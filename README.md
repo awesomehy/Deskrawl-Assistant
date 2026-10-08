@@ -2,6 +2,26 @@
 
 Windows x64 装备筛选工具，当前版本 **v1.1.2**。使用 WebView2 独立窗体显示网页界面，外部读取游戏的背包和仓库，根据玩家配置的词条规则锁定装备。
 
+## 快速使用
+
+1. 打开 [Releases 下载页面](https://github.com/awesomehy/Deskrawl-Assistant/releases)，选择最新版；也可直接下载 [Deskrawl-Assistant-v1.1.2.exe](https://github.com/awesomehy/Deskrawl-Assistant/releases/download/v1.1.2/Deskrawl-Assistant-v1.1.2.exe)。
+2. 双击 exe，稍等片刻即可打开助手窗体，无需安装 Python。若提示缺少 WebView2，请使用[微软官方安装程序](https://go.microsoft.com/fwlink/p/?LinkId=2124703)联网安装后重试。
+3. 启动 Deskrawl 并进入角色，在助手顶部点击“连接游戏”，自动读取背包与仓库。主城和战斗场景均可使用。
+4. 进入“装备筛选规则”，按职业、部位或名称选择装备；勾选主词条并设置“至少命中 n 类”，按需启用副词条，保存并启用规则。
+5. 进入“背包与仓库”，点击“一键按规则锁定”检查已有装备；需要自动处理后续新装备时，开启“持续监控”。点击装备可查看数值、命中高亮及筛选结果。
+
+更新前请通过助手右上角退出旧版，再运行新版。个人规则会继续保留。各版本的更新记录和适配范围见对应 Release 页面。
+
+## 使用截图
+
+**装备筛选规则**：按职业、部位或名称找到装备，再配置可接受的主副词条及命中数量。
+
+![装备筛选规则：选择装备并配置主副词条](docs/screenshots/rule-settings.png)
+
+**背包与仓库**：批量管理装备锁定状态，查看装备数值与筛选结果；绿色和 ✓ 表示命中规则的词条。
+
+![背包与仓库：装备清单、数值预览及命中高亮](docs/screenshots/inventory-preview.png)
+
 ## 功能
 
 - 顶部显示连接按钮与游戏连接状态；连接后自动读取背包和仓库。
@@ -19,7 +39,7 @@ Windows x64 装备筛选工具，当前版本 **v1.1.2**。使用 WebView2 独�
 
 在 [GitHub Releases](https://github.com/awesomehy/Deskrawl-Assistant/releases) 下载打包好的程序，推荐使用 [v1.1.2](https://github.com/awesomehy/Deskrawl-Assistant/releases/tag/v1.1.2) 的 exe。直接双击即可打开窗体，无需安装 Python。页面每个版本只上传 exe，并提供更新记录；缺少 WebView2 时，可使用[微软官方安装程序](https://go.microsoft.com/fwlink/p/?LinkId=2124703)联网安装。
 
-历史版本 v1.1.0、v1.1.1 提供原始发布程序；这两个标签只保存发行说明和校验清单，没有对应构建时的完整源码快照。当前完整源码对应 v1.1.2。
+历史版本 v1.1.0、v1.1.1 提供原始发布程序；这两个标签只保存发行说明和组件许可，没有对应构建时的完整源码快照。当前完整源码对应 v1.1.2。
 
 发行版规则与日志保存在 `%LOCALAPPDATA%\Deskrawl装备助手\`，移动或更新 exe 后仍保留。源代码版保存到工作目录的 `config/` 和 `data/runtime/`，这些个人文件不纳入仓库。全新启动没有任何启用的筛选规则。
 
@@ -93,3 +113,11 @@ Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutF
 部分旧界面源码保留用于兼容和排查。`tools/verify_container_transfer.py`、`tools/verify_carriage_transfer.py` 是搬运功能的开发原型，未接入 v1.1.2 窗体或发行包；相关测试只验证模拟事务。
 
 资源提取工具只读解析本地游戏安装文件，额外依赖 `requirements-unity.txt`；日常运行无需 UnityPy。版本变更见 [版本记录](docs/版本记录.md)，第三方资源说明见 [NOTICE.md](NOTICE.md)。
+
+## 贡献
+
+欢迎通过提 [Issue](https://github.com/awesomehy/Deskrawl-Assistant/issues) 或 [Pull Request](https://github.com/awesomehy/Deskrawl-Assistant/pulls) (如果提供了仓库链接) 的方式贡献代码、报告 Bug 或提出建议。
+
+## 许可证
+
+本项目软件采用 [AGPL-3.0](LICENSE) 许可证。

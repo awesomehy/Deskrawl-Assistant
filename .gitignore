@@ -47,3 +47,4 @@ tools/*
 
 docs/*
 !docs/版本记录.md
+!docs/screenshots/

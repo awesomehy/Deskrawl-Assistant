@@ -1,0 +1,45 @@
+from pathlib import Path
+from PyInstaller.utils.hooks import collect_data_files
+
+root = Path(SPECPATH).parent
+assets = [
+    'game-catalog.json',
+    'equipment-ui.json',
+    'affix-groups-static.json',
+    'runtime-type-hints.json',
+    'ui-runtime-hints.json',
+]
+datas = [(str(root / 'data' / name), 'data') for name in assets]
+datas.append((str(root / 'deskrawl_assistant' / 'web'), 'deskrawl_assistant/web'))
+datas += collect_data_files('webview', subdir='js')
+
+a = Analysis(
+    [str(root / 'run_assistant.pyw')],
+    pathex=[str(root)],
+    binaries=[],
+    datas=datas,
+    hiddenimports=[],
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=['frida', 'UnityPy', 'PIL', 'tkinter', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'cefpython3', 'gi'],
+    noarchive=False,
+    optimize=0,
+)
+pyz = PYZ(a.pure)
+exe = EXE(
+    pyz,
+    a.scripts,
+    a.binaries,
+    a.datas,
+    [],
+    name='Deskrawl装备助手-v1.1.2',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=False,
+    console=False,
+    disable_windowed_traceback=False,
+    version=str(root / 'packaging' / 'version-info.txt'),
+    uac_admin=False,
+)

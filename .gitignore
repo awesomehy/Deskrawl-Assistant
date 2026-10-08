@@ -1,0 +1,49 @@
+.venv/
+.build-venv/
+__pycache__/
+*.pyc
+build/
+dist/
+release/
+
+# Local player configuration, captures, diagnostics and third-party analysis.
+config/
+reference/
+notes/
+plugins/
+.env
+.env.*
+*.log
+*.jsonl
+*.pem
+*.pfx
+*.key
+
+# Publish only the static resources required by this version.
+data/*
+!data/game-catalog.json
+!data/equipment-ui.json
+!data/affix-groups-static.json
+!data/runtime-type-hints.json
+!data/ui-runtime-hints.json
+!data/transfer-extra-types.json
+
+# The Microsoft bootstrapper is fetched separately before packaging.
+packaging/*.exe
+
+# Keep the development tools used to build, extract or test this version.
+tools/*
+!tools/build_exe.py
+!tools/smoke_exe.py
+!tools/runtime_probe.py
+!tools/extract_catalog.py
+!tools/extract_equipment_ui.py
+!tools/inspect_affix_groups.py
+!tools/inspect_runtime_types.py
+!tools/inspect_install.py
+!tools/probe_transfer_state.py
+!tools/verify_container_transfer.py
+!tools/verify_carriage_transfer.py
+
+docs/*
+!docs/版本记录.md

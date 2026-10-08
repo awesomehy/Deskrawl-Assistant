@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "note": "纯合成测试样本，不是当前游戏读取结果。词条组合及阈值仅演示规则，不证明游戏可掉落这些数值。",
+  "items": [
+    {
+      "equipment_key": "LegendaryRing1",
+      "name": "巨龙血牙印戒",
+      "slot": "sample-slot-1",
+      "item_id": "sample-ring-1",
+      "affixes": {"Stats.CritChance": [{"value": "10.5", "unit": "percent", "confidence": "0.999"}]},
+      "lock_state": "unlocked",
+      "name_confidence": "0.999",
+      "lock_confidence": "0.999",
+      "tooltip_complete": true,
+      "observed_token": "sample-capture-1"
+    },
+    {
+      "equipment_key": "LegendaryRing1",
+      "name": "巨龙血牙印戒",
+      "slot": "sample-slot-2",
+      "item_id": "sample-ring-2",
+      "affixes": {"Stats.CritChance": [{"value": "10.5", "unit": "percent", "confidence": "0.999"}]},
+      "lock_state": "locked",
+      "name_confidence": "0.999",
+      "lock_confidence": "0.999",
+      "tooltip_complete": true,
+      "observed_token": "sample-capture-2"
+    },
+    {
+      "equipment_key": "LegendaryRing1",
+      "name": "巨龙血牙印戒",
+      "slot": "sample-slot-3",
+      "item_id": "sample-ring-3",
+      "affixes": {"Stats.CritChance": [{"value": "12", "unit": "percent", "confidence": "0.999"}]},
+      "lock_state": "unknown",
+      "name_confidence": "0.999",
+      "lock_confidence": "0",
+      "tooltip_complete": true,
+      "observed_token": "sample-capture-3"
+    },
+    {
+      "equipment_key": "LegendaryRing1",
+      "name": "巨龙血牙印戒",
+      "slot": "sample-slot-4",
+      "item_id": "sample-ring-4",
+      "affixes": {"Stats.CritChance": [{"value": "9.5", "unit": "percent", "confidence": "0.999"}]},
+      "lock_state": "unlocked",
+      "name_confidence": "0.999",
+      "lock_confidence": "0.999",
+      "tooltip_complete": true,
+      "observed_token": "sample-capture-4"
+    },
+    {
+      "equipment_key": "LegendarySword1",
+      "name": "苦痛锯齿巨剑",
+      "slot": "sample-slot-5",
+      "item_id": "sample-sword-1",
+      "affixes": {"Stats.Strength": [{"value": "20", "unit": "flat", "confidence": "0.999"}]},
+      "lock_state": "unlocked",
+      "name_confidence": "0.999",
+      "lock_confidence": "0.999",
+      "tooltip_complete": false,
+      "observed_token": "sample-capture-5"
+    }
+  ]
+}

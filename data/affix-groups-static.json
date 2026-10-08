@@ -1,0 +1,1280 @@
+{
+  "schema_version": 1,
+  "scope": "Static shipped affix pool configuration only; eligible pool membership is not player affix provenance.",
+  "metadataSha256": "c1bebda964147ef5511f559162cc10ec3abf1c65ab0ece930396d1db39c90e05",
+  "unitypyVersion": "1.25.2",
+  "source": {
+    "path": "G:\\SteamLibrary\\steamapps\\common\\Deskrawl\\Deskrawl_Data\\sharedassets0.assets",
+    "sha256": "e138dbd25c30e7b9e6ada16e8398e6b80e6d8bfade84c84fc49d638ea04cce06",
+    "configPathId": 59919,
+    "configByteLength": 1056,
+    "configObjectSha256": "92f3ee2d47a312ecfb8478302ccc6053fbd7532e9a66601240677af90d083cfb",
+    "scriptFile": "G:\\SteamLibrary\\steamapps\\common\\Deskrawl\\Deskrawl_Data\\globalgamemanagers.assets",
+    "scriptPathId": 374,
+    "class": "ItemizationConfig",
+    "assembly": "Assembly-CSharp"
+  },
+  "enumConstants": {
+    "StatType": [
+      {
+        "name": "Strength",
+        "value": 0,
+        "fieldIndex": 23065,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94310,
+        "compressedBytesHex": "00"
+      },
+      {
+        "name": "Dexterity",
+        "value": 1,
+        "fieldIndex": 23066,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94311,
+        "compressedBytesHex": "02"
+      },
+      {
+        "name": "Intelligence",
+        "value": 2,
+        "fieldIndex": 23067,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94312,
+        "compressedBytesHex": "04"
+      },
+      {
+        "name": "Damage",
+        "value": 3,
+        "fieldIndex": 23068,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94313,
+        "compressedBytesHex": "06"
+      },
+      {
+        "name": "CritChance",
+        "value": 4,
+        "fieldIndex": 23069,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94314,
+        "compressedBytesHex": "08"
+      },
+      {
+        "name": "CritDamage",
+        "value": 5,
+        "fieldIndex": 23070,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94315,
+        "compressedBytesHex": "0a"
+      },
+      {
+        "name": "AttackSpeed",
+        "value": 6,
+        "fieldIndex": 23071,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94316,
+        "compressedBytesHex": "0c"
+      },
+      {
+        "name": "MaxHealth",
+        "value": 7,
+        "fieldIndex": 23072,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94317,
+        "compressedBytesHex": "0e"
+      },
+      {
+        "name": "MaxHealthPercent",
+        "value": 42,
+        "fieldIndex": 23073,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94318,
+        "compressedBytesHex": "54"
+      },
+      {
+        "name": "Armor",
+        "value": 8,
+        "fieldIndex": 23074,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94319,
+        "compressedBytesHex": "10"
+      },
+      {
+        "name": "ArmorPercent",
+        "value": 44,
+        "fieldIndex": 23075,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94320,
+        "compressedBytesHex": "58"
+      },
+      {
+        "name": "MagicResist",
+        "value": 9,
+        "fieldIndex": 23076,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94321,
+        "compressedBytesHex": "12"
+      },
+      {
+        "name": "MagicResistPercent",
+        "value": 59,
+        "fieldIndex": 23077,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94322,
+        "compressedBytesHex": "76"
+      },
+      {
+        "name": "Dodge",
+        "value": 22,
+        "fieldIndex": 23078,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94323,
+        "compressedBytesHex": "2c"
+      },
+      {
+        "name": "CritDamageReduction",
+        "value": 60,
+        "fieldIndex": 23079,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94324,
+        "compressedBytesHex": "78"
+      },
+      {
+        "name": "DamageReduction",
+        "value": 64,
+        "fieldIndex": 23080,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94325,
+        "compressedBytesHex": "8080"
+      },
+      {
+        "name": "PoisonDamageReduction",
+        "value": 49,
+        "fieldIndex": 23081,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94327,
+        "compressedBytesHex": "62"
+      },
+      {
+        "name": "PhysicalDamageReduction",
+        "value": 51,
+        "fieldIndex": 23082,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94328,
+        "compressedBytesHex": "66"
+      },
+      {
+        "name": "FireDamageReduction",
+        "value": 52,
+        "fieldIndex": 23083,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94329,
+        "compressedBytesHex": "68"
+      },
+      {
+        "name": "ColdDamageReduction",
+        "value": 53,
+        "fieldIndex": 23084,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94330,
+        "compressedBytesHex": "6a"
+      },
+      {
+        "name": "LightningDamageReduction",
+        "value": 54,
+        "fieldIndex": 23085,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94331,
+        "compressedBytesHex": "6c"
+      },
+      {
+        "name": "ArcaneDamageReduction",
+        "value": 55,
+        "fieldIndex": 23086,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94332,
+        "compressedBytesHex": "6e"
+      },
+      {
+        "name": "MoveSpeed",
+        "value": 10,
+        "fieldIndex": 23087,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94333,
+        "compressedBytesHex": "14"
+      },
+      {
+        "name": "MoveSpeedPercent",
+        "value": 57,
+        "fieldIndex": 23088,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94334,
+        "compressedBytesHex": "72"
+      },
+      {
+        "name": "LifeOnHit",
+        "value": 11,
+        "fieldIndex": 23089,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94335,
+        "compressedBytesHex": "16"
+      },
+      {
+        "name": "LifeOnKill",
+        "value": 12,
+        "fieldIndex": 23090,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94336,
+        "compressedBytesHex": "18"
+      },
+      {
+        "name": "CooldownReduction",
+        "value": 13,
+        "fieldIndex": 23091,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94337,
+        "compressedBytesHex": "1a"
+      },
+      {
+        "name": "MaxMana",
+        "value": 14,
+        "fieldIndex": 23092,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94338,
+        "compressedBytesHex": "1c"
+      },
+      {
+        "name": "GoldFind",
+        "value": 15,
+        "fieldIndex": 23093,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94339,
+        "compressedBytesHex": "1e"
+      },
+      {
+        "name": "MagicFind",
+        "value": 16,
+        "fieldIndex": 23094,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94340,
+        "compressedBytesHex": "20"
+      },
+      {
+        "name": "HpPotionFind",
+        "value": 17,
+        "fieldIndex": 23095,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94341,
+        "compressedBytesHex": "22"
+      },
+      {
+        "name": "Capacity",
+        "value": 18,
+        "fieldIndex": 23096,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94342,
+        "compressedBytesHex": "24"
+      },
+      {
+        "name": "MaterialFind",
+        "value": 19,
+        "fieldIndex": 23097,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94343,
+        "compressedBytesHex": "26"
+      },
+      {
+        "name": "WeaponDamage",
+        "value": 20,
+        "fieldIndex": 23098,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94344,
+        "compressedBytesHex": "28"
+      },
+      {
+        "name": "WeaponSpeed",
+        "value": 21,
+        "fieldIndex": 23099,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94345,
+        "compressedBytesHex": "2a"
+      },
+      {
+        "name": "DamagePhysical",
+        "value": 23,
+        "fieldIndex": 23100,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94346,
+        "compressedBytesHex": "2e"
+      },
+      {
+        "name": "DamageFire",
+        "value": 24,
+        "fieldIndex": 23101,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94347,
+        "compressedBytesHex": "30"
+      },
+      {
+        "name": "DamageCold",
+        "value": 25,
+        "fieldIndex": 23102,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94348,
+        "compressedBytesHex": "32"
+      },
+      {
+        "name": "DamageLightning",
+        "value": 26,
+        "fieldIndex": 23103,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94349,
+        "compressedBytesHex": "34"
+      },
+      {
+        "name": "DamagePoison",
+        "value": 27,
+        "fieldIndex": 23104,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94350,
+        "compressedBytesHex": "36"
+      },
+      {
+        "name": "DamageArcane",
+        "value": 28,
+        "fieldIndex": 23105,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94351,
+        "compressedBytesHex": "38"
+      },
+      {
+        "name": "DamagePercent",
+        "value": 65,
+        "fieldIndex": 23106,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94352,
+        "compressedBytesHex": "8082"
+      },
+      {
+        "name": "DamageVsHealthy",
+        "value": 29,
+        "fieldIndex": 23107,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94354,
+        "compressedBytesHex": "3a"
+      },
+      {
+        "name": "DamageVsInjured",
+        "value": 30,
+        "fieldIndex": 23108,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94355,
+        "compressedBytesHex": "3c"
+      },
+      {
+        "name": "DamageVsSlowed",
+        "value": 31,
+        "fieldIndex": 23109,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94356,
+        "compressedBytesHex": "3e"
+      },
+      {
+        "name": "DamageVsElite",
+        "value": 32,
+        "fieldIndex": 23110,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94357,
+        "compressedBytesHex": "40"
+      },
+      {
+        "name": "VulnerableDamage",
+        "value": 40,
+        "fieldIndex": 23111,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94358,
+        "compressedBytesHex": "50"
+      },
+      {
+        "name": "DamageVsImmobilized",
+        "value": 43,
+        "fieldIndex": 23112,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94359,
+        "compressedBytesHex": "56"
+      },
+      {
+        "name": "DamageVsBleeding",
+        "value": 45,
+        "fieldIndex": 23113,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94360,
+        "compressedBytesHex": "5a"
+      },
+      {
+        "name": "DamageVsPoisoned",
+        "value": 46,
+        "fieldIndex": 23114,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94361,
+        "compressedBytesHex": "5c"
+      },
+      {
+        "name": "DamageVsDistant",
+        "value": 58,
+        "fieldIndex": 23115,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94362,
+        "compressedBytesHex": "74"
+      },
+      {
+        "name": "BasicAttackDamage",
+        "value": 33,
+        "fieldIndex": 23116,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94363,
+        "compressedBytesHex": "42"
+      },
+      {
+        "name": "StrongAttackDamage",
+        "value": 34,
+        "fieldIndex": 23117,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94364,
+        "compressedBytesHex": "44"
+      },
+      {
+        "name": "SpecialAbilityDamage",
+        "value": 61,
+        "fieldIndex": 23118,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94365,
+        "compressedBytesHex": "7a"
+      },
+      {
+        "name": "DamageOverTime",
+        "value": 62,
+        "fieldIndex": 23119,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94366,
+        "compressedBytesHex": "7c"
+      },
+      {
+        "name": "DamageVsBurned",
+        "value": 63,
+        "fieldIndex": 23120,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94367,
+        "compressedBytesHex": "7e"
+      },
+      {
+        "name": "ManaOnKill",
+        "value": 35,
+        "fieldIndex": 23121,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94368,
+        "compressedBytesHex": "46"
+      },
+      {
+        "name": "LifeRegen",
+        "value": 36,
+        "fieldIndex": 23122,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94369,
+        "compressedBytesHex": "48"
+      },
+      {
+        "name": "HealingReceivedBonus",
+        "value": 56,
+        "fieldIndex": 23123,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94370,
+        "compressedBytesHex": "70"
+      },
+      {
+        "name": "ManaRegen",
+        "value": 47,
+        "fieldIndex": 23124,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94371,
+        "compressedBytesHex": "5e"
+      },
+      {
+        "name": "ManaCostReduction",
+        "value": 37,
+        "fieldIndex": 23125,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94372,
+        "compressedBytesHex": "4a"
+      },
+      {
+        "name": "PotionCharges",
+        "value": 38,
+        "fieldIndex": 23126,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94373,
+        "compressedBytesHex": "4c"
+      },
+      {
+        "name": "Thorns",
+        "value": 39,
+        "fieldIndex": 23127,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94374,
+        "compressedBytesHex": "4e"
+      },
+      {
+        "name": "XPGain",
+        "value": 41,
+        "fieldIndex": 23128,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94375,
+        "compressedBytesHex": "52"
+      },
+      {
+        "name": "ThornsDamagePercent",
+        "value": 48,
+        "fieldIndex": 23129,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94376,
+        "compressedBytesHex": "60"
+      },
+      {
+        "name": "GemSlots",
+        "value": 50,
+        "fieldIndex": 23130,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94377,
+        "compressedBytesHex": "64"
+      }
+    ],
+    "AttributeCategory": [
+      {
+        "name": "Primary",
+        "value": 0,
+        "fieldIndex": 23136,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94381,
+        "compressedBytesHex": "00"
+      },
+      {
+        "name": "Secondary",
+        "value": 1,
+        "fieldIndex": 23137,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94382,
+        "compressedBytesHex": "02"
+      },
+      {
+        "name": "Legendary",
+        "value": 2,
+        "fieldIndex": 23138,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94383,
+        "compressedBytesHex": "04"
+      }
+    ],
+    "ModifierType": [
+      {
+        "name": "Flat",
+        "value": 0,
+        "fieldIndex": 23144,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94387,
+        "compressedBytesHex": "00"
+      },
+      {
+        "name": "PercentAdd",
+        "value": 1,
+        "fieldIndex": 23145,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94388,
+        "compressedBytesHex": "02"
+      },
+      {
+        "name": "PercentMult",
+        "value": 2,
+        "fieldIndex": 23146,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 94389,
+        "compressedBytesHex": "04"
+      }
+    ],
+    "EquipSlotType": [
+      {
+        "name": "None",
+        "value": 0,
+        "fieldIndex": 24450,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 95066,
+        "compressedBytesHex": "00"
+      },
+      {
+        "name": "Weapon",
+        "value": 1,
+        "fieldIndex": 24451,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 95067,
+        "compressedBytesHex": "02"
+      },
+      {
+        "name": "Helm",
+        "value": 2,
+        "fieldIndex": 24452,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 95068,
+        "compressedBytesHex": "04"
+      },
+      {
+        "name": "Chest",
+        "value": 3,
+        "fieldIndex": 24453,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 95069,
+        "compressedBytesHex": "06"
+      },
+      {
+        "name": "Pants",
+        "value": 4,
+        "fieldIndex": 24454,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 95070,
+        "compressedBytesHex": "08"
+      },
+      {
+        "name": "Boots",
+        "value": 5,
+        "fieldIndex": 24455,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 95071,
+        "compressedBytesHex": "0a"
+      },
+      {
+        "name": "Belt",
+        "value": 6,
+        "fieldIndex": 24456,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 95072,
+        "compressedBytesHex": "0c"
+      },
+      {
+        "name": "Ring",
+        "value": 7,
+        "fieldIndex": 24457,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 95073,
+        "compressedBytesHex": "0e"
+      },
+      {
+        "name": "Necklace",
+        "value": 8,
+        "fieldIndex": 24458,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 95074,
+        "compressedBytesHex": "10"
+      },
+      {
+        "name": "Gloves",
+        "value": 9,
+        "fieldIndex": 24459,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 95075,
+        "compressedBytesHex": "12"
+      },
+      {
+        "name": "Shoulder",
+        "value": 10,
+        "fieldIndex": 24460,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 95076,
+        "compressedBytesHex": "14"
+      },
+      {
+        "name": "Back",
+        "value": 11,
+        "fieldIndex": 24461,
+        "defaultTypeIndex": 23992,
+        "defaultDataIndex": 95077,
+        "compressedBytesHex": "16"
+      }
+    ]
+  },
+  "slotPools": [
+    {
+      "slotValue": 1,
+      "slot": "Weapon",
+      "primaryValues": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        6,
+        33,
+        34,
+        61,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        43,
+        32,
+        45,
+        58,
+        46,
+        62,
+        63,
+        40
+      ],
+      "primary": [
+        "Stats.Strength",
+        "Stats.Dexterity",
+        "Stats.Intelligence",
+        "Stats.Damage",
+        "Stats.CritDamage",
+        "Stats.AttackSpeed",
+        "Stats.BasicAttackDamage",
+        "Stats.StrongAttackDamage",
+        "Stats.SpecialAbilityDamage",
+        "Stats.DamagePhysical",
+        "Stats.DamageFire",
+        "Stats.DamageCold",
+        "Stats.DamageLightning",
+        "Stats.DamagePoison",
+        "Stats.DamageArcane",
+        "Stats.DamageVsHealthy",
+        "Stats.DamageVsInjured",
+        "Stats.DamageVsSlowed",
+        "Stats.DamageVsImmobilized",
+        "Stats.DamageVsElite",
+        "Stats.DamageVsBleeding",
+        "Stats.DamageVsDistant",
+        "Stats.DamageVsPoisoned",
+        "Stats.DamageOverTime",
+        "Stats.DamageVsBurned",
+        "Stats.VulnerableDamage"
+      ],
+      "secondaryValues": [
+        11,
+        12,
+        35
+      ],
+      "secondary": [
+        "Stats.LifeOnHit",
+        "Stats.LifeOnKill",
+        "Stats.ManaOnKill"
+      ]
+    },
+    {
+      "slotValue": 2,
+      "slot": "Helm",
+      "primaryValues": [
+        0,
+        1,
+        2,
+        7,
+        14,
+        13,
+        8,
+        9,
+        22,
+        44,
+        54,
+        55
+      ],
+      "primary": [
+        "Stats.Strength",
+        "Stats.Dexterity",
+        "Stats.Intelligence",
+        "Stats.MaxHealth",
+        "Stats.MaxMana",
+        "Stats.CooldownReduction",
+        "Stats.Armor",
+        "Stats.MagicResist",
+        "Stats.Dodge",
+        "Stats.ArmorPercent",
+        "Stats.LightningDamageReduction",
+        "Stats.ArcaneDamageReduction"
+      ],
+      "secondaryValues": [
+        36,
+        16,
+        15,
+        17,
+        41
+      ],
+      "secondary": [
+        "Stats.LifeRegen",
+        "Stats.MagicFind",
+        "Stats.GoldFind",
+        "Stats.HpPotionFind",
+        "Stats.XPGain"
+      ]
+    },
+    {
+      "slotValue": 3,
+      "slot": "Chest",
+      "primaryValues": [
+        0,
+        1,
+        2,
+        7,
+        8,
+        9,
+        22,
+        39,
+        44,
+        42,
+        61,
+        29,
+        30,
+        51,
+        53
+      ],
+      "primary": [
+        "Stats.Strength",
+        "Stats.Dexterity",
+        "Stats.Intelligence",
+        "Stats.MaxHealth",
+        "Stats.Armor",
+        "Stats.MagicResist",
+        "Stats.Dodge",
+        "Stats.Thorns",
+        "Stats.ArmorPercent",
+        "Stats.MaxHealthPercent",
+        "Stats.SpecialAbilityDamage",
+        "Stats.DamageVsHealthy",
+        "Stats.DamageVsInjured",
+        "Stats.PhysicalDamageReduction",
+        "Stats.ColdDamageReduction"
+      ],
+      "secondaryValues": [
+        36,
+        11,
+        15,
+        16,
+        41
+      ],
+      "secondary": [
+        "Stats.LifeRegen",
+        "Stats.LifeOnHit",
+        "Stats.GoldFind",
+        "Stats.MagicFind",
+        "Stats.XPGain"
+      ]
+    },
+    {
+      "slotValue": 4,
+      "slot": "Pants",
+      "primaryValues": [
+        0,
+        1,
+        2,
+        7,
+        8,
+        9,
+        22,
+        39,
+        44,
+        42,
+        49,
+        51
+      ],
+      "primary": [
+        "Stats.Strength",
+        "Stats.Dexterity",
+        "Stats.Intelligence",
+        "Stats.MaxHealth",
+        "Stats.Armor",
+        "Stats.MagicResist",
+        "Stats.Dodge",
+        "Stats.Thorns",
+        "Stats.ArmorPercent",
+        "Stats.MaxHealthPercent",
+        "Stats.PoisonDamageReduction",
+        "Stats.PhysicalDamageReduction"
+      ],
+      "secondaryValues": [
+        36,
+        11,
+        15,
+        16,
+        41
+      ],
+      "secondary": [
+        "Stats.LifeRegen",
+        "Stats.LifeOnHit",
+        "Stats.GoldFind",
+        "Stats.MagicFind",
+        "Stats.XPGain"
+      ]
+    },
+    {
+      "slotValue": 5,
+      "slot": "Boots",
+      "primaryValues": [
+        0,
+        1,
+        2,
+        7,
+        8,
+        9,
+        22,
+        37,
+        53,
+        52,
+        60
+      ],
+      "primary": [
+        "Stats.Strength",
+        "Stats.Dexterity",
+        "Stats.Intelligence",
+        "Stats.MaxHealth",
+        "Stats.Armor",
+        "Stats.MagicResist",
+        "Stats.Dodge",
+        "Stats.ManaCostReduction",
+        "Stats.ColdDamageReduction",
+        "Stats.FireDamageReduction",
+        "Stats.CritDamageReduction"
+      ],
+      "secondaryValues": [
+        17,
+        57,
+        11,
+        16,
+        15
+      ],
+      "secondary": [
+        "Stats.HpPotionFind",
+        "Stats.MoveSpeedPercent",
+        "Stats.LifeOnHit",
+        "Stats.MagicFind",
+        "Stats.GoldFind"
+      ]
+    },
+    {
+      "slotValue": 6,
+      "slot": "Belt",
+      "primaryValues": [
+        0,
+        1,
+        2,
+        7,
+        22,
+        9,
+        37,
+        38,
+        13,
+        6,
+        39
+      ],
+      "primary": [
+        "Stats.Strength",
+        "Stats.Dexterity",
+        "Stats.Intelligence",
+        "Stats.MaxHealth",
+        "Stats.Dodge",
+        "Stats.MagicResist",
+        "Stats.ManaCostReduction",
+        "Stats.PotionCharges",
+        "Stats.CooldownReduction",
+        "Stats.AttackSpeed",
+        "Stats.Thorns"
+      ],
+      "secondaryValues": [
+        17,
+        36,
+        35,
+        41
+      ],
+      "secondary": [
+        "Stats.HpPotionFind",
+        "Stats.LifeRegen",
+        "Stats.ManaOnKill",
+        "Stats.XPGain"
+      ]
+    },
+    {
+      "slotValue": 7,
+      "slot": "Ring",
+      "primaryValues": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6,
+        14,
+        9,
+        40,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        65
+      ],
+      "primary": [
+        "Stats.Strength",
+        "Stats.Dexterity",
+        "Stats.Intelligence",
+        "Stats.CritChance",
+        "Stats.CritDamage",
+        "Stats.AttackSpeed",
+        "Stats.MaxMana",
+        "Stats.MagicResist",
+        "Stats.VulnerableDamage",
+        "Stats.DamagePhysical",
+        "Stats.DamageFire",
+        "Stats.DamageCold",
+        "Stats.DamageLightning",
+        "Stats.DamagePoison",
+        "Stats.DamageArcane",
+        "Stats.DamagePercent"
+      ],
+      "secondaryValues": [
+        11,
+        12,
+        41,
+        16,
+        15
+      ],
+      "secondary": [
+        "Stats.LifeOnHit",
+        "Stats.LifeOnKill",
+        "Stats.XPGain",
+        "Stats.MagicFind",
+        "Stats.GoldFind"
+      ]
+    },
+    {
+      "slotValue": 8,
+      "slot": "Necklace",
+      "primaryValues": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6,
+        13,
+        9,
+        33,
+        34,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        40,
+        44,
+        65
+      ],
+      "primary": [
+        "Stats.Strength",
+        "Stats.Dexterity",
+        "Stats.Intelligence",
+        "Stats.CritChance",
+        "Stats.CritDamage",
+        "Stats.AttackSpeed",
+        "Stats.CooldownReduction",
+        "Stats.MagicResist",
+        "Stats.BasicAttackDamage",
+        "Stats.StrongAttackDamage",
+        "Stats.DamagePhysical",
+        "Stats.DamageFire",
+        "Stats.DamageCold",
+        "Stats.DamageLightning",
+        "Stats.DamagePoison",
+        "Stats.DamageArcane",
+        "Stats.DamageVsHealthy",
+        "Stats.DamageVsInjured",
+        "Stats.DamageVsSlowed",
+        "Stats.DamageVsElite",
+        "Stats.VulnerableDamage",
+        "Stats.ArmorPercent",
+        "Stats.DamagePercent"
+      ],
+      "secondaryValues": [
+        57,
+        11,
+        16,
+        41
+      ],
+      "secondary": [
+        "Stats.MoveSpeedPercent",
+        "Stats.LifeOnHit",
+        "Stats.MagicFind",
+        "Stats.XPGain"
+      ]
+    },
+    {
+      "slotValue": 9,
+      "slot": "Gloves",
+      "primaryValues": [
+        0,
+        1,
+        2,
+        13,
+        37,
+        14,
+        4,
+        3,
+        5,
+        6,
+        60,
+        9
+      ],
+      "primary": [
+        "Stats.Strength",
+        "Stats.Dexterity",
+        "Stats.Intelligence",
+        "Stats.CooldownReduction",
+        "Stats.ManaCostReduction",
+        "Stats.MaxMana",
+        "Stats.CritChance",
+        "Stats.Damage",
+        "Stats.CritDamage",
+        "Stats.AttackSpeed",
+        "Stats.CritDamageReduction",
+        "Stats.MagicResist"
+      ],
+      "secondaryValues": [
+        15,
+        16,
+        17,
+        35,
+        41
+      ],
+      "secondary": [
+        "Stats.GoldFind",
+        "Stats.MagicFind",
+        "Stats.HpPotionFind",
+        "Stats.ManaOnKill",
+        "Stats.XPGain"
+      ]
+    },
+    {
+      "slotValue": 10,
+      "slot": "Shoulder",
+      "primaryValues": [
+        0,
+        1,
+        2,
+        7,
+        8,
+        9,
+        22,
+        13,
+        49,
+        52,
+        60,
+        39
+      ],
+      "primary": [
+        "Stats.Strength",
+        "Stats.Dexterity",
+        "Stats.Intelligence",
+        "Stats.MaxHealth",
+        "Stats.Armor",
+        "Stats.MagicResist",
+        "Stats.Dodge",
+        "Stats.CooldownReduction",
+        "Stats.PoisonDamageReduction",
+        "Stats.FireDamageReduction",
+        "Stats.CritDamageReduction",
+        "Stats.Thorns"
+      ],
+      "secondaryValues": [
+        36,
+        57
+      ],
+      "secondary": [
+        "Stats.LifeRegen",
+        "Stats.MoveSpeedPercent"
+      ]
+    },
+    {
+      "slotValue": 11,
+      "slot": "Back",
+      "primaryValues": [],
+      "primary": [],
+      "secondaryValues": [],
+      "secondary": []
+    }
+  ],
+  "gemSocketsBySlot": [
+    {
+      "slotValue": 1,
+      "maxSockets": 3,
+      "slot": "Weapon"
+    },
+    {
+      "slotValue": 2,
+      "maxSockets": 1,
+      "slot": "Helm"
+    },
+    {
+      "slotValue": 3,
+      "maxSockets": 2,
+      "slot": "Chest"
+    },
+    {
+      "slotValue": 4,
+      "maxSockets": 2,
+      "slot": "Pants"
+    },
+    {
+      "slotValue": 5,
+      "maxSockets": 0,
+      "slot": "Boots"
+    },
+    {
+      "slotValue": 6,
+      "maxSockets": 0,
+      "slot": "Belt"
+    },
+    {
+      "slotValue": 7,
+      "maxSockets": 1,
+      "slot": "Ring"
+    },
+    {
+      "slotValue": 8,
+      "maxSockets": 1,
+      "slot": "Necklace"
+    },
+    {
+      "slotValue": 9,
+      "maxSockets": 0,
+      "slot": "Gloves"
+    },
+    {
+      "slotValue": 10,
+      "maxSockets": 0,
+      "slot": "Shoulder"
+    },
+    {
+      "slotValue": 11,
+      "maxSockets": 0,
+      "slot": "Back"
+    }
+  ],
+  "minLevelForSockets": 30,
+  "limitations": [
+    "The game can alter pool configuration at runtime; this is its shipped serialized configuration.",
+    "SavedStatModifier has Stat/Type/Value but no category/provenance; category must be resolved with item slot and validated source.",
+    "This script does not read saves, player items, process memory, runtime event sources, or game APIs.",
+    "Legendary effects, fixed stats, gem bonuses, sockets and hidden Black Mist choices must not count as proven random affixes.",
+    "Empty Back pools are preserved; no runtime fallback or pool construction is inferred."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "rules": [
+    {
+      "id": "example-crit-ring",
+      "name": "示例：巨龙血牙印戒，暴击率达到 10.5%",
+      "enabled": false,
+      "equipment_keys": ["LegendaryRing1"],
+      "mode": "all",
+      "conditions": [
+        {"stat_key": "Stats.CritChance", "operator": ">=", "value": "10.5", "unit": "percent"}
+      ]
+    },
+    {
+      "id": "example-strength-sword",
+      "name": "示例：苦痛锯齿巨剑，存在力量词条",
+      "enabled": false,
+      "equipment_keys": ["LegendarySword1"],
+      "mode": "all",
+      "conditions": [
+        {"stat_key": "Stats.Strength", "operator": "exists"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="assistant-token" content="__SESSION_TOKEN__">
+  <title>Deskrawl · 装备助手</title>
+  <link rel="icon" href="/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><img src="/mark.svg" alt=""><div><strong>DESKRAWL <span>装备助手</span></strong><small>挑选值得保留的每一件装备</small></div></div>
+    <div class="connection"><span id="connection-state" class="status-pill"><i></i>未连接游戏</span><button id="connect" class="button primary">连接游戏</button><button id="disconnect" class="button ghost" hidden>断开</button><button id="exit" class="icon-button" aria-label="退出助手" title="退出助手并停止监控"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v10M6.2 5.8a9 9 0 1 0 11.6 0"/></svg></button></div>
+  </header>
+  <nav class="tabs" aria-label="功能页签"><button class="tab active" data-tab="rules" role="tab" aria-selected="true">装备筛选规则 <span id="rule-count">0</span></button><button class="tab" data-tab="inventory" role="tab" aria-selected="false">背包与仓库</button><span id="monitor-badge" hidden><i></i>持续监控中</span></nav>
+  <main>
+    <section id="rules-page" role="tabpanel">
+      <div class="page-heading"><div><h1>装备筛选规则</h1><p>先找到传说装备，再设定要保留的词条组合。</p></div><div class="heading-actions"><button id="import-rules" class="button ghost">导入规则</button><button id="export-rules" class="button ghost">导出规则</button><input id="import-file" type="file" accept="application/json,.json" hidden></div></div>
+      <div class="rules-layout">
+        <section class="panel equipment-browser">
+          <div class="filter-area"><div id="class-filters" class="segmented" aria-label="职业筛选"></div><div class="filter-row"><label class="search"><span>⌕</span><input id="equipment-search" placeholder="搜索装备名称…" aria-label="搜索装备名称"></label><select id="slot-filter" aria-label="部位筛选"><option value="">全部部位</option></select></div><div class="list-heading"><span id="equipment-count"></span><select id="configured-filter" aria-label="配置状态筛选"><option value="">全部装备</option><option value="yes">已配置规则</option><option value="no">未配置规则</option></select></div></div>
+          <div id="equipment-grid" class="equipment-grid"></div>
+        </section>
+        <section class="panel rule-editor" id="rule-editor"><div class="empty-state">选择左侧装备开始配置</div></section>
+      </div>
+    </section>
+    <section id="inventory-page" role="tabpanel" hidden>
+      <div class="page-heading"><div><h1>背包与仓库</h1><p>后台管理装备锁状态，按已启用的筛选规则保留新装备。</p></div><div class="heading-actions"><button id="export-items" class="button ghost">导出清单</button><button id="refresh" class="button">刷新装备</button></div></div>
+      <div class="overview"><div class="metric"><span>背包装备</span><strong id="inventory-count">—</strong><small id="inventory-capacity">连接后读取</small></div><div class="metric"><span>仓库装备</span><strong id="storage-count">—</strong><small id="storage-capacity">连接后读取</small></div><div class="metric"><span>已锁定</span><strong id="locked-count">—</strong><small>背包与仓库合计</small></div><div class="metric"><span>符合规则 · 待锁定</span><strong id="match-count">—</strong><small>只检查已启用的规则</small></div></div>
+      <section class="panel inventory-panel">
+        <div class="operations"><div class="scope-picker"><label for="action-scope">批量范围</label><select id="action-scope" title="全部解锁、按规则锁定的作用范围；锁定所选装备以勾选为准。"><option value="all">背包 + 仓库</option><option value="inventory">仅背包</option><option value="storage">仅仓库</option></select></div><button id="unlock-all" class="button danger">一键全部解锁</button><button id="lock-selected" class="button">锁定所选装备 <span id="selected-count">0</span></button><button id="lock-rules" class="button primary">一键按规则锁定</button><div class="monitor-control"><div><strong>持续监控</strong><small>新增装备按规则自动锁定</small></div><button id="monitor-switch" class="switch" role="switch" aria-checked="false" aria-label="持续监控背包和仓库"><span></span></button></div></div>
+        <div class="operation-notice"><span id="operation-message">连接游戏后自动读取装备。</span><div class="progress-wrap" hidden id="progress-wrap"><progress id="operation-progress" max="1" value="0"></progress><small id="progress-label"></small></div><button id="stop" class="text-button" hidden>停止操作</button></div>
+        <div class="inventory-filters"><div class="segmented" id="container-filter"><button class="selected" data-container="">全部</button><button data-container="inventory">背包</button><button data-container="storage">仓库</button></div><label class="search"><span>⌕</span><input id="item-search" placeholder="搜索装备…" aria-label="搜索背包和仓库装备"></label><select id="lock-filter" aria-label="锁状态筛选"><option value="">全部锁状态</option><option value="locked">已锁定</option><option value="unlocked">未锁定</option><option value="matches">符合规则</option></select><span id="visible-count"></span></div>
+        <div class="inventory-body"><div class="table-scroll"><table><thead><tr><th class="check-column"><input type="checkbox" id="select-visible" aria-label="选择当前列表未锁定装备"></th><th>装备</th><th>位置</th><th>等级</th><th>锁状态</th><th>规则结果</th></tr></thead><tbody id="item-rows"></tbody></table><div id="inventory-empty" class="empty-state">连接游戏，查看背包和仓库装备</div></div><aside id="item-detail" class="item-detail"><div class="empty-state">点击装备查看词条与筛选结果</div></aside></div>
+      </section>
+      <div class="bottom-notes"><span id="usage-note">监控只自动处理新增装备；已有装备请用“一键按规则锁定”。关闭网页后监控仍可继续，点右上角退出才会停止。</span><button id="history-toggle" class="text-button">操作记录</button></div><div id="history-list" class="panel history" hidden></div>
+    </section>
+  </main>
+  <footer><span id="footer-state">本机运行 · 无需切回游戏前台</span><span id="last-read">自动监控默认关闭</span></footer>
+  <div id="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="confirm-dialog"><div class="dialog-icon">↗</div><h2 id="confirm-title"></h2><p id="confirm-body"></p><div class="dialog-actions"><button id="confirm-cancel" class="button">取消</button><button id="confirm-ok" class="button danger">确认</button></div></dialog>
+</body></html>

@@ -1,0 +1,74 @@
+{
+  "container": "storage",
+  "slot_index": 104,
+  "internal_name": "LegendaryChestArmor5",
+  "name_key": "LegendaryChestArmor5",
+  "is_equipment": true,
+  "equip_slot": 3,
+  "modifiers": [
+    {
+      "stat": 8,
+      "stat_name": "Armor",
+      "type": 0,
+      "value": 777.0,
+      "source": "generated_modifiers",
+      "display_unit": null
+    },
+    {
+      "stat": 61,
+      "stat_name": "SpecialAbilityDamage",
+      "type": 0,
+      "value": 1.24399995803833,
+      "source": "generated_modifiers",
+      "display_unit": null
+    },
+    {
+      "stat": 30,
+      "stat_name": "DamageVsInjured",
+      "type": 0,
+      "value": 1.5549999475479126,
+      "source": "generated_modifiers",
+      "display_unit": null
+    },
+    {
+      "stat": 29,
+      "stat_name": "DamageVsHealthy",
+      "type": 0,
+      "value": 1.5549999475479126,
+      "source": "generated_modifiers",
+      "display_unit": null
+    },
+    {
+      "stat": 51,
+      "stat_name": "PhysicalDamageReduction",
+      "type": 0,
+      "value": 0.1550000011920929,
+      "source": "generated_modifiers",
+      "display_unit": null
+    },
+    {
+      "stat": 11,
+      "stat_name": "LifeOnHit",
+      "type": 0,
+      "value": 31.0,
+      "source": "generated_modifiers",
+      "display_unit": null
+    }
+  ],
+  "modifiers_complete": true,
+  "is_black_mist": false,
+  "read_evidence": {
+    "identity_verified": true,
+    "slot_verified": true,
+    "lock_verified": true,
+    "enum_values_verified": true,
+    "modifiers_complete": true,
+    "native_affixes_verified": true,
+    "snapshot_consistent": true
+  },
+  "rarity": 3,
+  "upgrade_level": 0,
+  "item_uid": "fixture-preview-chest",
+  "instance_id": "fixture-preview-chest",
+  "locked": true
+}

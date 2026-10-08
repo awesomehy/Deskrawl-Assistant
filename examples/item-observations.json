@@ -1,0 +1,261 @@
+{
+  "schema_version": 2,
+  "note": "纯合成测试样本，不是当前游戏读取结果。词条组合及阈值仅演示规则，不证明游戏可掉落这些数值。",
+  "items": [
+    {
+      "equipment_key": "LegendarySword1",
+      "name": "苦痛锯齿巨剑",
+      "slot": "sample-slot-1",
+      "item_id": "sample-count-sword-1",
+      "affixes": {
+        "Stats.Strength": [
+          {
+            "value": "20",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "primary",
+            "group_confidence": "0.999"
+          }
+        ],
+        "Stats.Dexterity": [
+          {
+            "value": "15",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "primary",
+            "group_confidence": "0.999"
+          }
+        ],
+        "Stats.LifeOnHit": [
+          {
+            "value": "15",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "secondary",
+            "group_confidence": "0.999"
+          }
+        ]
+      },
+      "lock_state": "unlocked",
+      "name_confidence": "0.999",
+      "lock_confidence": "0.999",
+      "tooltip_complete": true,
+      "observed_token": "sample-count-capture-1",
+      "groups_complete": {
+        "primary": true,
+        "secondary": true
+      }
+    },
+    {
+      "equipment_key": "LegendarySword1",
+      "name": "苦痛锯齿巨剑",
+      "slot": "sample-slot-2",
+      "item_id": "sample-count-sword-2",
+      "affixes": {
+        "Stats.Strength": [
+          {
+            "value": "20",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "primary",
+            "group_confidence": "0.999"
+          }
+        ],
+        "Stats.Dexterity": [
+          {
+            "value": "15",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "primary",
+            "group_confidence": "0.999"
+          }
+        ],
+        "Stats.LifeOnHit": [
+          {
+            "value": "15",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "secondary",
+            "group_confidence": "0.999"
+          }
+        ]
+      },
+      "lock_state": "locked",
+      "name_confidence": "0.999",
+      "lock_confidence": "0.999",
+      "tooltip_complete": true,
+      "observed_token": "sample-count-capture-2",
+      "groups_complete": {
+        "primary": true,
+        "secondary": true
+      }
+    },
+    {
+      "equipment_key": "LegendarySword1",
+      "name": "苦痛锯齿巨剑",
+      "slot": "sample-slot-3",
+      "item_id": "sample-count-sword-3",
+      "affixes": {
+        "Stats.Strength": [
+          {
+            "value": "20",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "primary",
+            "group_confidence": "0.999"
+          }
+        ],
+        "Stats.Dexterity": [
+          {
+            "value": "15",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "primary",
+            "group_confidence": "0.999"
+          }
+        ],
+        "Stats.LifeOnHit": [
+          {
+            "value": "15",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "secondary",
+            "group_confidence": "0.999"
+          }
+        ]
+      },
+      "lock_state": "unknown",
+      "name_confidence": "0.999",
+      "lock_confidence": "0",
+      "tooltip_complete": true,
+      "observed_token": "sample-count-capture-3",
+      "groups_complete": {
+        "primary": true,
+        "secondary": true
+      }
+    },
+    {
+      "equipment_key": "LegendarySword1",
+      "name": "苦痛锯齿巨剑",
+      "slot": "sample-slot-4",
+      "item_id": "sample-count-sword-4",
+      "affixes": {
+        "Stats.Strength": [
+          {
+            "value": "20",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "primary",
+            "group_confidence": "0.999"
+          }
+        ],
+        "Stats.LifeOnHit": [
+          {
+            "value": "15",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "secondary",
+            "group_confidence": "0.999"
+          }
+        ]
+      },
+      "lock_state": "unlocked",
+      "name_confidence": "0.999",
+      "lock_confidence": "0.999",
+      "tooltip_complete": true,
+      "observed_token": "sample-count-capture-4",
+      "groups_complete": {
+        "primary": true,
+        "secondary": true
+      }
+    },
+    {
+      "equipment_key": "LegendarySword1",
+      "name": "苦痛锯齿巨剑",
+      "slot": "sample-slot-5",
+      "item_id": "sample-count-sword-5",
+      "affixes": {
+        "Stats.Strength": [
+          {
+            "value": "20",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "unknown",
+            "group_confidence": "0"
+          }
+        ],
+        "Stats.Dexterity": [
+          {
+            "value": "15",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "primary",
+            "group_confidence": "0.999"
+          }
+        ],
+        "Stats.LifeOnHit": [
+          {
+            "value": "15",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "secondary",
+            "group_confidence": "0.999"
+          }
+        ]
+      },
+      "lock_state": "unlocked",
+      "name_confidence": "0.999",
+      "lock_confidence": "0.999",
+      "tooltip_complete": true,
+      "observed_token": "sample-count-capture-5",
+      "groups_complete": {
+        "primary": true,
+        "secondary": true
+      }
+    },
+    {
+      "equipment_key": "LegendarySword1",
+      "name": "苦痛锯齿巨剑",
+      "slot": "sample-slot-6",
+      "item_id": "sample-count-sword-6",
+      "affixes": {
+        "Stats.Strength": [
+          {
+            "value": "20",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "primary",
+            "group_confidence": "0.999"
+          }
+        ],
+        "Stats.Dexterity": [
+          {
+            "value": "15",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "primary",
+            "group_confidence": "0.999"
+          }
+        ],
+        "Stats.LifeOnHit": [
+          {
+            "value": "15",
+            "unit": "flat",
+            "confidence": "0.999",
+            "group": "secondary",
+            "group_confidence": "0.999"
+          }
+        ]
+      },
+      "lock_state": "unlocked",
+      "name_confidence": "0.999",
+      "lock_confidence": "0.999",
+      "tooltip_complete": true,
+      "observed_token": "sample-count-capture-6",
+      "groups_complete": {
+        "primary": false,
+        "secondary": true
+      }
+    }
+  ]
+}

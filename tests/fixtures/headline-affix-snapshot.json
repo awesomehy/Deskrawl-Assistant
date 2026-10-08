@@ -1,0 +1,537 @@
+{
+  "schema_version": 1,
+  "metadata_sha256": "c1bebda964147ef5511f559162cc10ec3abf1c65ab0ece930396d1db39c90e05",
+  "pid": 999,
+  "bridge_session": "headline-fixture",
+  "snapshot_id": "headline-fixture-1",
+  "complete": true,
+  "containers": {
+    "inventory": {
+      "slots": [],
+      "slots_complete": true,
+      "complete": true,
+      "occupied_count": 0,
+      "slot_count": 40
+    },
+    "storage": {
+      "slots": [
+        {
+          "container": "storage",
+          "slot_index": 34,
+          "internal_name": "LegendaryBow1",
+          "name_key": "LegendaryBow1",
+          "is_equipment": true,
+          "equip_slot": 1,
+          "modifiers": [
+            {
+              "stat": 21,
+              "stat_name": "WeaponSpeed",
+              "type": 0,
+              "value": 0.9200000166893005,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 20,
+              "stat_name": "WeaponDamage",
+              "type": 0,
+              "value": 306.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 23,
+              "stat_name": "DamagePhysical",
+              "type": 0,
+              "value": 1.0859999656677246,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 30,
+              "stat_name": "DamageVsInjured",
+              "type": 0,
+              "value": 1.350000023841858,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 6,
+              "stat_name": "AttackSpeed",
+              "type": 0,
+              "value": 0.2290000021457672,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 28,
+              "stat_name": "DamageArcane",
+              "type": 0,
+              "value": 1.100000023841858,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 35,
+              "stat_name": "ManaOnKill",
+              "type": 0,
+              "value": 12.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            }
+          ],
+          "modifiers_complete": true,
+          "is_black_mist": false,
+          "read_evidence": {
+            "identity_verified": true,
+            "slot_verified": true,
+            "lock_verified": true,
+            "enum_values_verified": true,
+            "modifiers_complete": true,
+            "native_affixes_verified": true,
+            "snapshot_consistent": true
+          },
+          "item_uid": "fixture-uid-storage-34",
+          "instance_id": "fixture-instance-storage-34",
+          "locked": false
+        },
+        {
+          "container": "storage",
+          "slot_index": 189,
+          "internal_name": "LegendaryGloves6",
+          "name_key": "LegendaryGloves6",
+          "is_equipment": true,
+          "equip_slot": 9,
+          "modifiers": [
+            {
+              "stat": 8,
+              "stat_name": "Armor",
+              "type": 0,
+              "value": 733.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 6,
+              "stat_name": "AttackSpeed",
+              "type": 0,
+              "value": 0.23199999332427979,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 3,
+              "stat_name": "Damage",
+              "type": 0,
+              "value": 43.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 4,
+              "stat_name": "CritChance",
+              "type": 0,
+              "value": 0.09399999678134918,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 13,
+              "stat_name": "CooldownReduction",
+              "type": 0,
+              "value": 0.1289999932050705,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 15,
+              "stat_name": "GoldFind",
+              "type": 0,
+              "value": 0.29899999499320984,
+              "source": "generated_modifiers",
+              "display_unit": null
+            }
+          ],
+          "modifiers_complete": true,
+          "is_black_mist": false,
+          "read_evidence": {
+            "identity_verified": true,
+            "slot_verified": true,
+            "lock_verified": true,
+            "enum_values_verified": true,
+            "modifiers_complete": true,
+            "native_affixes_verified": true,
+            "snapshot_consistent": true
+          },
+          "item_uid": "fixture-uid-storage-189",
+          "instance_id": "fixture-instance-storage-189",
+          "locked": false
+        },
+        {
+          "container": "storage",
+          "slot_index": 192,
+          "internal_name": "LegendaryGloves6",
+          "name_key": "LegendaryGloves6",
+          "is_equipment": true,
+          "equip_slot": 9,
+          "modifiers": [
+            {
+              "stat": 8,
+              "stat_name": "Armor",
+              "type": 0,
+              "value": 774.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 3,
+              "stat_name": "Damage",
+              "type": 0,
+              "value": 46.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 5,
+              "stat_name": "CritDamage",
+              "type": 0,
+              "value": 0.9279999732971191,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 1,
+              "stat_name": "Dexterity",
+              "type": 0,
+              "value": 77.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 14,
+              "stat_name": "MaxMana",
+              "type": 0,
+              "value": 77.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 16,
+              "stat_name": "MagicFind",
+              "type": 0,
+              "value": 0.3089999854564667,
+              "source": "generated_modifiers",
+              "display_unit": null
+            }
+          ],
+          "modifiers_complete": true,
+          "is_black_mist": false,
+          "read_evidence": {
+            "identity_verified": true,
+            "slot_verified": true,
+            "lock_verified": true,
+            "enum_values_verified": true,
+            "modifiers_complete": true,
+            "native_affixes_verified": true,
+            "snapshot_consistent": true
+          },
+          "item_uid": "fixture-uid-storage-192",
+          "instance_id": "fixture-instance-storage-192",
+          "locked": false
+        },
+        {
+          "container": "storage",
+          "slot_index": 194,
+          "internal_name": "LegendaryGloves5",
+          "name_key": "LegendaryGloves5",
+          "is_equipment": true,
+          "equip_slot": 9,
+          "modifiers": [
+            {
+              "stat": 8,
+              "stat_name": "Armor",
+              "type": 0,
+              "value": 695.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 5,
+              "stat_name": "CritDamage",
+              "type": 0,
+              "value": 0.7509999871253967,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 3,
+              "stat_name": "Damage",
+              "type": 0,
+              "value": 35.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 13,
+              "stat_name": "CooldownReduction",
+              "type": 0,
+              "value": 0.13600000739097595,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 1,
+              "stat_name": "Dexterity",
+              "type": 0,
+              "value": 75.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 35,
+              "stat_name": "ManaOnKill",
+              "type": 0,
+              "value": 14.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            }
+          ],
+          "modifiers_complete": true,
+          "is_black_mist": false,
+          "read_evidence": {
+            "identity_verified": true,
+            "slot_verified": true,
+            "lock_verified": true,
+            "enum_values_verified": true,
+            "modifiers_complete": true,
+            "native_affixes_verified": true,
+            "snapshot_consistent": true
+          },
+          "item_uid": "fixture-uid-storage-194",
+          "instance_id": "fixture-instance-storage-194",
+          "locked": false
+        },
+        {
+          "container": "storage",
+          "slot_index": 205,
+          "internal_name": "LegendaryChestArmor2",
+          "name_key": "LegendaryChestArmor2",
+          "is_equipment": true,
+          "equip_slot": 3,
+          "modifiers": [
+            {
+              "stat": 8,
+              "stat_name": "Armor",
+              "type": 0,
+              "value": 756.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 7,
+              "stat_name": "MaxHealth",
+              "type": 0,
+              "value": 615.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 44,
+              "stat_name": "ArmorPercent",
+              "type": 0,
+              "value": 0.27399998903274536,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 39,
+              "stat_name": "Thorns",
+              "type": 0,
+              "value": 115.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 42,
+              "stat_name": "MaxHealthPercent",
+              "type": 0,
+              "value": 0.28200000524520874,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 15,
+              "stat_name": "GoldFind",
+              "type": 0,
+              "value": 0.2800000011920929,
+              "source": "generated_modifiers",
+              "display_unit": null
+            }
+          ],
+          "modifiers_complete": true,
+          "is_black_mist": false,
+          "read_evidence": {
+            "identity_verified": true,
+            "slot_verified": true,
+            "lock_verified": true,
+            "enum_values_verified": true,
+            "modifiers_complete": true,
+            "native_affixes_verified": true,
+            "snapshot_consistent": true
+          },
+          "item_uid": "fixture-uid-storage-205",
+          "instance_id": "fixture-instance-storage-205",
+          "locked": false
+        },
+        {
+          "container": "storage",
+          "slot_index": 240,
+          "internal_name": "LegendaryGloves2",
+          "name_key": "LegendaryGloves2",
+          "is_equipment": true,
+          "equip_slot": 9,
+          "modifiers": [
+            {
+              "stat": 8,
+              "stat_name": "Armor",
+              "type": 0,
+              "value": 774.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 13,
+              "stat_name": "CooldownReduction",
+              "type": 0,
+              "value": 0.1550000011920929,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 6,
+              "stat_name": "AttackSpeed",
+              "type": 0,
+              "value": 0.23199999332427979,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 3,
+              "stat_name": "Damage",
+              "type": 0,
+              "value": 46.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 4,
+              "stat_name": "CritChance",
+              "type": 0,
+              "value": 0.12399999797344208,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 35,
+              "stat_name": "ManaOnKill",
+              "type": 0,
+              "value": 15.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            }
+          ],
+          "modifiers_complete": true,
+          "is_black_mist": false,
+          "read_evidence": {
+            "identity_verified": true,
+            "slot_verified": true,
+            "lock_verified": true,
+            "enum_values_verified": true,
+            "modifiers_complete": true,
+            "native_affixes_verified": true,
+            "snapshot_consistent": true
+          },
+          "item_uid": "fixture-uid-storage-240",
+          "instance_id": "fixture-instance-storage-240",
+          "locked": false
+        },
+        {
+          "container": "storage",
+          "slot_index": 241,
+          "internal_name": "LegendaryGloves5",
+          "name_key": "LegendaryGloves5",
+          "is_equipment": true,
+          "equip_slot": 9,
+          "modifiers": [
+            {
+              "stat": 8,
+              "stat_name": "Armor",
+              "type": 0,
+              "value": 702.0,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 5,
+              "stat_name": "CritDamage",
+              "type": 0,
+              "value": 0.7059999704360962,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 6,
+              "stat_name": "AttackSpeed",
+              "type": 0,
+              "value": 0.22599999606609344,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 13,
+              "stat_name": "CooldownReduction",
+              "type": 0,
+              "value": 0.15199999511241913,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 4,
+              "stat_name": "CritChance",
+              "type": 0,
+              "value": 0.1120000034570694,
+              "source": "generated_modifiers",
+              "display_unit": null
+            },
+            {
+              "stat": 16,
+              "stat_name": "MagicFind",
+              "type": 0,
+              "value": 0.23100000619888306,
+              "source": "generated_modifiers",
+              "display_unit": null
+            }
+          ],
+          "modifiers_complete": true,
+          "is_black_mist": false,
+          "read_evidence": {
+            "identity_verified": true,
+            "slot_verified": true,
+            "lock_verified": true,
+            "enum_values_verified": true,
+            "modifiers_complete": true,
+            "native_affixes_verified": true,
+            "snapshot_consistent": true
+          },
+          "item_uid": "fixture-uid-storage-241",
+          "instance_id": "fixture-instance-storage-241",
+          "locked": false
+        }
+      ],
+      "slots_complete": true,
+      "complete": true,
+      "occupied_count": 7,
+      "slot_count": 250
+    }
+  }
+}

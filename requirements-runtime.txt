@@ -1,0 +1,5 @@
+# Local web UI and game service use Python 3.10+ standard library.
+# tkinter is used only by the legacy UI; the exe launcher uses a Windows dialog.
+# Frida was an abandoned diagnostic experiment and is not used by the app.
+pywebview==6.2.1
+pythonnet==3.1.0

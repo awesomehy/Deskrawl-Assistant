@@ -17,7 +17,9 @@ Windows x64 装备筛选工具，当前版本 **v1.1.2**。使用 WebView2 独�
 
 ## 使用与数据保存
 
-已构建的 Windows 包位于本地 `release/Deskrawl装备助手-v1.1.2-Windows64.zip`。解压后双击 exe 即可打开窗体，无需安装 Python；缺少 WebView2 时，运行发行包内的微软安装程序。
+在 [GitHub Releases](https://github.com/awesomehy/Deskrawl-Assistant/releases) 下载打包好的程序，推荐使用 [v1.1.2](https://github.com/awesomehy/Deskrawl-Assistant/releases/tag/v1.1.2) 的 exe。直接双击即可打开窗体，无需安装 Python。页面每个版本只上传 exe，并提供更新记录；缺少 WebView2 时，可使用[微软官方安装程序](https://go.microsoft.com/fwlink/p/?LinkId=2124703)联网安装。
+
+历史版本 v1.1.0、v1.1.1 提供原始发布程序；这两个标签只保存发行说明和校验清单，没有对应构建时的完整源码快照。当前完整源码对应 v1.1.2。
 
 发行版规则与日志保存在 `%LOCALAPPDATA%\Deskrawl装备助手\`，移动或更新 exe 后仍保留。源代码版保存到工作目录的 `config/` 和 `data/runtime/`，这些个人文件不纳入仓库。全新启动没有任何启用的筛选规则。
 

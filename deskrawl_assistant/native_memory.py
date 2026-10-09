@@ -64,6 +64,10 @@ class MemoryReadError(RuntimeError):
     pass
 
 
+class SnapshotChangedError(MemoryReadError):
+    """The live game changed a verified object while it was being copied."""
+
+
 def game_pids():
     snapshot = K.CreateToolhelp32Snapshot(2, 0)
     if snapshot == C.c_void_p(-1).value:

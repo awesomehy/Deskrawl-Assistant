@@ -27,6 +27,9 @@ data/*
 !data/runtime-type-hints.json
 !data/ui-runtime-hints.json
 !data/transfer-extra-types.json
+!data/container-transfer-types.json
+!data/carriage-types.json
+!data/item-ui.json
 
 # The Microsoft bootstrapper is fetched separately before packaging.
 packaging/*.exe
@@ -38,6 +41,7 @@ tools/*
 !tools/runtime_probe.py
 !tools/extract_catalog.py
 !tools/extract_equipment_ui.py
+!tools/extract_item_ui.py
 !tools/inspect_affix_groups.py
 !tools/inspect_runtime_types.py
 !tools/inspect_install.py
@@ -47,4 +51,5 @@ tools/*
 
 docs/*
 !docs/版本记录.md
+!docs/1.1.3验收说明.md
 !docs/screenshots/

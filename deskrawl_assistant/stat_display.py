@@ -2,7 +2,7 @@
 
 Supported-build native evidence:
 EquipmentTooltipAttributeUI.hnn/hnl: percentage StatType bit mask, x100,
-one decimal; flat affixes use zero decimals. gi.dpb: upgrade distribution
+one decimal; flat affixes use zero decimals. gj.dqd: upgrade distribution
 over the ORIGINAL modifier array, including headline and secondary records.
 """
 from decimal import Decimal, ROUND_HALF_UP, localcontext, InvalidOperation
@@ -23,7 +23,7 @@ def _single(value):
 
 
 def upgraded_value(value, index, count, level, rarity):
-    """Mirror gi.dpb (RVA 0x773ca0) without invoking any game function."""
+    """Mirror 1.0.2 gj.dqd (RVA 0x78c620) without game function invocation."""
     if value is None:
         return None
     value = _single(value)

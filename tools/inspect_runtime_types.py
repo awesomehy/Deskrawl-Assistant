@@ -21,7 +21,7 @@ from pathlib import Path
 import struct
 
 
-METADATA_HASH = "c1bebda964147ef5511f559162cc10ec3abf1c65ab0ece930396d1db39c90e05"
+METADATA_HASH = "2c0ae47e1ee26b6c787d5294f04680b6b875d84e8d5f6db1e574446892e3f2ad"
 PRIMITIVES = {
     1: "System.Void", 2: "System.Boolean", 3: "System.Char", 4: "System.SByte",
     5: "System.Byte", 6: "System.Int16", 7: "System.UInt16", 8: "System.Int32",
@@ -30,7 +30,7 @@ PRIMITIVES = {
     24: "System.IntPtr", 25: "System.UIntPtr", 28: "System.Object",
 }
 SELECTED = {
-    "Inventory", "InventorySlot", "Storage", "GeneratedItemData", "ItemData",
+    "Inventory", "InventorySlot", "Storage", "GeneratedItemData", "ItemData", "gj",
     "StatModifier", "LeveledStatModifier", "SaveSystem", "SaveData", "SavedSlot",
     "SavedRegistryEntry", "SavedStatModifier", "SavedStash", "SaveContainer",
     "ObscuredFloat", "ObscuredInt", "ObscuredLong", "ObscuredString",
@@ -251,11 +251,11 @@ class Inspector:
                                      "preferredVa": f"0x{self.pe.va(self.registration_raw):X}",
                                      "preferredImageBase": f"0x{self.pe.base:X}"},
             "readPathHints": {
-                "inventory": {"class": "Inventory", "namespace": "", "singletonStaticField": "<nsl>k__BackingField",
-                              "slotsInstanceField": "<nso>k__BackingField", "slotsType": "InventorySlot[]"},
-                "storage": {"class": "Storage", "namespace": "", "singletonStaticField": "<nyh>k__BackingField",
-                            "slotsInstanceField": "<nyk>k__BackingField", "slotsType": "InventorySlot[]"},
-                "registry": {"class": "gi", "namespace": "", "dictionaryStaticField": "myk",
+                "inventory": {"class": "Inventory", "namespace": "", "singletonStaticField": "<nyh>k__BackingField",
+                              "slotsInstanceField": "<nyk>k__BackingField", "slotsType": "InventorySlot[]"},
+                "storage": {"class": "Storage", "namespace": "", "singletonStaticField": "<oed>k__BackingField",
+                            "slotsInstanceField": "<oeg>k__BackingField", "slotsType": "InventorySlot[]"},
+                "registry": {"class": "gj", "namespace": "", "dictionaryStaticField": "ndg",
                              "dictionaryType": "System.Collections.Generic.Dictionary`2<System.String, GeneratedItemData>",
                              "candidateKeySlotField": "ItemUid", "keyAssociationValidatedAtRuntime": False},
                 "modifiers": {"class": "GeneratedItemData", "field": "Modifiers", "type": "StatModifier[]",
@@ -263,7 +263,7 @@ class Inspector:
                               "valueType": "CodeStage.AntiCheat.ObscuredTypes.ObscuredFloat",
                               "randomAffixSourceValidated": False, "displayUnitValidated": False},
             },
-            "typeHints": [self.type_at(x) for x in (16050, 16051, 16335, 23998, 24033, 26360, 29828)],
+            "typeHints": [self.type_at(t['byvalTypeIndex']) for t in selected if t['name'] in SELECTED],
             "generatedItemDataReferences": references, "types": selected,
             "limitations": [
                 "Obfuscated method behavior and live instance identity remain unverified.",

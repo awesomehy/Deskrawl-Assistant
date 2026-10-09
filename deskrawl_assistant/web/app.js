@@ -7,6 +7,7 @@ let catalog, state, gearKey, draft, dirty=false, selectedClass=0, containerFilte
 let selectedItems=new Set(), itemSignature='', catalogSignature='', polling=false, toastTimer, exiting=false;
 const gearMap=new Map(), statMap=new Map();
 let lastRules='';
+let automationDraft=null, automationDirty=false, collectionSignature='';
 
 async function api(path,data,retry=true){
   const response=await fetch('/api/'+path,data===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Assistant-Token':token},body:JSON.stringify(data)});
@@ -102,7 +103,7 @@ function renderEditor(){
     <div class="editor-actions"><button id="delete-rule" class="text-button" ${draft.id?'':'hidden'}>删除规则</button><span class="spacer"></span><button id="reset-rule" class="button ghost">重置改动</button><button id="save-rule" class="button primary">${draft.id?'保存修改':'保存并应用'}</button></div>`;
   updateSummary();
 }
-function setDirty(value){dirty=value;if(desktopMode)api('window/draft',{dirty:value}).catch(()=>{});}
+function setDirty(value){dirty=value;if(desktopMode)api('window/draft',{dirty:dirty||automationDirty}).catch(()=>{});}
 function markDirty(){setDirty(true);$('draft-status').textContent='有未保存的改动';updateSummary();}
 function validation(){
   const gear=gearMap.get(gearKey),pool=catalog.pools[gear.slot];
@@ -136,48 +137,102 @@ async function saveRule(){
     setDirty(false);draft.id=result.rule.id;await pollState();renderEditor();toast(draft.enabled?'规则已保存并启用':'规则已保存，当前停用');
   }catch(error){toast(error.message,true);updateSummary();}
 }
-function scopedItems(){const scope=$('action-scope').value;return state.items.filter(i=>scope==='all'||i.container===scope);}
+function scopedItems(){const scope=$('action-scope').value;return state.items.filter(i=>i.is_equipment&&(scope==='all'||i.container===scope));}
 function visibleItems(){
-  const query=$('item-search').value.trim().toLowerCase(),lock=$('lock-filter').value;
+  const query=$('item-search').value.trim().toLowerCase(),lock=$('lock-filter').value,kind=$('kind-filter').value;
   return (state?.items||[]).filter(i=>(!containerFilter||i.container===containerFilter)&&
-    (!query||(i.name+' '+(gearMap.get(i.name_key)?.en||'')).toLowerCase().includes(query))&&
-    (!lock||(lock==='locked'?i.locked===true:lock==='unlocked'?i.locked===false:i.matches)));
+    (!kind||i.kind===kind)&&(!query||(i.name+' '+(gearMap.get(i.name_key)?.en||'')).toLowerCase().includes(query))&&
+    (!lock||(i.is_equipment&&(lock==='locked'?i.locked===true:lock==='unlocked'?i.locked===false:i.matches))));
 }
 function resultBadge(item){
+  if(!item.is_equipment)return '<span class="badge miss">—</span>';
   return item.matches?'<span class="badge match">符合规则</span>':item.review?'<span class="badge review">待核验</span>':'<span class="badge miss">未命中</span>';
 }
 function renderInventory(){
   if(!state)return;
   const view=visibleItems();
-  selectedItems=new Set([...selectedItems].filter(id=>state.items.some(i=>i.instance_id===id&&i.locked===false)));
-  $('visible-count').textContent=`${view.length} 件装备`;
+  selectedItems=new Set([...selectedItems].filter(id=>state.items.some(i=>i.selection_id===id)));
+  $('visible-count').textContent=`${view.length} 组物品`;
   const signature=JSON.stringify([view,detailId,[...selectedItems]]);
   if(signature!==itemSignature){
     itemSignature=signature;
-    $('item-rows').innerHTML=view.map(i=>`<tr data-item="${esc(i.instance_id)}" class="${i.instance_id===detailId?'active':''}" tabindex="0">
-      <td><input type="checkbox" data-item-select="${esc(i.instance_id)}" aria-label="选择${esc(i.name)}" ${selectedItems.has(i.instance_id)?'checked':''} ${i.locked!==false?'disabled':''}></td>
+    $('item-rows').innerHTML=view.map(i=>`<tr data-item="${esc(i.selection_id)}" class="${i.selection_id===detailId?'active':''}" tabindex="0">
+      <td><input type="checkbox" data-item-select="${esc(i.selection_id)}" aria-label="选择${esc(i.name)}" ${selectedItems.has(i.selection_id)?'checked':''} ${!i.selection_id?'disabled':''}></td>
       <td><div class="item-name">${i.icon?`<img src="${esc(i.icon)}" alt="">`:''}<div><strong>${esc(i.name)}</strong><small>${esc(i.slot_label)}</small></div></div></td>
-      <td>${i.container==='inventory'?'背包':'仓库'} · ${Number(i.slot_index)+1}</td><td>${esc(i.level)}${i.upgrade?` <small>+${i.upgrade}</small>`:''}</td>
+      <td>${i.container==='inventory'?'背包':'仓库'} · ${Number(i.slot_index)+1}</td><td>${esc(i.count)}</td><td>${esc(i.level??'—')}${i.upgrade?` <small>+${i.upgrade}</small>`:''}</td>
       <td><span class="badge ${i.locked?'locked':'unlocked'}">${i.locked===true?'已锁定':i.locked===false?'未锁定':'未确认'}</span></td><td>${resultBadge(i)}</td></tr>`).join('');
     $('inventory-empty').hidden=view.length>0;
-    $('inventory-empty').textContent=state.connected?'当前筛选条件下没有装备':'连接游戏，查看背包和仓库装备';
+    $('inventory-empty').textContent=state.connected?'当前筛选条件下没有物品':'连接游戏，查看背包和仓库物品';
     renderDetail();
   }
-  const available=view.filter(i=>i.locked===false);
-  $('select-visible').checked=available.length>0&&available.every(i=>selectedItems.has(i.instance_id));
-  $('select-visible').indeterminate=available.some(i=>selectedItems.has(i.instance_id))&&!$('select-visible').checked;
+  const available=view.filter(i=>i.selection_id);
+  $('select-visible').checked=available.length>0&&available.every(i=>selectedItems.has(i.selection_id));
+  $('select-visible').indeterminate=available.some(i=>selectedItems.has(i.selection_id))&&!$('select-visible').checked;
   $('select-visible').disabled=!available.length;
-  $('selected-count').textContent=selectedItems.size;
+  $('selected-count').textContent=state.items.filter(i=>selectedItems.has(i.selection_id)&&i.is_equipment&&i.locked===false).length;
+  $('transfer-selection').textContent=selectedItems.size?`已选 ${selectedItems.size} 组物品`:'勾选物品后移动';
   updateControls();
 }
 function renderDetail(){
-  const item=state.items.find(i=>i.instance_id===detailId);
-  if(!item){$('item-detail').innerHTML='<div class="empty-state">点击装备查看词条与筛选结果</div>';return;}
+  const item=state.items.find(i=>i.selection_id===detailId);
+  if(!item){$('item-detail').innerHTML='<div class="empty-state">点击物品查看详情</div>';return;}
+  const moveButton=`<button class="button detail-move" data-move-item="${esc(item.selection_id)}" data-target="${item.container==='inventory'?'storage':'inventory'}" ${!item.movable||state.busy?'disabled':''}>${item.container==='inventory'?'移入仓库':'取回背包'}</button>`;
+  if(!item.is_equipment){$('item-detail').innerHTML=`<div class="detail-title">${item.icon?`<img src="${esc(item.icon)}" alt="">`:`<div class="item-placeholder">${esc(item.kind_label[0])}</div>`}<div><h3>${esc(item.name)}</h3><small>${esc(item.kind_label)}</small></div></div><div class="detail-meta">数量 ${esc(item.count)} · ${item.container==='inventory'?'背包':'仓库'}第 ${Number(item.slot_index)+1} 格</div>${renderEffects(item)}<p class="detail-hint">${esc(item.effect_note||'')}</p><p class="detail-hint">${item.kind==='gem'?`同种同等级宝石优先堆叠${item.max_stack>1?`，每组最多 ${esc(item.max_stack)} 颗`:''}，剩余数量放入空格。`:'整组移动到目标空格，保留原有数量。'}不参与装备词条筛选。</p>${moveButton}`;return;}
   $('item-detail').innerHTML=`<div class="detail-title">${item.icon?`<img src="${esc(item.icon)}" alt="">`:''}<div><h3>${esc(item.name)}</h3><small>${esc(item.slot_label)} · ${esc(classesLabel(item.class_mask))}</small></div></div>
     <div class="detail-meta"><span>物品等级 ${esc(item.level)}</span><span>强化 +${esc(item.upgrade??0)}</span></div>
     ${['base','primary','secondary','unknown'].map(g=>{const values=item.groups[g]||[];return values.length?`<div class="detail-group"><h4>${{base:'基础属性 · 不参与筛选',primary:'主词条',secondary:'副词条',unknown:'待核验词条'}[g]}</h4><div class="type-list">${values.map(v=>`<div class="affix-row ${v.matched?'matched':''}" data-affix-key="${esc(v.key)}" title="${esc(v.value_note||(v.matched?'命中规则：'+v.matched_rules.join('、'):''))}"><span class="affix-name">${esc(v.name)}</span><strong class="affix-value">${esc(v.display_value??'未读取')}</strong>${v.matched?'<small class="affix-hit" aria-label="命中规则">✓</small>':''}</div>`).join('')}</div></div>`:'';}).join('')}
     <p class="detail-hint">绿色为命中已启用规则的词条；整件装备是否达标见下方结果。数值包含已确认的装备强化。</p>
-    <div class="detail-rule">${resultBadge(item)}${item.reasons.map(r=>`<p>${esc(r)}</p>`).join('')}<button class="text-button" data-configure-item="${esc(item.name_key)}">配置这件装备的规则 →</button></div>`;
+    <div class="detail-rule">${resultBadge(item)}${item.reasons.map(r=>`<p>${esc(r)}</p>`).join('')}<button class="text-button" data-configure-item="${esc(item.name_key)}">配置这件装备的规则 →</button></div>${moveButton}`;
+}
+function renderEffects(item){
+  const plain=s=>String(s??'').replace(/<[^>]+>/g,'');
+  return (item.effect_groups||[]).map(g=>`<div class="detail-group item-effect"><h4>${esc(g.title)}</h4>${(g.values||[]).map(v=>`<div class="effect-row"><div><span>${esc(v.name)}</span><strong>${esc(v.display_value)}</strong></div>${v.growth?`<small>${esc(v.growth)}</small>`:''}</div>`).join('')}${(g.texts||[]).map(t=>`<p>${esc(plain(t))}</p>`).join('')}</div>`).join('');
+}
+function readAutomationForm(){
+  return {carriage:{enabled:$('auto-carriage').checked,items:[...automationDraft.carriage.items]},gems:{enabled:$('auto-gems').checked},pressure:{enabled:$('auto-pressure').checked,threshold:Number($('pressure-threshold').value),target_free:Number($('pressure-target').value),equipment_filter:$('pressure-filter').value}};
+}
+function markAutomationDirty(){
+  automationDraft=readAutomationForm();automationDirty=JSON.stringify(automationDraft)!==JSON.stringify(state.automation.settings);
+  setDirty(dirty);
+  $('automation-draft-state').textContent=automationDirty?'有未保存的设置':'设置已保存';
+  $('run-automation').disabled=!state.automation.running&&(!state.connected||state.busy||automationDirty||!Object.values(automationDraft).some(v=>v.enabled));
+}
+function filteredCollectionChoices(){
+  const query=$('carriage-search').value.trim().toLowerCase(),kind=$('carriage-kind').value;
+  return catalog.collectibles.filter(i=>(!kind||i.kind===kind)&&(!query||(i.name+' '+i.key).toLowerCase().includes(query)));
+}
+function setFilteredCollectionSelection(checked){
+  if(!automationDraft)return;
+  const choices=filteredCollectionChoices();if(!choices.length)return;
+  const selected=new Set(automationDraft.carriage.items);
+  choices.forEach(i=>checked?selected.add(i.key):selected.delete(i.key));
+  automationDraft.carriage.items=[...selected];
+  markAutomationDirty();renderCollectionChoices();
+}
+function renderCollectionChoices(){
+  if(!automationDraft)return;
+  const selected=new Set(automationDraft.carriage.items);
+  const choices=filteredCollectionChoices().sort((a,b)=>Number(selected.has(b.key))-Number(selected.has(a.key))||a.name.localeCompare(b.name,'zh-CN'));
+  const signature=JSON.stringify([choices,automationDraft.carriage.items]);
+  if(signature!==collectionSignature){collectionSignature=signature;$('carriage-choices').innerHTML=choices.map(i=>`<label><input type="checkbox" data-collect-key="${esc(i.key)}" ${selected.has(i.key)?'checked':''}><span>${esc(i.name)}</span><small>${{equipment:'装备',gem:'宝石',rune:'符文',chest:'宝箱',material:'其他'}[i.kind]}</small></label>`).join('')||'<p class="note">没有找到物品</p>';}
+  $('carriage-selected').textContent=`已选 ${selected.size} 种物品 · 显示 ${choices.length} 种`;
+  $('carriage-select-all').disabled=!choices.some(i=>!selected.has(i.key));
+  $('carriage-select-none').disabled=!choices.some(i=>selected.has(i.key));
+}
+function renderAutomation(){
+  const a=state.automation;if(!a)return;
+  if(!automationDraft||(!automationDirty&&JSON.stringify(automationDraft)!==JSON.stringify(a.settings))){
+    automationDraft=JSON.parse(JSON.stringify(a.settings));$('auto-carriage').checked=automationDraft.carriage.enabled;$('auto-gems').checked=automationDraft.gems.enabled;$('auto-pressure').checked=automationDraft.pressure.enabled;$('pressure-threshold').value=automationDraft.pressure.threshold;$('pressure-target').value=automationDraft.pressure.target_free;$('pressure-filter').value=automationDraft.pressure.equipment_filter;renderCollectionChoices();
+  }
+  $('automation-summary').textContent=(a.running?'运行中':'已暂停')+' · 点击配置';
+  $('automation-summary').classList.toggle('running',a.running);
+  $('automation-status').textContent=a.status;
+  const carriage=a.carriage||{};
+  $('carriage-state').textContent=!state.connected?'连接后读取马车':carriage.available?`当前马车 ${carriage.count} 组：${carriage.items.map(i=>i.name+' ×'+i.count).join('、')||'暂无物品'}`:carriage.reason||'当前场景没有马车';
+  $('run-automation').textContent=a.running?'暂停自动整理':'启动自动整理';
+  $('run-automation').disabled=!a.running&&(!state.connected||state.busy||automationDirty||!Object.values(automationDraft).some(v=>v.enabled));
+  $('save-automation').disabled=!automationDirty;
+  $('automation-draft-state').textContent=automationDirty?'有未保存的设置':'设置已保存';
 }
 function updateControls(){
   if(!state)return;
@@ -186,15 +241,17 @@ function updateControls(){
   $('disconnect').hidden=!state.connected;$('disconnect').disabled=state.busy;
   $('refresh').disabled=!state.connected||state.busy;
   $('unlock-all').disabled=!available||!scopedItems().some(i=>i.locked===true);
-  $('lock-selected').disabled=!available||!selectedItems.size;
+  $('lock-selected').disabled=!available||!state.items.some(i=>selectedItems.has(i.selection_id)&&i.is_equipment&&i.locked===false);
+  for(const target of ['storage','inventory']){const items=state.items.filter(i=>selectedItems.has(i.selection_id)&&i.container!==target);$('move-'+target+'-count').textContent=items.length;$('move-'+target).disabled=!available||!state.transfer?.available||!items.length||items.some(i=>!i.movable);}
+  $('transfer-hint').textContent=state.connected&&!state.transfer?.available?(state.transfer?.reason||'移动条件尚未核验，请刷新物品。'):'优先堆叠同种同等级宝石；满堆后使用已开放的空格。';
   $('lock-rules').disabled=!available||!enabled;
   $('lock-rules').title=enabled?'按已启用规则处理批量范围内的装备':'请先在规则页保存并启用至少一条规则';
   $('export-items').disabled=!state.items.length;
   $('monitor-switch').disabled=!state.connected||(!state.monitoring&&(state.busy||!state.complete||!enabled));
   $('monitor-switch').title=!state.connected?'请先连接游戏':!enabled?'请先保存并启用至少一条规则':'监控背包和仓库里的新增装备';
   $('monitor-switch').classList.toggle('on',state.monitoring);$('monitor-switch').setAttribute('aria-checked',state.monitoring);
-  $('stop').hidden=!state.busy&&!state.monitoring;
-  $('monitor-badge').hidden=!state.monitoring;
+  $('stop').hidden=!state.busy&&!state.monitoring&&!state.automation?.running;
+  $('monitor-badge').hidden=!state.monitoring&&!state.automation?.running;
 }
 function renderState(){
   const connection=$('connection-state');connection.className='status-pill'+(state.connected?' online':'')+(state.busy?' busy':'');
@@ -209,14 +266,14 @@ function renderState(){
     const counts=state.counts[c];$(c+'-count').textContent=counts?counts.equipment:'—';
     $(c+'-capacity').textContent=counts?`物品占用 ${counts.occupied} / ${counts.capacity} 格`:'连接后读取';
   }
-  $('locked-count').textContent=state.items.length?state.items.filter(i=>i.locked===true).length:'—';
+  $('locked-count').textContent=state.items.length?state.items.filter(i=>i.is_equipment&&i.locked===true).length:'—';
   $('match-count').textContent=state.items.length?state.items.filter(i=>i.matches&&i.locked===false).length:'—';
   $('progress-wrap').hidden=!state.busy||!state.progress;
   if(state.progress){$('operation-progress').max=Math.max(1,state.progress.total);$('operation-progress').value=state.progress.done;$('progress-label').textContent=`${state.progress.done} / ${state.progress.total}`;}
   $('history-list').innerHTML=state.history.length?state.history.map(h=>`<div><time>${esc(h.time)}</time><span>${esc(h.text)}</span></div>`).join(''):'<div class="note">尚无操作记录</div>';
   const rulesSignature=JSON.stringify(state.rules);
   if(rulesSignature!==lastRules){lastRules=rulesSignature;renderCatalog();if(gearKey&&!dirty){const r=rulesFor(gearKey).find(r=>r.id===draft?.id);if(r){draft=makeDraft(r);renderEditor();}}}
-  renderInventory();updateControls();
+  renderInventory();updateControls();renderAutomation();
 }
 async function pollState(){
   if(polling||exiting)return;
@@ -271,26 +328,34 @@ $('import-file').addEventListener('change',async e=>{
 $('export-rules').addEventListener('click',()=>download('export/rules','Deskrawl筛选规则.json'));
 $('export-items').addEventListener('click',()=>download('export/items','Deskrawl装备清单.json'));
 $('container-filter').addEventListener('click',e=>{const button=e.target.closest('[data-container]');if(!button)return;containerFilter=button.dataset.container;document.querySelectorAll('[data-container]').forEach(b=>b.classList.toggle('selected',b===button));renderInventory();});
-$('item-search').addEventListener('input',renderInventory);$('lock-filter').addEventListener('change',renderInventory);$('action-scope').addEventListener('change',updateControls);
+$('item-search').addEventListener('input',renderInventory);$('lock-filter').addEventListener('change',renderInventory);$('kind-filter').addEventListener('change',renderInventory);$('action-scope').addEventListener('change',updateControls);
 $('item-rows').addEventListener('change',e=>{const id=e.target.dataset.itemSelect;if(!id)return;if(e.target.checked)selectedItems.add(id);else selectedItems.delete(id);renderInventory();});
 $('item-rows').addEventListener('click',e=>{if(e.target.matches('input'))return;const row=e.target.closest('[data-item]');if(row){detailId=row.dataset.item;renderInventory();}});
 $('item-rows').addEventListener('keydown',e=>{if(e.target.matches('input')||!['Enter',' '].includes(e.key))return;const row=e.target.closest('[data-item]');if(row){e.preventDefault();detailId=row.dataset.item;renderInventory();}});
-$('select-visible').addEventListener('change',e=>{visibleItems().filter(i=>i.locked===false).forEach(i=>e.target.checked?selectedItems.add(i.instance_id):selectedItems.delete(i.instance_id));renderInventory();});
-$('item-detail').addEventListener('click',async e=>{const button=e.target.closest('[data-configure-item]');if(button&&gearMap.has(button.dataset.configureItem)){await chooseGear(button.dataset.configureItem);switchTab('rules');}});
-$('lock-selected').addEventListener('click',()=>action('lock_selected',{items:state.items.filter(i=>selectedItems.has(i.instance_id)).map(i=>({item_uid:i.item_uid,instance_id:i.instance_id,name_key:i.name_key}))}));
+$('select-visible').addEventListener('change',e=>{visibleItems().filter(i=>i.selection_id).forEach(i=>e.target.checked?selectedItems.add(i.selection_id):selectedItems.delete(i.selection_id));renderInventory();});
+for(const target of ['storage','inventory'])$('move-'+target).addEventListener('click',()=>action('move_items',{target,items:state.items.filter(i=>selectedItems.has(i.selection_id)&&i.container!==target).map(i=>i.selection_id)}));
+$('item-detail').addEventListener('click',async e=>{const move=e.target.closest('[data-move-item]');if(move){await action('move_items',{target:move.dataset.target,items:[move.dataset.moveItem]});return;}const button=e.target.closest('[data-configure-item]');if(button&&gearMap.has(button.dataset.configureItem)){await chooseGear(button.dataset.configureItem);switchTab('rules');}});
+$('lock-selected').addEventListener('click',()=>action('lock_selected',{items:state.items.filter(i=>selectedItems.has(i.selection_id)&&i.is_equipment&&i.locked===false).map(i=>({item_uid:i.item_uid,instance_id:i.instance_id,name_key:i.name_key}))}));
 $('lock-rules').addEventListener('click',()=>action('lock_rules'));
 $('unlock-all').addEventListener('click',async()=>{
   const count=scopedItems().filter(i=>i.locked===true).length,scope=$('action-scope').selectedOptions[0].text;
   if(await confirmAction(`全部解锁 · ${scope}`,`将解锁此范围内的 ${count} 件已锁装备。解锁后，它们可被游戏出售或分解。\n持续监控将自动关闭。`,'解锁这 '+count+' 件装备'))action('unlock_all');
 });
 $('monitor-switch').addEventListener('click',async()=>{try{await api('monitor',{enabled:!state.monitoring});await pollState();}catch(error){toast(error.message,true);}});
+$('automation-panel').addEventListener('change',e=>{const key=e.target.dataset.collectKey;if(key){const selected=new Set(automationDraft.carriage.items);e.target.checked?selected.add(key):selected.delete(key);automationDraft.carriage.items=[...selected];}if(e.target.id==='carriage-kind'){renderCollectionChoices();return;}markAutomationDirty();renderCollectionChoices();});
+$('carriage-search').addEventListener('input',renderCollectionChoices);
+$('carriage-select-all').addEventListener('click',()=>setFilteredCollectionSelection(true));
+$('carriage-select-none').addEventListener('click',()=>setFilteredCollectionSelection(false));
+for(const id of ['pressure-threshold','pressure-target'])$(id).addEventListener('input',markAutomationDirty);
+$('save-automation').addEventListener('click',async()=>{try{const result=await api('automation/settings',{settings:readAutomationForm()});automationDraft=result.settings;automationDirty=false;setDirty(dirty);await pollState();toast('自动整理设置已保存');}catch(error){toast(error.message,true);}});
+$('run-automation').addEventListener('click',async()=>{try{await api('automation/run',{enabled:!state.automation.running});await pollState();}catch(error){toast(error.message,true);}});
 $('stop').addEventListener('click',async()=>{try{await api('stop',{});await pollState();}catch(error){toast(error.message,true);}});
 $('history-toggle').addEventListener('click',()=>$('history-list').hidden=!$('history-list').hidden);
 $('exit').addEventListener('click',async()=>{
-  if(dirty&&!await confirmAction('退出助手？','当前配置还未保存。退出将放弃改动，并停止持续监控。','退出',false))return;
+  if((dirty||automationDirty)&&!await confirmAction('退出助手？','当前配置还未保存。退出将放弃改动，并停止持续监控和自动整理。','退出',false))return;
   try{await api('shutdown',{});exiting=true;document.body.innerHTML='<div class="empty-state"><h2>助手已退出</h2><p class="note">持续监控已停止。可关闭此页面，或双击启动文件重新打开。</p></div>';}catch(error){toast(error.message,true);}
 });
-window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
+window.addEventListener('beforeunload',e=>{if(dirty||automationDirty){e.preventDefault();e.returnValue='';}});
 async function boot(){
   if(desktopMode)$('usage-note').textContent='监控只自动处理新增装备；已有装备请用“一键按规则锁定”。最小化窗口可继续监控，关闭窗口会退出助手并停止监控。';
   try{catalog=await api('catalog');buildCatalog();await pollState();const first=state.rules[0]?.equipment_keys[0]||'LegendaryBelt3';if(first)await chooseGear(first);setInterval(pollState,1000);}catch(error){toast(error.message,true);}

@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import threading
+import time
 from typing import Any
 from .paths import runtime_dir
 
@@ -64,7 +65,15 @@ class RuntimeClient:
                 return {"registry_count": len(records), "backend": "external_read_only"}
             if name == "hover":
                 return self._reader.hovered_inventory()
-            return self._reader.snapshot((args[0] if args else {}).get("maxItems", 2048))
+            from .native_memory import SnapshotChangedError
+            max_items = (args[0] if args else {}).get("maxItems", 2048)
+            for attempt in range(3):
+                try:
+                    return self._reader.snapshot(max_items)
+                except SnapshotChangedError:
+                    if attempt == 2:
+                        raise
+                    time.sleep(0.02)
 
     def snapshot(self, *, max_items: int = 2048, save: bool = True):
         if isinstance(max_items, bool) or not isinstance(max_items, int) or not 1 <= max_items <= 8192:
@@ -90,12 +99,31 @@ class RuntimeClient:
                 raise RuntimeConnectionError("尚未连接游戏。")
             return unlock_equipment(self._reader, expected, validate)
 
+    def move_items(self, expected, target, validate=lambda: True):
+        from .container_transfer import move_items
+        with self._guard:
+            if self._reader is None:
+                raise RuntimeConnectionError("尚未连接游戏。")
+            return move_items(self._reader, expected, target, validate)
+
     def close(self):
         with self._guard:
             reader, self._reader = self._reader, None
             self.pid = None
             if reader is not None:
                 reader.close()
+
+    def carriage_snapshot(self):
+        from .carriage_transfer import public_carriage
+        with self._guard:
+            if self._reader is None: raise RuntimeConnectionError('尚未连接游戏。')
+            return public_carriage(self._reader)
+
+    def collect_carriage(self,selection_id,validate=lambda:True):
+        from .carriage_transfer import collect_item
+        with self._guard:
+            if self._reader is None: raise RuntimeConnectionError('尚未连接游戏。')
+            return collect_item(self._reader,selection_id,validate)
 
     def __enter__(self):
         return self

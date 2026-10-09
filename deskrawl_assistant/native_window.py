@@ -90,7 +90,7 @@ def main(port=18741):
     webview.settings['OPEN_DEVTOOLS_IN_DEBUG'] = False
     host = AssistantServer(port)
     try:
-        window = webview.create_window('Deskrawl 装备助手',host.url+'?desktop=1',
+        window = webview.create_window('Deskrawl 装备助手 v1.1.3',host.url+'?desktop=1',
             width=1280,height=820,min_size=(980,680),resizable=True,
             background_color='#11151c',text_select=True,zoomable=False)
         hooks = WindowHooks(window,host.service)

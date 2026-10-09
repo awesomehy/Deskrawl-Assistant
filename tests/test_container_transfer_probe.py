@@ -32,7 +32,8 @@ class TransactionTests(unittest.TestCase):
         head[40]=1
         full=bytes(head)
         p.put(source,full); p.put(target,empty)
-        reader=SimpleNamespace(memory=p,classes={'InventorySlot':klass},module={'base':0x10000000},singleton=lambda name:save)
+        reader=SimpleNamespace(memory=p,classes={'InventorySlot':klass},module={'base':0x10000000},singleton=lambda name:save,
+            string=lambda uid:str(uid) if uid else None)
         tx=object.__new__(FrozenSlotTransaction)
         tx.reader=reader; tx.handle=123
         tx.write=p.put
@@ -47,7 +48,7 @@ class TransactionTests(unittest.TestCase):
         self.assertEqual(p.read(target,48),full)
         self.assertTrue(result['save_requested'])
         page=((target+32)>>12)&0x1fffff
-        self.assertTrue(p.u64(0x10000000+0x3c08200+(page>>6)*8)&(1<<(page&63)))
+        self.assertTrue(p.u64(0x10000000+0x3bda8e0+(page>>6)*8)&(1<<(page&63)))
         resume.assert_called_once()
 
     @patch('verify_container_transfer.NT.NtSuspendProcess',return_value=0)
@@ -133,6 +134,75 @@ class TransactionTests(unittest.TestCase):
         self.assertEqual(p.read(drop,216),bytes(header))
         self.assertEqual(p.read(target,48),empty)
         resume.assert_called_once()
+
+    @patch('verify_carriage_transfer.NT.NtSuspendProcess',return_value=0)
+    @patch('verify_carriage_transfer.NT.NtResumeProcess',return_value=0)
+    def test_carriage_gem_without_uid_preserves_stack_quantity(self,resume,suspend):
+        p,tx,source,target,full,empty=self.make()
+        drop,item,klass=0x700000,0x500000,0x800000
+        header=bytearray(216)
+        struct.pack_into('<Q',header,0,klass)
+        struct.pack_into('<Q',header,16,0x900000)
+        struct.pack_into('<Q',header,120,item)
+        struct.pack_into('<i',header,168,36)
+        p.put(drop,header)
+        p.put(item+32,struct.pack('<i',6))
+        tx.reader.classes['LootDrop']=klass
+        collector=object.__new__(FrozenCarriageTransaction)
+        collector.reader=tx.reader;collector.handle=123;collector.write=p.put
+        collector.collect(drop,bytes(header),target,empty,[])
+        self.assertEqual(p.u64(target+16),item)
+        self.assertEqual(p.i32(target+24),36)
+        self.assertEqual(p.u64(target+32),0)
+        self.assertEqual(p.read(drop+185,1),b'\1')
+        resume.assert_called_once()
+
+    @patch('verify_carriage_transfer.NT.NtSuspendProcess',return_value=0)
+    @patch('verify_carriage_transfer.NT.NtResumeProcess',return_value=0)
+    def test_carriage_already_collected_drop_cannot_be_claimed_twice(self,resume,suspend):
+        p,tx,source,target,full,empty=self.make()
+        drop,item,klass=0x700000,0x500000,0x800000
+        header=bytearray(216)
+        struct.pack_into('<Q',header,0,klass)
+        struct.pack_into('<Q',header,16,0x900000)
+        struct.pack_into('<Q',header,120,item)
+        struct.pack_into('<Q',header,136,0x600000)
+        struct.pack_into('<i',header,168,1)
+        header[185]=1
+        p.put(drop,header)
+        tx.reader.classes['LootDrop']=klass
+        collector=object.__new__(FrozenCarriageTransaction)
+        collector.reader=tx.reader;collector.handle=123;collector.write=p.put
+        with self.assertRaisesRegex(RuntimeError,'已经收取'):
+            collector.collect(drop,bytes(header),target,empty,[])
+        self.assertEqual(p.read(target,48),empty)
+        suspend.assert_not_called()
+
+    @patch('verify_carriage_transfer.NT.NtSuspendProcess',return_value=0)
+    @patch('verify_carriage_transfer.NT.NtResumeProcess',return_value=0)
+    def test_carriage_large_gem_group_can_split_without_losing_quantity(self,resume,suspend):
+        p,tx,source,target,full,empty=self.make()
+        drop,item,klass=0x700000,0x500000,0x800000
+        head=bytearray(216)
+        struct.pack_into('<Q',head,0,klass);struct.pack_into('<Q',head,16,0x900000)
+        struct.pack_into('<Q',head,120,item);struct.pack_into('<i',head,168,120)
+        p.put(drop,head);p.put(item+32,struct.pack('<i',6));p.put(target+0x10000,empty)
+        tx.reader.classes['LootDrop']=klass
+        collector=object.__new__(FrozenCarriageTransaction);collector.reader=tx.reader;collector.handle=123;collector.write=p.put
+        collector.collect_many(drop,bytes(head),[(target,empty,99),(target+0x10000,empty,21)],[])
+        self.assertEqual(p.i32(target+24)+p.i32(target+0x10000+24),120)
+        self.assertEqual(p.read(drop+185,1),b'\1');resume.assert_called_once()
+
+    @patch('verify_carriage_transfer.NT.NtSuspendProcess',return_value=0)
+    def test_carriage_quantity_mismatch_rejects_entire_batch(self,suspend):
+        p,tx,source,target,full,empty=self.make();drop=0x700000;head=bytearray(216)
+        struct.pack_into('<Q',head,0,0x800000);struct.pack_into('<Q',head,16,0x900000)
+        struct.pack_into('<Q',head,120,0x500000);struct.pack_into('<i',head,168,120)
+        p.put(drop,head);tx.reader.classes['LootDrop']=0x800000
+        collector=object.__new__(FrozenCarriageTransaction);collector.reader=tx.reader;collector.handle=123;collector.write=p.put
+        with self.assertRaisesRegex(RuntimeError,'数量与目标槽位不一致'):
+            collector.collect_many(drop,bytes(head),[(target,empty,99)],[])
+        self.assertEqual(p.read(target,48),empty);self.assertEqual(p.read(drop,216),bytes(head));suspend.assert_not_called()
 
 
 if __name__=='__main__': unittest.main()

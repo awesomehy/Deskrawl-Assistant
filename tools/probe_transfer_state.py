@@ -13,14 +13,10 @@ from deskrawl_assistant.native_memory import game_pids, MemoryReadError
 
 class TransferReader(native_reader.NativeReader):
     def _locate_classes(self):
-        evidence = json.loads((ROOT/'data/transfer-extra-types.json').read_text(encoding='utf-8'))
-        self.types.update({t['name']:t for t in evidence if t['name'] in {'HorseCarriage','LootDrop','GameManager','CarriageAutomation','LootManager'}})
-        original = native_reader.REQUIRED_CLASSES
-        native_reader.REQUIRED_CLASSES = original+('HorseCarriage','LootDrop','GameManager','CarriageAutomation','LootManager')
-        try:
-            super()._locate_classes()
-        finally:
-            native_reader.REQUIRED_CLASSES = original
+        evidence = json.loads((ROOT/'data/carriage-types.json').read_text(encoding='utf-8'))
+        self.types.update({t['name']:t for t in evidence})
+        self.required_classes = native_reader.REQUIRED_CLASSES+('HorseCarriage','LootDrop','GameManager')
+        super()._locate_classes()
 
     def list_objects(self,address,element):
         p=self.memory

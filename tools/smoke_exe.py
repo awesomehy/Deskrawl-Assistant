@@ -18,7 +18,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.1.2'
+NAME = 'Deskrawl装备助手-v1.1.3'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -32,7 +32,13 @@ def main():
     names = set(archive.toc)
     assert f'python{sys.version_info.major}{sys.version_info.minor}.dll' in names
     assert 'VCRUNTIME140.dll' in names or 'vcruntime140.dll' in names
-    assert len([n for n in names if n.startswith('deskrawl_assistant/web/icons/') or n.startswith('deskrawl_assistant\\web\\icons\\')]) == 209
+    normalized = {n.replace('\\','/'):n for n in names}
+    icons = {n for n in normalized if n.startswith('deskrawl_assistant/web/icons/')}
+    assert len(icons) == 444
+    item_ui = json.loads(archive.extract(normalized['data/item-ui.json']))
+    assert len(item_ui['items']) == 235
+    assert all('deskrawl_assistant/web'+i['icon'] in icons for i in item_ui['items'].values())
+    assert all(i['effect_groups'] for i in item_ui['items'].values())
     assert not any('lock-rules.json' in n or 'latest-snapshot.json' in n or 'assistant-actions.jsonl' in n for n in names)
     assert not any('frida' in n.lower() or 'unitypy' in n.lower() for n in names)
     assert any(n.replace('\\','/').endswith('webview/js/api.js') for n in names)
@@ -108,6 +114,7 @@ def main():
         start()
         assert not request('/api/state')['rules']
         assert not request('/api/state')['monitoring']
+        assert not request('/api/state')['automation']['running']
         report['checks'].append('空规则、监控默认关闭；独立 exe 在中文和空格路径正常启动')
         assert '__SESSION_TOKEN__' not in request('/').decode('utf-8')
         assert b'async function api' in request('/app.js')
@@ -118,6 +125,14 @@ def main():
         for item in catalog['equipment']:
             assert request(item['icon']).startswith(b'\x89PNG')
         report['checks'].append('页面脚本、样式、209 张装备图标与 52 件传说装备词典正常读取')
+        for item in item_ui['items'].values():
+            assert request(item['icon']).startswith(b'\x89PNG')
+        report['checks'].append('36 张宝石、199 张符文图标及效果说明全部内置并可读取')
+        settings = {'carriage':{'enabled':False,'items':['GemDiamond4']},'gems':{'enabled':True},
+                    'pressure':{'enabled':False,'threshold':4,'target_free':12,'equipment_filter':'all'}}
+        request('/api/automation/settings', {'settings':settings})
+        assert request('/api/state')['automation']['settings'] == settings
+        assert not request('/api/state')['automation']['running']
         rule = {'id':'packaging-disabled-rule','name':'打包验证（停用）', 'equipment_keys':['LegendaryBelt3'], 'enabled':False,
             'groups':{'primary':{'selected_stats':['Stats.CooldownReduction'],'operator':'>=','count':1}}, 'group_mode':'all'}
         request('/api/rule/save', rule)
@@ -165,8 +180,10 @@ def main():
         state = request('/api/state')
         assert len(state['rules']) == 1 and state['rules'][0]['enabled'] is False
         assert state['connected'] is False and state['monitoring'] is False
+        assert state['automation']['settings'] == settings and not state['automation']['running']
         assert token != old_token
         report['checks'].append('退出后重启仍保留规则；不会自动连接或开启监控')
+        report['checks'].append('自动整理选择与偏好重启后保留，仍默认暂停')
         assert (persistent / 'config/lock-rules.json').is_file()
         if args.connect_game:
             assert (persistent / 'data/runtime/latest-snapshot.json').is_file()

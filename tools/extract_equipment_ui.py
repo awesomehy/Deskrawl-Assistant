@@ -92,7 +92,7 @@ def main():
     if set(rows) != names: raise ValueError('Missing equipment: '+str(names-set(rows)))
     output = {'schema_version':1,'source':'Shipped ItemData assets; class bitmask and slot constants decoded from verified metadata.',
               'metadata_sha256':METADATA_HASH,'resources_sha256':source['source'].get('sha256'),
-              'sharedassets_sha256':'e138dbd25c30e7b9e6ada16e8398e6b80e6d8bfade84c84fc49d638ea04cce06',
+              'sharedassets_sha256':hashlib.sha256((root/'sharedassets0.assets').read_bytes()).hexdigest(),
               'enums':enums,'equipment':rows}
     (BASE / 'data/equipment-ui.json').write_text(json.dumps(output,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(json.dumps({'equipment':len(rows),'legendary':sum(k.startswith('Legendary') for k in rows),'enums':enums},ensure_ascii=False))

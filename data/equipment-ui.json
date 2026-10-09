@@ -1,8 +1,9 @@
 {
   "schema_version": 1,
   "source": "Shipped ItemData assets; class bitmask and slot constants decoded from verified metadata.",
-  "metadata_sha256": "c1bebda964147ef5511f559162cc10ec3abf1c65ab0ece930396d1db39c90e05",
-  "resources_sha256": "e32141208fdee6c88aabcc04f9a00ed63098698dedab5e2bf58198bd6d44621d",
+  "metadata_sha256": "2c0ae47e1ee26b6c787d5294f04680b6b875d84e8d5f6db1e574446892e3f2ad",
+  "resources_sha256": "ff823400ac4fa0a0b1d62034192604dc17da52d9b213f86b49085ac931750de0",
+  "sharedassets_sha256": "96687c2558329d3562d60b14fc9fab4a11ce557e3bed43c3f118cd2cfe03de21",
   "enums": {
     "HeroClass": {
       "None": 0,
@@ -43,8 +44,8 @@
       "rarity_value": 4,
       "icon": "/icons/DivineBack1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4846,
-      "sprite_path_id": 745,
+      "source_path_id": 4890,
+      "sprite_path_id": 770,
       "sprite_name": "divine_back1"
     },
     "LegendaryBack1": {
@@ -54,8 +55,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryBack1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4847,
-      "sprite_path_id": 808,
+      "source_path_id": 4891,
+      "sprite_path_id": 843,
       "sprite_name": "legendary_back1"
     },
     "LegendaryBack2": {
@@ -65,8 +66,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryBack2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4848,
-      "sprite_path_id": 835,
+      "source_path_id": 4892,
+      "sprite_path_id": 870,
       "sprite_name": "legendary_back2"
     },
     "LegendaryBack3": {
@@ -76,8 +77,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryBack3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4849,
-      "sprite_path_id": 1021,
+      "source_path_id": 4893,
+      "sprite_path_id": 1067,
       "sprite_name": "legendarycloak3_icon"
     },
     "RareBack1": {
@@ -87,8 +88,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareBack1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4850,
-      "sprite_path_id": 796,
+      "source_path_id": 4894,
+      "sprite_path_id": 831,
       "sprite_name": "cloak_03_brown"
     },
     "RareBack2": {
@@ -98,8 +99,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareBack2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4851,
-      "sprite_path_id": 824,
+      "source_path_id": 4895,
+      "sprite_path_id": 859,
       "sprite_name": "cloak_03_red"
     },
     "RareBack3": {
@@ -109,8 +110,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareBack3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4852,
-      "sprite_path_id": 689,
+      "source_path_id": 4896,
+      "sprite_path_id": 712,
       "sprite_name": "cloak_03_grey"
     },
     "CommonBelt1": {
@@ -120,8 +121,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonBelt1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4853,
-      "sprite_path_id": 950,
+      "source_path_id": 4897,
+      "sprite_path_id": 992,
       "sprite_name": "Mail1_belt"
     },
     "CommonBelt2": {
@@ -131,8 +132,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonBelt2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4854,
-      "sprite_path_id": 757,
+      "source_path_id": 4898,
+      "sprite_path_id": 785,
       "sprite_name": "Letherbelt"
     },
     "CommonBelt3": {
@@ -142,8 +143,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonBelt3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4855,
-      "sprite_path_id": 839,
+      "source_path_id": 4899,
+      "sprite_path_id": 874,
       "sprite_name": "Leather1_belt"
     },
     "CommonBelt4": {
@@ -153,8 +154,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonBelt4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4856,
-      "sprite_path_id": 874,
+      "source_path_id": 4900,
+      "sprite_path_id": 910,
       "sprite_name": "Cloth1_belt"
     },
     "LegendaryBelt3": {
@@ -164,8 +165,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryBelt3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4857,
-      "sprite_path_id": 783,
+      "source_path_id": 4901,
+      "sprite_path_id": 816,
       "sprite_name": "Mail10_belt"
     },
     "RareBelt1": {
@@ -175,8 +176,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareBelt1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4858,
-      "sprite_path_id": 812,
+      "source_path_id": 4902,
+      "sprite_path_id": 847,
       "sprite_name": "Belt_17"
     },
     "RareBelt2": {
@@ -186,8 +187,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareBelt2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4859,
-      "sprite_path_id": 946,
+      "source_path_id": 4903,
+      "sprite_path_id": 987,
       "sprite_name": "Leather7_belt"
     },
     "RareBelt3": {
@@ -197,8 +198,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareBelt3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4860,
-      "sprite_path_id": 855,
+      "source_path_id": 4904,
+      "sprite_path_id": 891,
       "sprite_name": "Cloth17_belt"
     },
     "RareBelt4": {
@@ -208,8 +209,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareBelt4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4861,
-      "sprite_path_id": 787,
+      "source_path_id": 4905,
+      "sprite_path_id": 821,
       "sprite_name": "Cloth14_belt"
     },
     "UncommonBelt1": {
@@ -219,8 +220,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonBelt1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4862,
-      "sprite_path_id": 976,
+      "source_path_id": 4906,
+      "sprite_path_id": 1020,
       "sprite_name": "Cloth11_belt"
     },
     "UncommonBelt2": {
@@ -230,8 +231,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonBelt2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4863,
-      "sprite_path_id": 836,
+      "source_path_id": 4907,
+      "sprite_path_id": 871,
       "sprite_name": "Mail8_belt"
     },
     "UncommonBelt3": {
@@ -241,8 +242,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonBelt3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4864,
-      "sprite_path_id": 928,
+      "source_path_id": 4908,
+      "sprite_path_id": 969,
       "sprite_name": "Mail17_belt"
     },
     "UncommonBelt4": {
@@ -252,8 +253,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonBelt4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4865,
-      "sprite_path_id": 971,
+      "source_path_id": 4909,
+      "sprite_path_id": 1015,
       "sprite_name": "Belt_24"
     },
     "CommonBoots1": {
@@ -263,8 +264,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonBoots1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4866,
-      "sprite_path_id": 5679,
+      "source_path_id": 4910,
+      "sprite_path_id": 5698,
       "sprite_name": "Boots_04"
     },
     "CommonBoots2": {
@@ -274,8 +275,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonBoots2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4867,
-      "sprite_path_id": 754,
+      "source_path_id": 4911,
+      "sprite_path_id": 782,
       "sprite_name": "LeatherBoots"
     },
     "CommonBoots3": {
@@ -285,8 +286,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonBoots3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4868,
-      "sprite_path_id": 727,
+      "source_path_id": 4912,
+      "sprite_path_id": 752,
       "sprite_name": "LeatherBoots3"
     },
     "CommonBoots4": {
@@ -296,8 +297,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonBoots4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4869,
-      "sprite_path_id": 834,
+      "source_path_id": 4913,
+      "sprite_path_id": 869,
       "sprite_name": "Cloth13_Boots"
     },
     "LegendaryBoots1": {
@@ -307,8 +308,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryBoots1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4870,
-      "sprite_path_id": 749,
+      "source_path_id": 4914,
+      "sprite_path_id": 775,
       "sprite_name": "Cloth8_Boots"
     },
     "LegendaryBoots2": {
@@ -318,8 +319,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryBoots2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4871,
-      "sprite_path_id": 947,
+      "source_path_id": 4915,
+      "sprite_path_id": 988,
       "sprite_name": "Leather3_boots"
     },
     "RareBoots1": {
@@ -329,8 +330,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareBoots1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4872,
-      "sprite_path_id": 913,
+      "source_path_id": 4916,
+      "sprite_path_id": 954,
       "sprite_name": "Mail11_Boots"
     },
     "RareBoots2": {
@@ -340,8 +341,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareBoots2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4873,
-      "sprite_path_id": 996,
+      "source_path_id": 4917,
+      "sprite_path_id": 1041,
       "sprite_name": "Boots_56_magic"
     },
     "RareBoots3": {
@@ -351,8 +352,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareBoots3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4874,
-      "sprite_path_id": 712,
+      "source_path_id": 4918,
+      "sprite_path_id": 736,
       "sprite_name": "Boots_53"
     },
     "RareBoots4": {
@@ -362,8 +363,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareBoots4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4875,
-      "sprite_path_id": 934,
+      "source_path_id": 4919,
+      "sprite_path_id": 975,
       "sprite_name": "Leather6_boots"
     },
     "UncommonBoots1": {
@@ -373,8 +374,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonBoots1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4876,
-      "sprite_path_id": 1004,
+      "source_path_id": 4920,
+      "sprite_path_id": 1050,
       "sprite_name": "Cloth6_Boots"
     },
     "UncommonBoots2": {
@@ -384,8 +385,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonBoots2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4877,
-      "sprite_path_id": 893,
+      "source_path_id": 4921,
+      "sprite_path_id": 933,
       "sprite_name": "Leather17_boots"
     },
     "UncommonBoots3": {
@@ -395,8 +396,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonBoots3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4878,
-      "sprite_path_id": 690,
+      "source_path_id": 4922,
+      "sprite_path_id": 713,
       "sprite_name": "Cloth15_Boots"
     },
     "UncommonBoots4": {
@@ -406,8 +407,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonBoots4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4879,
-      "sprite_path_id": 827,
+      "source_path_id": 4923,
+      "sprite_path_id": 862,
       "sprite_name": "Mail6_Boots"
     },
     "CommonChestArmor1": {
@@ -417,8 +418,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonChestArmor1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4880,
-      "sprite_path_id": 964,
+      "source_path_id": 4924,
+      "sprite_path_id": 1008,
       "sprite_name": "Chest_01_farmer"
     },
     "CommonChestArmor2": {
@@ -428,8 +429,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonChestArmor2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4881,
-      "sprite_path_id": 901,
+      "source_path_id": 4925,
+      "sprite_path_id": 941,
       "sprite_name": "Chest_78"
     },
     "CommonChestArmor3": {
@@ -439,8 +440,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonChestArmor3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4882,
-      "sprite_path_id": 830,
+      "source_path_id": 4926,
+      "sprite_path_id": 865,
       "sprite_name": "Chest_24"
     },
     "CommonChestArmor4": {
@@ -450,8 +451,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonChestArmor4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4883,
-      "sprite_path_id": 1030,
+      "source_path_id": 4927,
+      "sprite_path_id": 1076,
       "sprite_name": "Chest_04_farmer"
     },
     "LegendaryChestArmor1": {
@@ -461,8 +462,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryChestArmor1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4884,
-      "sprite_path_id": 952,
+      "source_path_id": 4928,
+      "sprite_path_id": 994,
       "sprite_name": "Mail9_Chest"
     },
     "LegendaryChestArmor2": {
@@ -472,8 +473,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryChestArmor2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4885,
-      "sprite_path_id": 900,
+      "source_path_id": 4929,
+      "sprite_path_id": 940,
       "sprite_name": "Mail15_Chest"
     },
     "LegendaryChestArmor3": {
@@ -483,8 +484,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryChestArmor3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4886,
-      "sprite_path_id": 978,
+      "source_path_id": 4930,
+      "sprite_path_id": 1022,
       "sprite_name": "Cloth12_Chest"
     },
     "LegendaryChestArmor4": {
@@ -494,8 +495,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryChestArmor4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4887,
-      "sprite_path_id": 988,
+      "source_path_id": 4931,
+      "sprite_path_id": 1032,
       "sprite_name": "Cloth16_Chest"
     },
     "LegendaryChestArmor6": {
@@ -505,8 +506,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryChestArmor6.png",
       "source_file": "resources.assets",
-      "source_path_id": 4888,
-      "sprite_path_id": 885,
+      "source_path_id": 4932,
+      "sprite_path_id": 922,
       "sprite_name": "Leather8_Chest"
     },
     "RareChestArmor1": {
@@ -516,8 +517,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareChestArmor1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4889,
-      "sprite_path_id": 891,
+      "source_path_id": 4933,
+      "sprite_path_id": 930,
       "sprite_name": "Chest_58_leatherPlus"
     },
     "RareChestArmor2": {
@@ -527,8 +528,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareChestArmor2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4890,
-      "sprite_path_id": 966,
+      "source_path_id": 4934,
+      "sprite_path_id": 1010,
       "sprite_name": "Chest_14_milita"
     },
     "RareChestArmor3": {
@@ -538,8 +539,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareChestArmor3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4891,
-      "sprite_path_id": 872,
+      "source_path_id": 4935,
+      "sprite_path_id": 908,
       "sprite_name": "Chest_71_knight"
     },
     "RareChestArmor4": {
@@ -549,8 +550,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareChestArmor4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4892,
-      "sprite_path_id": 799,
+      "source_path_id": 4936,
+      "sprite_path_id": 834,
       "sprite_name": "ChestS1"
     },
     "RareChestArmor5": {
@@ -560,8 +561,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareChestArmor5.png",
       "source_file": "resources.assets",
-      "source_path_id": 4893,
-      "sprite_path_id": 713,
+      "source_path_id": 4937,
+      "sprite_path_id": 737,
       "sprite_name": "Chest_41"
     },
     "RareChestArmor6": {
@@ -571,8 +572,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareChestArmor6.png",
       "source_file": "resources.assets",
-      "source_path_id": 4894,
-      "sprite_path_id": 721,
+      "source_path_id": 4938,
+      "sprite_path_id": 746,
       "sprite_name": "Cloth13_Chest"
     },
     "RareChestArmor7": {
@@ -582,8 +583,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareChestArmor7.png",
       "source_file": "resources.assets",
-      "source_path_id": 4895,
-      "sprite_path_id": 1028,
+      "source_path_id": 4939,
+      "sprite_path_id": 1074,
       "sprite_name": "Chest_23"
     },
     "RareChestArmor8": {
@@ -593,8 +594,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareChestArmor8.png",
       "source_file": "resources.assets",
-      "source_path_id": 4896,
-      "sprite_path_id": 728,
+      "source_path_id": 4940,
+      "sprite_path_id": 753,
       "sprite_name": "Chest_28"
     },
     "UncommonChestArmor1": {
@@ -604,8 +605,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonChestArmor1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4897,
-      "sprite_path_id": 784,
+      "source_path_id": 4941,
+      "sprite_path_id": 818,
       "sprite_name": "Chest_21"
     },
     "UncommonChestArmor2": {
@@ -615,8 +616,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonChestArmor2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4898,
-      "sprite_path_id": 854,
+      "source_path_id": 4942,
+      "sprite_path_id": 890,
       "sprite_name": "Chest_33"
     },
     "UncommonChestArmor3": {
@@ -626,8 +627,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonChestArmor3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4899,
-      "sprite_path_id": 850,
+      "source_path_id": 4943,
+      "sprite_path_id": 885,
       "sprite_name": "Chest_74"
     },
     "UncommonChestArmor4": {
@@ -637,8 +638,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonChestArmor4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4900,
-      "sprite_path_id": 730,
+      "source_path_id": 4944,
+      "sprite_path_id": 755,
       "sprite_name": "Chest_48_leather"
     },
     "CommonGloves1": {
@@ -648,8 +649,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonGloves1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4901,
-      "sprite_path_id": 990,
+      "source_path_id": 4945,
+      "sprite_path_id": 1034,
       "sprite_name": "Cloth1_gloves"
     },
     "CommonGloves2": {
@@ -659,8 +660,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonGloves2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4902,
-      "sprite_path_id": 983,
+      "source_path_id": 4946,
+      "sprite_path_id": 1027,
       "sprite_name": "Leather14_gloves"
     },
     "CommonGloves3": {
@@ -670,8 +671,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonGloves3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4903,
-      "sprite_path_id": 991,
+      "source_path_id": 4947,
+      "sprite_path_id": 1035,
       "sprite_name": "Cloth17_gloves"
     },
     "CommonGloves4": {
@@ -681,8 +682,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonGloves4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4904,
-      "sprite_path_id": 916,
+      "source_path_id": 4948,
+      "sprite_path_id": 957,
       "sprite_name": "Gloves_05_archer"
     },
     "LegendaryGloves1": {
@@ -692,8 +693,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryGloves1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4905,
-      "sprite_path_id": 894,
+      "source_path_id": 4949,
+      "sprite_path_id": 934,
       "sprite_name": "Mail12_gloves"
     },
     "LegendaryGloves3": {
@@ -703,8 +704,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryGloves3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4906,
-      "sprite_path_id": 904,
+      "source_path_id": 4950,
+      "sprite_path_id": 944,
       "sprite_name": "Cloth12_gloves"
     },
     "LegendaryGloves4": {
@@ -714,8 +715,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryGloves4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4907,
-      "sprite_path_id": 951,
+      "source_path_id": 4951,
+      "sprite_path_id": 993,
       "sprite_name": "Gloves_22"
     },
     "LegendaryGloves5": {
@@ -725,8 +726,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryGloves5.png",
       "source_file": "resources.assets",
-      "source_path_id": 4908,
-      "sprite_path_id": 877,
+      "source_path_id": 4952,
+      "sprite_path_id": 913,
       "sprite_name": "Leather15_gloves"
     },
     "LegendaryGloves6": {
@@ -736,8 +737,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryGloves6.png",
       "source_file": "resources.assets",
-      "source_path_id": 4909,
-      "sprite_path_id": 1020,
+      "source_path_id": 4953,
+      "sprite_path_id": 1066,
       "sprite_name": "Leather16_gloves"
     },
     "RareGloves1": {
@@ -747,8 +748,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareGloves1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4910,
-      "sprite_path_id": 1015,
+      "source_path_id": 4954,
+      "sprite_path_id": 1061,
       "sprite_name": "Gloves_15_death"
     },
     "RareGloves2": {
@@ -758,8 +759,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareGloves2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4911,
-      "sprite_path_id": 687,
+      "source_path_id": 4955,
+      "sprite_path_id": 710,
       "sprite_name": "Mail4_gloves"
     },
     "RareGloves3": {
@@ -769,8 +770,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareGloves3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4912,
-      "sprite_path_id": 715,
+      "source_path_id": 4956,
+      "sprite_path_id": 740,
       "sprite_name": "Mail9_gloves"
     },
     "RareGloves4": {
@@ -780,8 +781,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareGloves4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4913,
-      "sprite_path_id": 965,
+      "source_path_id": 4957,
+      "sprite_path_id": 1009,
       "sprite_name": "Mail11_gloves"
     },
     "UncommonGloves1": {
@@ -791,8 +792,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonGloves1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4914,
-      "sprite_path_id": 803,
+      "source_path_id": 4958,
+      "sprite_path_id": 838,
       "sprite_name": "Mail1_gloves"
     },
     "UncommonGloves2": {
@@ -802,8 +803,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonGloves2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4915,
-      "sprite_path_id": 768,
+      "source_path_id": 4959,
+      "sprite_path_id": 797,
       "sprite_name": "Leather3_gloves"
     },
     "UncommonGloves3": {
@@ -813,8 +814,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonGloves3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4916,
-      "sprite_path_id": 1009,
+      "source_path_id": 4960,
+      "sprite_path_id": 1055,
       "sprite_name": "Leather11_gloves"
     },
     "UncommonGloves4": {
@@ -824,8 +825,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonGloves4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4917,
-      "sprite_path_id": 797,
+      "source_path_id": 4961,
+      "sprite_path_id": 832,
       "sprite_name": "Leather12_gloves"
     },
     "CommonHelm1": {
@@ -835,8 +836,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonHelm1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4918,
-      "sprite_path_id": 742,
+      "source_path_id": 4962,
+      "sprite_path_id": 767,
       "sprite_name": "Helm_55_farmer"
     },
     "CommonHelm2": {
@@ -846,8 +847,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonHelm2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4919,
-      "sprite_path_id": 960,
+      "source_path_id": 4963,
+      "sprite_path_id": 1003,
       "sprite_name": "Helm_70_mage"
     },
     "CommonHelm3": {
@@ -857,8 +858,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonHelm3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4920,
-      "sprite_path_id": 738,
+      "source_path_id": 4964,
+      "sprite_path_id": 763,
       "sprite_name": "Helm_02"
     },
     "CommonHelm4": {
@@ -868,8 +869,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonHelm4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4921,
-      "sprite_path_id": 857,
+      "source_path_id": 4965,
+      "sprite_path_id": 893,
       "sprite_name": "ClassicHat"
     },
     "DivineHelm1": {
@@ -879,8 +880,8 @@
       "rarity_value": 4,
       "icon": "/icons/DivineHelm1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4922,
-      "sprite_path_id": 914,
+      "source_path_id": 4966,
+      "sprite_path_id": 955,
       "sprite_name": "Helm_24"
     },
     "DivineHelm2": {
@@ -890,8 +891,8 @@
       "rarity_value": 4,
       "icon": "/icons/DivineHelm2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4923,
-      "sprite_path_id": 917,
+      "source_path_id": 4967,
+      "sprite_path_id": 958,
       "sprite_name": "Helm_44"
     },
     "LegendaryHelm1": {
@@ -901,8 +902,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryHelm1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4924,
-      "sprite_path_id": 793,
+      "source_path_id": 4968,
+      "sprite_path_id": 828,
       "sprite_name": "Helm_61_crown"
     },
     "LegendaryHelm2": {
@@ -912,8 +913,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryHelm2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4925,
-      "sprite_path_id": 955,
+      "source_path_id": 4969,
+      "sprite_path_id": 998,
       "sprite_name": "Helm_29_samurai"
     },
     "LegendaryHelm3": {
@@ -923,8 +924,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryHelm3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4926,
-      "sprite_path_id": 813,
+      "source_path_id": 4970,
+      "sprite_path_id": 848,
       "sprite_name": "Helm_03"
     },
     "LegendaryHelm4": {
@@ -934,8 +935,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryHelm4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4927,
-      "sprite_path_id": 915,
+      "source_path_id": 4971,
+      "sprite_path_id": 956,
       "sprite_name": "Helm_68"
     },
     "LegendaryHelm5": {
@@ -945,8 +946,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryHelm5.png",
       "source_file": "resources.assets",
-      "source_path_id": 4928,
-      "sprite_path_id": 860,
+      "source_path_id": 4972,
+      "sprite_path_id": 896,
       "sprite_name": "Helm_34_Mask"
     },
     "RareHelm1": {
@@ -956,8 +957,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareHelm1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4929,
-      "sprite_path_id": 694,
+      "source_path_id": 4973,
+      "sprite_path_id": 717,
       "sprite_name": "Helm_42"
     },
     "RareHelm2": {
@@ -967,8 +968,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareHelm2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4930,
-      "sprite_path_id": 788,
+      "source_path_id": 4974,
+      "sprite_path_id": 822,
       "sprite_name": "Helm_13"
     },
     "RareHelm3": {
@@ -978,8 +979,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareHelm3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4931,
-      "sprite_path_id": 762,
+      "source_path_id": 4975,
+      "sprite_path_id": 791,
       "sprite_name": "Helm_66"
     },
     "RareHelm4": {
@@ -989,8 +990,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareHelm4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4932,
-      "sprite_path_id": 719,
+      "source_path_id": 4976,
+      "sprite_path_id": 744,
       "sprite_name": "Helm_45"
     },
     "RareHelm5": {
@@ -1000,8 +1001,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareHelm5.png",
       "source_file": "resources.assets",
-      "source_path_id": 4933,
-      "sprite_path_id": 821,
+      "source_path_id": 4977,
+      "sprite_path_id": 856,
       "sprite_name": "mage_hat"
     },
     "RareHelm6": {
@@ -1011,8 +1012,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareHelm6.png",
       "source_file": "resources.assets",
-      "source_path_id": 4934,
-      "sprite_path_id": 869,
+      "source_path_id": 4978,
+      "sprite_path_id": 905,
       "sprite_name": "Helm_63_queen"
     },
     "RareHelm7": {
@@ -1022,8 +1023,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareHelm7.png",
       "source_file": "resources.assets",
-      "source_path_id": 4935,
-      "sprite_path_id": 840,
+      "source_path_id": 4979,
+      "sprite_path_id": 875,
       "sprite_name": "Leather3_head"
     },
     "RareHelm8": {
@@ -1033,8 +1034,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareHelm8.png",
       "source_file": "resources.assets",
-      "source_path_id": 4936,
-      "sprite_path_id": 962,
+      "source_path_id": 4980,
+      "sprite_path_id": 1006,
       "sprite_name": "Leather5_head"
     },
     "UncommonHelm1": {
@@ -1044,8 +1045,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonHelm1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4937,
-      "sprite_path_id": 949,
+      "source_path_id": 4981,
+      "sprite_path_id": 990,
       "sprite_name": "Helm_06"
     },
     "UncommonHelm2": {
@@ -1055,8 +1056,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonHelm2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4938,
-      "sprite_path_id": 921,
+      "source_path_id": 4982,
+      "sprite_path_id": 962,
       "sprite_name": "Helm_21_spearman"
     },
     "UncommonHelm3": {
@@ -1066,8 +1067,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonHelm3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4939,
-      "sprite_path_id": 714,
+      "source_path_id": 4983,
+      "sprite_path_id": 739,
       "sprite_name": "Helm_01_guard"
     },
     "UncommonHelm4": {
@@ -1077,8 +1078,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonHelm4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4940,
-      "sprite_path_id": 953,
+      "source_path_id": 4984,
+      "sprite_path_id": 996,
       "sprite_name": "BrownHat2"
     },
     "CommonNeck1": {
@@ -1088,8 +1089,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonNeck1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4941,
-      "sprite_path_id": 941,
+      "source_path_id": 4985,
+      "sprite_path_id": 982,
       "sprite_name": "necklace_34Blackdrop"
     },
     "CommonNeck2": {
@@ -1099,8 +1100,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonNeck2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4942,
-      "sprite_path_id": 865,
+      "source_path_id": 4986,
+      "sprite_path_id": 901,
       "sprite_name": "necklace_09"
     },
     "CommonNeck3": {
@@ -1110,8 +1111,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonNeck3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4943,
-      "sprite_path_id": 776,
+      "source_path_id": 4987,
+      "sprite_path_id": 808,
       "sprite_name": "necklace_19"
     },
     "CommonNeck4": {
@@ -1121,8 +1122,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonNeck4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4944,
-      "sprite_path_id": 861,
+      "source_path_id": 4988,
+      "sprite_path_id": 897,
       "sprite_name": "NecklaceCross"
     },
     "LegendaryNeck2": {
@@ -1132,8 +1133,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryNeck2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4945,
-      "sprite_path_id": 759,
+      "source_path_id": 4989,
+      "sprite_path_id": 787,
       "sprite_name": "Neck_b_08"
     },
     "LegendaryNeck3": {
@@ -1143,8 +1144,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryNeck3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4946,
-      "sprite_path_id": 868,
+      "source_path_id": 4990,
+      "sprite_path_id": 904,
       "sprite_name": "Jewelry_49_blackironneck"
     },
     "LegendaryNeck4": {
@@ -1154,8 +1155,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryNeck4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4947,
-      "sprite_path_id": 814,
+      "source_path_id": 4991,
+      "sprite_path_id": 849,
       "sprite_name": "Neck_b_01"
     },
     "LegendaryNeck5": {
@@ -1165,8 +1166,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryNeck5.png",
       "source_file": "resources.assets",
-      "source_path_id": 4948,
-      "sprite_path_id": 732,
+      "source_path_id": 4992,
+      "sprite_path_id": 757,
       "sprite_name": "Jewelry_51_flowerneck"
     },
     "RareNeck1": {
@@ -1176,8 +1177,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareNeck1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4949,
-      "sprite_path_id": 859,
+      "source_path_id": 4993,
+      "sprite_path_id": 895,
       "sprite_name": "necklace_03"
     },
     "RareNeck2": {
@@ -1187,8 +1188,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareNeck2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4950,
-      "sprite_path_id": 740,
+      "source_path_id": 4994,
+      "sprite_path_id": 765,
       "sprite_name": "necklace_17"
     },
     "RareNeck3": {
@@ -1198,8 +1199,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareNeck3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4951,
-      "sprite_path_id": 831,
+      "source_path_id": 4995,
+      "sprite_path_id": 866,
       "sprite_name": "necklace_24_crystalBlue"
     },
     "RareNeck4": {
@@ -1209,8 +1210,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareNeck4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4952,
-      "sprite_path_id": 998,
+      "source_path_id": 4996,
+      "sprite_path_id": 1043,
       "sprite_name": "Jewelry_58_tribe_neck"
     },
     "UncommonNeck1": {
@@ -1220,8 +1221,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonNeck1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4953,
-      "sprite_path_id": 5419,
+      "source_path_id": 4997,
+      "sprite_path_id": 5436,
       "sprite_name": "necklace_02"
     },
     "UncommonNeck2": {
@@ -1231,8 +1232,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonNeck2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4954,
-      "sprite_path_id": 863,
+      "source_path_id": 4998,
+      "sprite_path_id": 899,
       "sprite_name": "necklace_11_fourcolors"
     },
     "UncommonNeck3": {
@@ -1242,8 +1243,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonNeck3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4955,
-      "sprite_path_id": 837,
+      "source_path_id": 4999,
+      "sprite_path_id": 872,
       "sprite_name": "necklace_28_Special"
     },
     "UncommonNeck4": {
@@ -1253,8 +1254,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonNeck4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4956,
-      "sprite_path_id": 918,
+      "source_path_id": 5000,
+      "sprite_path_id": 959,
       "sprite_name": "necklace_08"
     },
     "CommonPant1": {
@@ -1264,8 +1265,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonPant1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4957,
-      "sprite_path_id": 692,
+      "source_path_id": 5001,
+      "sprite_path_id": 715,
       "sprite_name": "WhitePants"
     },
     "CommonPant2": {
@@ -1275,8 +1276,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonPant2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4958,
-      "sprite_path_id": 867,
+      "source_path_id": 5002,
+      "sprite_path_id": 903,
       "sprite_name": "VillagePants"
     },
     "CommonPant3": {
@@ -1286,8 +1287,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonPant3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4959,
-      "sprite_path_id": 987,
+      "source_path_id": 5003,
+      "sprite_path_id": 1031,
       "sprite_name": "BlackPants"
     },
     "CommonPant4": {
@@ -1297,8 +1298,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonPant4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4960,
-      "sprite_path_id": 771,
+      "source_path_id": 5004,
+      "sprite_path_id": 802,
       "sprite_name": "Pants_02"
     },
     "LegendaryPants1": {
@@ -1308,8 +1309,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryPants1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4961,
-      "sprite_path_id": 985,
+      "source_path_id": 5005,
+      "sprite_path_id": 1029,
       "sprite_name": "Cloth16_Pants"
     },
     "LegendaryPants3": {
@@ -1319,8 +1320,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryPants3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4962,
-      "sprite_path_id": 958,
+      "source_path_id": 5006,
+      "sprite_path_id": 1001,
       "sprite_name": "mail16_Pants"
     },
     "RarePant1": {
@@ -1330,8 +1331,8 @@
       "rarity_value": 2,
       "icon": "/icons/RarePant1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4963,
-      "sprite_path_id": 818,
+      "source_path_id": 5007,
+      "sprite_path_id": 853,
       "sprite_name": "Pants_30"
     },
     "RarePant2": {
@@ -1341,8 +1342,8 @@
       "rarity_value": 2,
       "icon": "/icons/RarePant2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4964,
-      "sprite_path_id": 875,
+      "source_path_id": 5008,
+      "sprite_path_id": 911,
       "sprite_name": "Mail12_Pants"
     },
     "RarePant3": {
@@ -1352,8 +1353,8 @@
       "rarity_value": 2,
       "icon": "/icons/RarePant3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4965,
-      "sprite_path_id": 763,
+      "source_path_id": 5009,
+      "sprite_path_id": 792,
       "sprite_name": "Cloth7_Pants"
     },
     "RarePant4": {
@@ -1363,8 +1364,8 @@
       "rarity_value": 2,
       "icon": "/icons/RarePant4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4966,
-      "sprite_path_id": 905,
+      "source_path_id": 5010,
+      "sprite_path_id": 945,
       "sprite_name": "Pants_16"
     },
     "RarePant5": {
@@ -1374,8 +1375,8 @@
       "rarity_value": 2,
       "icon": "/icons/RarePant5.png",
       "source_file": "resources.assets",
-      "source_path_id": 4967,
-      "sprite_path_id": 896,
+      "source_path_id": 5011,
+      "sprite_path_id": 936,
       "sprite_name": "Pants_33"
     },
     "RarePant6": {
@@ -1385,8 +1386,8 @@
       "rarity_value": 2,
       "icon": "/icons/RarePant6.png",
       "source_file": "resources.assets",
-      "source_path_id": 4968,
-      "sprite_path_id": 920,
+      "source_path_id": 5012,
+      "sprite_path_id": 961,
       "sprite_name": "Cloth14_Pants"
     },
     "RarePant7": {
@@ -1396,8 +1397,8 @@
       "rarity_value": 2,
       "icon": "/icons/RarePant7.png",
       "source_file": "resources.assets",
-      "source_path_id": 4969,
-      "sprite_path_id": 753,
+      "source_path_id": 5013,
+      "sprite_path_id": 781,
       "sprite_name": "Leather7_Pants"
     },
     "RarePant8": {
@@ -1407,8 +1408,8 @@
       "rarity_value": 2,
       "icon": "/icons/RarePant8.png",
       "source_file": "resources.assets",
-      "source_path_id": 4970,
-      "sprite_path_id": 785,
+      "source_path_id": 5014,
+      "sprite_path_id": 819,
       "sprite_name": "Cloth9_Pants"
     },
     "UncommonPant1": {
@@ -1418,8 +1419,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonPant1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4971,
-      "sprite_path_id": 871,
+      "source_path_id": 5015,
+      "sprite_path_id": 907,
       "sprite_name": "Pants_08"
     },
     "UncommonPant2": {
@@ -1429,8 +1430,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonPant2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4972,
-      "sprite_path_id": 781,
+      "source_path_id": 5016,
+      "sprite_path_id": 814,
       "sprite_name": "Leather8_Pants"
     },
     "UncommonPant3": {
@@ -1440,8 +1441,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonPant3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4973,
-      "sprite_path_id": 932,
+      "source_path_id": 5017,
+      "sprite_path_id": 973,
       "sprite_name": "GreenPants"
     },
     "UncommonPant4": {
@@ -1451,8 +1452,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonPant4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4974,
-      "sprite_path_id": 751,
+      "source_path_id": 5018,
+      "sprite_path_id": 778,
       "sprite_name": "Leather17_Pants"
     },
     "CommonRing1": {
@@ -1462,8 +1463,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonRing1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4975,
-      "sprite_path_id": 926,
+      "source_path_id": 5019,
+      "sprite_path_id": 967,
       "sprite_name": "Ring_01"
     },
     "CommonRing2": {
@@ -1473,8 +1474,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonRing2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4976,
-      "sprite_path_id": 786,
+      "source_path_id": 5020,
+      "sprite_path_id": 820,
       "sprite_name": "Ring_14"
     },
     "CommonRing3": {
@@ -1484,8 +1485,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonRing3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4977,
-      "sprite_path_id": 699,
+      "source_path_id": 5021,
+      "sprite_path_id": 722,
       "sprite_name": "Ring_11"
     },
     "CommonRing4": {
@@ -1495,8 +1496,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonRing4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4978,
-      "sprite_path_id": 844,
+      "source_path_id": 5022,
+      "sprite_path_id": 879,
       "sprite_name": "Jewelry_22_bronze_ring"
     },
     "DivineRing1": {
@@ -1506,8 +1507,8 @@
       "rarity_value": 4,
       "icon": "/icons/DivineRing1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4979,
-      "sprite_path_id": 838,
+      "source_path_id": 5023,
+      "sprite_path_id": 873,
       "sprite_name": "Ring_15_necromantic"
     },
     "LegendaryRing1": {
@@ -1517,8 +1518,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryRing1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4980,
-      "sprite_path_id": 898,
+      "source_path_id": 5024,
+      "sprite_path_id": 938,
       "sprite_name": "Ring_b_08"
     },
     "LegendaryRing2": {
@@ -1528,8 +1529,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryRing2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4981,
-      "sprite_path_id": 778,
+      "source_path_id": 5025,
+      "sprite_path_id": 810,
       "sprite_name": "Ring_b_10"
     },
     "LegendaryRing3": {
@@ -1539,8 +1540,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryRing3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4982,
-      "sprite_path_id": 968,
+      "source_path_id": 5026,
+      "sprite_path_id": 1012,
       "sprite_name": "Ring_09"
     },
     "LegendaryRing4": {
@@ -1550,8 +1551,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryRing4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4983,
-      "sprite_path_id": 981,
+      "source_path_id": 5027,
+      "sprite_path_id": 1025,
       "sprite_name": "Jewelry_34_fire_ring"
     },
     "LegendaryRing6": {
@@ -1561,8 +1562,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryRing6.png",
       "source_file": "resources.assets",
-      "source_path_id": 4984,
-      "sprite_path_id": 922,
+      "source_path_id": 5028,
+      "sprite_path_id": 963,
       "sprite_name": "Ring_52"
     },
     "RareRing1": {
@@ -1572,8 +1573,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareRing1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4985,
-      "sprite_path_id": 847,
+      "source_path_id": 5029,
+      "sprite_path_id": 882,
       "sprite_name": "Ring_21_redgold"
     },
     "RareRing2": {
@@ -1583,8 +1584,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareRing2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4986,
-      "sprite_path_id": 770,
+      "source_path_id": 5030,
+      "sprite_path_id": 799,
       "sprite_name": "Ring_47"
     },
     "RareRing3": {
@@ -1594,8 +1595,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareRing3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4987,
-      "sprite_path_id": 735,
+      "source_path_id": 5031,
+      "sprite_path_id": 760,
       "sprite_name": "Ring_40_fire"
     },
     "RareRing4": {
@@ -1605,8 +1606,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareRing4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4988,
-      "sprite_path_id": 804,
+      "source_path_id": 5032,
+      "sprite_path_id": 839,
       "sprite_name": "Ring_44"
     },
     "UncommonRing1": {
@@ -1616,8 +1617,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonRing1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4989,
-      "sprite_path_id": 741,
+      "source_path_id": 5033,
+      "sprite_path_id": 766,
       "sprite_name": "Ring_46_dragon"
     },
     "UncommonRing2": {
@@ -1627,8 +1628,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonRing2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4990,
-      "sprite_path_id": 929,
+      "source_path_id": 5034,
+      "sprite_path_id": 970,
       "sprite_name": "Ring_04"
     },
     "UncommonRing3": {
@@ -1638,8 +1639,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonRing3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4991,
-      "sprite_path_id": 903,
+      "source_path_id": 5035,
+      "sprite_path_id": 943,
       "sprite_name": "Ring_b_03"
     },
     "UncommonRing4": {
@@ -1649,8 +1650,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonRing4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4992,
-      "sprite_path_id": 761,
+      "source_path_id": 5036,
+      "sprite_path_id": 790,
       "sprite_name": "Ring_55_black"
     },
     "CommonShoulder1": {
@@ -1660,8 +1661,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonShoulder1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4993,
-      "sprite_path_id": 886,
+      "source_path_id": 5037,
+      "sprite_path_id": 923,
       "sprite_name": "Shoulder_15"
     },
     "CommonShoulder2": {
@@ -1671,8 +1672,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonShoulder2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4994,
-      "sprite_path_id": 723,
+      "source_path_id": 5038,
+      "sprite_path_id": 748,
       "sprite_name": "Shoulder_16"
     },
     "CommonShoulder3": {
@@ -1682,8 +1683,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonShoulder3.png",
       "source_file": "resources.assets",
-      "source_path_id": 4995,
-      "sprite_path_id": 774,
+      "source_path_id": 5039,
+      "sprite_path_id": 805,
       "sprite_name": "Shoulder_17"
     },
     "CommonShoulder4": {
@@ -1693,8 +1694,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonShoulder4.png",
       "source_file": "resources.assets",
-      "source_path_id": 4996,
-      "sprite_path_id": 5590,
+      "source_path_id": 5040,
+      "sprite_path_id": 5609,
       "sprite_name": "Leather1_Shoulder"
     },
     "LegendaryShoulder1": {
@@ -1704,8 +1705,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryShoulder1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4997,
-      "sprite_path_id": 927,
+      "source_path_id": 5041,
+      "sprite_path_id": 968,
       "sprite_name": "Shoulder_48_turtle"
     },
     "LegendaryShoulder2": {
@@ -1715,8 +1716,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryShoulder2.png",
       "source_file": "resources.assets",
-      "source_path_id": 4998,
-      "sprite_path_id": 748,
+      "source_path_id": 5042,
+      "sprite_path_id": 774,
       "sprite_name": "Shoulder_49_fire"
     },
     "RareShoulder1": {
@@ -1726,8 +1727,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareShoulder1.png",
       "source_file": "resources.assets",
-      "source_path_id": 4999,
-      "sprite_path_id": 882,
+      "source_path_id": 5043,
+      "sprite_path_id": 919,
       "sprite_name": "Shoulder_46"
     },
     "RareShoulder2": {
@@ -1737,8 +1738,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareShoulder2.png",
       "source_file": "resources.assets",
-      "source_path_id": 5000,
-      "sprite_path_id": 828,
+      "source_path_id": 5044,
+      "sprite_path_id": 863,
       "sprite_name": "Shoulder_51"
     },
     "RareShoulder3": {
@@ -1748,8 +1749,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareShoulder3.png",
       "source_file": "resources.assets",
-      "source_path_id": 5001,
-      "sprite_path_id": 888,
+      "source_path_id": 5045,
+      "sprite_path_id": 926,
       "sprite_name": "Shoulder_06"
     },
     "RareShoulder4": {
@@ -1759,8 +1760,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareShoulder4.png",
       "source_file": "resources.assets",
-      "source_path_id": 5002,
-      "sprite_path_id": 823,
+      "source_path_id": 5046,
+      "sprite_path_id": 858,
       "sprite_name": "Shoulder_09"
     },
     "RareShoulder5": {
@@ -1770,8 +1771,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareShoulder5.png",
       "source_file": "resources.assets",
-      "source_path_id": 5003,
-      "sprite_path_id": 944,
+      "source_path_id": 5047,
+      "sprite_path_id": 985,
       "sprite_name": "Mail5_Shoulder"
     },
     "RareShoulder6": {
@@ -1781,8 +1782,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareShoulder6.png",
       "source_file": "resources.assets",
-      "source_path_id": 5004,
-      "sprite_path_id": 729,
+      "source_path_id": 5048,
+      "sprite_path_id": 754,
       "sprite_name": "Leather13_Shoulder"
     },
     "RareShoulder7": {
@@ -1792,8 +1793,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareShoulder7.png",
       "source_file": "resources.assets",
-      "source_path_id": 5005,
-      "sprite_path_id": 705,
+      "source_path_id": 5049,
+      "sprite_path_id": 729,
       "sprite_name": "Leather11_Shoulder"
     },
     "RareShoulder8": {
@@ -1803,8 +1804,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareShoulder8.png",
       "source_file": "resources.assets",
-      "source_path_id": 5006,
-      "sprite_path_id": 866,
+      "source_path_id": 5050,
+      "sprite_path_id": 902,
       "sprite_name": "Shoulder_59"
     },
     "UncommonShoulder1": {
@@ -1814,8 +1815,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonShoulder1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5007,
-      "sprite_path_id": 945,
+      "source_path_id": 5051,
+      "sprite_path_id": 986,
       "sprite_name": "Shoulder_39"
     },
     "UncommonShoulder2": {
@@ -1825,8 +1826,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonShoulder2.png",
       "source_file": "resources.assets",
-      "source_path_id": 5008,
-      "sprite_path_id": 995,
+      "source_path_id": 5052,
+      "sprite_path_id": 1040,
       "sprite_name": "Shoulder_26"
     },
     "UncommonShoulder3": {
@@ -1836,8 +1837,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonShoulder3.png",
       "source_file": "resources.assets",
-      "source_path_id": 5009,
-      "sprite_path_id": 731,
+      "source_path_id": 5053,
+      "sprite_path_id": 756,
       "sprite_name": "Shoulder_08"
     },
     "UncommonShoulder4": {
@@ -1847,8 +1848,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonShoulder4.png",
       "source_file": "resources.assets",
-      "source_path_id": 5010,
-      "sprite_path_id": 842,
+      "source_path_id": 5054,
+      "sprite_path_id": 877,
       "sprite_name": "Mail2_Shoulder"
     },
     "CommonMace1": {
@@ -1858,8 +1859,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonMace1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5011,
-      "sprite_path_id": 1019,
+      "source_path_id": 5055,
+      "sprite_path_id": 1065,
       "sprite_name": "Club_v2_07"
     },
     "CommonSword1": {
@@ -1869,8 +1870,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonSword1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5012,
-      "sprite_path_id": 5541,
+      "source_path_id": 5056,
+      "sprite_path_id": 5560,
       "sprite_name": "Sword_01"
     },
     "DivineBow1": {
@@ -1880,8 +1881,8 @@
       "rarity_value": 4,
       "icon": "/icons/DivineBow1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5013,
-      "sprite_path_id": 722,
+      "source_path_id": 5057,
+      "sprite_path_id": 747,
       "sprite_name": "Bow_37"
     },
     "DivineMace1": {
@@ -1891,8 +1892,8 @@
       "rarity_value": 4,
       "icon": "/icons/DivineMace1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5014,
-      "sprite_path_id": 862,
+      "source_path_id": 5058,
+      "sprite_path_id": 898,
       "sprite_name": "Hammer_v2_17"
     },
     "DivineSword1": {
@@ -1902,8 +1903,8 @@
       "rarity_value": 4,
       "icon": "/icons/DivineSword1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5015,
-      "sprite_path_id": 911,
+      "source_path_id": 5059,
+      "sprite_path_id": 952,
       "sprite_name": "Sword_v2_30"
     },
     "LegendaryAxe1": {
@@ -1913,8 +1914,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryAxe1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5016,
-      "sprite_path_id": 973,
+      "source_path_id": 5060,
+      "sprite_path_id": 1017,
       "sprite_name": "Axe_v2_46"
     },
     "LegendaryBow1": {
@@ -1924,8 +1925,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryBow1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5017,
-      "sprite_path_id": 1002,
+      "source_path_id": 5061,
+      "sprite_path_id": 1047,
       "sprite_name": "Bow_20_purple"
     },
     "LegendaryBow2": {
@@ -1935,8 +1936,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryBow2.png",
       "source_file": "resources.assets",
-      "source_path_id": 5018,
-      "sprite_path_id": 899,
+      "source_path_id": 5062,
+      "sprite_path_id": 939,
       "sprite_name": "Bow_22"
     },
     "LegendaryMace1": {
@@ -1946,8 +1947,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryMace1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5019,
-      "sprite_path_id": 1012,
+      "source_path_id": 5063,
+      "sprite_path_id": 1058,
       "sprite_name": "Hammer_v2_14"
     },
     "LegendaryStaff1": {
@@ -1957,8 +1958,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryStaff1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5020,
-      "sprite_path_id": 826,
+      "source_path_id": 5064,
+      "sprite_path_id": 861,
       "sprite_name": "Staff_v2_55"
     },
     "LegendaryStaff2": {
@@ -1968,8 +1969,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryStaff2.png",
       "source_file": "resources.assets",
-      "source_path_id": 5021,
-      "sprite_path_id": 724,
+      "source_path_id": 5065,
+      "sprite_path_id": 749,
       "sprite_name": "Staff_v2_05"
     },
     "LegendarySword1": {
@@ -1979,8 +1980,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendarySword1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5022,
-      "sprite_path_id": 878,
+      "source_path_id": 5066,
+      "sprite_path_id": 915,
       "sprite_name": "Sword_v2_12"
     },
     "RareAxe1": {
@@ -1990,8 +1991,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareAxe1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5023,
-      "sprite_path_id": 825,
+      "source_path_id": 5067,
+      "sprite_path_id": 860,
       "sprite_name": "Axe_40"
     },
     "RareAxe2": {
@@ -2001,8 +2002,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareAxe2.png",
       "source_file": "resources.assets",
-      "source_path_id": 5024,
-      "sprite_path_id": 832,
+      "source_path_id": 5068,
+      "sprite_path_id": 867,
       "sprite_name": "Axe_v2_19"
     },
     "RareBow1": {
@@ -2012,8 +2013,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareBow1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5025,
-      "sprite_path_id": 782,
+      "source_path_id": 5069,
+      "sprite_path_id": 815,
       "sprite_name": "Bow_16"
     },
     "RareBow2": {
@@ -2023,8 +2024,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareBow2.png",
       "source_file": "resources.assets",
-      "source_path_id": 5026,
-      "sprite_path_id": 744,
+      "source_path_id": 5070,
+      "sprite_path_id": 769,
       "sprite_name": "Bow_18"
     },
     "RareBow3": {
@@ -2034,8 +2035,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareBow3.png",
       "source_file": "resources.assets",
-      "source_path_id": 5027,
-      "sprite_path_id": 843,
+      "source_path_id": 5071,
+      "sprite_path_id": 878,
       "sprite_name": "Bow_v2_01"
     },
     "RareMace1": {
@@ -2045,8 +2046,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareMace1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5028,
-      "sprite_path_id": 810,
+      "source_path_id": 5072,
+      "sprite_path_id": 845,
       "sprite_name": "Club_v2_10"
     },
     "RareMace2": {
@@ -2056,8 +2057,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareMace2.png",
       "source_file": "resources.assets",
-      "source_path_id": 5029,
-      "sprite_path_id": 969,
+      "source_path_id": 5073,
+      "sprite_path_id": 1013,
       "sprite_name": "Club_v2_13"
     },
     "RareStaff1": {
@@ -2067,8 +2068,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareStaff1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5030,
-      "sprite_path_id": 764,
+      "source_path_id": 5074,
+      "sprite_path_id": 793,
       "sprite_name": "staff_46"
     },
     "RareStaff2": {
@@ -2078,8 +2079,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareStaff2.png",
       "source_file": "resources.assets",
-      "source_path_id": 5031,
-      "sprite_path_id": 910,
+      "source_path_id": 5075,
+      "sprite_path_id": 951,
       "sprite_name": "Staff_v2_36"
     },
     "RareSword1": {
@@ -2089,8 +2090,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareSword1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5032,
-      "sprite_path_id": 815,
+      "source_path_id": 5076,
+      "sprite_path_id": 850,
       "sprite_name": "Sword_v2_01"
     },
     "RareSword2": {
@@ -2100,8 +2101,8 @@
       "rarity_value": 2,
       "icon": "/icons/RareSword2.png",
       "source_file": "resources.assets",
-      "source_path_id": 5033,
-      "sprite_path_id": 700,
+      "source_path_id": 5077,
+      "sprite_path_id": 723,
       "sprite_name": "Sword_57"
     },
     "UnCommonAxe1": {
@@ -2111,8 +2112,8 @@
       "rarity_value": 1,
       "icon": "/icons/UnCommonAxe1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5034,
-      "sprite_path_id": 1000,
+      "source_path_id": 5078,
+      "sprite_path_id": 1045,
       "sprite_name": "Loot_14_axeold"
     },
     "UncommonBow1": {
@@ -2122,8 +2123,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonBow1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5035,
-      "sprite_path_id": 791,
+      "source_path_id": 5079,
+      "sprite_path_id": 826,
       "sprite_name": "Bow_13"
     },
     "UncommonMace1": {
@@ -2133,8 +2134,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonMace1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5036,
-      "sprite_path_id": 822,
+      "source_path_id": 5080,
+      "sprite_path_id": 857,
       "sprite_name": "hammer_52"
     },
     "UncommonStaff1": {
@@ -2144,8 +2145,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonStaff1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5037,
-      "sprite_path_id": 906,
+      "source_path_id": 5081,
+      "sprite_path_id": 946,
       "sprite_name": "Staff_v2_30"
     },
     "UncommonSword1": {
@@ -2155,8 +2156,8 @@
       "rarity_value": 1,
       "icon": "/icons/UncommonSword1.png",
       "source_file": "resources.assets",
-      "source_path_id": 5038,
-      "sprite_path_id": 710,
+      "source_path_id": 5082,
+      "sprite_path_id": 734,
       "sprite_name": "Sword_49"
     },
     "DivineBack2": {
@@ -2166,8 +2167,8 @@
       "rarity_value": 4,
       "icon": "/icons/DivineBack2.png",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59939,
-      "sprite_path_id": 5676,
+      "source_path_id": 59987,
+      "sprite_path_id": 5695,
       "sprite_name": "divine_back2"
     },
     "LegendaryBack4": {
@@ -2177,8 +2178,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryBack4.png",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59940,
-      "sprite_path_id": 5230,
+      "source_path_id": 59988,
+      "sprite_path_id": 5248,
       "sprite_name": "legendaryback4_icon"
     },
     "LegendaryBelt1": {
@@ -2188,8 +2189,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryBelt1.png",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59941,
-      "sprite_path_id": 5209,
+      "source_path_id": 59989,
+      "sprite_path_id": 5227,
       "sprite_name": "Alchemy_37_belt"
     },
     "LegendaryBelt2": {
@@ -2199,8 +2200,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryBelt2.png",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59942,
-      "sprite_path_id": 5652,
+      "source_path_id": 59990,
+      "sprite_path_id": 5671,
       "sprite_name": "Cloth16_belt"
     },
     "LegendaryBoots3": {
@@ -2210,8 +2211,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryBoots3.png",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59943,
-      "sprite_path_id": 5737,
+      "source_path_id": 59991,
+      "sprite_path_id": 5756,
       "sprite_name": "Cloth7_Boots"
     },
     "LegendaryChestArmor5": {
@@ -2221,8 +2222,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryChestArmor5.png",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59944,
-      "sprite_path_id": 5862,
+      "source_path_id": 59992,
+      "sprite_path_id": 5881,
       "sprite_name": "Mail7Chest"
     },
     "LegendaryGloves2": {
@@ -2232,8 +2233,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryGloves2.png",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59945,
-      "sprite_path_id": 5512,
+      "source_path_id": 59993,
+      "sprite_path_id": 5531,
       "sprite_name": "Gloves_11"
     },
     "LegendaryNeck1": {
@@ -2243,8 +2244,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryNeck1.png",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59946,
-      "sprite_path_id": 5740,
+      "source_path_id": 59994,
+      "sprite_path_id": 5759,
       "sprite_name": "Neck_b_06"
     },
     "LegendaryPants2": {
@@ -2254,8 +2255,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryPants2.png",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59947,
-      "sprite_path_id": 5793,
+      "source_path_id": 59995,
+      "sprite_path_id": 5812,
       "sprite_name": "mail10_Pants"
     },
     "LegendaryRing5": {
@@ -2265,8 +2266,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryRing5.png",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59958,
-      "sprite_path_id": 5795,
+      "source_path_id": 60006,
+      "sprite_path_id": 5814,
       "sprite_name": "Ring_41_magic"
     },
     "LegendaryRing7": {
@@ -2276,8 +2277,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryRing7.png",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59959,
-      "sprite_path_id": 5937,
+      "source_path_id": 60007,
+      "sprite_path_id": 5958,
       "sprite_name": "Ring_b_09"
     },
     "LegendaryShoulder3": {
@@ -2287,8 +2288,8 @@
       "rarity_value": 3,
       "icon": "/icons/LegendaryShoulder3.png",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59960,
-      "sprite_path_id": 5640,
+      "source_path_id": 60008,
+      "sprite_path_id": 5659,
       "sprite_name": "Mail9_Shoulder"
     },
     "CommonAxe1": {
@@ -2298,8 +2299,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonAxe1.png",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59961,
-      "sprite_path_id": 5596,
+      "source_path_id": 60009,
+      "sprite_path_id": 5615,
       "sprite_name": "BasicAxe"
     },
     "CommonBow1": {
@@ -2309,8 +2310,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonBow1.png",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59962,
-      "sprite_path_id": 5313,
+      "source_path_id": 60010,
+      "sprite_path_id": 5330,
       "sprite_name": "Bow_01"
     },
     "CommonStaff1": {
@@ -2320,8 +2321,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonStaff1.png",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59963,
-      "sprite_path_id": 5789,
+      "source_path_id": 60011,
+      "sprite_path_id": 5808,
       "sprite_name": "staff_43"
     },
     "CommonStaff2": {
@@ -2331,8 +2332,8 @@
       "rarity_value": 0,
       "icon": "/icons/CommonStaff2.png",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59964,
-      "sprite_path_id": 5479,
+      "source_path_id": 60012,
+      "sprite_path_id": 5497,
       "sprite_name": "Staff_v2_04"
     }
   }

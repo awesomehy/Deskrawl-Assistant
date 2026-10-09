@@ -16,11 +16,11 @@ import time
 import uuid
 
 from .catalog import load_catalog
-from .native_memory import MemoryReadError, ProcessMemory
+from .native_memory import MemoryReadError, ProcessMemory, SnapshotChangedError
 from .paths import RESOURCE_ROOT
 
 BASE = RESOURCE_ROOT
-REQUIRED_CLASSES = ("Inventory", "Storage", "InventorySlot", "GeneratedItemData", "StatModifier", "ItemData", "gi", "SaveSystem")
+REQUIRED_CLASSES = ("Inventory", "Storage", "InventorySlot", "GeneratedItemData", "StatModifier", "ItemData", "gj", "SaveSystem")
 
 
 def decode_obscured_float(data: bytes) -> float:
@@ -106,7 +106,7 @@ class NativeReader:
         string_offset = struct.unpack_from("<I", self.metadata, 32)[0]
         type_offset = struct.unpack_from("<I", self.metadata, 236)[0]
         names = {}
-        for name in REQUIRED_CLASSES:
+        for name in getattr(self,'required_classes',REQUIRED_CLASSES):
             index = self.types[name]["typeDefinitionIndex"]
             name_index = struct.unpack_from("<I", self.metadata, type_offset + index * 76)[0]
             names[name] = self.metadata_base + string_offset + name_index
@@ -220,7 +220,7 @@ class NativeReader:
 
     def registry(self):
         p = self.memory
-        static = p.u64(self.classes["gi"] + 184)
+        static = p.u64(self.classes["gj"] + 184)
         if not static:
             raise MemoryReadError("装备注册表尚未加载")
         root = p.u64(static)
@@ -230,36 +230,65 @@ class NativeReader:
         expected = {"_entries": 24, "_count": 32, "_freeCount": 40, "_version": 44}
         if any(offsets.get(k) != v for k, v in expected.items()):
             raise MemoryReadError("装备注册表字段布局不一致")
-        count, version = p.i32(root + 32), p.i32(root + 44)
+        # Copy all mutable dictionary counters together. In particular, do not
+        # compare old entries with a freeCount read after decoding every UID.
+        header = p.read(root + 24, 24)
+        entries, count, free_list, free_count, version = struct.unpack("<Qiiii", header)
+
+        def ensure_stable(block=None):
+            if (p.u64(self.classes["gj"] + 184) != static or p.u64(static) != root or
+                    p.read(root + 24, 24) != header or
+                    (block is not None and p.read(entries + 32, len(block)) != block)):
+                raise SnapshotChangedError("装备注册表在读取期间发生变化，请重新读取")
+
         if not 0 <= count <= 8192:
+            ensure_stable()
             raise MemoryReadError("装备注册表大小异常")
-        entries = p.u64(root + 24)
+        if not 0 <= free_count <= count:
+            ensure_stable()
+            raise MemoryReadError("装备注册表空闲条目数异常")
+        stamp = {"object": root, "entries": entries, "version": version,
+                 "count": count, "free_count": free_count, "header": header}
         if not entries:
+            ensure_stable()
             if count:
                 raise MemoryReadError("装备注册表缺少条目数组")
-            return {}, {"object": root, "entries": entries, "version": version, "count": count}
+            self.snapshot_stamps.extend([(self.classes["gj"] + 184, struct.pack("<Q", static)),
+                                         (static, struct.pack("<Q", root)), (root + 24, header)])
+            return {}, stamp
         array_class = p.u64(entries)
         element = p.u64(array_class + 64)
         fields = {f["name"]: f["offset"] for f in self.fields(element)}
         if fields != {"hashCode": 16, "next": 20, "key": 24, "value": 32} or p.i32(array_class + 0x104) != 24:
             raise MemoryReadError("装备注册表条目布局不一致")
         if p.u64(entries + 24) < count:
+            ensure_stable()
             raise MemoryReadError("装备注册表条目数超出数组长度")
         block = p.read(entries + 32, count * 24)
+        ensure_stable(block)
         records = {}
-        for index in range(count):
-            hash_code, next_, key, value = struct.unpack_from("<iiQQ", block, index * 24)
-            if hash_code < 0:
-                continue
-            if not key or not value or p.u64(value) != self.classes["GeneratedItemData"]:
-                raise MemoryReadError("装备注册表含未确认的条目对象")
-            uid = self.string(key)
-            if not uid or uid in records:
-                raise MemoryReadError("装备注册表唯一标识为空或重复")
-            records[uid] = value
-        if len(records) != count - p.i32(root + 40):
+        try:
+            for index in range(count):
+                hash_code, next_, key, value = struct.unpack_from("<iiQQ", block, index * 24)
+                if hash_code < 0:
+                    continue
+                if not key or not value or p.u64(value) != self.classes["GeneratedItemData"]:
+                    raise MemoryReadError("装备注册表含未确认的条目对象")
+                uid = self.string(key)
+                if not uid or uid in records:
+                    raise MemoryReadError("装备注册表唯一标识为空或重复")
+                records[uid] = value
+        except (MemoryReadError, UnicodeError):
+            ensure_stable(block)
+            raise
+        ensure_stable(block)
+        if len(records) != count - free_count:
             raise MemoryReadError("装备注册表有效条目数不一致")
-        return records, {"object": root, "entries": entries, "version": version, "count": count}
+        self.snapshot_stamps.extend([(self.classes["gj"] + 184, struct.pack("<Q", static)),
+                                     (static, struct.pack("<Q", root)), (root + 24, header)])
+        if block:
+            self.snapshot_stamps.append((entries + 32, block))
+        return records, stamp
 
     def asset_name(self, item):
         p = self.memory
@@ -300,7 +329,8 @@ class NativeReader:
         out = {"item_class": self.class_name(klass), "internal_name": name,
             "name_key": name if name in self.catalog.equipment else None,
             "is_equipment": name in self.catalog.equipment, "item_type": p.i32(item + 32),
-            "equip_slot": p.i32(item + 144), "base_rarity": p.i32(item + 36)}
+            "equip_slot": p.i32(item + 144), "base_rarity": p.i32(item + 36),
+            "max_stack": p.i32(item + 136)}
         self.item_cache[item] = out
         return out
 
@@ -319,10 +349,10 @@ class NativeReader:
             modifiers.append({"stat": stat, "stat_name": self.stat_names[stat], "type": kind,
                 "value": decode_obscured_float(record[8:28]), "source": "generated_modifiers", "display_unit": None})
         if mods_ptr and p.read(mods_ptr + 32, len(block)) != block:
-            raise MemoryReadError("装备词条在读取期间发生变化")
+            raise SnapshotChangedError("装备词条在读取期间发生变化")
         instance = self.string(struct.unpack_from("<Q", header, 80)[0])
         if p.read(obj, 128) != header:
-            raise MemoryReadError("装备实例在读取期间发生变化")
+            raise SnapshotChangedError("装备实例在读取期间发生变化")
         self.snapshot_stamps.append((obj, header))
         if mods_ptr and block:
             self.snapshot_stamps.append((mods_ptr + 32, block))
@@ -362,9 +392,12 @@ class NativeReader:
                 else:
                     row["locked"] = row["slot_locked"]
                     row["modifiers"] = []
+                row["transfer_key"] = self.transfer_key(row['container'],index,slot,header,row)
                 if p.read(slot, 48) != header:
-                    raise MemoryReadError("槽位在读取期间发生变化")
+                    raise SnapshotChangedError("槽位在读取期间发生变化")
                 observations.append((slot, header))
+            except SnapshotChangedError:
+                raise
             except (MemoryReadError, UnicodeError) as exc:
                 row["issues"] = [str(exc)]
                 out["complete"] = False
@@ -372,9 +405,9 @@ class NativeReader:
             out["slots"].append(row)
         # Detect sorting/moving/replacing throughout the entire snapshot read.
         if p.u64(root + offset) != array_ptr or (array_ptr and p.read(array_ptr + 32, len(block)) != block):
-            raise MemoryReadError("物品集合在读取期间发生变化，请重新读取")
+            raise SnapshotChangedError("物品集合在读取期间发生变化，请重新读取")
         if any(p.read(slot, len(header)) != header for slot, header in observations):
-            raise MemoryReadError("物品槽位在读取期间发生变化，请重新读取")
+            raise SnapshotChangedError("物品槽位在读取期间发生变化，请重新读取")
         out["occupied_count"] = len(out["slots"])
         out["equipment_count"] = sum(row.get("is_equipment") is True for row in out["slots"])
         self.snapshot_stamps.extend(observations)
@@ -383,6 +416,11 @@ class NativeReader:
             self.snapshot_stamps.append((array_ptr + 32, block))
         out["slots_complete"] = out["complete"]
         return out
+
+    def transfer_key(self, container, index, slot, header, row):
+        """Session-scoped identity for stacks without generated equipment IDs."""
+        identity = f"{self.session_id}:{container}:{index}:{slot}:{row.get('internal_name')}:{row.get('instance_id','')}"
+        return hashlib.sha256(identity.encode('utf-8')+header).hexdigest()
 
     def diagnostics(self):
         return {"pid": self.pid, "backend": "external_read_only", "bridge_version": "0.2.0-external",
@@ -407,20 +445,22 @@ class NativeReader:
             try:
                 result["containers"][key] = self.container(name, registry, max_items)
                 result["issues"].extend(f"{key}: {issue}" for issue in result["containers"][key]["issues"])
+            except SnapshotChangedError:
+                raise
             except (MemoryReadError, UnicodeError) as exc:
                 result["containers"][key] = {"available": False, "complete": False, "slots": [], "issues": [str(exc)]}
                 result["issues"].append(f"{key}: {exc}")
-        if p.i32(stamp["object"] + 44) != stamp["version"] or p.u64(stamp["object"] + 24) != stamp["entries"] or p.i32(stamp["object"] + 32) != stamp["count"]:
-            result["issues"].append("装备注册表在读取期间发生变化，请重新读取")
-            for container in result["containers"].values():
-                container["complete"] = False
+        if p.read(stamp["object"] + 24, 24) != stamp["header"]:
+            raise SnapshotChangedError("装备注册表在读取期间发生变化，请重新读取")
         result["registry_count"] = len(registry)
         if any(p.read(address, len(block)) != block for address, block in self.snapshot_stamps):
-            result["issues"].append("物品内容在读取期间发生变化，请重新读取")
-            for container in result["containers"].values():
-                container["complete"] = False
-                container["slots_complete"] = False
+            raise SnapshotChangedError("物品内容在读取期间发生变化，请重新读取")
         result["complete"] = not result["issues"]
+        try:
+            from .container_transfer import access_state
+            result['transfer'], _ = access_state(self)
+        except (MemoryReadError, KeyError, OSError, ValueError) as exc:
+            result['transfer'] = {'available':False,'reason':str(exc)}
         for container in result["containers"].values():
             for row in container["slots"]:
                 ready = result["complete"] and row.get("is_equipment") is True and bool(row.get("instance_id")) and not row.get("issues")

@@ -8,6 +8,7 @@ from unittest.mock import patch
 from deskrawl_assistant.web_service import AssistantService, BASE
 from deskrawl_assistant.rules import rules_from_dict
 from deskrawl_assistant.models import ValidationError
+from deskrawl_assistant.native_memory import SnapshotChangedError
 
 SOURCE=json.loads((Path(__file__).parent/'fixtures/service-snapshot.json').read_text(encoding='utf-8'))
 BELT=next(row for c in SOURCE['containers'].values() for row in c['slots'] if row.get('name_key')=='LegendaryBelt3')
@@ -78,6 +79,70 @@ class WebServiceTests(unittest.TestCase):
         values={c['key']:c['value'] for c in catalog['classes']}
         self.assertEqual(values,{'Barbarian':1,'Mage':2,'Hunter':4,'Monk':8})
 
+    def publish_physical_items(self):
+        gear = item(1,locked=True)
+        gear['transfer_key'] = 'gear-token'
+        extras = [dict(container='storage',slot_index=n+10,count=n+3,item_uid='',
+                    is_equipment=False,internal_name=name,item_class=klass,locked=False,
+                    modifiers=[],transfer_key='stack-'+str(n))
+                  for n,(name,klass) in enumerate([('GemEmerald4','GemData'),('TreasureChest2','ItemData'),('Iron','ItemData')])]
+        self.client.items = [gear,*extras]
+        snapshot = self.client.snapshot()
+        snapshot['transfer'] = {'available':True,'storage_indices':list(range(250))}
+        self.service._publish(snapshot)
+        return snapshot
+
+    def test_material_gem_chest_are_listed_but_excluded_from_equipment_counts(self):
+        self.publish_physical_items()
+        state = self.service.state()
+        self.assertEqual(len(state['items']),4)
+        self.assertEqual(state['counts']['inventory']['equipment'],1)
+        self.assertEqual(state['counts']['storage']['equipment'],0)
+        self.assertEqual({i['kind'] for i in state['items']},{'equipment','gem','chest','material'})
+        chest = next(i for i in state['items'] if i['kind']=='chest')
+        self.assertEqual(chest['name'],'黄金宝箱')
+        self.assertFalse(chest['review'])
+        self.assertTrue(all(i['selection_id'] and i['movable'] for i in state['items']))
+
+    def test_gem_and_rune_previews_include_bundled_icons_and_effects(self):
+        self.publish_physical_items()
+        self.client.items.append(dict(container='inventory',slot_index=3,count=1,item_uid='rune-test',is_equipment=False,
+            internal_name='UncommonRune_DamageVsHealthy',item_class='RuneData',locked=False,modifiers=[],transfer_key='rune-token'))
+        self.service._publish(self.client.snapshot())
+        state=self.service.state()
+        for kind in ('gem','rune'):
+            row=next(i for i in state['items'] if i['kind']==kind)
+            self.assertTrue(row['icon']);self.assertTrue(row['effect_groups']);self.assertFalse(row['matches'])
+            self.assertTrue((BASE/'deskrawl_assistant/web'/row['icon'].lstrip('/')).exists())
+
+    def test_selected_tokens_are_resolved_server_side_and_preserve_locked_gear(self):
+        self.publish_physical_items()
+        def move(expected,target,validate):
+            self.assertTrue(validate())
+            self.assertEqual(expected[0]['transfer_key'],'gear-token')
+            self.assertTrue(expected[0]['locked'])
+            self.assertEqual(target,'storage')
+            self.client.items[0]['container'] = target
+            return {'moved':1}
+        with patch.object(self.client,'move_items',side_effect=move,create=True) as operation:
+            self.run_action('move_items',items=['gear-token'],target='storage',expected=[{'arbitrary_address':123}])
+            operation.assert_called_once()
+        self.assertTrue(self.client.items[0]['locked'])
+        self.assertIn('移入仓库 1 组',self.service.message)
+
+    def test_moving_rejects_stale_duplicate_or_wrong_direction_selection(self):
+        self.publish_physical_items()
+        for tokens,target in [(['missing'],'storage'),(['gear-token','gear-token'],'storage'),(['stack-0'],'storage'),(['gear-token'],'invalid')]:
+            with self.subTest(tokens=tokens,target=target),self.assertRaises(ValidationError):
+                self.service.start('move_items',{'items':tokens,'target':target})
+        self.assertFalse(self.service.busy)
+
+    def test_lock_rules_never_process_physical_non_equipment(self):
+        self.publish_physical_items()
+        self.service.save_rule(self.rule())
+        self.run_action('lock_rules')
+        self.assertFalse(self.client.actions)
+
     def test_persist_and_export_round_trip(self):
         self.service.save_rule(self.rule())
         self.assertEqual(len(rules_from_dict(self.service.export_rules(),self.service.catalog)),1)
@@ -131,6 +196,37 @@ class WebServiceTests(unittest.TestCase):
         self.client.items[2]['container']='storage'
         self.service._monitor_once()
         self.assertFalse(self.client.actions)
+
+    def test_transient_read_preserves_monitor_state_and_locks_new_item_next_tick(self):
+        self.service.save_rule(self.rule())
+        self.service.set_monitoring(True)
+        self.service._monitor_once()
+        previous = self.service.loot_state
+        self.client.items.append(item(4, 'storage'))
+        self.service.automation_running = True
+        with patch.object(self.client, 'snapshot', side_effect=SnapshotChangedError('装备注册表在读取期间发生变化')):
+            self.service._work('monitor', {})
+        self.assertTrue(self.service.monitoring)
+        self.assertTrue(self.service.automation_running)
+        self.assertIs(self.service.loot_state, previous)
+        self.assertFalse(self.service.error)
+        self.assertFalse(self.client.actions)
+        self.service.automation_running = False
+        self.service._work('monitor', {})
+        self.assertEqual(self.client.actions, [('test-instance-4', True)])
+        self.assertFalse(self.client.items[2]['locked'])
+
+    def test_transient_write_guard_preserves_pending_new_equipment(self):
+        self.service.save_rule(self.rule())
+        self.service.set_monitoring(True)
+        self.service._monitor_once()
+        self.client.items.append(item(4))
+        with patch.object(self.client, 'lock_equipment', side_effect=SnapshotChangedError('写入前装备注册表发生变化')):
+            self.service._work('monitor', {})
+        self.assertTrue(self.service.monitoring)
+        self.assertFalse(self.client.actions)
+        self.service._work('monitor', {})
+        self.assertEqual(self.client.actions, [('test-instance-4', True)])
 
     def test_import_preserves_existing_rules_and_disables_additions(self):
         self.service.save_rule(self.rule())

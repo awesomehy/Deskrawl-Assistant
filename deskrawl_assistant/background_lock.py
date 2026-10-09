@@ -8,7 +8,7 @@ import ctypes as C
 from ctypes import wintypes as W
 import struct
 
-from .native_memory import K, MemoryReadError
+from .native_memory import K, MemoryReadError, SnapshotChangedError
 from .action_log import record
 
 K.WriteProcessMemory.argtypes = (W.HANDLE, C.c_void_p, C.c_void_p, C.c_size_t, C.POINTER(C.c_size_t))
@@ -83,7 +83,7 @@ def _set_equipment_locked(reader, expected, locked, validate, writer_factory):
         raise MemoryReadError("装备词条已变化或未揭示，未写入")
     p = reader.memory
     save = reader.singleton('SaveSystem')
-    if reader.offsets['GeneratedItemData'].get('Locked') != 73 or reader.offsets['SaveSystem'].get('nfu') != 92:
+    if reader.offsets['GeneratedItemData'].get('Locked') != 73 or reader.offsets['SaveSystem'].get('nlo') != 92:
         raise MemoryReadError("锁定或保存字段布局不一致，未写入")
     if p.read(save + 92, 1) not in (b'\0', b'\1'):
         raise MemoryReadError("游戏保存状态异常，未写入")
@@ -93,10 +93,12 @@ def _set_equipment_locked(reader, expected, locked, validate, writer_factory):
         # before the one-byte mutation; no cached screen or object addresses.
         if (p.u64(address) != reader.classes['GeneratedItemData'] or
             reader.string(p.u64(address + 80)) != required[1] or
-            p.i32(stamp['object'] + 44) != stamp['version'] or
-            p.u64(stamp['object'] + 24) != stamp['entries'] or
             p.u64(save) != reader.classes['SaveSystem']):
             raise MemoryReadError("写入前装备或保存对象发生变化，未写入")
+        if (p.i32(stamp['object'] + 44) != stamp['version'] or
+            p.u64(stamp['object'] + 24) != stamp['entries'] or
+            ('header' in stamp and p.read(stamp['object'] + 24, 24) != stamp['header'])):
+            raise SnapshotChangedError("写入前装备注册表发生变化，未写入")
         desired = bytes([int(locked)])
         if p.read(address + 73, 1) == desired:
             return {'status':'already_'+status,'item_uid':required[0],'instance_id':required[1]}
@@ -109,7 +111,7 @@ def _set_equipment_locked(reader, expected, locked, validate, writer_factory):
             writer.set_bool(address + 73, False)
         if p.read(address + 73, 1) != desired or reader.string(p.u64(address + 80)) != required[1]:
             raise MemoryReadError("锁状态写入未通过回读，操作停止")
-        # SaveSystem.eft/efu/efv/efw/efx/efy all set nfu=true in this build.
+        # SaveSystem.eho/ehp/ehq/ehr/ehs/eht set nlo=true in game 1.0.2.
         # Its normal town autosave then copies GeneratedItemData.Locked into
         # SavedRegistryEntry.Locked; we do not edit encrypted save files.
         writer.set_true(save + 92)

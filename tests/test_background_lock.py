@@ -3,7 +3,7 @@ import copy
 import unittest
 from unittest.mock import patch
 from deskrawl_assistant.background_lock import lock_equipment, unlock_equipment, TrueBitWriter
-from deskrawl_assistant.native_memory import MemoryReadError
+from deskrawl_assistant.native_memory import MemoryReadError, SnapshotChangedError
 
 ITEM = {'container':'inventory','slot_index':1,'is_equipment':True,'item_uid':'belt-uid',
         'instance_id':'belt-instance','name_key':'LegendaryBelt3','locked':False,
@@ -26,7 +26,7 @@ class FakeMemory:
 class FakeReader:
     pid = 777
     classes = {'GeneratedItemData':0x110000,'SaveSystem':0x310000}
-    offsets = {'GeneratedItemData':{'Locked':73},'SaveSystem':{'nfu':92}}
+    offsets = {'GeneratedItemData':{'Locked':73},'SaveSystem':{'nlo':92}}
     def __init__(self):
         self.memory = FakeMemory()
         self.row = copy.deepcopy(ITEM)
@@ -97,7 +97,7 @@ class BackgroundLockTests(unittest.TestCase):
             writer=self.factory(pid)
             self.reader.memory.ints[REGISTRY+44]=8
             return writer
-        with self.assertRaises(MemoryReadError): self.lock(factory=changed)
+        with self.assertRaises(SnapshotChangedError): self.lock(factory=changed)
         self.assertFalse(self.writes)
         self.assertTrue(self.closed)
 

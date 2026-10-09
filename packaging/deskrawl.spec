@@ -8,6 +8,9 @@ assets = [
     'affix-groups-static.json',
     'runtime-type-hints.json',
     'ui-runtime-hints.json',
+    'container-transfer-types.json',
+    'carriage-types.json',
+    'item-ui.json',
 ]
 datas = [(str(root / 'data' / name), 'data') for name in assets]
 datas.append((str(root / 'deskrawl_assistant' / 'web'), 'deskrawl_assistant/web'))
@@ -33,7 +36,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='Deskrawl装备助手-v1.1.2',
+    name='Deskrawl装备助手-v1.1.3',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

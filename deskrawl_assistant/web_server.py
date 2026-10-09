@@ -90,6 +90,8 @@ def make_handler(service, token):
                 elif path=='/api/rule/delete': service.delete_rule(data.get('id'))
                 elif path=='/api/rule/import': return self.reply({'imported':service.import_rules(data.get('payload'))})
                 elif path=='/api/monitor': service.set_monitoring(data.get('enabled'))
+                elif path=='/api/automation/settings': return self.reply({'settings':service.save_automation(data.get('settings'))})
+                elif path=='/api/automation/run': service.set_automation_running(data.get('enabled'))
                 elif path=='/api/stop': service.stop()
                 elif path=='/api/shutdown':
                     service.stop()

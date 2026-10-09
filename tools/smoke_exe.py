@@ -42,6 +42,9 @@ def main():
     assert not any('lock-rules.json' in n or 'latest-snapshot.json' in n or 'assistant-actions.jsonl' in n for n in names)
     assert not any('activity.sqlite3' in n or 'experience.sqlite3' in n for n in names)
     assert 'data/experience-types.json' in normalized
+    assert 'data/recommendation-types.json' in normalized
+    assert 'data/recommendation-catalog.json' in normalized
+    assert not any('recommendations.sqlite3' in n for n in names)
     assert any('_sqlite3' in n for n in names)
     assert not any('frida' in n.lower() or 'unitypy' in n.lower() for n in names)
     assert any(n.replace('\\','/').endswith('webview/js/api.js') for n in names)
@@ -122,6 +125,12 @@ def main():
         assert '__SESSION_TOKEN__' not in request('/').decode('utf-8')
         assert b'async function api' in request('/app.js')
         assert request('/style.css')
+        recommendation = request('/api/recommendations')
+        assert recommendation['available'] is False and not recommendation['rows']
+        recommendation_settings = {'minutes':30,'difficulty':'current','overhead_seconds':7,'include_locked':True,'sort':'completed'}
+        assert request('/api/recommendations/settings',recommendation_settings)['settings'] == recommendation_settings
+        assert request('/api/recommendations')['settings'] == recommendation_settings
+        report['checks'].append('刷图推荐资源内置，断线状态明确，推荐设置持久保存')
         catalog = request('/api/catalog')
         assert len(catalog['equipment']) == 209
         assert sum(i['legendary'] for i in catalog['equipment']) == 52
@@ -180,6 +189,15 @@ def main():
             assert xp_receipt['source'] == 'live_timer' and xp_receipt['xp'] >= 0
             request('/api/experience/delete', {'id':xp_receipt['id']})
             report['checks'].append('单文件 exe 只读取得实际游戏经验和关卡，自动计时经验结算成功')
+            recommendation = request('/api/recommendations')
+            assert recommendation['available'], recommendation.get('error')
+            assert recommendation['coverage']['supported'] == 71 and recommendation['coverage']['total'] == 76
+            assert len(recommendation['rows']) == 71
+            assert recommendation['best']['accessible'] is True
+            assert recommendation['best']['seconds_per_run'] > 0
+            assert recommendation['best']['effective_budget_xp'] >= 0
+            report['checks'].append('单文件 exe 实机读取当前角色，71张常规图自动推荐与准入检查正常')
+
             report['game_pid'] = state['pid']
             report['equipment_count'] = len(state['items'])
             assert all('base' in item['groups'] for item in state['items'])

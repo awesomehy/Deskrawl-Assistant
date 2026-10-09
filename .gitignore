@@ -58,3 +58,9 @@ docs/*
 !docs/经验收益说明.md
 !data/experience-types.json
 !docs/experience-reader-verification.md
+
+!data/recommendation-catalog.json
+!data/recommendation-types.json
+!tools/extract_recommendation_catalog.py
+!docs/刷图推荐说明.md
+!docs/recommendation-model.md

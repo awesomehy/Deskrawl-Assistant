@@ -106,6 +106,13 @@ class RuntimeClient:
             value['profile'] = value['character'] + ' · 等级 ' + str(value['level']) + (' · 模式 ' + parts[0] if len(parts)==3 else '')
             return value
 
+    def recommendation_snapshot(self):
+        from .recommendation_reader import read_recommendation
+        with self._guard:
+            if self._reader is None:
+                raise RuntimeConnectionError('尚未连接游戏。')
+            return read_recommendation(self._reader)
+
     def lock_equipment(self, expected, validate=lambda row: True):
         from .background_lock import lock_equipment
         with self._guard:

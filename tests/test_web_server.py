@@ -12,6 +12,14 @@ from deskrawl_assistant.web_server import make_handler
 class FakeService:
     def __init__(self):self.actions=[]
     def start(self,kind,data):self.actions.append(kind)
+    def recommendation_page(self):
+        return {'available':False,'rows':[],'error':'尚未连接角色'}
+    def recommendation_settings(self,data):
+        from deskrawl_assistant.recommendation_book import validate_settings
+        return {'settings':validate_settings(data.get('settings',data),['Normal','Nightmare','Inferno'])}
+    def recommendation_reset(self):
+        self.actions.append('recommendation-reset')
+        return {'ok':True}
     def catalog_payload(self):return {'equipment':[]}
     def state(self):return {'connected':False}
     def log_page(self,**filters):
@@ -88,6 +96,26 @@ class HttpTests(unittest.TestCase):
         code,_,body=self.request('/api/logs?category=transfer&query=%E5%AE%9D%E7%9F%B3&before=123&limit=20')
         self.assertEqual(code,200)
         self.assertEqual(json.loads(body)['filters'],dict(category='transfer',query='宝石',before=123,limit=20))
+
+    def test_recommendation_status_and_query_validation(self):
+        code,_,body=self.request('/api/recommendations')
+        self.assertEqual(code,200)
+        self.assertEqual(json.loads(body)['rows'],[])
+        self.assertEqual(self.request('/api/recommendations?minutes=bad')[0],400)
+
+    def test_recommendation_mutations_require_session_and_validate_values(self):
+        endpoint='/api/recommendations/settings'
+        self.assertEqual(self.request(endpoint,{'minutes':30})[0],403)
+        headers={'X-Assistant-Token':'test-session-token','Origin':self.url}
+        code,_,body=self.request(endpoint,{'minutes':30},headers)
+        self.assertEqual(code,200)
+        self.assertEqual(json.loads(body)['settings']['minutes'],30)
+        for value in ({'minutes':float('nan')},{'difficulty':'Other'},{'include_locked':1},{'sort':'bad'}):
+            self.assertEqual(self.request(endpoint,value,headers)[0],400)
+        self.assertEqual(self.request('/api/recommendations/calibration/reset',{})[0],403)
+        self.assertFalse(self.service.actions)
+        self.assertEqual(self.request('/api/recommendations/calibration/reset',{},headers)[0],200)
+        self.assertEqual(self.service.actions,['recommendation-reset'])
 
     def test_invalid_log_filters_are_client_errors(self):
         for query in ('limit=bad','limit=10000','category=invalid','unknown=1','limit=2&limit=3'):

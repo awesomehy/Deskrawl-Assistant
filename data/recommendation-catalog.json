@@ -1,0 +1,5747 @@
+{
+  "schema_version": 1,
+  "metadata_sha256": "2c0ae47e1ee26b6c787d5294f04680b6b875d84e8d5f6db1e574446892e3f2ad",
+  "game_assembly_sha256": "c242676ed070072388b4231a5c215812c8bc3d53c21f9277c7c0afa4fa4fa2da",
+  "source": "Verified shipped MapData and Enemy assets; integrity-checked Obscured values. No player/save data.",
+  "asset_sha256": {
+    "resources.assets": "ff823400ac4fa0a0b1d62034192604dc17da52d9b213f86b49085ac931750de0",
+    "sharedassets0.assets": "96687c2558329d3562d60b14fc9fab4a11ce557e3bed43c3f118cd2cfe03de21",
+    "globalgamemanagers.assets": "f6052b57552a909807b5f2b911eb5e480ba3e9b6d626dd307db04e3e70c6f26b"
+  },
+  "config": {
+    "XpPerBaseHealth": 1.0,
+    "XpPerLevelScale": 0.10000000149011612,
+    "XpZeroUnderLevel": 6,
+    "MaxPlayerLevel": 70,
+    "health_growth": [
+      0.11999999731779099,
+      0.07999999821186066,
+      0.05999999865889549
+    ],
+    "damage_growth": [
+      0.10000000149011612,
+      0.03999999910593033,
+      0.029999999329447746
+    ],
+    "EliteHealthMultiplier": 3.0,
+    "EliteDamageMultiplier": 1.5
+  },
+  "difficulties": {
+    "Normal": {
+      "value": 0,
+      "health_multiplier": 1.0,
+      "damage_multiplier": 1.0,
+      "xp_multiplier": 1.0
+    },
+    "Nightmare": {
+      "value": 1,
+      "health_multiplier": 3.5,
+      "damage_multiplier": 1.350000023841858,
+      "xp_multiplier": 1.5
+    },
+    "Inferno": {
+      "value": 2,
+      "health_multiplier": 6.0,
+      "damage_multiplier": 1.7999999523162842,
+      "xp_multiplier": 2.0
+    }
+  },
+  "difficulty_options": [
+    {
+      "id": "Normal",
+      "label": "普通"
+    },
+    {
+      "id": "Nightmare",
+      "label": "噩梦"
+    },
+    {
+      "id": "Inferno",
+      "label": "炼狱"
+    }
+  ],
+  "maps": [
+    {
+      "map_id": "Beach1",
+      "stage": "塔赞群岛 1",
+      "family": "Beach",
+      "map_type": 0,
+      "min_level": 34,
+      "max_level": 35,
+      "waves": 10,
+      "prerequisite": "Desert7",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachHermitCrab",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachNaga",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60287
+    },
+    {
+      "map_id": "Beach2",
+      "stage": "塔赞群岛 2",
+      "family": "Beach",
+      "map_type": 0,
+      "min_level": 36,
+      "max_level": 36,
+      "waves": 10,
+      "prerequisite": "Beach1",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.05000000074505806,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachHermitCrab",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachNaga",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachHermitCrab",
+              "count": 4,
+              "row": 0
+            },
+            {
+              "enemy_id": "BeachNaga",
+              "count": 1,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60288
+    },
+    {
+      "map_id": "Beach3",
+      "stage": "塔赞群岛 3",
+      "family": "Beach",
+      "map_type": 0,
+      "min_level": 37,
+      "max_level": 37,
+      "waves": 10,
+      "prerequisite": "Beach2",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachSquid",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachNaga",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachHermitCrab",
+              "count": 4,
+              "row": 0
+            },
+            {
+              "enemy_id": "BeachNaga",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60289
+    },
+    {
+      "map_id": "Beach4",
+      "stage": "塔赞群岛 4",
+      "family": "Beach",
+      "map_type": 0,
+      "min_level": 38,
+      "max_level": 38,
+      "waves": 12,
+      "prerequisite": "Beach3",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachNaga",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachSquid",
+              "count": 5,
+              "row": 0
+            },
+            {
+              "enemy_id": "BeachNaga",
+              "count": 1,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "BeachTurtleBoss",
+            "count": 1,
+            "row": 0
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": true,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60290
+    },
+    {
+      "map_id": "Beach5",
+      "stage": "塔赞群岛 5",
+      "family": "Beach",
+      "map_type": 0,
+      "min_level": 39,
+      "max_level": 39,
+      "waves": 10,
+      "prerequisite": "Beach4",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachSquid",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachSerpent",
+              "count": 1,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60291
+    },
+    {
+      "map_id": "Beach6",
+      "stage": "塔赞群岛 6",
+      "family": "Beach",
+      "map_type": 0,
+      "min_level": 40,
+      "max_level": 40,
+      "waves": 10,
+      "prerequisite": "Beach5",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachSquid",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachSerpent",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachNaga",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60292
+    },
+    {
+      "map_id": "Beach7",
+      "stage": "塔赞群岛 7",
+      "family": "Beach",
+      "map_type": 0,
+      "min_level": 40,
+      "max_level": 40,
+      "waves": 10,
+      "prerequisite": "Beach6",
+      "requirements": [
+        {
+          "item_id": "Skull",
+          "count": 1,
+          "difficulty_mask": 1
+        },
+        {
+          "item_id": "SkullNightmare",
+          "count": 1,
+          "difficulty_mask": 2
+        },
+        {
+          "item_id": "SkullInferno",
+          "count": 1,
+          "difficulty_mask": 4
+        }
+      ],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachSquid",
+              "count": 7,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachSerpent",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "BeachNaga",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "BeachSerpent",
+              "count": 1,
+              "row": 1
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "BeachCrabBoss",
+            "count": 1,
+            "row": 0
+          },
+          {
+            "enemy_id": "BeachHermitCrab_BossMinion",
+            "count": 4,
+            "row": 0
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60293
+    },
+    {
+      "map_id": "CorruptForest1",
+      "stage": "国王森林南部 1",
+      "family": "CorruptForest",
+      "map_type": 0,
+      "min_level": 20,
+      "max_level": 21,
+      "waves": 10,
+      "prerequisite": "DungeonL3",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "ZombieWolf",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "PoisonSpider",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60294
+    },
+    {
+      "map_id": "CorruptForest2",
+      "stage": "国王森林南部 2",
+      "family": "CorruptForest",
+      "map_type": 0,
+      "min_level": 22,
+      "max_level": 23,
+      "waves": 10,
+      "prerequisite": "CorruptForest1",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.05000000074505806,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "ZombieWolf",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "PoisonSpider",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "ZombieWolf",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "PoisonSpider",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60295
+    },
+    {
+      "map_id": "CorruptForest3",
+      "stage": "国王森林南部 3",
+      "family": "CorruptForest",
+      "map_type": 0,
+      "min_level": 24,
+      "max_level": 24,
+      "waves": 10,
+      "prerequisite": "CorruptForest2",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "ZombieWolf",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "PoisonSpider",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "ZombieWolf",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "PoisonSpider",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60296
+    },
+    {
+      "map_id": "CorruptForest4",
+      "stage": "国王森林南部 4",
+      "family": "CorruptForest",
+      "map_type": 0,
+      "min_level": 25,
+      "max_level": 25,
+      "waves": 12,
+      "prerequisite": "CorruptForest3",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "ZombieWolf",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "PoisonSpider",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Stumplin",
+              "count": 4,
+              "row": 0
+            },
+            {
+              "enemy_id": "PoisonSpider",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "ZombieWolf",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "PoisonSpider",
+            "count": 2,
+            "row": 0
+          },
+          {
+            "enemy_id": "PoisonSpider",
+            "count": 2,
+            "row": 1
+          },
+          {
+            "enemy_id": "ForestSpiderKing",
+            "count": 1,
+            "row": 2
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": true,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60297
+    },
+    {
+      "map_id": "CorruptForest5",
+      "stage": "国王森林南部 5",
+      "family": "CorruptForest",
+      "map_type": 0,
+      "min_level": 26,
+      "max_level": 26,
+      "waves": 10,
+      "prerequisite": "CorruptForest4",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.05000000074505806,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "ZombieWolf",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "PoisonSpider",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Stumplin",
+              "count": 4,
+              "row": 0
+            },
+            {
+              "enemy_id": "PoisonSpider",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "ZombieWolf",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60298
+    },
+    {
+      "map_id": "CorruptForest6",
+      "stage": "国王森林南部 6",
+      "family": "CorruptForest",
+      "map_type": 0,
+      "min_level": 27,
+      "max_level": 27,
+      "waves": 10,
+      "prerequisite": "CorruptForest5",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "ZombieWolf",
+              "count": 4,
+              "row": 0
+            },
+            {
+              "enemy_id": "Stumplin",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "ZombieWolf",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "Stumplin",
+              "count": 6,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Stumplin",
+              "count": 9,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60299
+    },
+    {
+      "map_id": "CorruptForest7",
+      "stage": "国王森林南部 7",
+      "family": "CorruptForest",
+      "map_type": 0,
+      "min_level": 28,
+      "max_level": 28,
+      "waves": 10,
+      "prerequisite": "CorruptForest6",
+      "requirements": [
+        {
+          "item_id": "Skull",
+          "count": 1,
+          "difficulty_mask": 1
+        },
+        {
+          "item_id": "SkullNightmare",
+          "count": 1,
+          "difficulty_mask": 2
+        },
+        {
+          "item_id": "SkullInferno",
+          "count": 1,
+          "difficulty_mask": 4
+        }
+      ],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "ZombieWolf",
+              "count": 4,
+              "row": 0
+            },
+            {
+              "enemy_id": "Stumplin",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "ZombieWolf",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "Stumplin",
+              "count": 6,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Stumplin",
+              "count": 9,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "Stumplin",
+            "count": 5,
+            "row": 0
+          },
+          {
+            "enemy_id": "BigTreant",
+            "count": 1,
+            "row": 1
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60300
+    },
+    {
+      "map_id": "DefiledKeep1",
+      "stage": "污秽要塞 1",
+      "family": "DefiledKeep",
+      "map_type": 0,
+      "min_level": 58,
+      "max_level": 59,
+      "waves": 10,
+      "prerequisite": "SnowHill7",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DefiledKeepOoze",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "DefiledKeepOoze",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "DefiledKeepSuccubus",
+              "count": 2,
+              "row": 1
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60301
+    },
+    {
+      "map_id": "DefiledKeep2",
+      "stage": "污秽要塞 2",
+      "family": "DefiledKeep",
+      "map_type": 0,
+      "min_level": 60,
+      "max_level": 60,
+      "waves": 10,
+      "prerequisite": "DefiledKeep1",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.05000000074505806,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DefiledKeepAxemaster",
+              "count": 4,
+              "row": 0
+            },
+            {
+              "enemy_id": "DefiledKeepSuccubus",
+              "count": 3,
+              "row": 1
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "DefiledKeepScarab",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60302
+    },
+    {
+      "map_id": "DefiledKeep3",
+      "stage": "污秽要塞 3",
+      "family": "DefiledKeep",
+      "map_type": 0,
+      "min_level": 61,
+      "max_level": 61,
+      "waves": 10,
+      "prerequisite": "DefiledKeep2",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DefiledKeepScarab",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DefiledKeepOoze",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "DefiledKeepSuccubus",
+              "count": 3,
+              "row": 1
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "DefiledKeepAxemaster",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60303
+    },
+    {
+      "map_id": "DefiledKeep4",
+      "stage": "污秽要塞 4",
+      "family": "DefiledKeep",
+      "map_type": 0,
+      "min_level": 62,
+      "max_level": 62,
+      "waves": 12,
+      "prerequisite": "DefiledKeep3",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DefiledKeepScarab",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DefiledKeepOoze",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "DefiledKeepSuccubus",
+              "count": 3,
+              "row": 1
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "DefiledKeepAxemaster",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "DefiledKeepReaper",
+            "count": 1,
+            "row": 1
+          },
+          {
+            "enemy_id": "DefiledKeepAxemaster",
+            "count": 3,
+            "row": 0
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": true,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60304
+    },
+    {
+      "map_id": "DefiledKeep5",
+      "stage": "污秽要塞 5",
+      "family": "DefiledKeep",
+      "map_type": 0,
+      "min_level": 63,
+      "max_level": 63,
+      "waves": 10,
+      "prerequisite": "DefiledKeep4",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DefiledKeepAxemaster",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "DefiledKeepScarab",
+              "count": 3,
+              "row": 1
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "DefiledKeepOoze",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "DefiledKeepSuccubus",
+              "count": 3,
+              "row": 1
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60305
+    },
+    {
+      "map_id": "DefiledKeep6",
+      "stage": "污秽要塞 6",
+      "family": "DefiledKeep",
+      "map_type": 0,
+      "min_level": 64,
+      "max_level": 64,
+      "waves": 10,
+      "prerequisite": "DefiledKeep5",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DefiledKeepScarab",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "DefiledKeepAxemaster",
+              "count": 4,
+              "row": 1
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "DefiledKeepAxemaster",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "DefiledKeepSuccubus",
+              "count": 3,
+              "row": 1
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60306
+    },
+    {
+      "map_id": "DefiledKeep7",
+      "stage": "污秽要塞 7",
+      "family": "DefiledKeep",
+      "map_type": 0,
+      "min_level": 64,
+      "max_level": 64,
+      "waves": 10,
+      "prerequisite": "DefiledKeep6",
+      "requirements": [
+        {
+          "item_id": "Skull",
+          "count": 1,
+          "difficulty_mask": 1
+        },
+        {
+          "item_id": "SkullNightmare",
+          "count": 1,
+          "difficulty_mask": 2
+        },
+        {
+          "item_id": "SkullInferno",
+          "count": 1,
+          "difficulty_mask": 4
+        }
+      ],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DefiledKeepScarab",
+              "count": 6,
+              "row": 1
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "DefiledKeepAxemaster",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "DefiledKeepOoze",
+              "count": 5,
+              "row": 1
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "DefiledKeepDragon",
+            "count": 1,
+            "row": 0
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60307
+    },
+    {
+      "map_id": "Desert1",
+      "stage": "塔赞荒漠 1",
+      "family": "Desert",
+      "map_type": 0,
+      "min_level": 28,
+      "max_level": 29,
+      "waves": 10,
+      "prerequisite": "CorruptForest7",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertEagle",
+              "count": 1,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertWasp",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60308
+    },
+    {
+      "map_id": "Desert2",
+      "stage": "塔赞荒漠 2",
+      "family": "Desert",
+      "map_type": 0,
+      "min_level": 30,
+      "max_level": 30,
+      "waves": 10,
+      "prerequisite": "Desert1",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.05000000074505806,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertEagle",
+              "count": 1,
+              "row": 0
+            },
+            {
+              "enemy_id": "DesertWasp",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertKoboldThief",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertWasp",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60309
+    },
+    {
+      "map_id": "Desert3",
+      "stage": "塔赞荒漠 3",
+      "family": "Desert",
+      "map_type": 0,
+      "min_level": 31,
+      "max_level": 31,
+      "waves": 10,
+      "prerequisite": "Desert2",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertEagle",
+              "count": 1,
+              "row": 0
+            },
+            {
+              "enemy_id": "DesertWasp",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertKoboldThief",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertWasp",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60310
+    },
+    {
+      "map_id": "Desert4",
+      "stage": "塔赞荒漠 4",
+      "family": "Desert",
+      "map_type": 0,
+      "min_level": 32,
+      "max_level": 32,
+      "waves": 12,
+      "prerequisite": "Desert3",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertEagle",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertKoboldWarrior",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertKoboldThief",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "DesertEagle",
+            "count": 2,
+            "row": 0
+          },
+          {
+            "enemy_id": "DesertHarpy",
+            "count": 1,
+            "row": 1
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": true,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60311
+    },
+    {
+      "map_id": "Desert5",
+      "stage": "塔赞荒漠 5",
+      "family": "Desert",
+      "map_type": 0,
+      "min_level": 33,
+      "max_level": 33,
+      "waves": 10,
+      "prerequisite": "Desert4",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertKoboldThief",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "DesertKoboldWarrior",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertEagle",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertKoboldWarrior",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60312
+    },
+    {
+      "map_id": "Desert6",
+      "stage": "塔赞荒漠 6",
+      "family": "Desert",
+      "map_type": 0,
+      "min_level": 34,
+      "max_level": 34,
+      "waves": 10,
+      "prerequisite": "Desert5",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertKoboldThief",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "DesertKoboldWarrior",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertWasp",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertKoboldThief",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "DesertWasp",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60313
+    },
+    {
+      "map_id": "Desert7",
+      "stage": "塔赞荒漠 7",
+      "family": "Desert",
+      "map_type": 0,
+      "min_level": 34,
+      "max_level": 34,
+      "waves": 10,
+      "prerequisite": "Desert6",
+      "requirements": [
+        {
+          "item_id": "Skull",
+          "count": 1,
+          "difficulty_mask": 1
+        },
+        {
+          "item_id": "SkullNightmare",
+          "count": 1,
+          "difficulty_mask": 2
+        },
+        {
+          "item_id": "SkullInferno",
+          "count": 1,
+          "difficulty_mask": 4
+        }
+      ],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertKoboldThief",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "DesertKoboldWarrior",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertWasp",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "DesertKoboldThief",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "DesertWasp",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "DesertKoboldWarrior",
+            "count": 2,
+            "row": 0
+          },
+          {
+            "enemy_id": "DesertManticoraBoss",
+            "count": 1,
+            "row": 1
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60314
+    },
+    {
+      "map_id": "Dungeon1",
+      "stage": "尖塔山丘墓穴 1",
+      "family": "Dungeon",
+      "map_type": 0,
+      "min_level": 11,
+      "max_level": 12,
+      "waves": 8,
+      "prerequisite": "Forest7",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SkeletonArcher",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "GoblinWarrior",
+              "count": 6,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "GoblinWarrior",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "SkeletonArcher",
+              "count": 1,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60316
+    },
+    {
+      "map_id": "Dungeon2",
+      "stage": "尖塔山丘墓穴 2",
+      "family": "Dungeon",
+      "map_type": 0,
+      "min_level": 13,
+      "max_level": 14,
+      "waves": 10,
+      "prerequisite": "Dungeon1",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.05000000074505806,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SkeletonArcher",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "GoblinWarrior",
+              "count": 7,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "GoblinWarrior",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "SkeletonArcher",
+              "count": 1,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.5,
+          "enemies": [
+            {
+              "enemy_id": "OrcWarrior",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60317
+    },
+    {
+      "map_id": "Dungeon3",
+      "stage": "尖塔山丘墓穴 3",
+      "family": "Dungeon",
+      "map_type": 0,
+      "min_level": 15,
+      "max_level": 15,
+      "waves": 10,
+      "prerequisite": "Dungeon2",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SkeletonArcher",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "GoblinWarrior",
+              "count": 7,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "GoblinWarrior",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "SkeletonArcher",
+              "count": 1,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.5,
+          "enemies": [
+            {
+              "enemy_id": "OrcWarrior",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60318
+    },
+    {
+      "map_id": "Dungeon4",
+      "stage": "尖塔山丘墓穴 4",
+      "family": "Dungeon",
+      "map_type": 0,
+      "min_level": 16,
+      "max_level": 16,
+      "waves": 12,
+      "prerequisite": "Dungeon3",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SkeletonArcher",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "GoblinWarrior",
+              "count": 7,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "GoblinWarrior",
+              "count": 4,
+              "row": 0
+            },
+            {
+              "enemy_id": "SkeletonArcher",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.5,
+          "enemies": [
+            {
+              "enemy_id": "OrcWarrior",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "GoblinWarrior",
+            "count": 2,
+            "row": 0
+          },
+          {
+            "enemy_id": "DarkElfMage",
+            "count": 1,
+            "row": 1
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": true,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60319
+    },
+    {
+      "map_id": "DungeonL1",
+      "stage": "尖塔山丘墓穴下层 1",
+      "family": "DungeonL",
+      "map_type": 0,
+      "min_level": 17,
+      "max_level": 17,
+      "waves": 10,
+      "prerequisite": "Dungeon4",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SkeletonArcher",
+              "count": 6,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "OrcWarrior",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "SkeletonArcher",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.5,
+          "enemies": [
+            {
+              "enemy_id": "OrcWarrior",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60320
+    },
+    {
+      "map_id": "DungeonL2",
+      "stage": "尖塔山丘墓穴下层 2",
+      "family": "DungeonL",
+      "map_type": 0,
+      "min_level": 18,
+      "max_level": 18,
+      "waves": 10,
+      "prerequisite": "DungeonL1",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SkeletonArcher",
+              "count": 6,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "OrcWarrior",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "SkeletonArcher",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.5,
+          "enemies": [
+            {
+              "enemy_id": "OrcWarrior",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60321
+    },
+    {
+      "map_id": "DungeonL3",
+      "stage": "尖塔山丘墓穴下层 3",
+      "family": "DungeonL",
+      "map_type": 0,
+      "min_level": 19,
+      "max_level": 19,
+      "waves": 10,
+      "prerequisite": "DungeonL2",
+      "requirements": [
+        {
+          "item_id": "Skull",
+          "count": 1,
+          "difficulty_mask": 1
+        },
+        {
+          "item_id": "SkullNightmare",
+          "count": 1,
+          "difficulty_mask": 2
+        },
+        {
+          "item_id": "SkullInferno",
+          "count": 1,
+          "difficulty_mask": 4
+        }
+      ],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "GoblinWarrior",
+              "count": 11,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "OrcWarrior",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "SkeletonArcher",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.5,
+          "enemies": [
+            {
+              "enemy_id": "OrcWarrior",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "OrcWarrior",
+            "count": 3,
+            "row": 0
+          },
+          {
+            "enemy_id": "Ogre",
+            "count": 1,
+            "row": 1
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60322
+    },
+    {
+      "map_id": "Forest1",
+      "stage": "国王森林 1",
+      "family": "Forest",
+      "map_type": 0,
+      "min_level": 1,
+      "max_level": 2,
+      "waves": 6,
+      "prerequisite": null,
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Spider",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "Wolf",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60326
+    },
+    {
+      "map_id": "Forest2",
+      "stage": "国王森林 2",
+      "family": "Forest",
+      "map_type": 0,
+      "min_level": 3,
+      "max_level": 4,
+      "waves": 7,
+      "prerequisite": "Forest1",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Spider",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Wolf",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60327
+    },
+    {
+      "map_id": "Forest3",
+      "stage": "国王森林 3",
+      "family": "Forest",
+      "map_type": 0,
+      "min_level": 5,
+      "max_level": 6,
+      "waves": 8,
+      "prerequisite": "Forest2",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.05000000074505806,
+      "normal_pool": [
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "Boar",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.20000000298023224,
+          "enemies": [
+            {
+              "enemy_id": "Spider",
+              "count": 6,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Wolf",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60328
+    },
+    {
+      "map_id": "Forest4",
+      "stage": "国王森林 4",
+      "family": "Forest",
+      "map_type": 0,
+      "min_level": 7,
+      "max_level": 7,
+      "waves": 10,
+      "prerequisite": "Forest3",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Boar",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Spider",
+              "count": 6,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "Raptor",
+            "count": 1,
+            "row": 0
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": true,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60329
+    },
+    {
+      "map_id": "Forest5",
+      "stage": "国王森林 5",
+      "family": "Forest",
+      "map_type": 0,
+      "min_level": 8,
+      "max_level": 8,
+      "waves": 8,
+      "prerequisite": "Forest4",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "Boar",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.20000000298023224,
+          "enemies": [
+            {
+              "enemy_id": "Spider",
+              "count": 6,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Wolf",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60330
+    },
+    {
+      "map_id": "Forest6",
+      "stage": "国王森林 6",
+      "family": "Forest",
+      "map_type": 0,
+      "min_level": 9,
+      "max_level": 9,
+      "waves": 8,
+      "prerequisite": "Forest5",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "Boar",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Wolf",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60331
+    },
+    {
+      "map_id": "Forest7",
+      "stage": "国王森林 7",
+      "family": "Forest",
+      "map_type": 0,
+      "min_level": 10,
+      "max_level": 10,
+      "waves": 10,
+      "prerequisite": "Forest6",
+      "requirements": [
+        {
+          "item_id": "Skull",
+          "count": 1,
+          "difficulty_mask": 1
+        },
+        {
+          "item_id": "SkullNightmare",
+          "count": 1,
+          "difficulty_mask": 2
+        },
+        {
+          "item_id": "SkullInferno",
+          "count": 1,
+          "difficulty_mask": 4
+        }
+      ],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Boar",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Wolf",
+              "count": 6,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "Wolf",
+            "count": 3,
+            "row": 0
+          },
+          {
+            "enemy_id": "Werewolf",
+            "count": 1,
+            "row": 1
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60332
+    },
+    {
+      "map_id": "LockedMap",
+      "stage": "封锁区域",
+      "family": "LockedMap",
+      "map_type": 0,
+      "min_level": 1,
+      "max_level": 1,
+      "waves": 4,
+      "prerequisite": null,
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": true,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Boar",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Spider",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Wolf",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 5332
+    },
+    {
+      "map_id": "MythicDungeon",
+      "stage": "神话裂隙",
+      "family": "MythicDungeon",
+      "map_type": 1,
+      "min_level": 70,
+      "max_level": 70,
+      "waves": 10,
+      "prerequisite": null,
+      "requirements": [
+        {
+          "item_id": "SkullInferno",
+          "count": 3,
+          "difficulty_mask": -1
+        }
+      ],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "GoblinWarrior",
+              "count": 5,
+              "row": 0
+            },
+            {
+              "enemy_id": "SkeletonWarrior",
+              "count": 5,
+              "row": 0
+            },
+            {
+              "enemy_id": "OrcWarrior",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "DarkElfMage",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "Dragon",
+            "count": 1,
+            "row": 0
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": false,
+      "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
+      "source_path_id": 60334
+    },
+    {
+      "map_id": "RedDesert1",
+      "stage": "贫瘠之地 1",
+      "family": "RedDesert",
+      "map_type": 0,
+      "min_level": 40,
+      "max_level": 41,
+      "waves": 10,
+      "prerequisite": "Beach7",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertCrocodile",
+              "count": 1,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertSatyr",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60335
+    },
+    {
+      "map_id": "RedDesert2",
+      "stage": "贫瘠之地 2",
+      "family": "RedDesert",
+      "map_type": 0,
+      "min_level": 42,
+      "max_level": 42,
+      "waves": 10,
+      "prerequisite": "RedDesert1",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.05000000074505806,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertCrocodile",
+              "count": 1,
+              "row": 0
+            },
+            {
+              "enemy_id": "RedDesertSatyr",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertImp",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertCrocodile",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60336
+    },
+    {
+      "map_id": "RedDesert3",
+      "stage": "贫瘠之地 3",
+      "family": "RedDesert",
+      "map_type": 0,
+      "min_level": 43,
+      "max_level": 43,
+      "waves": 10,
+      "prerequisite": "RedDesert2",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertSatyr",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "RedDesertImp",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertCrocodile",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "RedDesertSatyr",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertImp",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60337
+    },
+    {
+      "map_id": "RedDesert4",
+      "stage": "贫瘠之地 4",
+      "family": "RedDesert",
+      "map_type": 0,
+      "min_level": 44,
+      "max_level": 44,
+      "waves": 12,
+      "prerequisite": "RedDesert3",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertCrocodile",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertSatyr",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertImp",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "RedDesertCrocodile",
+            "count": 3,
+            "row": 0
+          },
+          {
+            "enemy_id": "RedDesertCrocodile",
+            "count": 4,
+            "row": 1
+          },
+          {
+            "enemy_id": "RedDesertSerparmat",
+            "count": 1,
+            "row": 2
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": true,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60338
+    },
+    {
+      "map_id": "RedDesert5",
+      "stage": "贫瘠之地 5",
+      "family": "RedDesert",
+      "map_type": 0,
+      "min_level": 45,
+      "max_level": 45,
+      "waves": 10,
+      "prerequisite": "RedDesert4",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertRockGolem",
+              "count": 1,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertSatyr",
+              "count": 4,
+              "row": 0
+            },
+            {
+              "enemy_id": "RedDesertImp",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertCrocodile",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60339
+    },
+    {
+      "map_id": "RedDesert6",
+      "stage": "贫瘠之地 6",
+      "family": "RedDesert",
+      "map_type": 0,
+      "min_level": 46,
+      "max_level": 46,
+      "waves": 10,
+      "prerequisite": "RedDesert5",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertRockGolem",
+              "count": 1,
+              "row": 0
+            },
+            {
+              "enemy_id": "RedDesertCrocodile",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "RedDesertImp",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertRockGolem",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "RedDesertImp",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertSatyr",
+              "count": 6,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60340
+    },
+    {
+      "map_id": "RedDesert7",
+      "stage": "贫瘠之地 7",
+      "family": "RedDesert",
+      "map_type": 0,
+      "min_level": 46,
+      "max_level": 46,
+      "waves": 10,
+      "prerequisite": "RedDesert6",
+      "requirements": [
+        {
+          "item_id": "Skull",
+          "count": 1,
+          "difficulty_mask": 1
+        },
+        {
+          "item_id": "SkullNightmare",
+          "count": 1,
+          "difficulty_mask": 2
+        },
+        {
+          "item_id": "SkullInferno",
+          "count": 1,
+          "difficulty_mask": 4
+        }
+      ],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertRockGolem",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "RedDesertImp",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertSatyr",
+              "count": 4,
+              "row": 0
+            },
+            {
+              "enemy_id": "RedDesertImp",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedDesertRockGolem",
+              "count": 1,
+              "row": 0
+            },
+            {
+              "enemy_id": "RedDesertSatyr",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "RedDesertRockGolem",
+            "count": 2,
+            "row": 0
+          },
+          {
+            "enemy_id": "RedDesertAirWarlord",
+            "count": 1,
+            "row": 1
+          },
+          {
+            "enemy_id": "RedDesertRockGolem",
+            "count": 2,
+            "row": 2
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60341
+    },
+    {
+      "map_id": "RedForest1",
+      "stage": "绯红山谷 1",
+      "family": "RedForest",
+      "map_type": 0,
+      "min_level": 46,
+      "max_level": 47,
+      "waves": 10,
+      "prerequisite": "RedDesert7",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedForestBear",
+              "count": 1,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedForestTiger",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60342
+    },
+    {
+      "map_id": "RedForest2",
+      "stage": "绯红山谷 2",
+      "family": "RedForest",
+      "map_type": 0,
+      "min_level": 48,
+      "max_level": 48,
+      "waves": 10,
+      "prerequisite": "RedForest1",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.05000000074505806,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedForestBear",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "RedForestTiger",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60343
+    },
+    {
+      "map_id": "RedForest3",
+      "stage": "绯红山谷 3",
+      "family": "RedForest",
+      "map_type": 0,
+      "min_level": 49,
+      "max_level": 49,
+      "waves": 10,
+      "prerequisite": "RedForest2",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedForestBear",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "RedForestGiant",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "RedForestTiger",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60344
+    },
+    {
+      "map_id": "RedForest4",
+      "stage": "绯红山谷 4",
+      "family": "RedForest",
+      "map_type": 0,
+      "min_level": 50,
+      "max_level": 50,
+      "waves": 12,
+      "prerequisite": "RedForest3",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedForestBear",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "RedForestGiant",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "RedForestTiger",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "RedForestHobgoblin",
+            "count": 1,
+            "row": 1
+          },
+          {
+            "enemy_id": "RedForestTiger",
+            "count": 3,
+            "row": 0
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": true,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60345
+    },
+    {
+      "map_id": "RedForest5",
+      "stage": "绯红山谷 5",
+      "family": "RedForest",
+      "map_type": 0,
+      "min_level": 51,
+      "max_level": 51,
+      "waves": 10,
+      "prerequisite": "RedForest4",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedForestBear",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "RedForestTiger",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedForestFaeDragon",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedForestGiant",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60346
+    },
+    {
+      "map_id": "RedForest6",
+      "stage": "绯红山谷 6",
+      "family": "RedForest",
+      "map_type": 0,
+      "min_level": 52,
+      "max_level": 52,
+      "waves": 10,
+      "prerequisite": "RedForest5",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedForestTiger",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "RedForestBear",
+              "count": 1,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedForestFaeDragon",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "RedForestGiant",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60347
+    },
+    {
+      "map_id": "RedForest7",
+      "stage": "绯红山谷 7",
+      "family": "RedForest",
+      "map_type": 0,
+      "min_level": 52,
+      "max_level": 52,
+      "waves": 10,
+      "prerequisite": "RedForest6",
+      "requirements": [
+        {
+          "item_id": "Skull",
+          "count": 1,
+          "difficulty_mask": 1
+        },
+        {
+          "item_id": "SkullNightmare",
+          "count": 1,
+          "difficulty_mask": 2
+        },
+        {
+          "item_id": "SkullInferno",
+          "count": 1,
+          "difficulty_mask": 4
+        }
+      ],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "RedForestFaeDragon",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "RedForestGiant",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "RedForestFaeDragon",
+              "count": 3,
+              "row": 1
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "RedForestDragon",
+            "count": 1,
+            "row": 0
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60348
+    },
+    {
+      "map_id": "SnowHill1",
+      "stage": "维尔达克高地 1",
+      "family": "SnowHill",
+      "map_type": 0,
+      "min_level": 52,
+      "max_level": 53,
+      "waves": 10,
+      "prerequisite": "RedForest7",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillSlime",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillWhelp",
+              "count": 1,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60349
+    },
+    {
+      "map_id": "SnowHill2",
+      "stage": "维尔达克高地 2",
+      "family": "SnowHill",
+      "map_type": 0,
+      "min_level": 54,
+      "max_level": 54,
+      "waves": 10,
+      "prerequisite": "SnowHill1",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.05000000074505806,
+      "normal_pool": [
+        {
+          "weight": 0.699999988079071,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillSlime",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillWhelp",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60350
+    },
+    {
+      "map_id": "SnowHill3",
+      "stage": "维尔达克高地 3",
+      "family": "SnowHill",
+      "map_type": 0,
+      "min_level": 55,
+      "max_level": 55,
+      "waves": 10,
+      "prerequisite": "SnowHill2",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillSlime",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillWhelp",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.699999988079071,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillZombieWarrior",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60351
+    },
+    {
+      "map_id": "SnowHill4",
+      "stage": "维尔达克高地 4",
+      "family": "SnowHill",
+      "map_type": 0,
+      "min_level": 56,
+      "max_level": 56,
+      "waves": 12,
+      "prerequisite": "SnowHill3",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillSlime",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillWhelp",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillZombieWarrior",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "SnowHillIceHound",
+            "count": 1,
+            "row": 2
+          },
+          {
+            "enemy_id": "SnowHillSlime",
+            "count": 5,
+            "row": 0
+          },
+          {
+            "enemy_id": "SnowHillSlime",
+            "count": 5,
+            "row": 1
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": true,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60352
+    },
+    {
+      "map_id": "SnowHill5",
+      "stage": "维尔达克高地 5",
+      "family": "SnowHill",
+      "map_type": 0,
+      "min_level": 57,
+      "max_level": 57,
+      "waves": 10,
+      "prerequisite": "SnowHill4",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 0.800000011920929,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillWhelp",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.800000011920929,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillZombieWarrior",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillZombieWarrior",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "SnowHillWhelp",
+              "count": 1,
+              "row": 1
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60353
+    },
+    {
+      "map_id": "SnowHill6",
+      "stage": "维尔达克高地 6",
+      "family": "SnowHill",
+      "map_type": 0,
+      "min_level": 58,
+      "max_level": 58,
+      "waves": 10,
+      "prerequisite": "SnowHill5",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 0.800000011920929,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillZombieWarrior",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillZombieWarrior",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "SnowHillWhelp",
+              "count": 1,
+              "row": 1
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillRockElemental",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60354
+    },
+    {
+      "map_id": "SnowHill7",
+      "stage": "维尔达克高地 7",
+      "family": "SnowHill",
+      "map_type": 0,
+      "min_level": 58,
+      "max_level": 58,
+      "waves": 10,
+      "prerequisite": "SnowHill6",
+      "requirements": [
+        {
+          "item_id": "Skull",
+          "count": 1,
+          "difficulty_mask": 1
+        },
+        {
+          "item_id": "SkullNightmare",
+          "count": 1,
+          "difficulty_mask": 2
+        },
+        {
+          "item_id": "SkullInferno",
+          "count": 1,
+          "difficulty_mask": 4
+        }
+      ],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillZombieWarrior",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "SnowHillRockElemental",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "SnowHillFrostDragon",
+            "count": 1,
+            "row": 2
+          },
+          {
+            "enemy_id": "SnowHillWhelp",
+            "count": 3,
+            "row": 0
+          },
+          {
+            "enemy_id": "SnowHillWhelp",
+            "count": 3,
+            "row": 1
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60355
+    },
+    {
+      "map_id": "TrainingGrounds",
+      "stage": "训练场",
+      "family": "TrainingGrounds",
+      "map_type": 2,
+      "min_level": 1,
+      "max_level": 1,
+      "waves": 1,
+      "prerequisite": null,
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "TrainingDummy",
+            "count": 1,
+            "row": 0
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": false,
+      "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
+      "source_path_id": 60357
+    },
+    {
+      "map_id": "TreasureBarrens",
+      "stage": "梦幻贫瘠之地",
+      "family": "TreasureBarrens",
+      "map_type": 3,
+      "min_level": 46,
+      "max_level": 46,
+      "waves": 5,
+      "prerequisite": "RedDesert7",
+      "requirements": [
+        {
+          "item_id": "TreasureMapKey",
+          "count": 1,
+          "difficulty_mask": -7
+        },
+        {
+          "item_id": "TreasureMapKeyNightmare",
+          "count": 1,
+          "difficulty_mask": -6
+        },
+        {
+          "item_id": "TreasureMapKeyInferno",
+          "count": 1,
+          "difficulty_mask": -4
+        }
+      ],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "TreasureForestDragon",
+              "count": 5,
+              "row": 0
+            },
+            {
+              "enemy_id": "TreasureForestDragon2",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "TreasureForestDragon",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "TreasureForestDragon2",
+              "count": 8,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "TreasureForestDragon",
+              "count": 8,
+              "row": 0
+            },
+            {
+              "enemy_id": "TreasureForestDragon2",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "TreasureBarrensDragonBoss",
+            "count": 1,
+            "row": 1
+          },
+          {
+            "enemy_id": "TreasureForestDragon",
+            "count": 4,
+            "row": 0
+          },
+          {
+            "enemy_id": "TreasureForestDragon2",
+            "count": 4,
+            "row": 0
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": false,
+      "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
+      "source_path_id": 60358
+    },
+    {
+      "map_id": "TreasureForest",
+      "stage": "梦幻国王森林",
+      "family": "TreasureForest",
+      "map_type": 3,
+      "min_level": 30,
+      "max_level": 30,
+      "waves": 5,
+      "prerequisite": "CorruptForest7",
+      "requirements": [
+        {
+          "item_id": "TreasureMapKey",
+          "count": 1,
+          "difficulty_mask": -7
+        },
+        {
+          "item_id": "TreasureMapKeyNightmare",
+          "count": 1,
+          "difficulty_mask": -6
+        },
+        {
+          "item_id": "TreasureMapKeyInferno",
+          "count": 1,
+          "difficulty_mask": -4
+        }
+      ],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "TreasureForestDragon",
+              "count": 5,
+              "row": 0
+            },
+            {
+              "enemy_id": "TreasureForestDragon2",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "TreasureForestDragon",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "TreasureForestDragon2",
+              "count": 8,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "TreasureForestDragon",
+              "count": 8,
+              "row": 0
+            },
+            {
+              "enemy_id": "TreasureForestDragon2",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "TreasureForestDragonBoss",
+            "count": 1,
+            "row": 1
+          },
+          {
+            "enemy_id": "TreasureForestDragon",
+            "count": 4,
+            "row": 0
+          },
+          {
+            "enemy_id": "TreasureForestDragon2",
+            "count": 4,
+            "row": 0
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": false,
+      "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
+      "source_path_id": 60359
+    },
+    {
+      "map_id": "TreasureKeep",
+      "stage": "梦幻要塞",
+      "family": "TreasureKeep",
+      "map_type": 3,
+      "min_level": 65,
+      "max_level": 65,
+      "waves": 5,
+      "prerequisite": "DefiledKeep7",
+      "requirements": [
+        {
+          "item_id": "TreasureMapKey",
+          "count": 1,
+          "difficulty_mask": -7
+        },
+        {
+          "item_id": "TreasureMapKeyNightmare",
+          "count": 1,
+          "difficulty_mask": -6
+        },
+        {
+          "item_id": "TreasureMapKeyInferno",
+          "count": 1,
+          "difficulty_mask": -4
+        }
+      ],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "TreasureForestDragon",
+              "count": 5,
+              "row": 0
+            },
+            {
+              "enemy_id": "TreasureForestDragon2",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "TreasureForestDragon",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "TreasureForestDragon2",
+              "count": 8,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "TreasureForestDragon",
+              "count": 8,
+              "row": 0
+            },
+            {
+              "enemy_id": "TreasureForestDragon2",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "TreasureKeepDragonBoss",
+            "count": 1,
+            "row": 1
+          },
+          {
+            "enemy_id": "TreasureForestDragon",
+            "count": 4,
+            "row": 0
+          },
+          {
+            "enemy_id": "TreasureForestDragon2",
+            "count": 4,
+            "row": 0
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": false,
+      "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
+      "source_path_id": 60360
+    },
+    {
+      "map_id": "Volcano1",
+      "stage": "灰烬之冠 1",
+      "family": "Volcano",
+      "map_type": 0,
+      "min_level": 65,
+      "max_level": 65,
+      "waves": 10,
+      "prerequisite": "DefiledKeep7",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "VolcanoCinderlash",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "VolcanoHellguard",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60361
+    },
+    {
+      "map_id": "Volcano2",
+      "stage": "灰烬之冠 2",
+      "family": "Volcano",
+      "map_type": 0,
+      "min_level": 66,
+      "max_level": 66,
+      "waves": 10,
+      "prerequisite": "Volcano1",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.05000000074505806,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "VolcanoHellguard",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "VolcanoCinderlash",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60362
+    },
+    {
+      "map_id": "Volcano3",
+      "stage": "灰烬之冠 3",
+      "family": "Volcano",
+      "map_type": 0,
+      "min_level": 67,
+      "max_level": 67,
+      "waves": 10,
+      "prerequisite": "Volcano2",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "VolcanoHellguard",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "VolcanoEmberBat",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "VolcanoCinderlash",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60363
+    },
+    {
+      "map_id": "Volcano4",
+      "stage": "灰烬之冠 4",
+      "family": "Volcano",
+      "map_type": 0,
+      "min_level": 68,
+      "max_level": 68,
+      "waves": 12,
+      "prerequisite": "Volcano3",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "VolcanoEmberBat",
+              "count": 3,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "VolcanoHellguard",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "VolcanoCinderlash",
+              "count": 3,
+              "row": 1
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "VolcanoMagmaGolem",
+              "count": 1,
+              "row": 0
+            },
+            {
+              "enemy_id": "VolcanoCinderlash",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "VolcanoDragon",
+            "count": 1,
+            "row": 1
+          },
+          {
+            "enemy_id": "VolcanoEmberBat",
+            "count": 3,
+            "row": 0
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": true,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60364
+    },
+    {
+      "map_id": "Volcano5",
+      "stage": "灰烬之冠 5",
+      "family": "Volcano",
+      "map_type": 0,
+      "min_level": 69,
+      "max_level": 69,
+      "waves": 10,
+      "prerequisite": "Volcano4",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "VolcanoMagmaGolem",
+              "count": 2,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "VolcanoEmberBat",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "VolcanoCinderlash",
+              "count": 3,
+              "row": 1
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60365
+    },
+    {
+      "map_id": "Volcano6",
+      "stage": "灰烬之冠 6",
+      "family": "Volcano",
+      "map_type": 0,
+      "min_level": 70,
+      "max_level": 70,
+      "waves": 10,
+      "prerequisite": "Volcano5",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "VolcanoMagmaGolem",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "VolcanoCinderlash",
+              "count": 4,
+              "row": 1
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "VolcanoMagmaGolem",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "VolcanoEmberBat",
+              "count": 4,
+              "row": 1
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "boss": false,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60366
+    },
+    {
+      "map_id": "Volcano7",
+      "stage": "灰烬之冠 7",
+      "family": "Volcano",
+      "map_type": 0,
+      "min_level": 70,
+      "max_level": 70,
+      "waves": 10,
+      "prerequisite": "Volcano6",
+      "requirements": [
+        {
+          "item_id": "Skull",
+          "count": 1,
+          "difficulty_mask": 1
+        },
+        {
+          "item_id": "SkullNightmare",
+          "count": 1,
+          "difficulty_mask": 2
+        },
+        {
+          "item_id": "SkullInferno",
+          "count": 1,
+          "difficulty_mask": 4
+        }
+      ],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "VolcanoMagmaGolem",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "VolcanoEmberBat",
+              "count": 4,
+              "row": 1
+            }
+          ]
+        },
+        {
+          "weight": 0.5,
+          "enemies": [
+            {
+              "enemy_id": "VolcanoMagmaGolem",
+              "count": 2,
+              "row": 0
+            },
+            {
+              "enemy_id": "VolcanoCinderlash",
+              "count": 5,
+              "row": 1
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "VolcanoDemonLord",
+            "count": 1,
+            "row": 0
+          },
+          {
+            "enemy_id": "VolcanoCinderlash",
+            "count": 4,
+            "row": 1
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": true,
+      "unsupported_reason": "",
+      "source_path_id": 60367
+    }
+  ],
+  "enemies": {
+    "DefiledKeepSuccubus": {
+      "enemy_id": "DefiledKeepSuccubus",
+      "base_level": 1,
+      "base_health": 250,
+      "base_damage": 10,
+      "move_speed": 1.7000000476837158,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.5,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 60985
+    },
+    "DefiledKeepScarab": {
+      "enemy_id": "DefiledKeepScarab",
+      "base_level": 1,
+      "base_health": 250,
+      "base_damage": 14,
+      "move_speed": 1.850000023841858,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.25,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61056
+    },
+    "DefiledKeepDragon": {
+      "enemy_id": "DefiledKeepDragon",
+      "base_level": 1,
+      "base_health": 6000,
+      "base_damage": 36,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 2.0,
+      "attack_speed": 0.75,
+      "high_difficulty_health": 6500,
+      "high_difficulty_damage": 38,
+      "source_path_id": 61039
+    },
+    "DefiledKeepOoze": {
+      "enemy_id": "DefiledKeepOoze",
+      "base_level": 1,
+      "base_health": 350,
+      "base_damage": 14,
+      "move_speed": 1.399999976158142,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.75,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61002
+    },
+    "DefiledKeepReaper": {
+      "enemy_id": "DefiledKeepReaper",
+      "base_level": 1,
+      "base_health": 6400,
+      "base_damage": 26,
+      "move_speed": 1.5,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 2.0,
+      "attack_speed": 0.75,
+      "high_difficulty_health": 7500,
+      "high_difficulty_damage": 38,
+      "source_path_id": 61013
+    },
+    "DefiledKeepAxemaster": {
+      "enemy_id": "DefiledKeepAxemaster",
+      "base_level": 1,
+      "base_health": 300,
+      "base_damage": 16,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.75,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 60987
+    },
+    "VolcanoCinderlash": {
+      "enemy_id": "VolcanoCinderlash",
+      "base_level": 1,
+      "base_health": 200,
+      "base_damage": 18,
+      "move_speed": 1.5,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.75,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 62451
+    },
+    "VolcanoEmberBat": {
+      "enemy_id": "VolcanoEmberBat",
+      "base_level": 1,
+      "base_health": 200,
+      "base_damage": 15,
+      "move_speed": 1.899999976158142,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.25,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 62399
+    },
+    "VolcanoMagmaGolem": {
+      "enemy_id": "VolcanoMagmaGolem",
+      "base_level": 1,
+      "base_health": 700,
+      "base_damage": 18,
+      "move_speed": 1.2999999523162842,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6000000238418579,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61044
+    },
+    "VolcanoDemonLord": {
+      "enemy_id": "VolcanoDemonLord",
+      "base_level": 1,
+      "base_health": 10000,
+      "base_damage": 35,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 2.0,
+      "attack_speed": 0.75,
+      "high_difficulty_health": 11000,
+      "high_difficulty_damage": 38,
+      "source_path_id": 62057
+    },
+    "VolcanoDragon": {
+      "enemy_id": "VolcanoDragon",
+      "base_level": 1,
+      "base_health": 6000,
+      "base_damage": 30,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 2.0,
+      "attack_speed": 0.6000000238418579,
+      "high_difficulty_health": 7000,
+      "high_difficulty_damage": 34,
+      "source_path_id": 61498
+    },
+    "OrcWarrior": {
+      "enemy_id": "OrcWarrior",
+      "base_level": 1,
+      "base_health": 130,
+      "base_damage": 12,
+      "move_speed": 1.7999999523162842,
+      "crit_chance": 0.0,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61604
+    },
+    "TreasureForestDragon": {
+      "enemy_id": "TreasureForestDragon",
+      "base_level": 1,
+      "base_health": 30,
+      "base_damage": 1,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.5,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61605
+    },
+    "SnowHillFrostDragon": {
+      "enemy_id": "SnowHillFrostDragon",
+      "base_level": 1,
+      "base_health": 7000,
+      "base_damage": 26,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 2.0,
+      "attack_speed": 0.75,
+      "high_difficulty_health": 6000,
+      "high_difficulty_damage": 30,
+      "source_path_id": 61606
+    },
+    "Wolf": {
+      "enemy_id": "Wolf",
+      "base_level": 1,
+      "base_health": 30,
+      "base_damage": 4,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61607
+    },
+    "Dragon": {
+      "enemy_id": "Dragon",
+      "base_level": 1,
+      "base_health": 12000000,
+      "base_damage": 50,
+      "move_speed": 1.0,
+      "crit_chance": 0.0,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61608
+    },
+    "RedDesertImp": {
+      "enemy_id": "RedDesertImp",
+      "base_level": 1,
+      "base_health": 140,
+      "base_damage": 10,
+      "move_speed": 1.399999976158142,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6499999761581421,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61609
+    },
+    "TreasureBarrensDragonBoss": {
+      "enemy_id": "TreasureBarrensDragonBoss",
+      "base_level": 1,
+      "base_health": 300,
+      "base_damage": 1,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.5,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61610
+    },
+    "BeachCrabBoss": {
+      "enemy_id": "BeachCrabBoss",
+      "base_level": 1,
+      "base_health": 6000,
+      "base_damage": 36,
+      "move_speed": 1.0,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 2.0,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61611
+    },
+    "DesertEagle": {
+      "enemy_id": "DesertEagle",
+      "base_level": 1,
+      "base_health": 300,
+      "base_damage": 18,
+      "move_speed": 2.0,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.25,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61612
+    },
+    "BeachSerpent": {
+      "enemy_id": "BeachSerpent",
+      "base_level": 1,
+      "base_health": 350,
+      "base_damage": 18,
+      "move_speed": 1.5,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61613
+    },
+    "RedForestHobgoblin": {
+      "enemy_id": "RedForestHobgoblin",
+      "base_level": 1,
+      "base_health": 7000,
+      "base_damage": 40,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 2.0,
+      "attack_speed": 1.0,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61614
+    },
+    "SnowHillZombieWarrior": {
+      "enemy_id": "SnowHillZombieWarrior",
+      "base_level": 1,
+      "base_health": 300,
+      "base_damage": 15,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6000000238418579,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61615
+    },
+    "Boar": {
+      "enemy_id": "Boar",
+      "base_level": 1,
+      "base_health": 50,
+      "base_damage": 6,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.05000000074505806,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61616
+    },
+    "TreasureKeepDragonBoss": {
+      "enemy_id": "TreasureKeepDragonBoss",
+      "base_level": 1,
+      "base_health": 300,
+      "base_damage": 1,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.5,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61617
+    },
+    "SnowHillRockElemental": {
+      "enemy_id": "SnowHillRockElemental",
+      "base_level": 1,
+      "base_health": 500,
+      "base_damage": 20,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6000000238418579,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61618
+    },
+    "SkeletonArcher": {
+      "enemy_id": "SkeletonArcher",
+      "base_level": 1,
+      "base_health": 90,
+      "base_damage": 7,
+      "move_speed": 1.5,
+      "crit_chance": 0.0,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.8299999833106995,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61619
+    },
+    "RedDesertRockGolem": {
+      "enemy_id": "RedDesertRockGolem",
+      "base_level": 1,
+      "base_health": 280,
+      "base_damage": 24,
+      "move_speed": 1.399999976158142,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.0,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61620
+    },
+    "BeachHermitCrab_BossMinion": {
+      "enemy_id": "BeachHermitCrab_BossMinion",
+      "base_level": 1,
+      "base_health": 200,
+      "base_damage": 8,
+      "move_speed": 1.2000000476837158,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61621
+    },
+    "DesertHarpy": {
+      "enemy_id": "DesertHarpy",
+      "base_level": 1,
+      "base_health": 3200,
+      "base_damage": 18,
+      "move_speed": 2.0,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61622
+    },
+    "RedForestGiant": {
+      "enemy_id": "RedForestGiant",
+      "base_level": 1,
+      "base_health": 260,
+      "base_damage": 16,
+      "move_speed": 1.5,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.75,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61623
+    },
+    "Ogre": {
+      "enemy_id": "Ogre",
+      "base_level": 1,
+      "base_health": 4000,
+      "base_damage": 25,
+      "move_speed": 1.0,
+      "crit_chance": 0.20000000298023224,
+      "crit_multiplier": 2.0,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61624
+    },
+    "Stumplin": {
+      "enemy_id": "Stumplin",
+      "base_level": 1,
+      "base_health": 120,
+      "base_damage": 13,
+      "move_speed": 1.25,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61625
+    },
+    "ZombieWolf": {
+      "enemy_id": "ZombieWolf",
+      "base_level": 1,
+      "base_health": 160,
+      "base_damage": 15,
+      "move_speed": 1.2999999523162842,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.25,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61626
+    },
+    "RedDesertSatyr": {
+      "enemy_id": "RedDesertSatyr",
+      "base_level": 1,
+      "base_health": 160,
+      "base_damage": 12,
+      "move_speed": 1.399999976158142,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.5,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61627
+    },
+    "DarkElfMage": {
+      "enemy_id": "DarkElfMage",
+      "base_level": 1,
+      "base_health": 900,
+      "base_damage": 20,
+      "move_speed": 1.7999999523162842,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 4000,
+      "high_difficulty_damage": 26,
+      "source_path_id": 61628
+    },
+    "DesertWasp": {
+      "enemy_id": "DesertWasp",
+      "base_level": 1,
+      "base_health": 120,
+      "base_damage": 14,
+      "move_speed": 1.5,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61629
+    },
+    "ForestSpiderKing": {
+      "enemy_id": "ForestSpiderKing",
+      "base_level": 1,
+      "base_health": 4000,
+      "base_damage": 24,
+      "move_speed": 1.25,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 2.0,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61630
+    },
+    "BeachHermitCrab": {
+      "enemy_id": "BeachHermitCrab",
+      "base_level": 1,
+      "base_health": 160,
+      "base_damage": 10,
+      "move_speed": 1.2000000476837158,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61631
+    },
+    "SnowHillWhelp": {
+      "enemy_id": "SnowHillWhelp",
+      "base_level": 1,
+      "base_health": 350,
+      "base_damage": 14,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.0,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61632
+    },
+    "RedForestTiger": {
+      "enemy_id": "RedForestTiger",
+      "base_level": 1,
+      "base_health": 220,
+      "base_damage": 16,
+      "move_speed": 3.0,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.25,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61633
+    },
+    "RedForestBear": {
+      "enemy_id": "RedForestBear",
+      "base_level": 1,
+      "base_health": 280,
+      "base_damage": 14,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.75,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61634
+    },
+    "SkeletonWarrior": {
+      "enemy_id": "SkeletonWarrior",
+      "base_level": 1,
+      "base_health": 50,
+      "base_damage": 5,
+      "move_speed": 1.5,
+      "crit_chance": 0.0,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61635
+    },
+    "BeachTurtleBoss": {
+      "enemy_id": "BeachTurtleBoss",
+      "base_level": 1,
+      "base_health": 7500,
+      "base_damage": 32,
+      "move_speed": 0.800000011920929,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 2.0,
+      "attack_speed": 0.4000000059604645,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61636
+    },
+    "Raptor": {
+      "enemy_id": "Raptor",
+      "base_level": 1,
+      "base_health": 600,
+      "base_damage": 18,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.0,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 4000,
+      "high_difficulty_damage": 24,
+      "source_path_id": 61637
+    },
+    "RedDesertAirWarlord": {
+      "enemy_id": "RedDesertAirWarlord",
+      "base_level": 1,
+      "base_health": 6000,
+      "base_damage": 36,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 2.0,
+      "attack_speed": 1.0,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61638
+    },
+    "RedForestDragon": {
+      "enemy_id": "RedForestDragon",
+      "base_level": 1,
+      "base_health": 6500,
+      "base_damage": 36,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 2.0,
+      "attack_speed": 0.75,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61639
+    },
+    "Spider": {
+      "enemy_id": "Spider",
+      "base_level": 1,
+      "base_health": 15,
+      "base_damage": 3,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.05000000074505806,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61640
+    },
+    "DesertManticoraBoss": {
+      "enemy_id": "DesertManticoraBoss",
+      "base_level": 1,
+      "base_health": 6000,
+      "base_damage": 14,
+      "move_speed": 2.200000047683716,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61641
+    },
+    "BeachNaga": {
+      "enemy_id": "BeachNaga",
+      "base_level": 1,
+      "base_health": 280,
+      "base_damage": 16,
+      "move_speed": 1.399999976158142,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61642
+    },
+    "TreasureForestDragonBoss": {
+      "enemy_id": "TreasureForestDragonBoss",
+      "base_level": 1,
+      "base_health": 300,
+      "base_damage": 1,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.5,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61643
+    },
+    "BeachSquid": {
+      "enemy_id": "BeachSquid",
+      "base_level": 1,
+      "base_health": 200,
+      "base_damage": 15,
+      "move_speed": 1.2000000476837158,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61644
+    },
+    "GoblinWarrior": {
+      "enemy_id": "GoblinWarrior",
+      "base_level": 1,
+      "base_health": 70,
+      "base_damage": 6,
+      "move_speed": 2.0,
+      "crit_chance": 0.0,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61646
+    },
+    "BigTreant": {
+      "enemy_id": "BigTreant",
+      "base_level": 1,
+      "base_health": 6000,
+      "base_damage": 30,
+      "move_speed": 1.0,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 2.0,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61647
+    },
+    "Werewolf": {
+      "enemy_id": "Werewolf",
+      "base_level": 1,
+      "base_health": 900,
+      "base_damage": 21,
+      "move_speed": 2.0,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 4400,
+      "high_difficulty_damage": 28,
+      "source_path_id": 61648
+    },
+    "DesertKoboldWarrior": {
+      "enemy_id": "DesertKoboldWarrior",
+      "base_level": 1,
+      "base_health": 300,
+      "base_damage": 10,
+      "move_speed": 1.2999999523162842,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.25,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61649
+    },
+    "PoisonSpider": {
+      "enemy_id": "PoisonSpider",
+      "base_level": 1,
+      "base_health": 100,
+      "base_damage": 11,
+      "move_speed": 1.25,
+      "crit_chance": 0.05000000074505806,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61650
+    },
+    "TreasureForestDragon2": {
+      "enemy_id": "TreasureForestDragon2",
+      "base_level": 1,
+      "base_health": 25,
+      "base_damage": 1,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.5,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61651
+    },
+    "RedDesertCrocodile": {
+      "enemy_id": "RedDesertCrocodile",
+      "base_level": 1,
+      "base_health": 200,
+      "base_damage": 18,
+      "move_speed": 1.5,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.25,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61652
+    },
+    "SnowHillIceHound": {
+      "enemy_id": "SnowHillIceHound",
+      "base_level": 1,
+      "base_health": 5700,
+      "base_damage": 20,
+      "move_speed": 1.399999976158142,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 2.0,
+      "attack_speed": 1.25,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61653
+    },
+    "RedForestFaeDragon": {
+      "enemy_id": "RedForestFaeDragon",
+      "base_level": 1,
+      "base_health": 130,
+      "base_damage": 10,
+      "move_speed": 1.399999976158142,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.0,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61654
+    },
+    "SnowHillSlime": {
+      "enemy_id": "SnowHillSlime",
+      "base_level": 1,
+      "base_health": 160,
+      "base_damage": 12,
+      "move_speed": 1.2000000476837158,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.75,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61655
+    },
+    "DesertKoboldThief": {
+      "enemy_id": "DesertKoboldThief",
+      "base_level": 1,
+      "base_health": 150,
+      "base_damage": 14,
+      "move_speed": 1.5,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.25,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61656
+    },
+    "RedDesertSerparmat": {
+      "enemy_id": "RedDesertSerparmat",
+      "base_level": 1,
+      "base_health": 3000,
+      "base_damage": 30,
+      "move_speed": 2.0,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 2.0,
+      "attack_speed": 1.25,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61657
+    },
+    "VolcanoHellguard": {
+      "enemy_id": "VolcanoHellguard",
+      "base_level": 1,
+      "base_health": 350,
+      "base_damage": 20,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.75,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 61873
+    }
+  },
+  "evidence": {
+    "xp": "Enemy.cmg 0x73BC80; GameManager death 0x77DFC0; MapData.cha 0x711870",
+    "health": "Enemy.bjv 0x744320; GameConfig.ccv 0x707D50",
+    "waves": "WaveManager.esn 0x7F5420 replaces last wave; eso 0x7F59E0 rolls elite per non-boss wave; esp 0x7F5BF0 weights pools",
+    "levels": "MapData.cgt/cgu 0x7114F0/0x711590: Normal uses asset range, higher difficulties use level 70"
+  },
+  "limitations": [
+    "特殊/神话图未参与理论排序",
+    "首轮时间为理论模型；真实刷图可被动校准",
+    "未验证特殊掉落/召唤怪奖励，不计为固定额外经验"
+  ]
+}

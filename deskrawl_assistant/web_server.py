@@ -61,6 +61,10 @@ def make_handler(service, token):
                     params = {k:v[0] for k,v in query.items()}
                     if 'minutes' in params: params['minutes'] = float(params['minutes'])
                     return self.reply(service.experience_page(**params))
+                if path=='/api/recommendations':
+                    if urlsplit(self.path).query:
+                        raise ValueError('刷图推荐不接受额外查询参数。')
+                    return self.reply(service.recommendation_page())
                 if path=='/api/export/rules': return self.reply(service.export_rules())
                 if path=='/api/export/items':
                     with service.guard: value = service.snapshot
@@ -106,6 +110,10 @@ def make_handler(service, token):
                     desktop.activate()
                 elif path in {'/api/experience/sample','/api/experience/delete','/api/experience/start','/api/experience/finish','/api/experience/cancel'}:
                     return self.reply(service.experience_action(path.rsplit('/',1)[-1], data))
+                elif path=='/api/recommendations/settings':
+                    return self.reply(service.recommendation_settings(data))
+                elif path=='/api/recommendations/calibration/reset':
+                    return self.reply(service.recommendation_reset())
                 elif path=='/api/rule/save': return self.reply({'rule':service.save_rule(data)})
                 elif path=='/api/rule/delete': service.delete_rule(data.get('id'))
                 elif path=='/api/rule/import': return self.reply({'imported':service.import_rules(data.get('payload'))})

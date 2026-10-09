@@ -6,6 +6,8 @@ root = Path(SPECPATH).parent
 assets = [
     'game-catalog.json',
     'experience-types.json',
+    'recommendation-types.json',
+    'recommendation-catalog.json',
     'equipment-ui.json',
     'affix-groups-static.json',
     'runtime-type-hints.json',

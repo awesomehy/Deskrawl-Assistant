@@ -17,6 +17,7 @@ from .loot_monitor import LootState
 from .action_log import record
 from .paths import RESOURCE_ROOT, rules_file, runtime_dir
 from .activity_journal import ActivityJournal, ItemActivityTracker, operation_id
+from .experience import ExperienceBook
 from .automation import DEFAULT_SETTINGS, validate_settings, pressure_candidates, free_slots
 from copy import deepcopy
 
@@ -56,6 +57,7 @@ class AssistantService:
         self.client = client or RuntimeClient()
         self.config = Path(config) if config else rules_file()
         self.journal = ActivityJournal((self.config.parent if config else runtime_dir()) / 'activity.sqlite3')
+        self.experience = ExperienceBook((self.config.parent if config else runtime_dir()) / 'experience.sqlite3')
         self.activity = ItemActivityTracker(self.journal, self._describe_item)
         self.client.item_events = self._record_item_commit
         self.operation_kind = None
@@ -102,6 +104,43 @@ class AssistantService:
 
     def log_page(self, **filters):
         return self.journal.page(**filters)
+
+    def experience_live(self):
+        if not self.client.connected:
+            return {'available': False, 'error': '连接游戏后可读取角色经验；也可手动录入采样。'}
+        try:
+            return self.client.experience_snapshot()
+        except Exception as exc:
+            return {'available': False, 'error': '经验读取暂不可用：' + str(exc)}
+
+    def experience_page(self, **filters):
+        payload = self.experience.page(**filters)
+        payload['live'] = self.experience_live()
+        return payload
+
+    def experience_action(self, action, data):
+        with self.guard:
+            if self.closed.is_set():
+                raise ValueError('助手已退出。')
+            if action == 'sample':
+                result = self.experience.add(data)
+            elif action == 'delete':
+                self.experience.delete(data.get('id'))
+                result = {'ok': True}
+            elif action == 'start':
+                live = self.experience_live()
+                data = dict(data)
+                if not data.get('profile') and live.get('available'):
+                    data['profile'] = live.get('profile') or live.get('character') or ''
+                result = self.experience.start(data, live)
+            elif action == 'finish':
+                result = self.experience.finish(data, self.experience_live() if data.get('xp') is None else None)
+            elif action == 'cancel':
+                self.experience.cancel()
+                return {'ok': True}
+            else:
+                raise ValueError('经验操作不存在。')
+            return result
 
     def _record_item_commit(self, event, result):
         if result.get('journal_recorded'): return

@@ -86,6 +86,26 @@ class RuntimeClient:
             write_runtime_json("latest-snapshot.json", result)
         return result
 
+    def experience_snapshot(self):
+        from .experience_reader import read_experience
+        with self._guard:
+            if self._reader is None:
+                raise RuntimeConnectionError('尚未连接游戏。')
+            value = read_experience(self._reader)
+            if not value.get('available'):
+                value['error'] = value.get('reason') or '经验读取尚不可用。'
+                return value
+            value['stage_id'] = value['stage']
+            difficulty = {'Normal':'普通', 'Hard':'困难', 'Nightmare':'噩梦', 'Hell':'地狱'}.get(value['difficulty'],value['difficulty'])
+            if value['stage'] and difficulty:
+                value['stage'] += ' · ' + difficulty
+            raw_character = value['character']
+            value['character_id'] = raw_character
+            parts = raw_character.split(':',2)
+            value['character'] = (parts[-1] or '未命名角色') + (' · 存档 ' + str(int(parts[1])+1) if len(parts)==3 else '')
+            value['profile'] = value['character'] + ' · 等级 ' + str(value['level']) + (' · 模式 ' + parts[0] if len(parts)==3 else '')
+            return value
+
     def lock_equipment(self, expected, validate=lambda row: True):
         from .background_lock import lock_equipment
         with self._guard:

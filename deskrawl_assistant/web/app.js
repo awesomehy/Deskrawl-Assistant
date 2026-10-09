@@ -9,6 +9,7 @@ const gearMap=new Map(), statMap=new Map();
 let lastRules='';
 let automationDraft=null, automationDirty=false, collectionSignature='';
 let activeTab='rules', logBefore=null, logNext=null, logRequest=0, logTimer;
+let experienceData=null, experienceRequest=0, experienceLoading=false, experienceBusy=false, experienceReceivedAt=0, experienceInputTimer;
 
 async function api(path,data,retry=true){
   const response=await fetch('/api/'+path,data===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Assistant-Token':token},body:JSON.stringify(data)});
@@ -45,9 +46,10 @@ function rulesFor(key){return (state?.rules||[]).filter(r=>r.equipment_keys.incl
 function switchTab(tab){
   activeTab=tab;
   document.querySelectorAll('.tab').forEach(button=>{let active=button.dataset.tab===tab;button.classList.toggle('active',active);button.setAttribute('aria-selected',active);});
-  $('rules-page').hidden=tab!=='rules';$('inventory-page').hidden=tab!=='inventory';$('logs-page').hidden=tab!=='logs';
+  $('rules-page').hidden=tab!=='rules';$('inventory-page').hidden=tab!=='inventory';$('logs-page').hidden=tab!=='logs';$('experience-page').hidden=tab!=='experience';
   if(tab==='inventory')renderInventory();
   if(tab==='logs')loadLogs();
+  if(tab==='experience')loadExperience();
 }
 function buildCatalog(){
   catalog.equipment.forEach(g=>gearMap.set(g.key,g));catalog.stats.forEach(s=>statMap.set(s.key,s));
@@ -406,4 +408,135 @@ $('log-search').addEventListener('input',()=>{clearTimeout(logTimer);logTimer=se
 $('log-refresh').addEventListener('click',()=>loadLogs());
 $('log-latest').addEventListener('click',resetLogs);
 $('log-older').addEventListener('click',()=>{if(logNext){logBefore=logNext;loadLogs();}});
+const experienceNumber=new Intl.NumberFormat('zh-CN',{maximumFractionDigits:2});
+function formatExperience(value){return Number.isFinite(Number(value))?experienceNumber.format(Number(value)):'—';}
+function formatExperienceTime(value){
+  const seconds=Math.max(0,Number(value)||0),whole=Math.floor(seconds);
+  if(seconds<60)return `${formatExperience(seconds)} 秒`;
+  const hours=Math.floor(whole/3600),minutes=Math.floor(whole%3600/60),rest=whole%60;
+  return `${hours?hours+' 小时 ':''}${minutes?minutes+' 分 ':''}${rest?rest+' 秒':''}`.trim();
+}
+function experienceMinutes(){
+  const field=$('experience-minutes'),minutes=Number(field.value);
+  return field.value!==''&&Number.isInteger(minutes)&&minutes>=1&&minutes<=10080?minutes:null;
+}
+function experienceElapsed(){
+  if(!experienceData?.active)return 0;
+  return Math.max(0,Number(experienceData.active.elapsed_seconds)||0)+(experienceData.active.stopped?0:(Date.now()-experienceReceivedAt)/1000);
+}
+function updateExperienceTimer(){
+  if(exiting||!$('experience-elapsed'))return;
+  const seconds=Math.floor(experienceElapsed()),hours=Math.floor(seconds/3600),minutes=Math.floor(seconds%3600/60),rest=seconds%60;
+  $('experience-elapsed').textContent=[...(hours?[String(hours).padStart(2,'0')]:[]),String(minutes).padStart(2,'0'),String(rest).padStart(2,'0')].join(':');
+}
+function renderExperience(){
+  if(!experienceData||exiting)return;
+  const data=experienceData,minutes=data.minutes||experienceMinutes()||60,rows=data.rows||[],best=rows[0],active=data.active,live=data.live||{},completed=(data.sort||$('experience-sort').value)==='completed';
+  const filter=$('experience-filter'),selected=filter.value;
+  const profiles=[...new Set(data.profiles||[])].filter(Boolean);
+  if(selected&&!profiles.includes(selected))profiles.push(selected);
+  filter.innerHTML='<option value="">全部条件</option>'+profiles.map(profile=>`<option value="${esc(profile)}" ${profile===selected?'selected':''}>${esc(profile)}</option>`).join('');
+  $('experience-best').textContent=best?.stage||'—';
+  $('experience-best-profile').textContent=best?`${best.profile||'未标注条件'} · ${formatExperience(best.samples)} 次采样`:'等待采样';
+  $('experience-hourly').textContent=best?formatExperience(best.xp_per_hour):'—';
+  $('experience-projection').textContent=best?formatExperience(completed?best.completed_runs_xp:best.projected_xp):'—';
+  $('experience-projection-label').textContent=`${minutes} 分钟${completed?'完整通关':'预计'}经验`;
+  $('experience-projection-note').textContent=completed?'仅计时限内完整通关的经验':'按实测平均速度估算';
+  $('experience-samples').textContent=formatExperience(rows.reduce((sum,row)=>sum+(Number(row.samples)||0),0));
+  $('experience-coverage').textContent=rows.length?`${new Set(rows.map(row=>row.stage)).size} 个关卡 · ${rows.length} 个关卡 / 条件`:'尚未记录关卡';
+  $('experience-count').textContent=`${rows.length} 个关卡 / 条件`;
+  $('experience-ranking-note').textContent=`按 ${minutes} 分钟${completed?'完整通关':'预计'}经验从高到低排列${selected?' · '+selected:''}。`;
+  $('experience-projected-heading').textContent=`${minutes} 分钟预计`;
+  $('experience-completed-heading').textContent=`${minutes} 分钟完整通关`;
+  $('experience-rows').innerHTML=rows.map((row,index)=>`<tr class="${index===0?'experience-leading':''}"><td><div class="experience-stage-cell"><span class="experience-rank">${index+1}</span><div><strong>${esc(row.stage)}</strong><small>${esc(row.profile||'未标注条件')}</small></div></div></td><td>${formatExperience(row.samples)}${Number(row.samples)===1?'<small>单次样本</small>':''}</td><td>${formatExperience(row.average_xp)}</td><td>${esc(formatExperienceTime(row.average_seconds))}</td><td>${formatExperience(row.xp_per_hour)}</td><td class="${completed?'':'experience-value'}">${formatExperience(row.projected_xp)}</td><td class="${completed?'experience-value':''}">${formatExperience(row.completed_runs_xp)}<small>${formatExperience(row.completed_runs)} 次完整通关</small></td></tr>`).join('');
+  $('experience-empty').hidden=rows.length>0;
+  $('experience-empty').innerHTML=selected?'这个条件下还没有经验样本<br>尝试其他条件，或录入这个条件的关卡数据。':'还没有经验样本<br>完成一次计时采样，或手动录入关卡经验与用时，开始比较。';
+  $('experience-live-dot').classList.toggle('available',!!live.available);
+  $('experience-live-state').textContent=live.available?'游戏经验已连接':'暂时无法自动读取经验';
+  $('experience-live-detail').textContent=live.available?[live.character,live.stage?`关卡：${live.stage}`:'',live.total_xp!=null?`累计经验 ${formatExperience(live.total_xp)}`:''].filter(Boolean).join(' · ')||'开始与结束采样时自动读取经验。':(live.error||'未连接时仍可手动录入经验。');
+  $('experience-use-current').disabled=!live.stage||!!active||experienceBusy;
+  if(active){$('experience-stage').value=active.stage;$('experience-profile').value=active.profile||'';}
+  $('experience-stage').disabled=!!active||experienceBusy;
+  $('experience-profile').disabled=!!active||experienceBusy;
+  $('experience-start').hidden=!!active;
+  $('experience-finish').hidden=!active;
+  $('experience-cancel').hidden=!active;
+  $('experience-finish-field').hidden=!active;
+  $('experience-finish-help').textContent=active?.auto_xp===false?'开始时没有经验基线，请手动填写本次获得经验。':'自动读取时可留空；也可手动填写覆盖自动结果。';
+  $('experience-finish-xp').placeholder=active?.auto_xp===false?'填写实际获得经验':'自动读取，或填写实际经验';
+  $('experience-timer-label').textContent=active?(active.stopped?'已停止，待补录':'正在采样'):'准备开始';
+  $('experience-finish').textContent=active?.stopped?'补录并保存':'结束并保存';
+  $('experience-timer-form').classList.toggle('sampling',!!active);
+  $('experience-active-label').textContent=active?`${active.stage} · ${active.profile||'未标注条件'}`:'每次记录一个关卡的实际收益';
+  $('experience-timer-note').textContent=active?(active.stopped?'计时已停止。请填写本次获得经验并保存，这段补录时间不会计入用时。':live.available&&active.auto_xp!==false?'结算并准备重开后结束。经验可自动读取；手动填写时以填写值为准。':'需要手动填写本次获得经验。也可先点击结束冻结计时，再补录经验。'):'连接游戏可自动记录经验差值。未连接时，结束采样需要填写本次获得经验。';
+  for(const id of ['experience-start','experience-finish','experience-cancel','experience-add','experience-refresh'])$(id).disabled=experienceBusy;
+  const recent=data.recent||[];
+  $('experience-history-count').textContent=recent.length?`显示最近 ${recent.length} 次${selected?' · 当前条件':''}`:'';
+  $('experience-history-rows').innerHTML=recent.map(row=>{
+    const date=new Date(row.recorded_at),time=Number.isNaN(date.getTime())?esc(row.recorded_at||'—'):date.toLocaleString('zh-CN',{hour12:false});
+    const hourly=Number(row.seconds)>0?Number(row.xp)*3600/Number(row.seconds):null;
+    return `<tr><td><time>${time}</time></td><td><strong>${esc(row.stage)}</strong><small>${esc(row.profile||'未标注条件')}</small></td><td>${formatExperience(row.xp)}</td><td>${esc(formatExperienceTime(row.seconds))}</td><td>${hourly==null?'—':formatExperience(hourly)}</td><td><button class="text-button experience-delete" data-experience-delete="${esc(row.id)}" type="button" ${experienceBusy?'disabled':''} aria-label="删除${esc(row.stage)}这次采样">删除</button></td></tr>`;
+  }).join('');
+  $('experience-history-empty').hidden=recent.length>0;
+  updateExperienceTimer();
+}
+async function loadExperience(quiet=false){
+  if(exiting||quiet&&experienceLoading)return;
+  const minutes=experienceMinutes();
+  if(minutes===null){if(!quiet){$('experience-error').textContent='计划刷图时间请输入 1 至 10080 的整数分钟。';$('experience-error').hidden=false;}return;}
+  const request=++experienceRequest,params=new URLSearchParams({minutes:String(minutes),sort:$('experience-sort').value}),profile=$('experience-filter').value;
+  if(profile)params.set('profile',profile);
+  experienceLoading=true;
+  try{
+    const result=await api('experience?'+params);if(request!==experienceRequest||exiting)return;
+    experienceData=result;experienceReceivedAt=Date.now();renderExperience();$('experience-error').hidden=true;
+  }catch(error){if(request!==experienceRequest||exiting)return;$('experience-error').textContent=error.message;$('experience-error').hidden=false;if(!quiet)toast(error.message,true);}
+  finally{if(request===experienceRequest)experienceLoading=false;}
+}
+async function mutateExperience(path,payload,message){
+  if(experienceBusy)return;
+  experienceBusy=true;renderExperience();
+  try{await api('experience/'+path,payload);await loadExperience();toast(message);return true;}
+  catch(error){if(path==='finish')await loadExperience();toast(error.message,true);return false;}
+  finally{experienceBusy=false;renderExperience();}
+}
+$('experience-refresh').addEventListener('click',()=>loadExperience());
+$('experience-filter').addEventListener('change',()=>loadExperience());
+$('experience-sort').addEventListener('change',()=>loadExperience());
+$('experience-use-current').addEventListener('click',()=>{
+  const live=experienceData?.live;if(!live?.stage||experienceData.active||experienceBusy)return;
+  $('experience-stage').value=live.stage;$('experience-profile').value=live.profile||live.character||'';
+  toast('已填入当前关卡与角色，可补充配装或经验加成条件。');
+});
+$('experience-minutes').addEventListener('input',()=>{clearTimeout(experienceInputTimer);experienceInputTimer=setTimeout(()=>loadExperience(),350);});
+$('experience-timer-form').addEventListener('submit',async e=>{
+  e.preventDefault();if(experienceData?.active||experienceBusy)return;
+  const stage=$('experience-stage').value.trim();if(!stage){toast('请填写这次采样的关卡。',true);return;}
+  if(await mutateExperience('start',{stage,profile:$('experience-profile').value.trim()},'计时已开始；结算并准备重开后结束采样。'))$('experience-finish-xp').value='';
+});
+$('experience-finish').addEventListener('click',async()=>{
+  if(!experienceData?.active||experienceBusy)return;
+  const field=$('experience-finish-xp'),payload={};
+  if(field.value!==''){
+    const xp=Number(field.value);if(!Number.isFinite(xp)||!Number.isInteger(xp)||xp<0){toast('获得经验请输入大于或等于 0 的整数。',true);field.focus();return;}
+    payload.xp=xp;
+  }
+  if(await mutateExperience('finish',payload,'采样已保存，效率排行已更新。'))field.value='';
+});
+$('experience-cancel').addEventListener('click',async()=>{
+  if(!experienceData?.active||experienceBusy)return;
+  if(await confirmAction('取消这次采样？','这次计时和经验收益不会保存。之前的样本保留。','取消采样',false))mutateExperience('cancel',{},'本次采样已取消。');
+});
+$('experience-manual-form').addEventListener('submit',async e=>{
+  e.preventDefault();if(experienceBusy)return;
+  const stage=$('experience-manual-stage').value.trim(),profile=$('experience-manual-profile').value.trim(),xp=Number($('experience-manual-xp').value),seconds=Number($('experience-manual-seconds').value);
+  if(!stage||!Number.isInteger(xp)||xp<0||!Number.isFinite(seconds)||seconds<0.1){toast('请填写关卡、非负整数经验和至少 0.1 秒的用时。',true);return;}
+  if(await mutateExperience('sample',{stage,profile,xp,seconds},'经验样本已保存，效率排行已更新。')){$('experience-manual-xp').value='';$('experience-manual-seconds').value='';}
+});
+$('experience-history-rows').addEventListener('click',async e=>{
+  const button=e.target.closest('[data-experience-delete]');if(!button||experienceBusy)return;
+  if(await confirmAction('删除这次经验采样？','删除后会重新计算该关卡的经验效率。','删除样本'))mutateExperience('delete',{id:Number(button.dataset.experienceDelete)},'样本已删除，效率排行已更新。');
+});
+setInterval(()=>{if(!exiting&&activeTab==='experience'&&!experienceBusy)loadExperience(true);},2000);
+setInterval(updateExperienceTimer,250);
 boot();

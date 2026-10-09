@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import json
 from pathlib import Path
 import sys
 
@@ -26,3 +27,18 @@ def runtime_dir() -> Path:
 
 def rules_file() -> Path:
     return data_root() / 'config' / 'lock-rules.json'
+
+
+def cache_root() -> Path:
+    override = os.environ.get('DESKRAWL_ASSISTANT_CACHE_DIR')
+    if override:
+        return Path(override).expanduser().resolve()
+    if getattr(sys, 'frozen', False):
+        settings = Path(sys.executable).with_name('runtime-paths.json')
+        try:
+            value = json.loads(settings.read_text(encoding='utf-8')).get('cache_dir')
+            if isinstance(value, str) and Path(value).is_absolute():
+                return Path(value) / 'webview'
+        except (OSError, ValueError, AttributeError):
+            pass
+    return data_root() / 'webview-cache'

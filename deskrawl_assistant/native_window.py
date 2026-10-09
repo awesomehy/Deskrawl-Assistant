@@ -5,7 +5,7 @@ import json
 import threading
 import urllib.request
 
-from .paths import data_root
+from .paths import data_root, cache_root
 from .action_log import record
 from .web_server import AssistantServer, existing_service
 
@@ -90,7 +90,7 @@ def main(port=18741):
     webview.settings['OPEN_DEVTOOLS_IN_DEBUG'] = False
     host = AssistantServer(port)
     try:
-        window = webview.create_window('Deskrawl 装备助手 v1.1.4',host.url+'?desktop=1',
+        window = webview.create_window('Deskrawl 装备助手 v1.1.4 · 经验收益分支',host.url+'?desktop=1',
             width=1280,height=820,min_size=(980,680),resizable=True,
             background_color='#11151c',text_select=True,zoomable=False)
         hooks = WindowHooks(window,host.service)
@@ -109,7 +109,7 @@ def main(port=18741):
                 hooks.exiting = True
                 window.destroy()
         threading.Thread(target=close_after_shutdown,daemon=True).start()
-        cache = data_root() / 'webview-cache'
+        cache = cache_root()
         cache.mkdir(parents=True,exist_ok=True)
         webview.start(gui='edgechromium',debug=False,private_mode=True,storage_path=str(cache))
     finally:

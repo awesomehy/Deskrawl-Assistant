@@ -54,3 +54,7 @@ docs/*
 !docs/1.1.3验收说明.md
 !docs/1.1.4验收说明.md
 !docs/screenshots/
+
+!docs/经验收益说明.md
+!data/experience-types.json
+!docs/experience-reader-verification.md

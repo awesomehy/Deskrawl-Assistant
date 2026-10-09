@@ -54,6 +54,13 @@ def make_handler(service, token):
                     for field in ('before','limit'):
                         if field in params: params[field] = int(params[field])
                     return self.reply(service.log_page(**params))
+                if path=='/api/experience':
+                    query = parse_qs(urlsplit(self.path).query, keep_blank_values=True)
+                    if set(query)-{'minutes','profile','sort'} or any(len(v)!=1 for v in query.values()):
+                        raise ValueError('经验查询参数无效。')
+                    params = {k:v[0] for k,v in query.items()}
+                    if 'minutes' in params: params['minutes'] = float(params['minutes'])
+                    return self.reply(service.experience_page(**params))
                 if path=='/api/export/rules': return self.reply(service.export_rules())
                 if path=='/api/export/items':
                     with service.guard: value = service.snapshot
@@ -97,6 +104,8 @@ def make_handler(service, token):
                     desktop = getattr(self.server,'desktop',None)
                     if desktop is None: raise ValueError('当前助手没有独立窗口。')
                     desktop.activate()
+                elif path in {'/api/experience/sample','/api/experience/delete','/api/experience/start','/api/experience/finish','/api/experience/cancel'}:
+                    return self.reply(service.experience_action(path.rsplit('/',1)[-1], data))
                 elif path=='/api/rule/save': return self.reply({'rule':service.save_rule(data)})
                 elif path=='/api/rule/delete': service.delete_rule(data.get('id'))
                 elif path=='/api/rule/import': return self.reply({'imported':service.import_rules(data.get('payload'))})

@@ -1,12 +1,12 @@
 # Deskrawl 装备助手
 
-Windows x64 装备筛选与物品整理工具，当前版本 **v1.1.6**，适配 **Deskrawl 1.0.2（Steam build 25817367）**。使用 WebView2 独立窗体显示网页界面，外部读取游戏的背包、仓库与马车，根据玩家配置锁定装备、移动和自动整理物品。
+Windows x64 装备筛选与物品整理工具，当前版本 **v1.1.7**，适配 **Deskrawl 1.0.2（Steam build 25817367）**。使用 WebView2 独立窗体显示网页界面，外部读取游戏的背包、仓库与马车，根据玩家配置锁定装备、移动和自动整理物品。
 
 如果觉得本软件对你有帮助，欢迎在 [GitHub 项目](https://github.com/awesomehy/Deskrawl-Assistant) 点亮 **Star**，感谢支持！
 
 ## 快速使用
 
-1. 打开 [Releases 下载页面](https://github.com/awesomehy/Deskrawl-Assistant/releases)，选择最新版；也可直接下载 [Deskrawl-Assistant-v1.1.6.exe](https://github.com/awesomehy/Deskrawl-Assistant/releases/download/v1.1.6/Deskrawl-Assistant-v1.1.6.exe)。
+1. 打开 [Releases 下载页面](https://github.com/awesomehy/Deskrawl-Assistant/releases)，选择最新版；也可直接下载 [Deskrawl-Assistant-v1.1.7.exe](https://github.com/awesomehy/Deskrawl-Assistant/releases/download/v1.1.7/Deskrawl-Assistant-v1.1.7.exe)。
 2. 双击 exe，稍等片刻即可打开助手窗体，无需安装 Python。若提示缺少 WebView2，请使用[微软官方安装程序](https://go.microsoft.com/fwlink/p/?LinkId=2124703)联网安装后重试。
 3. 启动 Deskrawl 并进入角色，在助手顶部点击“连接游戏”，自动读取背包与仓库。主城和战斗场景均可使用。
 4. 进入“装备筛选规则”，按职业、部位或名称选择装备；勾选主词条并设置“至少命中 n 类”，按需启用副词条，保存并启用规则。每件装备可新增多个命名组合；任意一个启用组合满足即符合规则。
@@ -14,7 +14,7 @@ Windows x64 装备筛选与物品整理工具，当前版本 **v1.1.6**，适配
 6. 勾选背包或仓库物品后点击“移入仓库”或“取回背包”。展开“自动整理”，配置马车收取、宝石自动入库、背包容量整理，点击“保存整理设置”后再“启动自动整理”。马车物品可按类型和搜索结果全选 / 全不选。
 7. 进入“日志”查看观测到的新物品、逐件锁定与搬运记录，可按分类和名称搜索、查看历史。保持连接即可记录，无需开启自动锁定或整理。
 
-从 v1.1.4 或更早版本升级时，请保存设置并通过助手右上角退出旧版，再运行 v1.1.6。v1.1.5 起会自动检查更新，发现更高版本时可在顶部「下载并更新（重启）」升级。个人规则、整理设置和日志会保留；重启后监控与自动整理默认暂停，需要重新开启。各版本的更新记录和适配范围见对应 Release 页面。
+v1.1.7 修复了自动更新后重启报 Python DLL 错误的问题。v1.1.5 / v1.1.6 用户首次升级请保存设置、通过助手右上角退出旧版，再手动下载并运行 v1.1.7；旧版内置更新器无法被新下载包提前修复。个人规则、整理设置和日志会保留；重启后监控与自动整理默认暂停，需要重新开启。各版本的更新记录和适配范围见对应 Release 页面。
 
 ## 使用截图
 
@@ -59,7 +59,7 @@ Windows x64 装备筛选与物品整理工具，当前版本 **v1.1.6**，适配
 
 ## 使用与数据保存
 
-在 [GitHub Releases](https://github.com/awesomehy/Deskrawl-Assistant/releases) 下载打包好的程序，推荐使用 [v1.1.5](https://github.com/awesomehy/Deskrawl-Assistant/releases/tag/v1.1.5) 的 exe。直接双击即可打开窗体，无需安装 Python。页面每个版本只上传 exe，并提供更新记录；缺少 WebView2 时，可使用[微软官方安装程序](https://go.microsoft.com/fwlink/p/?LinkId=2124703)联网安装。
+在 [GitHub Releases](https://github.com/awesomehy/Deskrawl-Assistant/releases) 下载打包好的程序，推荐使用 [v1.1.7](https://github.com/awesomehy/Deskrawl-Assistant/releases/tag/v1.1.7) 的 exe。直接双击即可打开窗体，无需安装 Python。页面每个版本只上传 exe，并提供更新记录；缺少 WebView2 时，可使用[微软官方安装程序](https://go.microsoft.com/fwlink/p/?LinkId=2124703)联网安装。
 
 历史版本 v1.1.0、v1.1.1 提供原始发布程序；这两个标签只保存发行说明和组件许可，没有对应构建时的完整源码快照。v1.1.2 起的标签提供各自完整源码，适配范围见对应 Release。
 

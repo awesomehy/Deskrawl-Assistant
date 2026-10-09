@@ -18,7 +18,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.1.6'
+NAME = 'Deskrawl装备助手-v1.1.7'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -26,8 +26,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--connect-game', action='store_true')
     parser.add_argument('--desktop', action='store_true')
+    parser.add_argument('--exe', type=Path, help='Test a separately packaged executable.')
+    parser.add_argument('--report', type=Path, help='Save verification without replacing another build report.')
     args = parser.parse_args()
-    source = ROOT / 'release' / NAME / (NAME + '.exe')
+    source = args.exe.resolve() if args.exe else ROOT / 'release' / NAME / (NAME + '.exe')
     archive = CArchiveReader(str(source))
     names = set(archive.toc)
     assert f'python{sys.version_info.major}{sys.version_info.minor}.dll' in names
@@ -93,7 +95,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.1.6'
+                assert request('/api/state')['app_version'] == '1.1.7'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -228,7 +230,8 @@ def main():
             subprocess.run(['taskkill', '/PID', str(process.pid), '/T', '/F'],
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=subprocess.CREATE_NO_WINDOW)
     report['native_window'] = args.desktop
-    (ROOT / 'release' / ('native-exe-verification.json' if args.desktop else 'exe-verification.json')).write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+    report_path = args.report or ROOT / 'release' / ('native-exe-verification.json' if args.desktop else 'exe-verification.json')
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
     print(json.dumps(report, ensure_ascii=False, indent=2))
 
 

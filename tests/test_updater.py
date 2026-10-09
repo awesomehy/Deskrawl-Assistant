@@ -11,10 +11,53 @@ from unittest.mock import Mock, patch
 import urllib.error
 
 from deskrawl_assistant.updater import (API_ROOT, REPOSITORY_URL, UpdateManager,
-    download_release, parse_release, trusted_url, validate_executable, version_tuple)
+    download_release, independent_process_environment, launch_helper, parse_release, trusted_url, validate_executable, version_tuple)
 
 
 BINARY=b'MZ'+b'test payload'*100
+
+
+class RestartEnvironmentTests(unittest.TestCase):
+    def test_restart_drops_old_extraction_context_without_mutating_parent(self):
+        parent={'_PYI_APPLICATION_HOME_DIR':'deleted old temp','_PYI_ARCHIVE_FILE':'same.exe',
+            '_PYI_PARENT_PROCESS_LEVEL':'1','_MEIPASS2':'legacy temp',
+            'PYINSTALLER_RESET_ENVIRONMENT':'0','DESKRAWL_ASSISTANT_DATA_DIR':'personal settings',
+            'PATH':'system path','PYINSTALLER_STRICT_UNPACK_MODE':'1'}
+        before=parent.copy();clean=independent_process_environment(parent)
+        self.assertEqual(parent,before)
+        self.assertEqual(clean,{'DESKRAWL_ASSISTANT_DATA_DIR':'personal settings','PATH':'system path',
+            'PYINSTALLER_STRICT_UNPACK_MODE':'1','PYINSTALLER_RESET_ENVIRONMENT':'1'})
+
+    def test_windows_environment_case_and_future_private_fields_are_handled(self):
+        clean=independent_process_environment({'_pyi_future_field':'old','_MeIpAsS2':'old',
+            'pyinstaller_reset_environment':'0','Temp':'user temp'})
+        self.assertEqual(clean,{'Temp':'user temp','PYINSTALLER_RESET_ENVIRONMENT':'1'})
+
+    def test_clean_launch_still_preserves_user_directory_and_requests_new_unpack(self):
+        self.assertEqual(independent_process_environment({'LOCALAPPDATA':'user directory'}),
+            {'LOCALAPPDATA':'user directory','PYINSTALLER_RESET_ENVIRONMENT':'1'})
+
+    def test_update_helper_is_spawned_without_the_frozen_parents_extraction(self):
+        with tempfile.TemporaryDirectory() as folder:
+            folder=Path(folder);signal=folder/'ready.json';signal.write_text('{}')
+            descriptor=folder/'plan.json'
+            descriptor.write_text(json.dumps({'helper_ready':str(signal)}),encoding='utf-8')
+            parent={'SystemRoot':r'C:\Windows','_PYI_APPLICATION_HOME_DIR':'old extraction',
+                '_PYI_ARCHIVE_FILE':'same.exe','_PYI_PARENT_PROCESS_LEVEL':'1',
+                'DESKRAWL_ASSISTANT_DATA_DIR':'retained settings'}
+            with patch.dict('deskrawl_assistant.updater.os.environ',parent,clear=True), \
+                    patch('deskrawl_assistant.updater.subprocess.STARTUPINFO',create=True), \
+                    patch('deskrawl_assistant.updater.subprocess.STARTF_USESHOWWINDOW',1,create=True), \
+                    patch('deskrawl_assistant.updater.subprocess.CREATE_NO_WINDOW',0,create=True), \
+                    patch('deskrawl_assistant.updater.subprocess.Popen') as spawn:
+                self.assertIs(launch_helper((folder/'replace.ps1',descriptor)),spawn.return_value)
+            child=spawn.call_args.kwargs['env']
+            self.assertFalse(any(key.startswith('_PYI_') for key in child))
+            self.assertEqual(child['PYINSTALLER_RESET_ENVIRONMENT'],'1')
+            self.assertEqual(child['DESKRAWL_ASSISTANT_DATA_DIR'],'retained settings')
+            self.assertFalse(signal.exists())
+
+
 def payload(version='1.1.6',binary=BINARY):
     tag='v'+version;name='Deskrawl-Assistant-'+tag+'.exe'
     return {'tag_name':tag,'draft':False,'prerelease':False,

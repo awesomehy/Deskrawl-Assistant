@@ -340,6 +340,16 @@ class UpdateManager:
             self.worker.join(1)
 
 
+def independent_process_environment(environment=None):
+    """Restart independently of an exiting one-file application's extraction."""
+    source = os.environ if environment is None else environment
+    clean = {key:value for key,value in source.items()
+        if not key.upper().startswith('_PYI_') and key.upper() not in
+        {'_MEIPASS2','PYINSTALLER_RESET_ENVIRONMENT'}}
+    clean['PYINSTALLER_RESET_ENVIRONMENT'] = '1'
+    return clean
+
+
 def launch_helper(plan):
     script, descriptor = plan
     shell = Path(os.environ.get('SystemRoot', r'C:\Windows')) / 'System32/WindowsPowerShell/v1.0/powershell.exe'
@@ -348,7 +358,8 @@ def launch_helper(plan):
     startup.wShowWindow = 0
     process = subprocess.Popen([str(shell), '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
         '-WindowStyle', 'Hidden', '-File', str(script), '-Plan', str(descriptor)],
-        startupinfo=startup, creationflags=subprocess.CREATE_NO_WINDOW)
+        startupinfo=startup, creationflags=subprocess.CREATE_NO_WINDOW,
+        env=independent_process_environment())
     payload = json.loads(descriptor.read_text(encoding='utf-8-sig'))
     signal = Path(payload['helper_ready'])
     deadline = time.monotonic() + 15

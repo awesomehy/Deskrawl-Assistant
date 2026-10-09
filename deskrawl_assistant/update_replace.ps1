@@ -23,6 +23,11 @@ function Move-Retry([string]$from, [string]$to) {
     }
 }
 function Start-Assistant([bool]$updated) {
+    # The old one-file parent deletes its extraction directory on exit.
+    # Both the updated program and a rollback need a fresh independent unpack.
+    Get-ChildItem Env: | Where-Object { $_.Name -like '_PYI_*' -or $_.Name -eq '_MEIPASS2' } |
+        ForEach-Object { Remove-Item -LiteralPath ('Env:' + $_.Name) -ErrorAction SilentlyContinue }
+    $env:PYINSTALLER_RESET_ENVIRONMENT = '1'
     $env:DESKRAWL_ASSISTANT_DATA_DIR = [string]$p.data_root
     if ($updated) { $env:DESKRAWL_ASSISTANT_UPDATE_ID = [string]$p.id }
     else { Remove-Item Env:DESKRAWL_ASSISTANT_UPDATE_ID -ErrorAction SilentlyContinue }

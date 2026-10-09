@@ -1,7 +1,7 @@
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(1, 1, 6, 0),
-    prodvers=(1, 1, 6, 0),
+    filevers=(1, 1, 7, 0),
+    prodvers=(1, 1, 7, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -13,11 +13,11 @@ VSVersionInfo(
     StringFileInfo([
       StringTable('080404B0', [
         StringStruct('FileDescription', 'Deskrawl 装备助手'),
-        StringStruct('FileVersion', '1.1.6'),
+        StringStruct('FileVersion', '1.1.7'),
         StringStruct('InternalName', 'DeskrawlEquipmentAssistant'),
-        StringStruct('OriginalFilename', 'Deskrawl装备助手-v1.1.6.exe'),
+        StringStruct('OriginalFilename', 'Deskrawl装备助手-v1.1.7.exe'),
         StringStruct('ProductName', 'Deskrawl 装备助手'),
-        StringStruct('ProductVersion', '1.1.6')
+        StringStruct('ProductVersion', '1.1.7')
       ])
     ]),
     VarFileInfo([VarStruct('Translation', [2052, 1200])])

@@ -8,6 +8,8 @@ import urllib.request
 from .paths import data_root
 from .action_log import record
 from .web_server import AssistantServer, existing_service
+from .version import VERSION
+from .updater import application_ready
 
 
 def verify_runtime():
@@ -90,7 +92,7 @@ def main(port=18741):
     webview.settings['OPEN_DEVTOOLS_IN_DEBUG'] = False
     host = AssistantServer(port)
     try:
-        window = webview.create_window('Deskrawl 装备助手 v1.1.4',host.url+'?desktop=1',
+        window = webview.create_window('Deskrawl 装备助手 v' + VERSION,host.url+'?desktop=1',
             width=1280,height=820,min_size=(980,680),resizable=True,
             background_color='#11151c',text_select=True,zoomable=False)
         hooks = WindowHooks(window,host.service)
@@ -101,7 +103,10 @@ def main(port=18741):
         window.events.restored += hooks.restore
         window.events.maximized += hooks.restore
         window.events.shown += lambda: record('desktop_window_shown')
-        window.events.loaded += lambda: record('desktop_window_loaded')
+        def loaded():
+            record('desktop_window_loaded')
+            application_ready()
+        window.events.loaded += loaded
         host.start()
         def close_after_shutdown():
             host.finished.wait()

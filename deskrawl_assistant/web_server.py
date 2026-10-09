@@ -3,15 +3,19 @@ from __future__ import annotations
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import mimetypes
+import os
 from pathlib import Path
 import secrets
 import threading
+import time
 import urllib.error
 import urllib.request
 from urllib.parse import urlsplit, unquote, parse_qs
 import webbrowser
 from .web_service import AssistantService
 from .action_log import record
+from .version import VERSION
+from .updater import UpdateManager, launch_helper
 
 WEB = Path(__file__).resolve().parent / 'web'
 PORT = 18741
@@ -41,7 +45,13 @@ def make_handler(service, token):
             path = unquote(urlsplit(self.path).path)
             try:
                 if path=='/api/ping': return self.reply({'app':'deskrawl-local-assistant','version':3,
-                    'desktop':getattr(self.server,'desktop',None) is not None})
+                    'app_version':VERSION,'pid':os.getpid(),'desktop':getattr(self.server,'desktop',None) is not None})
+                if path=='/api/update':
+                    updater = getattr(self.server,'updater',None)
+                    value = updater.snapshot() if updater else {'phase':'unsupported','has_update':False,'can_install':False,
+                        'message':'当前启动方式不支持自动更新。','current_version':VERSION}
+                    if getattr(self.server,'desktop',None) is None: value['can_install'] = False
+                    return self.reply(value)
                 if path=='/api/session': return self.reply({'token':token})
                 if path=='/api/catalog': return self.reply(service.catalog_payload())
                 if path=='/api/state': return self.reply(service.state())
@@ -88,7 +98,19 @@ def make_handler(service, token):
                 data = json.loads(self.rfile.read(size) or b'{}')
                 if not isinstance(data,dict): raise ValueError('请求格式无效。')
                 path = urlsplit(self.path).path
+                if getattr(service,'updating',False) is True and path not in ('/api/stop','/api/shutdown'):
+                    raise ValueError('正在替换程序，请稍候。')
                 if path=='/api/action': service.start(data.get('kind'),data)
+                elif path in ('/api/update/check','/api/update/install'):
+                    updater = getattr(self.server,'updater',None)
+                    if updater is None: raise ValueError('当前启动方式不支持更新。')
+                    if path.endswith('/check'): updater.check()
+                    else:
+                        desktop = getattr(self.server,'desktop',None)
+                        if desktop is None: raise ValueError('请在 exe 独立窗口中更新。')
+                        if data.get('saved') is not True or desktop.dirty:
+                            raise ValueError('请先保存规则和整理设置，再进行更新。')
+                        updater.install()
                 elif path=='/api/window/draft':
                     desktop = getattr(self.server,'desktop',None)
                     if desktop is None: raise ValueError('当前助手没有独立窗口。')
@@ -126,13 +148,16 @@ def existing_service(port):
 
 class AssistantServer:
     """A stoppable server owned by the desktop window, without a browser launch."""
-    def __init__(self, port=PORT, service=None):
+    def __init__(self, port=PORT, service=None, updater=None):
         self.service = service or AssistantService()
         self.finished = threading.Event()
         self.thread = None
         try:
             self.server = ThreadingHTTPServer(('127.0.0.1',port),make_handler(self.service,secrets.token_hex(24)))
             self.server.daemon_threads = True
+            self.updater = updater or UpdateManager(prepare=self.prepare_update,launch=self.install_update,
+                abort=self.abort_update,port=self.server.server_port)
+            self.server.updater = self.updater
         except Exception:
             self.service.close()
             raise
@@ -152,8 +177,33 @@ class AssistantServer:
                     self.finished.set()
         self.thread = threading.Thread(target=run,daemon=True)
         self.thread.start()
+        self.updater.start()
+
+    def prepare_update(self):
+        desktop = getattr(self.server,'desktop',None)
+        if desktop is None or desktop.dirty:
+            raise ValueError('请保存未完成的配置后再更新。')
+        with self.service.guard: self.service.updating = True
+        self.service.stop()
+        worker = self.service.worker
+        if worker and worker is not threading.current_thread(): worker.join(20)
+        if worker and worker.is_alive():
+            self.abort_update()
+            raise ValueError('当前装备操作尚未结束，请稍后再试。')
+        if desktop.dirty:
+            self.abort_update()
+            raise ValueError('下载期间有新的未保存改动，请先保存。')
+        self.service.journal.append('system','update_installing','更新文件已校验，正在退出并替换程序。')
+
+    def abort_update(self):
+        with self.service.guard: self.service.updating = False
+
+    def install_update(self, plan):
+        launch_helper(plan)
+        threading.Thread(target=self.server.shutdown,daemon=True).start()
 
     def close(self):
+        self.updater.close()
         self.service.stop()
         if self.thread is not None:
             if not self.finished.is_set(): self.server.shutdown()
@@ -175,16 +225,13 @@ def main(*, port=PORT, open_browser=True):
                 if open_browser: webbrowser.open(url)
                 return
     except (OSError,ValueError): pass
-    service = AssistantService()
-    server = None
+    host = AssistantServer(port)
     try:
-        server = ThreadingHTTPServer(('127.0.0.1',port),make_handler(service,secrets.token_hex(24)))
-        server.daemon_threads = True
+        host.start()
         if open_browser: webbrowser.open(url)
-        server.serve_forever(poll_interval=.25)
+        host.finished.wait()
     finally:
-        service.close()
-        if server: server.server_close()
+        host.close()
 
 
 if __name__=='__main__': main()

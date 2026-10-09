@@ -8,7 +8,7 @@ import time
 import uuid
 from .catalog import load_catalog
 from .models import Rule, ValidationError
-from .rules import LockPlanner, rules_from_dict, evaluate, DEFAULT_MIN_CONFIDENCE
+from .rules import LockPlanner, rules_from_dict, evaluate, DEFAULT_MIN_CONFIDENCE, primary_perfect_rules
 from .runtime_adapter import RuntimeAdapter, headline_stats
 from .stat_display import preview_value
 from .runtime_client import RuntimeClient
@@ -19,6 +19,7 @@ from .paths import RESOURCE_ROOT, rules_file, runtime_dir
 from .activity_journal import ActivityJournal, ItemActivityTracker, operation_id
 from .automation import DEFAULT_SETTINGS, validate_settings, pressure_candidates, free_slots
 from copy import deepcopy
+from .version import VERSION
 
 BASE = RESOURCE_ROOT
 SLOT_LABELS = {'Weapon':'武器','Helm':'头盔','Chest':'胸甲','Pants':'裤子','Boots':'靴子','Belt':'腰带',
@@ -83,6 +84,7 @@ class AssistantService:
         self.snapshot = None
         self.revision = 0
         self.busy = False
+        self.updating = False
         self.monitoring = False
         self.loot_state = None
         self.message = self.config_error or '连接游戏后，背包和仓库会自动读取。'
@@ -239,7 +241,7 @@ class AssistantService:
                 self.message = '游戏已退出，请重新启动游戏并连接。'
             snap = self.snapshot
             rules = list(self.rules)
-            result = {'connected':self.client.connected,'pid':self.client.pid,'busy':self.busy,
+            result = {'connected':self.client.connected,'pid':self.client.pid,'busy':self.busy or self.updating,
                 'monitoring':self.monitoring,'message':self.message,'error':self.error,'progress':self.progress,
                 'revision':self.revision,'rules':[r.to_dict() for r in rules], 'config_error':self.config_error,
                 'history':list(self.history), 'items':[], 'counts':{}, 'complete':bool(snap and snap.get('complete')),
@@ -247,7 +249,7 @@ class AssistantService:
                 'transfer':snap.get('transfer',{'available':False}) if snap else {'available':False}}
             result['automation'] = {'settings':deepcopy(self.automation_settings),'running':self.automation_running,
                 'status':self.automation_status,'carriage':self._carriage_payload()}
-            result['app_version'] = '1.1.4'
+            result['app_version'] = VERSION
         if not snap: return result
         adapted = self.adapter.adapt_snapshot(snap)
         observations = {(i.container,i.index):i for i in adapted.items}
@@ -264,6 +266,7 @@ class AssistantService:
             match = False
             reasons = []
             matched_combinations = []
+            primary_perfect = []
             if observation:
                 item_rules = [r for r in rules if r.enabled and key in r.equipment_keys]
                 evaluations = [evaluate(r,observation,self.catalog) for r in item_rules]
@@ -279,6 +282,7 @@ class AssistantService:
                         **preview_value(modifier, row), 'matched':bool(hit_rules), 'matched_rules':list(dict.fromkeys(hit_rules))})
                 match = any(e.status=='match' for e in evaluations)
                 matched_combinations = [r.name for r,e in zip(item_rules,evaluations) if e.status=='match']
+                primary_perfect = [r.name for r in primary_perfect_rules(observation,item_rules,self.catalog)]
                 decision = planner.plan(observation,rules)
                 if evaluations:
                     reasons = [r.name+' · '+reason for r,e in zip(item_rules,evaluations) for reason in e.reasons]
@@ -299,7 +303,8 @@ class AssistantService:
                 'locked':row.get('locked'),'level':row.get('item_level'),'upgrade':row.get('upgrade_level'),
                 'icon':meta.get('icon'),'slot':meta.get('slot'),'slot_label':SLOT_LABELS.get(meta.get('slot'), '未知部位') if kind=='equipment' else kind_label,
                 'class_mask':meta.get('class_mask',0),'groups':groups,'matches':match,'matched_combinations':matched_combinations,
-                'review':review,'reasons':reasons})
+                'review':review,'reasons':reasons,'primary_perfect':bool(primary_perfect),
+                'primary_perfect_combinations':primary_perfect})
         for container in ('inventory','storage'):
             values = [i for i in result['items'] if i['container']==container]
             result['counts'][container] = {'equipment':sum(i['is_equipment'] for i in values),'locked':sum(i['is_equipment'] and i['locked'] is True for i in values),
@@ -313,6 +318,7 @@ class AssistantService:
         payload = payload or {}
         with self.guard:
             if self.closed.is_set(): raise ValidationError('助手已退出，请重新启动。')
+            if self.updating: raise ValidationError('正在更新程序，请稍候。')
             if self.busy: raise ValidationError('当前操作尚未完成，请稍候或停止操作。')
             if kind not in ('connect','disconnect','read','lock_selected','lock_rules','unlock_all','move_items'):
                 raise ValidationError('不支持的操作。')
@@ -674,7 +680,7 @@ class AssistantService:
     def _monitor_loop(self):
         while not self.closed.wait(2):
             with self.guard:
-                if self.busy or not self.client.connected: continue
+                if self.busy or self.updating or not self.client.connected: continue
                 self.busy = True
                 self.operation_kind = 'monitor' if self.monitoring or self.automation_running else 'observe'
                 self.worker = threading.Thread(target=self._work,args=(self.operation_kind,{}),daemon=True)

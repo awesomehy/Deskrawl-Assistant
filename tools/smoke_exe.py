@@ -18,7 +18,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.1.4'
+NAME = 'Deskrawl装备助手-v1.1.5'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 

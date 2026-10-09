@@ -6,6 +6,8 @@ import unittest
 from unittest.mock import patch
 import urllib.error
 import urllib.request
+from types import SimpleNamespace
+from unittest.mock import Mock
 from deskrawl_assistant.web_server import make_handler
 
 
@@ -43,6 +45,29 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(code,200)
         self.assertEqual(headers['Content-Type'],'text/javascript; charset=utf-8')
         self.assertIn(b'async function api',body)
+
+    def test_update_actions_require_session_and_never_accept_unsaved_drafts(self):
+        updater=Mock();self.server.updater=updater
+        self.server.desktop=SimpleNamespace(dirty=False)
+        for headers in ({'Origin':self.url},{'Origin':'https://other.example','X-Assistant-Token':'test-session-token'}):
+            code,_,_=self.request('/api/update/install',{'saved':True},headers)
+            self.assertEqual(code,403)
+        headers={'Origin':self.url,'X-Assistant-Token':'test-session-token'}
+        code,_,_=self.request('/api/update/install',{},headers);self.assertEqual(code,400)
+        self.server.desktop.dirty=True
+        code,_,_=self.request('/api/update/install',{'saved':True},headers);self.assertEqual(code,400)
+        updater.install.assert_not_called()
+        self.server.desktop.dirty=False
+        code,_,_=self.request('/api/update/install',{'saved':True},headers);self.assertEqual(code,200)
+        updater.install.assert_called_once_with()
+
+    def test_browser_can_check_but_cannot_install_or_choose_arbitrary_executable(self):
+        updater=Mock();self.server.updater=updater
+        headers={'Origin':self.url,'X-Assistant-Token':'test-session-token'}
+        code,_,_=self.request('/api/update/check',{},headers);self.assertEqual(code,200)
+        updater.check.assert_called_once_with()
+        code,_,_=self.request('/api/update/install',{'saved':True,'target':'C:/other.exe'},headers)
+        self.assertEqual(code,400);updater.install.assert_not_called()
 
     def test_stale_session_recovery_does_not_execute_rejected_action(self):
         code,_,body=self.request('/api/action',{'kind':'connect'},{'X-Assistant-Token':'old-token'})

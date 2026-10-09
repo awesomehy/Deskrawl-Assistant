@@ -13,7 +13,7 @@ import sys
 from zipfile import ZipFile, ZIP_DEFLATED
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.1.4'
+NAME = 'Deskrawl装备助手-v1.1.5'
 
 
 def license_text(package):
@@ -61,7 +61,7 @@ def main():
             license_note += 'License: '+str(info.metadata.get('License',''))+'\n'
     (output / '第三方许可.txt').write_text(license_note, encoding='utf-8-sig')
     profile = json.loads((ROOT / 'data/runtime-type-hints.json').read_text(encoding='utf-8'))
-    report = {'name': NAME, 'version': '1.1.4', 'platform': 'Windows x64', 'presentation':'native WebView2 window',
+    report = {'name': NAME, 'version': '1.1.5', 'platform': 'Windows x64', 'presentation':'native WebView2 window',
         'python': sys.version.split()[0], 'pyinstaller': version('pyinstaller'),
         'exe_bytes': exe.stat().st_size, 'exe_sha256': hashlib.sha256(exe.read_bytes()).hexdigest(),
         'supported_game_metadata_sha256': profile['metadataSha256'],

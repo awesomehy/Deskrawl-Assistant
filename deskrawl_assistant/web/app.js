@@ -9,6 +9,7 @@ const gearMap=new Map(), statMap=new Map();
 let lastRules='';
 let automationDraft=null, automationDirty=false, collectionSignature='';
 let activeTab='rules', logBefore=null, logNext=null, logRequest=0, logTimer;
+let updateState=null, updatePolling=false, updateSaving=false, updateNoticeShown=false;
 
 async function api(path,data,retry=true){
   const response=await fetch('/api/'+path,data===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Assistant-Token':token},body:JSON.stringify(data)});
@@ -142,19 +143,21 @@ async function saveRule(){
   $('save-rule').disabled=true;
   try{
     const result=await api('rule/save',{id:draft.id,name:draft.name,equipment_keys:[gearKey],enabled:draft.enabled,groups,group_mode:'all'});
-    setDirty(false);draft.id=result.rule.id;await pollState();renderEditor();toast(draft.enabled?'规则已保存并启用':'规则已保存，当前停用');
-  }catch(error){toast(error.message,true);updateSummary();}
+    setDirty(false);draft.id=result.rule.id;await pollState();renderEditor();toast(draft.enabled?'规则已保存并启用':'规则已保存，当前停用');return true;
+  }catch(error){toast(error.message,true);updateSummary();return false;}
 }
 function scopedItems(){const scope=$('action-scope').value;return state.items.filter(i=>i.is_equipment&&(scope==='all'||i.container===scope));}
 function visibleItems(){
   const query=$('item-search').value.trim().toLowerCase(),lock=$('lock-filter').value,kind=$('kind-filter').value;
   return (state?.items||[]).filter(i=>(!containerFilter||i.container===containerFilter)&&
     (!kind||i.kind===kind)&&(!query||(i.name+' '+(gearMap.get(i.name_key)?.en||'')).toLowerCase().includes(query))&&
-    (!lock||(i.is_equipment&&(lock==='locked'?i.locked===true:lock==='unlocked'?i.locked===false:i.matches))));
+    (!lock||(i.is_equipment&&(lock==='locked'?i.locked===true:lock==='unlocked'?i.locked===false:lock==='perfect'?i.primary_perfect:i.matches))));
 }
 function resultBadge(item){
   if(!item.is_equipment)return '<span class="badge miss">—</span>';
-  return item.matches?'<span class="badge match">符合规则</span>':item.review?'<span class="badge review">待核验</span>':'<span class="badge miss">未命中</span>';
+  const mark=item.primary_perfect?'<span class="badge primary-perfect" title="四条随机主词条全部命中同一个启用组合，不检查副词条">✦ 主词条全中</span>':'';
+  const normal=item.matches?'<span class="badge match">符合规则</span>':item.review?'<span class="badge review">待核验</span>':'<span class="badge miss">未命中</span>';
+  return `<span class="result-badges">${mark}${normal}</span>`;
 }
 function renderInventory(){
   if(!state)return;
@@ -164,7 +167,7 @@ function renderInventory(){
   const signature=JSON.stringify([view,detailId,[...selectedItems]]);
   if(signature!==itemSignature){
     itemSignature=signature;
-    $('item-rows').innerHTML=view.map(i=>`<tr data-item="${esc(i.selection_id)}" class="${i.selection_id===detailId?'active':''}" tabindex="0">
+    $('item-rows').innerHTML=view.map(i=>`<tr data-item="${esc(i.selection_id)}" class="${i.selection_id===detailId?'active':''} ${i.primary_perfect?'primary-perfect-item':''}" tabindex="0">
       <td><input type="checkbox" data-item-select="${esc(i.selection_id)}" aria-label="选择${esc(i.name)}" ${selectedItems.has(i.selection_id)?'checked':''} ${!i.selection_id?'disabled':''}></td>
       <td><div class="item-name">${i.icon?`<img src="${esc(i.icon)}" alt="">`:''}<div><strong>${esc(i.name)}</strong><small>${esc(i.slot_label)}</small></div></div></td>
       <td>${i.container==='inventory'?'背包':'仓库'} · ${Number(i.slot_index)+1}</td><td>${esc(i.count)}</td><td>${esc(i.level??'—')}${i.upgrade?` <small>+${i.upgrade}</small>`:''}</td>
@@ -190,7 +193,7 @@ function renderDetail(){
     <div class="detail-meta"><span>物品等级 ${esc(item.level)}</span><span>强化 +${esc(item.upgrade??0)}</span></div>
     ${['base','primary','secondary','unknown'].map(g=>{const values=item.groups[g]||[];return values.length?`<div class="detail-group"><h4>${{base:'基础属性 · 不参与筛选',primary:'主词条',secondary:'副词条',unknown:'待核验词条'}[g]}</h4><div class="type-list">${values.map(v=>`<div class="affix-row ${v.matched?'matched':''}" data-affix-key="${esc(v.key)}" title="${esc(v.value_note||(v.matched?'命中规则：'+v.matched_rules.join('、'):''))}"><span class="affix-name">${esc(v.name)}</span><strong class="affix-value">${esc(v.display_value??'未读取')}</strong>${v.matched?'<small class="affix-hit" aria-label="命中规则">✓</small>':''}</div>`).join('')}</div></div>`:'';}).join('')}
     <p class="detail-hint">绿色为命中已启用规则的词条；整件装备是否达标见下方结果。数值包含已确认的装备强化。</p>
-    <div class="detail-rule">${resultBadge(item)}${item.matched_combinations?.length?`<p class="matched-combinations">命中组合：${item.matched_combinations.map(esc).join('、')}</p>`:''}${item.reasons.map(r=>`<p>${esc(r)}</p>`).join('')}<button class="text-button" data-configure-item="${esc(item.name_key)}">配置这件装备的规则 →</button></div>${moveButton}`;
+    <div class="detail-rule">${resultBadge(item)}${item.primary_perfect_combinations?.length?`<p class="perfect-combinations">主词条全中组合：${item.primary_perfect_combinations.map(esc).join('、')}<small>四条随机主词条都在该组合的勾选范围内；此标记不检查副词条，不改变自动锁定条件。</small></p>`:''}${item.matched_combinations?.length?`<p class="matched-combinations">命中组合：${item.matched_combinations.map(esc).join('、')}</p>`:''}${item.reasons.map(r=>`<p>${esc(r)}</p>`).join('')}<button class="text-button" data-configure-item="${esc(item.name_key)}">配置这件装备的规则 →</button></div>${moveButton}`;
 }
 function renderEffects(item){
   const plain=s=>String(s??'').replace(/<[^>]+>/g,'');
@@ -363,7 +366,8 @@ $('carriage-search').addEventListener('input',renderCollectionChoices);
 $('carriage-select-all').addEventListener('click',()=>setFilteredCollectionSelection(true));
 $('carriage-select-none').addEventListener('click',()=>setFilteredCollectionSelection(false));
 for(const id of ['pressure-threshold','pressure-target'])$(id).addEventListener('input',markAutomationDirty);
-$('save-automation').addEventListener('click',async()=>{try{const result=await api('automation/settings',{settings:readAutomationForm()});automationDraft=result.settings;automationDirty=false;setDirty(dirty);await pollState();toast('自动整理设置已保存');}catch(error){toast(error.message,true);}});
+async function saveAutomation(){try{const result=await api('automation/settings',{settings:readAutomationForm()});automationDraft=result.settings;automationDirty=false;setDirty(dirty);await pollState();toast('自动整理设置已保存');return true;}catch(error){toast(error.message,true);return false;}}
+$('save-automation').addEventListener('click',saveAutomation);
 $('run-automation').addEventListener('click',async()=>{try{await api('automation/run',{enabled:!state.automation.running});await pollState();}catch(error){toast(error.message,true);}});
 $('stop').addEventListener('click',async()=>{try{await api('stop',{});await pollState();}catch(error){toast(error.message,true);}});
 $('history-toggle').addEventListener('click',()=>switchTab('logs'));
@@ -374,8 +378,39 @@ $('exit').addEventListener('click',async()=>{
 window.addEventListener('beforeunload',e=>{if(dirty||automationDirty){e.preventDefault();e.returnValue='';}});
 async function boot(){
   if(desktopMode)$('usage-note').textContent='监控只自动处理新增装备；已有装备请用“一键按规则锁定”。最小化窗口可继续监控，关闭窗口会退出助手并停止监控。';
-  try{catalog=await api('catalog');buildCatalog();await pollState();const first=state.rules[0]?.equipment_keys[0]||'LegendaryBelt3';if(first)await chooseGear(first);setInterval(pollState,1000);setInterval(()=>{if(activeTab==='logs'&&!logBefore)loadLogs(true);},2000);}catch(error){toast(error.message,true);}
+  try{catalog=await api('catalog');buildCatalog();await pollState();const first=state.rules[0]?.equipment_keys[0]||'LegendaryBelt3';if(first)await chooseGear(first);await pollUpdate();setInterval(pollState,1000);setInterval(pollUpdate,1500);setInterval(()=>{if(activeTab==='logs'&&!logBefore)loadLogs(true);},2000);}catch(error){toast(error.message,true);}
 }
+function renderUpdate(){
+  if(!updateState)return;
+  const active=['downloading','installing'].includes(updateState.phase),checking=updateState.phase==='checking';
+  $('update-bar').classList.toggle('available',!!updateState.has_update);
+  $('update-message').textContent=updateState.message+(active&&updateState.progress?` ${updateState.progress.percent}%`:'');
+  $('update-error').textContent=updateState.error||'';$('update-error').hidden=!updateState.error;
+  $('update-release').href=updateState.release_url||'https://github.com/awesomehy/Deskrawl-Assistant/releases';
+  $('check-update').disabled=active||checking||updateSaving;
+  $('check-update').textContent=checking?'正在检查…':'检查更新';
+  $('install-update').hidden=!updateState.has_update;
+  $('install-update').disabled=!updateState.can_install||active||checking||updateSaving;
+  $('install-update').textContent=updateSaving?'正在保存配置…':active?'更新中…':`下载 v${updateState.latest_version} 并更新（重启）`;
+  $('install-update').title=updateState.can_install?'下载至当前程序目录，校验后替换当前 exe 并重启；规则和日志保留。':'请在 exe 独立窗口中更新；源码模式可从发行记录下载。';
+  $('update-progress').hidden=!active||!updateState.progress;$('update-progress').value=updateState.progress?.percent||0;
+  $('rules-page').inert=active||updateSaving;$('automation-panel').inert=active||updateSaving;
+  if(updateState.notice&&!updateNoticeShown){updateNoticeShown=true;toast(updateState.notice.message,!updateState.notice.success);}
+}
+async function pollUpdate(){
+  if(updatePolling||exiting)return;updatePolling=true;
+  try{updateState=await api('update');renderUpdate();}catch(error){if(updateState?.phase==='installing')$('update-message').textContent='正在替换程序并启动新版本…';}finally{updatePolling=false;}
+}
+$('check-update').addEventListener('click',async()=>{try{await api('update/check',{});await pollUpdate();}catch(error){toast(error.message,true);}});
+$('install-update').addEventListener('click',async()=>{
+  if(updateSaving)return;updateSaving=true;renderUpdate();
+  try{
+    if(dirty&&(!await saveRule()||dirty))throw new Error('更新前请修正规则配置并保存。');
+    if(automationDirty&&(!await saveAutomation()||automationDirty))throw new Error('更新前请修正整理设置并保存。');
+    if(desktopMode)await api('window/draft',{dirty:false});
+    await api('update/install',{saved:true});await pollUpdate();
+  }catch(error){toast(error.message,true);}finally{updateSaving=false;renderUpdate();}
+});
 const logCategories={loot:'物品获取',lock:'锁定 / 解锁',transfer:'物品转移',settings:'配置操作',system:'运行操作',error:'失败'};
 function logPosition(position){
   if(!position)return '—';

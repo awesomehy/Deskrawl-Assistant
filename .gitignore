@@ -5,6 +5,7 @@ __pycache__/
 build/
 dist/
 release/
+webview-cache/
 
 # Local player configuration, captures, diagnostics and third-party analysis.
 config/
@@ -53,4 +54,5 @@ docs/*
 !docs/版本记录.md
 !docs/1.1.3验收说明.md
 !docs/1.1.4验收说明.md
+!docs/1.1.5验收说明.md
 !docs/screenshots/

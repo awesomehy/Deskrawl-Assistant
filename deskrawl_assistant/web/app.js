@@ -99,15 +99,16 @@ function renderEditor(){
   const gear=gearMap.get(gearKey),existing=rulesFor(gearKey);
   $('rule-editor').innerHTML=`<div class="editor-head">${gearIcon(gear)}<div><div class="eyebrow">传说装备 · ${esc(gear.slot_label)} · ${esc(classesLabel(gear.class_mask))}</div><h2>${esc(gear.name)}</h2><small>${esc(gear.en)}</small></div></div>
     <div class="editor-content">${gear.description?`<div class="legendary-description">${esc(gear.description)}</div>`:''}
-    <div class="editor-rule-select"><select id="existing-rule" aria-label="选择词条组合">${!draft.id?'<option value="" selected>新组合 · 尚未保存</option>':''}${existing.map((r,index)=>`<option value="${esc(r.id)}" ${draft.id===r.id?'selected':''}>${index+1}. ${esc(r.name)}${r.enabled?' · 已启用':' · 已停用'}</option>`).join('')}</select><button id="new-rule" class="button ghost">新增组合</button><button id="copy-rule" class="button ghost" ${draft.id?'':'hidden'}>复制组合</button></div>
+    <div class="editor-rule-select"><select id="existing-rule" aria-label="选择词条组合">${!draft.id?'<option value="" selected>新组合 · 尚未保存</option>':''}${existing.map((r,index)=>`<option value="${esc(r.id)}" ${draft.id===r.id?'selected':''}>${index+1}. ${esc(r.name)}${r.enabled?' · 已启用':' · 已停用'}</option>`).join('')}</select></div>
+    <div class="combination-toolbar"><button id="new-rule" class="button ghost">新增组合</button><button id="copy-rule" class="button ghost" ${draft.id?'':'hidden'}>复制组合</button><button id="delete-rule" class="button danger" ${draft.id?'':'hidden'}>删除当前</button><button id="cancel-new-rule" class="button ghost" ${!draft.id&&dirty?'':'hidden'}>取消新建</button><button id="manage-rules" class="button ghost" ${existing.length?'':'disabled'}>管理组合</button><button id="copy-to-gear" class="button ghost" ${existing.length?'':'disabled'}>复制到同类装备</button></div>
     <label class="combination-name">组合名称<input id="rule-name" value="${esc(draft.name)}" maxlength="80" placeholder="例如：暴击流、冰伤流" aria-label="组合名称"></label>
     <p class="combination-note">这件装备有 ${existing.length} 个已保存组合，${existing.filter(r=>r.enabled).length} 个启用。满足任意一个启用组合，即符合规则。</p>
-    <div class="rule-state"><label><input type="checkbox" id="rule-enabled" ${draft.enabled?'checked':''}>启用当前词条组合</label><span id="draft-status">${draft.id?'已保存':'尚未配置'}</span></div>
+    <div class="rule-state"><label><input type="checkbox" id="rule-enabled" ${draft.enabled?'checked':''}>启用当前词条组合</label><span id="draft-status">${dirty?'有未保存的改动':draft.id?'已保存':'尚未配置'}</span></div>
     ${draft.legacy?'<div class="inline-error">这是旧版数值规则；保存将改为当前主、副词条数量规则。</div>':''}
     ${groupMarkup('primary','主词条')}<div class="flow-label">↓ 主词条达标后，再检查副词条</div>${groupMarkup('secondary','副词条')}
     <div id="rule-summary" class="rule-summary"></div><div id="rule-error" class="inline-error" hidden></div>
     <p class="note">每个组合独立判断主、副词条。只需所选池中任意 n 类达标；同类型只算一次，基础属性不参与计数。一键锁定和持续监控都会检查所有启用组合。</p></div>
-    <div class="editor-actions"><button id="delete-rule" class="text-button" ${draft.id?'':'hidden'}>删除组合</button><span class="spacer"></span><button id="reset-rule" class="button ghost">重置改动</button><button id="save-rule" class="button primary">${draft.id?'保存修改':'保存并应用'}</button></div>`;
+    <div class="editor-actions"><small class="saved-state">${existing.length} 个已保存组合</small><span class="spacer"></span><button id="reset-rule" class="button ghost">重置改动</button><button id="save-rule" class="button primary">${draft.id?'保存修改':'保存并应用'}</button></div>`;
   updateSummary();
 }
 function setDirty(value){dirty=value;if(desktopMode)api('window/draft',{dirty:dirty||automationDirty}).catch(()=>{});}
@@ -335,14 +336,15 @@ $('rule-editor').addEventListener('click',async e=>{
       setDirty(true);renderEditor();$('draft-status').textContent='有未保存的改动';
     }
   }
-  if(button.id==='delete-rule'&&await confirmAction('删除这个词条组合？','只删除当前组合；这件装备的其他组合保留。','删除组合')){
-    try{await api('rule/delete',{id:draft.id});setDirty(false);draft=makeDraft(null);await pollState();await chooseGear(gearKey);toast('规则已删除');}catch(error){toast(error.message,true);}
-  }
+  if(button.id==='delete-rule')deleteCurrentCombination();
+  if(button.id==='cancel-new-rule'){setDirty(false);draft=makeDraft(rulesFor(gearKey)[0]);renderEditor();}
+  if(button.id==='manage-rules')openCombinationManager();
+  if(button.id==='copy-to-gear')openCopyDialog();
 });
 $('import-rules').addEventListener('click',()=>$('import-file').click());
 $('import-file').addEventListener('change',async e=>{
   const file=e.target.files[0];if(!file)return;
-  try{const payload=JSON.parse((await file.text()).replace(/^\uFEFF/,'')),result=await api('rule/import',{payload});await pollState();toast(`已导入 ${result.imported} 条规则，默认停用`);}catch(error){toast(error.message,true);}finally{e.target.value='';}
+  try{openImportDialog(JSON.parse((await file.text()).replace(/^\uFEFF/,'')),file.name);}catch(error){toast(error.message,true);}finally{e.target.value='';}
 });
 $('export-rules').addEventListener('click',()=>download('export/rules','Deskrawl筛选规则.json'));
 $('export-items').addEventListener('click',()=>download('export/items','Deskrawl装备清单.json'));

@@ -125,7 +125,7 @@ class ManagerTests(unittest.TestCase):
         self.folder=Path(self.tmp.name);self.exe=self.folder/'程序有 空格.exe';self.exe.write_bytes(b'old')
         self.prepared=Mock();self.launched=Mock();self.aborted=Mock()
         def download(release,stage,cancelled,progress):stage.write_bytes(BINARY);progress(len(BINARY),len(BINARY))
-        self.manager=UpdateManager(executable=self.exe,directory=self.folder/'updates',
+        self.manager=UpdateManager(executable=self.exe,current_version='1.1.5',directory=self.folder/'updates',
             fetcher=lambda:parse_release(payload()),downloader=download,
             prepare=self.prepared,launch=self.launched,abort=self.aborted,port=23456)
         self.addCleanup(self.manager.close)

@@ -198,23 +198,94 @@ class AssistantService:
             return rule.to_dict()
 
     def delete_rule(self, rule_id):
-        with self.guard:
-            if not any(r.id==rule_id for r in self.rules): raise ValidationError('规则已经不存在。')
-            deleted = next(r for r in self.rules if r.id==rule_id)
-            self._persist([r for r in self.rules if r.id!=rule_id])
-            self.journal.append('settings','rule_deleted','删除词条组合：'+deleted.name,
-                item_key=deleted.equipment_keys[0],item_name=self._describe_item(deleted.equipment_keys[0])[0],
-                context={'rule':deleted.to_dict()})
+        return self.delete_rules([rule_id])
 
-    def import_rules(self, payload):
+    def delete_rules(self, rule_ids, equipment_key=None):
         with self.guard:
+            if (not isinstance(rule_ids,list) or not rule_ids or
+                    any(not isinstance(i,str) or not i for i in rule_ids) or len(set(rule_ids))!=len(rule_ids)):
+                raise ValidationError('请选择要删除的组合，每个组合只能选择一次。')
+            deleted = [r for r in self.rules if r.id in rule_ids]
+            if len(deleted)!=len(rule_ids): raise ValidationError('部分组合已经不存在，请刷新后重试。')
+            if equipment_key is not None and any(equipment_key not in r.equipment_keys for r in deleted):
+                raise ValidationError('所选组合不属于当前装备。')
+            # An imported legacy rule may be shared by several pieces of gear.
+            # A scoped deletion removes only this equipment's association.
+            updated=[]
+            for rule in self.rules:
+                if rule.id not in rule_ids: updated.append(rule)
+                elif equipment_key is not None and len(rule.equipment_keys)>1:
+                    updated.append(Rule.from_dict({**rule.to_dict(),
+                        'equipment_keys':[k for k in rule.equipment_keys if k!=equipment_key]},self.catalog))
+            self._persist(updated)
+            key=equipment_key or deleted[0].equipment_keys[0]
+            self.journal.append('settings','rule_deleted' if len(deleted)==1 else 'rules_deleted',
+                '删除词条组合：'+deleted[0].name if len(deleted)==1 else f'删除 {len(deleted)} 个词条组合。',
+                item_key=key,item_name=self._describe_item(key)[0],
+                context={'rule':deleted[0].to_dict()} if len(deleted)==1 else {'rules':[r.to_dict() for r in deleted]})
+            return len(deleted)
+
+    def import_rules(self, payload, enabled=False):
+        with self.guard:
+            if not isinstance(enabled,bool): raise ValidationError('导入后启用选项必须为开启或关闭。')
             imported = rules_from_dict(payload, self.catalog)
-            # Imported rules begin disabled; importing never silently starts locks.
-            added = [Rule.from_dict({**r.to_dict(),'id':uuid.uuid4().hex,'enabled':False}, self.catalog) for r in imported]
+            added = [Rule.from_dict({**r.to_dict(),'id':uuid.uuid4().hex,'enabled':enabled}, self.catalog) for r in imported]
             self._persist(self.rules+added)
-            self.journal.append('settings','rules_imported',f'导入 {len(added)} 个词条组合，默认停用。',
-                context={'rules':[r.to_dict() for r in added]})
+            self.journal.append('settings','rules_imported',f'导入 {len(added)} 个词条组合，'+('已启用。' if enabled else '已停用。'),
+                context={'enabled':enabled,'rules':[r.to_dict() for r in added]})
             return len(added)
+
+    @staticmethod
+    def _combination_signature(rule):
+        data=rule.to_dict()
+        for key in ('id','equipment_keys'): data.pop(key)
+        for group in data.get('groups',{}).values(): group['selected_stats'].sort()
+        if 'conditions' in data:
+            data['conditions'].sort(key=lambda c:json.dumps(c,sort_keys=True))
+        return json.dumps(data,sort_keys=True,ensure_ascii=False)
+
+    def copy_rules(self, source_key, target_key, rule_ids=None, replace_existing=False, expected_target_ids=None):
+        with self.guard:
+            if not isinstance(replace_existing,bool): raise ValidationError('复制方式无效。')
+            if not isinstance(source_key,str) or not isinstance(target_key,str): raise ValidationError('请选择来源和目标装备。')
+            source=self.ui['equipment'].get(source_key);target=self.ui['equipment'].get(target_key)
+            if not source or not target: raise ValidationError('来源或目标装备不存在。')
+            if source_key==target_key: raise ValidationError('请选择另一件同类装备。')
+            if source['slot']!=target['slot']: raise ValidationError('只能复制到相同部位的装备。')
+            candidates=[r for r in self.rules if source_key in r.equipment_keys]
+            if rule_ids is not None:
+                if (not isinstance(rule_ids,list) or not rule_ids or any(not isinstance(i,str) for i in rule_ids)
+                        or len(set(rule_ids))!=len(rule_ids)):
+                    raise ValidationError('请选择有效的来源组合。')
+                candidates=[r for r in candidates if r.id in rule_ids]
+                if len(candidates)!=len(rule_ids): raise ValidationError('来源组合已变化，请刷新后重试。')
+            if not candidates: raise ValidationError('来源装备还没有保存的组合。')
+            target_rules=[r for r in self.rules if target_key in r.equipment_keys]
+            if replace_existing and expected_target_ids is not None:
+                if (not isinstance(expected_target_ids,list) or any(not isinstance(i,str) for i in expected_target_ids)
+                        or set(expected_target_ids)!={r.id for r in target_rules}
+                        or len(set(expected_target_ids))!=len(expected_target_ids)):
+                    raise ValidationError('目标装备的组合已变化，请重新打开复制窗口。')
+            kept=[]
+            for rule in self.rules:
+                if not replace_existing or target_key not in rule.equipment_keys: kept.append(rule)
+                elif len(rule.equipment_keys)>1:
+                    kept.append(Rule.from_dict({**rule.to_dict(),
+                        'equipment_keys':[k for k in rule.equipment_keys if k!=target_key]},self.catalog))
+            signatures={self._combination_signature(r) for r in target_rules} if not replace_existing else set()
+            added=[];skipped=0
+            for rule in candidates:
+                copied=Rule.from_dict({**rule.to_dict(),'id':uuid.uuid4().hex,'equipment_keys':[target_key]},self.catalog)
+                signature=self._combination_signature(copied)
+                if signature in signatures: skipped+=1;continue
+                signatures.add(signature);added.append(copied)
+            if added or replace_existing: self._persist(kept+added)
+            self.journal.append('settings','rules_copied',f'复制 {len(added)} 个组合到 '+self._describe_item(target_key)[0]+'。',
+                item_key=target_key,item_name=self._describe_item(target_key)[0],
+                context={'source_key':source_key,'target_key':target_key,'replace_existing':replace_existing,
+                    'replaced':len(target_rules) if replace_existing else 0,'skipped':skipped,'rules':[r.to_dict() for r in added]})
+            return {'copied':len(added),'skipped':skipped,'replaced':len(target_rules) if replace_existing else 0,
+                'target_key':target_key}
 
     def _rules(self):
         with self.guard: return list(self.rules)

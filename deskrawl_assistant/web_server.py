@@ -120,8 +120,13 @@ def make_handler(service, token):
                     if desktop is None: raise ValueError('当前助手没有独立窗口。')
                     desktop.activate()
                 elif path=='/api/rule/save': return self.reply({'rule':service.save_rule(data)})
-                elif path=='/api/rule/delete': service.delete_rule(data.get('id'))
-                elif path=='/api/rule/import': return self.reply({'imported':service.import_rules(data.get('payload'))})
+                elif path=='/api/rule/delete':
+                    return self.reply({'deleted':service.delete_rules(data.get('ids',[data.get('id')]),data.get('equipment_key'))})
+                elif path=='/api/rule/import':
+                    return self.reply({'imported':service.import_rules(data.get('payload'),data.get('enabled',False))})
+                elif path=='/api/rule/copy':
+                    return self.reply(service.copy_rules(data.get('source_key'),data.get('target_key'),
+                        data.get('rule_ids'),data.get('replace_existing',False),data.get('expected_target_ids')))
                 elif path=='/api/monitor': service.set_monitoring(data.get('enabled'))
                 elif path=='/api/automation/settings': return self.reply({'settings':service.save_automation(data.get('settings'))})
                 elif path=='/api/automation/run': service.set_automation_running(data.get('enabled'))

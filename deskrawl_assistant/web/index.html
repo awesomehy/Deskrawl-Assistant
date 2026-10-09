@@ -7,10 +7,11 @@
   <link rel="icon" href="/mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/style.css">
   <script src="/app.js" defer></script>
+  <script src="/rule-tools.js" defer></script>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><img src="/mark.svg" alt=""><div><strong>DESKRAWL <span>装备助手 · v1.1.5</span></strong><small>挑选值得保留的每一件装备</small></div></div>
+    <div class="brand"><img src="/mark.svg" alt=""><div><strong>DESKRAWL <span>装备助手 · v1.1.6</span></strong><small>挑选值得保留的每一件装备</small></div></div>
     <div class="topbar-actions">
       <div class="project-support"><a id="github-link" class="github-link" href="https://github.com/awesomehy/Deskrawl-Assistant" target="_blank" rel="noopener noreferrer" title="在浏览器中打开 GitHub 项目">GitHub <span aria-hidden="true">↗</span></a><small>如果觉得本软件对你有帮助，欢迎点亮 Star。</small></div>
       <div class="connection"><span id="connection-state" class="status-pill"><i></i>未连接游戏</span><button id="connect" class="button primary">连接游戏</button><button id="disconnect" class="button ghost" hidden>断开</button><button id="exit" class="icon-button" aria-label="退出助手" title="退出助手并停止监控"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v10M6.2 5.8a9 9 0 1 0 11.6 0"/></svg></button></div>
@@ -71,5 +72,8 @@
   </main>
   <footer><span id="footer-state">本机运行 · 无需切回游戏前台</span><span id="last-read">自动监控默认关闭</span></footer>
   <div id="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="import-dialog" class="rule-tool-dialog" aria-labelledby="import-title"><h2 id="import-title">导入筛选组合</h2><p id="import-summary"></p><label class="tool-field">导入后状态<select id="import-enabled"><option value="false">停用 · 稍后手动启用</option><option value="true">启用 · 立即参与筛选</option></select></label><p>保留现有组合，新导入的组合使用新的编号。选择启用后，将参与按规则锁定及持续监控。</p><div class="dialog-actions"><button id="import-cancel" class="button">取消</button><button id="import-confirm" class="button primary">导入组合</button></div></dialog>
+  <dialog id="manage-dialog" class="rule-tool-dialog" aria-labelledby="manage-title"><h2 id="manage-title">管理词条组合</h2><p>勾选需要清理的组合，然后批量删除。</p><div class="tool-selection"><button id="manage-all" class="button ghost">全选</button><button id="manage-none" class="button ghost">全不选</button><span id="manage-count"></span></div><div id="manage-list" class="manage-list"></div><div class="dialog-actions"><button id="manage-close" class="button">关闭</button><button id="manage-delete" class="button danger" disabled>删除所选组合</button></div></dialog>
+  <dialog id="copy-dialog" class="rule-tool-dialog" aria-labelledby="copy-title"><h2 id="copy-title">复制到同类装备</h2><p id="copy-source"></p><label class="tool-field">复制范围<select id="copy-scope"><option value="all">此装备的全部已保存组合</option><option value="current">仅当前已保存组合</option></select></label><label class="tool-field">目标装备<select id="copy-target"></select></label><div id="copy-target-preview" class="copy-target-preview"></div><label class="tool-field">复制方式<select id="copy-mode"><option value="append">追加 · 保留目标已有组合</option><option value="replace">替换 · 清理目标已有组合</option></select></label><p id="copy-summary"></p><p>复制名称、词条条件及启用状态；相同组合自动跳过。仅复制已保存的内容，当前未保存的改动仍可继续编辑。</p><div class="dialog-actions"><button id="copy-cancel" class="button">取消</button><button id="copy-confirm" class="button primary">复制组合</button></div></dialog>
   <dialog id="confirm-dialog"><div class="dialog-icon">↗</div><h2 id="confirm-title"></h2><p id="confirm-body"></p><div class="dialog-actions"><button id="confirm-cancel" class="button">取消</button><button id="confirm-ok" class="button danger">确认</button></div></dialog>
 </body></html>

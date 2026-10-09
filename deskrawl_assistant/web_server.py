@@ -8,7 +8,7 @@ import secrets
 import threading
 import urllib.error
 import urllib.request
-from urllib.parse import urlsplit, unquote
+from urllib.parse import urlsplit, unquote, parse_qs
 import webbrowser
 from .web_service import AssistantService
 from .action_log import record
@@ -45,9 +45,19 @@ def make_handler(service, token):
                 if path=='/api/session': return self.reply({'token':token})
                 if path=='/api/catalog': return self.reply(service.catalog_payload())
                 if path=='/api/state': return self.reply(service.state())
+                if path=='/api/logs':
+                    query = parse_qs(urlsplit(self.path).query)
+                    allowed = {'category','query','before','limit'}
+                    if set(query)-allowed or any(len(v)!=1 for v in query.values()):
+                        raise ValueError('日志查询参数无效。')
+                    params = {k:v[0] for k,v in query.items()}
+                    for field in ('before','limit'):
+                        if field in params: params[field] = int(params[field])
+                    return self.reply(service.log_page(**params))
                 if path=='/api/export/rules': return self.reply(service.export_rules())
                 if path=='/api/export/items':
                     with service.guard: value = service.snapshot
+                    service.journal.append('system','items_exported','导出当前背包与仓库清单。')
                     return self.reply(value or {'items':[]})
                 if path=='/':
                     body = (WEB / 'index.html').read_text(encoding='utf-8').replace('__SESSION_TOKEN__',token)
@@ -58,6 +68,7 @@ def make_handler(service, token):
                 mime = {'.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8',
                         '.svg':'image/svg+xml','.png':'image/png','.ico':'image/x-icon'}.get(file.suffix)
                 return self.reply(file.read_bytes(),content_type=mime)
+            except (ValueError,TypeError) as exc: return self.reply({'error':str(exc)},400)
             except Exception as exc: return self.reply({'error':str(exc)},500)
 
         def do_POST(self):

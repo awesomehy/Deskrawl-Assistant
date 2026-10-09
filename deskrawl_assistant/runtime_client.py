@@ -21,6 +21,7 @@ class RuntimeClient:
         self._guard = threading.RLock()
         self.pid: int | None = None
         self.last_error: str | None = None
+        self.item_events = None
 
     @property
     def connected(self) -> bool:
@@ -104,7 +105,8 @@ class RuntimeClient:
         with self._guard:
             if self._reader is None:
                 raise RuntimeConnectionError("尚未连接游戏。")
-            return move_items(self._reader, expected, target, validate)
+            return move_items(self._reader, expected, target, validate,
+                on_commit=lambda result: self.item_events('items_transferred',result) if self.item_events else None)
 
     def close(self):
         with self._guard:
@@ -123,7 +125,8 @@ class RuntimeClient:
         from .carriage_transfer import collect_item
         with self._guard:
             if self._reader is None: raise RuntimeConnectionError('尚未连接游戏。')
-            return collect_item(self._reader,selection_id,validate)
+            return collect_item(self._reader,selection_id,validate,
+                on_commit=lambda result: self.item_events('carriage_collected',result) if self.item_events else None)
 
     def __enter__(self):
         return self

@@ -36,7 +36,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='Deskrawl装备助手-v1.1.3',
+    name='Deskrawl装备助手-v1.1.4',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

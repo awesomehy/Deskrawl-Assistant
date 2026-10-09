@@ -18,7 +18,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.1.3'
+NAME = 'Deskrawl装备助手-v1.1.4'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -40,6 +40,8 @@ def main():
     assert all('deskrawl_assistant/web'+i['icon'] in icons for i in item_ui['items'].values())
     assert all(i['effect_groups'] for i in item_ui['items'].values())
     assert not any('lock-rules.json' in n or 'latest-snapshot.json' in n or 'assistant-actions.jsonl' in n for n in names)
+    assert not any('activity.sqlite3' in n for n in names)
+    assert any('_sqlite3' in n for n in names)
     assert not any('frida' in n.lower() or 'unitypy' in n.lower() for n in names)
     assert any(n.replace('\\','/').endswith('webview/js/api.js') for n in names)
     assert any(n.endswith('Python.Runtime.dll') for n in names)
@@ -136,8 +138,13 @@ def main():
         rule = {'id':'packaging-disabled-rule','name':'打包验证（停用）', 'equipment_keys':['LegendaryBelt3'], 'enabled':False,
             'groups':{'primary':{'selected_stats':['Stats.CooldownReduction'],'operator':'>=','count':1}}, 'group_mode':'all'}
         request('/api/rule/save', rule)
+        second_rule = {**rule,'id':'packaging-second-rule','name':'第二个流派组合（停用）'}
+        request('/api/rule/save',second_rule)
+        assert len(request('/api/export/rules')['rules']) == 2
+        logs_before = request('/api/logs?category=settings')['total']
+        assert logs_before >= 3
         assert request('/api/state')['rules'][0]['enabled'] is False
-        report['checks'].append('停用的测试规则成功保存到持久目录')
+        report['checks'].append('同件装备的两个可命名组合成功保存，导出保留全部组合；配置操作进入持久日志')
         # A second launch must attach to the same service and exit, leaving
         # the first instance's session and rule data intact.
         second_command = [str(exe), '--port', str(port)]
@@ -178,12 +185,15 @@ def main():
         finish()
         start()
         state = request('/api/state')
-        assert len(state['rules']) == 1 and state['rules'][0]['enabled'] is False
+        assert len(state['rules']) == 2 and all(r['enabled'] is False for r in state['rules'])
+        assert [r['name'] for r in state['rules']] == [rule['name'],second_rule['name']]
+        assert request('/api/logs?category=settings')['total'] >= logs_before
         assert state['connected'] is False and state['monitoring'] is False
         assert state['automation']['settings'] == settings and not state['automation']['running']
         assert token != old_token
         report['checks'].append('退出后重启仍保留规则；不会自动连接或开启监控')
         report['checks'].append('自动整理选择与偏好重启后保留，仍默认暂停')
+        report['checks'].append('多组合同名装备配置与 SQLite 日志重启后保留；日志无需外部 Python 或数据库程序')
         assert (persistent / 'config/lock-rules.json').is_file()
         if args.connect_game:
             assert (persistent / 'data/runtime/latest-snapshot.json').is_file()

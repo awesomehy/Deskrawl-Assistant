@@ -8,6 +8,7 @@ let selectedItems=new Set(), itemSignature='', catalogSignature='', polling=fals
 const gearMap=new Map(), statMap=new Map();
 let lastRules='';
 let automationDraft=null, automationDirty=false, collectionSignature='';
+let activeTab='rules', logBefore=null, logNext=null, logRequest=0, logTimer;
 
 async function api(path,data,retry=true){
   const response=await fetch('/api/'+path,data===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Assistant-Token':token},body:JSON.stringify(data)});
@@ -42,9 +43,11 @@ function gearIcon(gear,cls='gear-icon'){
 }
 function rulesFor(key){return (state?.rules||[]).filter(r=>r.equipment_keys.includes(key));}
 function switchTab(tab){
+  activeTab=tab;
   document.querySelectorAll('.tab').forEach(button=>{let active=button.dataset.tab===tab;button.classList.toggle('active',active);button.setAttribute('aria-selected',active);});
-  $('rules-page').hidden=tab!=='rules';$('inventory-page').hidden=tab!=='inventory';
+  $('rules-page').hidden=tab!=='rules';$('inventory-page').hidden=tab!=='inventory';$('logs-page').hidden=tab!=='logs';
   if(tab==='inventory')renderInventory();
+  if(tab==='logs')loadLogs();
 }
 function buildCatalog(){
   catalog.equipment.forEach(g=>gearMap.set(g.key,g));catalog.stats.forEach(s=>statMap.set(s.key,s));
@@ -62,18 +65,19 @@ function renderCatalog(){
     const rules=rulesFor(g.key),enabled=rules.some(r=>r.enabled);
     return `<button class="gear-card ${g.key===gearKey?'active':''}" data-gear="${esc(g.key)}" aria-pressed="${g.key===gearKey}">
       ${rules.length?`<span class="configured-dot ${enabled?'':'off'}"></span>`:''}${gearIcon(g)}<strong title="${esc(g.name)}">${esc(g.name)}</strong>
-      <small>${esc(g.slot_label)} · ${esc(classesLabel(g.class_mask))}</small><small class="card-status ${enabled?'':'off'}">${rules.length?(enabled?'规则已启用':'规则已停用'):'未配置规则'}</small></button>`;
+      <small>${esc(g.slot_label)} · ${esc(classesLabel(g.class_mask))}</small><small class="card-status ${enabled?'':'off'}">${rules.length?`${rules.filter(r=>r.enabled).length} / ${rules.length} 个组合启用`:'未配置规则'}</small></button>`;
   }).join(''):'<div class="empty-state">没有找到符合条件的装备<br>试试其他职业、部位或搜索词</div>';
 }
 function makeDraft(rule){
   const groups=rule?.groups||{};
-  return {id:rule?.id||'',name:rule?.name||gearMap.get(gearKey).name,enabled:rule?.enabled??true,
+  let number=1;while(rulesFor(gearKey).some(r=>r.name===`组合 ${number}`))number++;
+  return {id:rule?.id||'',name:rule?.name||`组合 ${number}`,enabled:rule?.enabled??true,
     primary:[...(groups.primary?.selected_stats||[])],primaryCount:groups.primary?.count||1,
     secondary:[...(groups.secondary?.selected_stats||[])],secondaryCount:groups.secondary?.count||1,
     secondaryEnabled:!!groups.secondary,legacy:!!rule&&!rule.groups};
 }
 async function chooseGear(key,ruleId){
-  if(dirty&&!await confirmAction('切换装备配置？','当前配置还没有保存。切换后将放弃这些改动。','放弃改动并切换',false))return;
+  if(dirty&&!await confirmAction('切换装备配置？','当前配置还没有保存。切换后将放弃这些改动。','放弃改动并切换',false)){renderEditor();return;}
   gearKey=key;const candidates=rulesFor(key);const rule=candidates.find(r=>r.id===ruleId)||candidates[0];
   draft=makeDraft(rule);setDirty(false);renderCatalog();renderEditor();
   const grid=$('equipment-grid'),active=grid.querySelector('.gear-card.active');
@@ -94,18 +98,22 @@ function renderEditor(){
   const gear=gearMap.get(gearKey),existing=rulesFor(gearKey);
   $('rule-editor').innerHTML=`<div class="editor-head">${gearIcon(gear)}<div><div class="eyebrow">传说装备 · ${esc(gear.slot_label)} · ${esc(classesLabel(gear.class_mask))}</div><h2>${esc(gear.name)}</h2><small>${esc(gear.en)}</small></div></div>
     <div class="editor-content">${gear.description?`<div class="legendary-description">${esc(gear.description)}</div>`:''}
-    ${existing.length>1?`<div class="editor-rule-select"><select id="existing-rule" aria-label="选择这件装备的规则">${existing.map(r=>`<option value="${esc(r.id)}" ${draft.id===r.id?'selected':''}>${esc(r.name)}${r.enabled?' · 已启用':' · 已停用'}</option>`).join('')}</select><button id="new-rule" class="button ghost">新增组合</button></div>`:''}
-    <div class="rule-state"><label><input type="checkbox" id="rule-enabled" ${draft.enabled?'checked':''}>启用这件装备的筛选规则</label><span id="draft-status">${draft.id?'已保存':'尚未配置'}</span></div>
+    <div class="editor-rule-select"><select id="existing-rule" aria-label="选择词条组合">${!draft.id?'<option value="" selected>新组合 · 尚未保存</option>':''}${existing.map((r,index)=>`<option value="${esc(r.id)}" ${draft.id===r.id?'selected':''}>${index+1}. ${esc(r.name)}${r.enabled?' · 已启用':' · 已停用'}</option>`).join('')}</select><button id="new-rule" class="button ghost">新增组合</button><button id="copy-rule" class="button ghost" ${draft.id?'':'hidden'}>复制组合</button></div>
+    <label class="combination-name">组合名称<input id="rule-name" value="${esc(draft.name)}" maxlength="80" placeholder="例如：暴击流、冰伤流" aria-label="组合名称"></label>
+    <p class="combination-note">这件装备有 ${existing.length} 个已保存组合，${existing.filter(r=>r.enabled).length} 个启用。满足任意一个启用组合，即符合规则。</p>
+    <div class="rule-state"><label><input type="checkbox" id="rule-enabled" ${draft.enabled?'checked':''}>启用当前词条组合</label><span id="draft-status">${draft.id?'已保存':'尚未配置'}</span></div>
     ${draft.legacy?'<div class="inline-error">这是旧版数值规则；保存将改为当前主、副词条数量规则。</div>':''}
     ${groupMarkup('primary','主词条')}<div class="flow-label">↓ 主词条达标后，再检查副词条</div>${groupMarkup('secondary','副词条')}
     <div id="rule-summary" class="rule-summary"></div><div id="rule-error" class="inline-error" hidden></div>
-    <p class="note">勾选的是可接受词条池，只需其中任意 n 类达标，并非每个勾选项都必需。同类型只算一次；基础属性不参与计数。保存并启用后，一键锁定和持续监控都使用这条规则。</p></div>
-    <div class="editor-actions"><button id="delete-rule" class="text-button" ${draft.id?'':'hidden'}>删除规则</button><span class="spacer"></span><button id="reset-rule" class="button ghost">重置改动</button><button id="save-rule" class="button primary">${draft.id?'保存修改':'保存并应用'}</button></div>`;
+    <p class="note">每个组合独立判断主、副词条。只需所选池中任意 n 类达标；同类型只算一次，基础属性不参与计数。一键锁定和持续监控都会检查所有启用组合。</p></div>
+    <div class="editor-actions"><button id="delete-rule" class="text-button" ${draft.id?'':'hidden'}>删除组合</button><span class="spacer"></span><button id="reset-rule" class="button ghost">重置改动</button><button id="save-rule" class="button primary">${draft.id?'保存修改':'保存并应用'}</button></div>`;
   updateSummary();
 }
 function setDirty(value){dirty=value;if(desktopMode)api('window/draft',{dirty:dirty||automationDirty}).catch(()=>{});}
 function markDirty(){setDirty(true);$('draft-status').textContent='有未保存的改动';updateSummary();}
 function validation(){
+  if(!draft.name.trim())return '请填写组合名称。';
+  if(draft.name.trim().length>80)return '组合名称最多 80 个字符。';
   const gear=gearMap.get(gearKey),pool=catalog.pools[gear.slot];
   if(!pool?.primary?.length)return '此部位没有可用的随机词条，暂不支持词条筛选配置。';
   for(const group of ['primary',...(draft.secondaryEnabled?['secondary']:[])]){
@@ -182,7 +190,7 @@ function renderDetail(){
     <div class="detail-meta"><span>物品等级 ${esc(item.level)}</span><span>强化 +${esc(item.upgrade??0)}</span></div>
     ${['base','primary','secondary','unknown'].map(g=>{const values=item.groups[g]||[];return values.length?`<div class="detail-group"><h4>${{base:'基础属性 · 不参与筛选',primary:'主词条',secondary:'副词条',unknown:'待核验词条'}[g]}</h4><div class="type-list">${values.map(v=>`<div class="affix-row ${v.matched?'matched':''}" data-affix-key="${esc(v.key)}" title="${esc(v.value_note||(v.matched?'命中规则：'+v.matched_rules.join('、'):''))}"><span class="affix-name">${esc(v.name)}</span><strong class="affix-value">${esc(v.display_value??'未读取')}</strong>${v.matched?'<small class="affix-hit" aria-label="命中规则">✓</small>':''}</div>`).join('')}</div></div>`:'';}).join('')}
     <p class="detail-hint">绿色为命中已启用规则的词条；整件装备是否达标见下方结果。数值包含已确认的装备强化。</p>
-    <div class="detail-rule">${resultBadge(item)}${item.reasons.map(r=>`<p>${esc(r)}</p>`).join('')}<button class="text-button" data-configure-item="${esc(item.name_key)}">配置这件装备的规则 →</button></div>${moveButton}`;
+    <div class="detail-rule">${resultBadge(item)}${item.matched_combinations?.length?`<p class="matched-combinations">命中组合：${item.matched_combinations.map(esc).join('、')}</p>`:''}${item.reasons.map(r=>`<p>${esc(r)}</p>`).join('')}<button class="text-button" data-configure-item="${esc(item.name_key)}">配置这件装备的规则 →</button></div>${moveButton}`;
 }
 function renderEffects(item){
   const plain=s=>String(s??'').replace(/<[^>]+>/g,'');
@@ -274,6 +282,7 @@ function renderState(){
   const rulesSignature=JSON.stringify(state.rules);
   if(rulesSignature!==lastRules){lastRules=rulesSignature;renderCatalog();if(gearKey&&!dirty){const r=rulesFor(gearKey).find(r=>r.id===draft?.id);if(r){draft=makeDraft(r);renderEditor();}}}
   renderInventory();updateControls();renderAutomation();
+  $('logging-state').textContent=state.connected?'已连接 · 每 2 秒记录物品变化':'连接游戏后开始记录物品变化';
 }
 async function pollState(){
   if(polling||exiting)return;
@@ -308,6 +317,7 @@ $('rule-editor').addEventListener('change',async e=>{
 });
 $('rule-editor').addEventListener('input',e=>{
   const input=e.target;
+  if(input.id==='rule-name'){draft.name=input.value;markDirty();}
   if(input.dataset.count){draft[input.dataset.count+'Count']=Number(input.value);markDirty();}
   if(input.dataset.affixSearch){let q=input.value.trim().toLowerCase();input.closest('.affix-group').querySelectorAll('[data-stat-name]').forEach(c=>c.hidden=!!q&&!c.dataset.statName.includes(q));}
 });
@@ -315,8 +325,14 @@ $('rule-editor').addEventListener('click',async e=>{
   const button=e.target.closest('button');if(!button)return;
   if(button.id==='save-rule')saveRule();
   if(button.id==='reset-rule'){setDirty(false);const r=rulesFor(gearKey).find(r=>r.id===draft.id);draft=makeDraft(r);renderEditor();}
-  if(button.id==='new-rule'){if(!dirty||await confirmAction('新增词条组合？','当前未保存的改动将被放弃。','新增',false)){draft=makeDraft(null);setDirty(false);renderEditor();}}
-  if(button.id==='delete-rule'&&await confirmAction('删除这条规则？','删除规则不会解锁游戏里的装备。','删除规则')){
+  if(['new-rule','copy-rule'].includes(button.id)){
+    if(!dirty||await confirmAction('新增词条组合？','当前未保存的改动将被放弃。','继续',false)){
+      if(button.id==='copy-rule'){const source=rulesFor(gearKey).find(r=>r.id===draft.id);draft=makeDraft(source);draft.id='';draft.name=(draft.name+' · 副本').slice(0,80);}
+      else draft=makeDraft(null);
+      setDirty(true);renderEditor();$('draft-status').textContent='有未保存的改动';
+    }
+  }
+  if(button.id==='delete-rule'&&await confirmAction('删除这个词条组合？','只删除当前组合；这件装备的其他组合保留。','删除组合')){
     try{await api('rule/delete',{id:draft.id});setDirty(false);draft=makeDraft(null);await pollState();await chooseGear(gearKey);toast('规则已删除');}catch(error){toast(error.message,true);}
   }
 });
@@ -350,7 +366,7 @@ for(const id of ['pressure-threshold','pressure-target'])$(id).addEventListener(
 $('save-automation').addEventListener('click',async()=>{try{const result=await api('automation/settings',{settings:readAutomationForm()});automationDraft=result.settings;automationDirty=false;setDirty(dirty);await pollState();toast('自动整理设置已保存');}catch(error){toast(error.message,true);}});
 $('run-automation').addEventListener('click',async()=>{try{await api('automation/run',{enabled:!state.automation.running});await pollState();}catch(error){toast(error.message,true);}});
 $('stop').addEventListener('click',async()=>{try{await api('stop',{});await pollState();}catch(error){toast(error.message,true);}});
-$('history-toggle').addEventListener('click',()=>$('history-list').hidden=!$('history-list').hidden);
+$('history-toggle').addEventListener('click',()=>switchTab('logs'));
 $('exit').addEventListener('click',async()=>{
   if((dirty||automationDirty)&&!await confirmAction('退出助手？','当前配置还未保存。退出将放弃改动，并停止持续监控和自动整理。','退出',false))return;
   try{await api('shutdown',{});exiting=true;document.body.innerHTML='<div class="empty-state"><h2>助手已退出</h2><p class="note">持续监控已停止。可关闭此页面，或双击启动文件重新打开。</p></div>';}catch(error){toast(error.message,true);}
@@ -358,6 +374,36 @@ $('exit').addEventListener('click',async()=>{
 window.addEventListener('beforeunload',e=>{if(dirty||automationDirty){e.preventDefault();e.returnValue='';}});
 async function boot(){
   if(desktopMode)$('usage-note').textContent='监控只自动处理新增装备；已有装备请用“一键按规则锁定”。最小化窗口可继续监控，关闭窗口会退出助手并停止监控。';
-  try{catalog=await api('catalog');buildCatalog();await pollState();const first=state.rules[0]?.equipment_keys[0]||'LegendaryBelt3';if(first)await chooseGear(first);setInterval(pollState,1000);}catch(error){toast(error.message,true);}
+  try{catalog=await api('catalog');buildCatalog();await pollState();const first=state.rules[0]?.equipment_keys[0]||'LegendaryBelt3';if(first)await chooseGear(first);setInterval(pollState,1000);setInterval(()=>{if(activeTab==='logs'&&!logBefore)loadLogs(true);},2000);}catch(error){toast(error.message,true);}
 }
+const logCategories={loot:'物品获取',lock:'锁定 / 解锁',transfer:'物品转移',settings:'配置操作',system:'运行操作',error:'失败'};
+function logPosition(position){
+  if(!position)return '—';
+  const label={inventory:'背包',storage:'仓库',carriage:'马车'}[position.container]||position.container||'未确认';
+  const slot=position.slot_index==null?'':`第 ${Number(position.slot_index)+1} ${position.container==='carriage'?'组':'格'}`;
+  const counts=position.count_before==null?'':`<small>数量 ${esc(position.count_before)}${position.count_after==null?' · 结果未确认':` → ${esc(position.count_after)}`}</small>`;
+  return `<span>${esc(label)} ${slot}</span>${counts}`;
+}
+async function loadLogs(quiet=false){
+  const request=++logRequest,params=new URLSearchParams({category:$('log-category').value,query:$('log-search').value.trim(),limit:'50'});
+  if(logBefore)params.set('before',logBefore);
+  try{
+    const result=await api('logs?'+params);if(request!==logRequest)return;
+    logNext=result.next_before;$('log-total').textContent=`共 ${result.total} 条记录`;
+    $('log-older').disabled=!logNext;$('log-latest').disabled=!logBefore;
+    $('log-empty').hidden=result.entries.length>0;
+    $('log-rows').innerHTML=result.entries.map(row=>{
+      const date=new Date(row.time),context=row.context||{},method=context.automatic?'自动':context.automatic===false?'手动':'';
+      const matched=context.matched_combinations?.length?`命中：${context.matched_combinations.join('、')}`:'';
+      return `<tr class="log-${esc(row.category)}"><td><time>${date.toLocaleTimeString('zh-CN',{hour12:false})}<small>${date.toLocaleDateString('zh-CN')}</small></time></td><td><span class="badge ${row.category==='error'?'review':row.category==='loot'?'match':'miss'}">${esc(logCategories[row.category])}</span>${method?`<small>${method}</small>`:''}</td><td><strong>${esc(row.item_name||'—')}</strong></td><td class="log-quantity">${row.quantity==null?'—':(context.quantity_requested?'请求 ':'')+esc(row.quantity)}</td><td>${logPosition(row.source)}</td><td>${logPosition(row.destination)}</td><td>${esc(row.message)}${matched?`<small>${esc(matched)}</small>`:''}</td></tr>`;
+    }).join('');
+    $('log-error').hidden=true;
+  }catch(error){if(request!==logRequest)return;$('log-error').textContent=error.message;$('log-error').hidden=false;if(!quiet)toast(error.message,true);}
+}
+function resetLogs(){logBefore=null;loadLogs();}
+$('log-category').addEventListener('change',resetLogs);
+$('log-search').addEventListener('input',()=>{clearTimeout(logTimer);logTimer=setTimeout(resetLogs,300);});
+$('log-refresh').addEventListener('click',()=>loadLogs());
+$('log-latest').addEventListener('click',resetLogs);
+$('log-older').addEventListener('click',()=>{if(logNext){logBefore=logNext;loadLogs();}});
 boot();

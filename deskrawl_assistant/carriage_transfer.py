@@ -7,6 +7,7 @@ import time
 from .native_memory import MemoryReadError
 from .container_transfer import FrozenSlotTransaction, NT, slot_fields, GC_MODE_RVA, GC_BITMAP_RVA, GAME_MANAGER_RVA
 from .paths import RESOURCE_ROOT
+from .activity_journal import operation_id
 
 class FrozenCarriageTransaction(FrozenSlotTransaction):
     def collect(self,drop,drop_header,target,target_header,guards):
@@ -115,7 +116,7 @@ def read_carriage(reader):
     drops=objects(ptr(carriage+152),'LootDrop')
     world=objects(ptr(manager+216),'LootDrop')
     rows=[]
-    for address in drops:
+    for index,address in enumerate(drops):
         if not address: continue
         verify(address,'LootDrop')
         header=read(address,216)
@@ -126,7 +127,9 @@ def read_carriage(reader):
         uid=reader.string(struct.unpack_from('<Q',header,136)[0])
         count=max(1,struct.unpack_from('<i',header,164 if row['item_type']==1 else 168)[0])
         token=hashlib.sha256(f'{reader.session_id}:{address}:{item}:{uid}:{count}'.encode()).hexdigest()
-        row={**row,'item_uid':uid,'count':count,'selection_id':token,'collectable':row['item_type']!=1 and world.count(address)==1,
+        observation_id=hashlib.sha256(f'{reader.session_id}:{address}:{item}:{uid}'.encode()).hexdigest()
+        row={**row,'item_uid':uid,'count':count,'selection_id':token,'observation_id':observation_id,'slot_index':index,
+             'collectable':row['item_type']!=1 and world.count(address)==1,
              '_address':address,'_header':header}
         rows.append(row)
     if any(p.read(a,len(b))!=b for a,b in guards): raise CarriageUnavailable('马车正在收集物品，等待下一次读取。')
@@ -137,10 +140,11 @@ def public_carriage(reader):
     try:
         value=read_carriage(reader)
         return {'available':True,'count':value['count'],'items':[{k:v for k,v in r.items() if not k.startswith('_')} for r in value['items']]}
-    except CarriageUnavailable as exc: return {'available':False,'count':0,'items':[],'reason':str(exc)}
+    except CarriageUnavailable as exc:
+        return {'available':False,'complete':'正在' not in str(exc),'count':0,'items':[],'reason':str(exc)}
 
 
-def collect_item(reader,selection_id,validate=lambda:True):
+def collect_item(reader,selection_id,validate=lambda:True,on_commit=None):
     snapshot=reader.snapshot()
     if not snapshot['complete']: raise CarriageUnavailable('物品正在变化，等待下次读取。')
     current=read_carriage(reader)
@@ -168,6 +172,17 @@ def collect_item(reader,selection_id,validate=lambda:True):
     tx=FrozenCarriageTransaction(reader)
     try: result=tx.collect_many(row['_address'],row['_header'],[(a,h,n) for _,a,h,n in targets],guards)
     finally: tx.close()
+    movements=[];remaining=row['count']
+    for index,_,_,amount in targets:
+        movements.append({'name':row['internal_name'],'identity':uid or '','observation_id':row.get('observation_id',''),
+            'count':amount,'merged':False,
+            'source':{'container':'carriage','slot_index':row.get('slot_index'),'count_before':remaining,'count_after':remaining-amount},
+            'destination':{'container':'inventory','slot_index':index,'count_before':0,'count_after':amount}})
+        remaining-=amount
+    result={**result,'operation_id':operation_id(),'movements':movements,'moved':1,
+            'name':row['internal_name'],'slot_index':targets[0][0],'new_slots':len(targets)}
+    # Persist confirmed changes before later scene cleanup/readback can fail.
+    if on_commit: on_commit(result)
     # Collected flag prevents a second pickup while Unity's expiry sweep runs.
     deadline=time.monotonic()+2
     while time.monotonic()<deadline:
@@ -180,4 +195,4 @@ def collect_item(reader,selection_id,validate=lambda:True):
         found=next((r for r in fresh['containers']['inventory']['slots'] if r['slot_index']==index),None)
         if not found or found.get('internal_name')!=row['internal_name'] or found['count']!=amount or found.get('item_uid')!=uid:
             raise MemoryReadError('马车收取后物品回读不一致，已停止自动整理')
-    return {**result,'moved':1,'name':row['internal_name'],'slot_index':targets[0][0],'new_slots':len(targets)}
+    return result

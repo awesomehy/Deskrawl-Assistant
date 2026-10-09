@@ -15,7 +15,8 @@ from .runtime_client import RuntimeClient
 from .native_memory import SnapshotChangedError
 from .loot_monitor import LootState
 from .action_log import record
-from .paths import RESOURCE_ROOT, rules_file
+from .paths import RESOURCE_ROOT, rules_file, runtime_dir
+from .activity_journal import ActivityJournal, ItemActivityTracker, operation_id
 from .automation import DEFAULT_SETTINGS, validate_settings, pressure_candidates, free_slots
 from copy import deepcopy
 
@@ -54,6 +55,10 @@ class AssistantService:
         self.adapter = RuntimeAdapter(self.catalog, BASE / 'data/affix-groups-static.json')
         self.client = client or RuntimeClient()
         self.config = Path(config) if config else rules_file()
+        self.journal = ActivityJournal((self.config.parent if config else runtime_dir()) / 'activity.sqlite3')
+        self.activity = ItemActivityTracker(self.journal, self._describe_item)
+        self.client.item_events = self._record_item_commit
+        self.operation_kind = None
         self.automation_config = self.config.with_name('automation.json')
         self.automation_settings = deepcopy(DEFAULT_SETTINGS)
         self.automation_running = False
@@ -87,6 +92,44 @@ class AssistantService:
         self.worker = None
         self.monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
         self.monitor_thread.start()
+
+    def _describe_item(self, key):
+        entry = self.item_names.get(key, {})
+        name = entry.get('Chinese (Simplified)') or entry.get('English') or key
+        meta = self.item_ui['items'].get(key,{})
+        kind = 'equipment' if key in self.ui['equipment'] else meta.get('kind','material')
+        return name, kind
+
+    def log_page(self, **filters):
+        return self.journal.page(**filters)
+
+    def _record_item_commit(self, event, result):
+        if result.get('journal_recorded'): return
+        movements = result.get('movements', [])
+        if not movements: return
+        op = result.setdefault('operation_id', operation_id())
+        entries = []
+        for index, movement in enumerate(movements):
+            name, kind = self._describe_item(movement['name'])
+            label = '从马车收取' if event == 'carriage_collected' else '转移物品'
+            if movement.get('merged'): label += '（合并堆叠）'
+            entries.append(dict(category='transfer',event=event,message=label+'：'+name,
+                item_key=movement['name'],item_name=name,item_kind=kind,quantity=movement['count'],
+                source=movement['source'],destination=movement['destination'],event_key=op+':'+str(index),
+                context={'operation_id':op,'automatic':self.operation_kind=='monitor',
+                         'merged':movement.get('merged',False),'identity':movement.get('identity','')}))
+        self.journal.append_many(entries)
+        self.activity.apply_movements(movements)
+        result['journal_recorded'] = True
+
+    def _record_transfer_failure(self, row, target, error, *, carriage=False, automatic=False):
+        key = row.get('internal_name') or row.get('name_key') or '未知物品'
+        name, kind = self._describe_item(key)
+        self.journal.append('error','item_transfer_failed','物品转移未完成核验：'+name+' · '+str(error),
+            item_key=key,item_name=name,item_kind=kind,quantity=row.get('count',1),
+            source={'container':'carriage' if carriage else row.get('container'),'slot_index':row.get('slot_index'),
+                    'count_before':row.get('count',1)},destination={'container':target},
+            context={'automatic':automatic,'error':str(error),'quantity_requested':True})
 
     def catalog_payload(self):
         localized = json.loads((BASE / 'data/game-catalog.json').read_text(encoding='utf-8'))['tables']['Equipments']['entries']
@@ -122,6 +165,7 @@ class AssistantService:
 
     def export_rules(self):
         rules = self._rules()
+        self.journal.append('settings','rules_exported',f'导出 {len(rules)} 个词条组合。')
         versions = {r.schema_version for r in rules}
         if len(versions)>1: return [r.to_dict() for r in rules]
         return {'version':next(iter(versions)) if versions else 2,'rules':[r.to_dict() for r in rules]}
@@ -131,6 +175,7 @@ class AssistantService:
             raw = dict(raw)
             raw['id'] = raw.get('id') or uuid.uuid4().hex
             rule = Rule.from_dict(raw, self.catalog)
+            if len(rule.name)>80: raise ValidationError('组合名称最多 80 个字符。')
             if len(rule.equipment_keys)!=1 or not rule.is_count_rule:
                 raise ValidationError('每条配置需对应一件装备，并设置主词条数量条件。')
             if any(g.operator!='>=' for g in rule.groups.values()):
@@ -145,12 +190,19 @@ class AssistantService:
             updated = [rule if r.id==rule.id else r for r in self.rules]
             if not any(r.id==rule.id for r in self.rules): updated.append(rule)
             self._persist(updated)
+            self.journal.append('settings','rule_saved','保存词条组合：'+rule.name,
+                item_key=rule.equipment_keys[0],item_name=self._describe_item(rule.equipment_keys[0])[0],
+                context={'rule':rule.to_dict()})
             return rule.to_dict()
 
     def delete_rule(self, rule_id):
         with self.guard:
             if not any(r.id==rule_id for r in self.rules): raise ValidationError('规则已经不存在。')
+            deleted = next(r for r in self.rules if r.id==rule_id)
             self._persist([r for r in self.rules if r.id!=rule_id])
+            self.journal.append('settings','rule_deleted','删除词条组合：'+deleted.name,
+                item_key=deleted.equipment_keys[0],item_name=self._describe_item(deleted.equipment_keys[0])[0],
+                context={'rule':deleted.to_dict()})
 
     def import_rules(self, payload):
         with self.guard:
@@ -158,6 +210,8 @@ class AssistantService:
             # Imported rules begin disabled; importing never silently starts locks.
             added = [Rule.from_dict({**r.to_dict(),'id':uuid.uuid4().hex,'enabled':False}, self.catalog) for r in imported]
             self._persist(self.rules+added)
+            self.journal.append('settings','rules_imported',f'导入 {len(added)} 个词条组合，默认停用。',
+                context={'rules':[r.to_dict() for r in added]})
             return len(added)
 
     def _rules(self):
@@ -167,7 +221,8 @@ class AssistantService:
         carriage = None
         if snapshot and hasattr(self.client,'carriage_snapshot'):
             try: carriage = self.client.carriage_snapshot()
-            except Exception as exc: carriage = {'available':False,'count':0,'items':[],'reason':str(exc)}
+            except Exception as exc: carriage = {'available':False,'complete':False,'count':0,'items':[],'reason':str(exc)}
+        if snapshot: self.activity.observe(snapshot,carriage)
         with self.guard:
             self.snapshot = snapshot
             if carriage is not None: self.carriage = carriage
@@ -192,7 +247,7 @@ class AssistantService:
                 'transfer':snap.get('transfer',{'available':False}) if snap else {'available':False}}
             result['automation'] = {'settings':deepcopy(self.automation_settings),'running':self.automation_running,
                 'status':self.automation_status,'carriage':self._carriage_payload()}
-            result['app_version'] = '1.1.3'
+            result['app_version'] = '1.1.4'
         if not snap: return result
         adapted = self.adapter.adapt_snapshot(snap)
         observations = {(i.container,i.index):i for i in adapted.items}
@@ -208,6 +263,7 @@ class AssistantService:
             groups = {'base':[],'primary':[],'secondary':[],'unknown':[]}
             match = False
             reasons = []
+            matched_combinations = []
             if observation:
                 item_rules = [r for r in rules if r.enabled and key in r.equipment_keys]
                 evaluations = [evaluate(r,observation,self.catalog) for r in item_rules]
@@ -222,9 +278,10 @@ class AssistantService:
                     groups[group].append({'key':stat,'name':self.catalog.stats[stat].label if stat in self.catalog.stats else stat,
                         **preview_value(modifier, row), 'matched':bool(hit_rules), 'matched_rules':list(dict.fromkeys(hit_rules))})
                 match = any(e.status=='match' for e in evaluations)
+                matched_combinations = [r.name for r,e in zip(item_rules,evaluations) if e.status=='match']
                 decision = planner.plan(observation,rules)
                 if evaluations:
-                    reasons = [reason for e in evaluations for reason in e.reasons]
+                    reasons = [r.name+' · '+reason for r,e in zip(item_rules,evaluations) for reason in e.reasons]
                 else: reasons = ['尚未启用这件装备的筛选规则']
                 review = decision.action=='review'
             else: review = row.get('is_equipment') is True
@@ -241,7 +298,8 @@ class AssistantService:
                 'container':row.get('container'),'slot_index':row.get('slot_index'),
                 'locked':row.get('locked'),'level':row.get('item_level'),'upgrade':row.get('upgrade_level'),
                 'icon':meta.get('icon'),'slot':meta.get('slot'),'slot_label':SLOT_LABELS.get(meta.get('slot'), '未知部位') if kind=='equipment' else kind_label,
-                'class_mask':meta.get('class_mask',0),'groups':groups,'matches':match,'review':review,'reasons':reasons})
+                'class_mask':meta.get('class_mask',0),'groups':groups,'matches':match,'matched_combinations':matched_combinations,
+                'review':review,'reasons':reasons})
         for container in ('inventory','storage'):
             values = [i for i in result['items'] if i['container']==container]
             result['counts'][container] = {'equipment':sum(i['is_equipment'] for i in values),'locked':sum(i['is_equipment'] and i['locked'] is True for i in values),
@@ -289,6 +347,7 @@ class AssistantService:
                 # Resolve browser tokens only against the trusted server snapshot.
                 payload = {'target':target,'expected':[dict(current[k]) for k in selection]}
             self.busy = True
+            self.operation_kind = kind
             self.error = ''
             self.progress = None
             self.cancelled.clear()
@@ -298,24 +357,33 @@ class AssistantService:
             self.worker.start()
 
     def _work(self, kind, payload):
+        with self.guard: self.operation_kind = kind
         try:
-            record('web_operation_started', kind=kind)
+            if kind!='observe': record('web_operation_started', kind=kind)
+            if kind not in ('observe','monitor'):
+                self.journal.append('system','operation_started',{
+                    'connect':'连接游戏','disconnect':'断开游戏','read':'刷新物品清单',
+                    'lock_selected':'锁定所选装备','lock_rules':'按规则锁定装备','unlock_all':'全部解锁装备',
+                    'move_items':'移动所选物品'}[kind]+'：开始',context={'operation':kind,'scope':payload.get('scope','all')})
             if kind=='connect':
                 self.client.connect()
+                self.activity.reset()
                 self._publish(self.client.snapshot())
                 message = '已连接游戏，背包和仓库已读取。'
             elif kind=='disconnect':
                 self.client.close()
                 self._publish(None)
                 message = '已断开游戏连接。'
-            elif kind=='read':
+            elif kind in ('read','observe'):
                 self._publish(self.client.snapshot())
                 message = '装备清单已刷新。'
             elif kind=='monitor':
                 message = self._monitor_once()
             elif kind=='move_items':
+                self._publish(self.client.snapshot())
                 with self.guard: self.progress = {'done':0,'total':len(payload['expected'])}
                 result = self.client.move_items(payload['expected'],payload['target'],lambda:not self.cancelled.is_set())
+                self._record_item_commit('items_transferred',result)
                 self._publish(self.client.snapshot())
                 with self.guard: self.progress = {'done':result['moved'],'total':len(payload['expected'])}
                 label = '移入仓库' if payload['target']=='storage' else '取回背包'
@@ -324,6 +392,7 @@ class AssistantService:
             else:
                 snapshot = self.client.snapshot()
                 if not snapshot.get('complete'): raise ValidationError('装备正在变化或读取不完整，请稍后重试。')
+                self._publish(snapshot)
                 scope = payload.get('scope','all')
                 candidates = [r for r in rows(snapshot) if scope=='all' or r.get('container')==scope]
                 if kind=='lock_selected':
@@ -339,18 +408,20 @@ class AssistantService:
                 label = '解锁' if kind=='unlock_all' else '锁定'
                 message = f'已后台{label} {count} 件装备'+('；已停止后续操作。' if self.cancelled.is_set() else '；已回读锁状态并请求游戏保存。')
             with self.guard:
-                self.message = message
-                if kind not in ('read','monitor') or ('锁定' in message) or ('自动整理：' in message):
+                if kind!='observe': self.message = message
+                if kind not in ('read','monitor','observe') or ('锁定' in message) or ('自动整理：' in message):
                     self.history.insert(0, {'time':time.strftime('%H:%M:%S'),'text':message})
                     self.history = self.history[:12]
-            record('web_operation_finished', kind=kind)
+            if kind not in ('observe','monitor'):
+                self.journal.append('system','operation_finished',message,context={'operation':kind,'cancelled':self.cancelled.is_set()})
+            if kind!='observe': record('web_operation_finished', kind=kind)
         except Exception as exc:
-            if kind == 'monitor' and isinstance(exc, SnapshotChangedError):
+            if kind in ('monitor','observe') and isinstance(exc, SnapshotChangedError):
                 # Keep both switches and the pending loot identities. Nothing
                 # from an inconsistent read is published or used for a write.
                 with self.guard:
                     self.error = ''
-                    self.message = '监控运行中：物品正在变化，等待下一轮完整读取。'
+                    if kind=='monitor': self.message = '监控运行中：物品正在变化，等待下一轮完整读取。'
                     if self.automation_running:
                         self.automation_status = '自动整理运行中：物品正在变化，等待下一轮检查。'
                 record('web_operation_retry', kind=kind, error=str(exc))
@@ -369,8 +440,13 @@ class AssistantService:
                     self.client.close()
                     self._publish(None)
             record('web_operation_failed', kind=kind, error=str(exc))
+            if kind=='move_items':
+                for row in payload['expected']: self._record_transfer_failure(row,payload['target'],exc)
+            self.journal.append('error','operation_failed','操作失败：'+str(exc),context={'operation':kind})
         finally:
-            with self.guard: self.busy = False
+            with self.guard:
+                self.busy = False
+                self.operation_kind = None
 
     def _rule_candidates(self, snapshot, candidates):
         allowed = {r.get('instance_id') for r in candidates}
@@ -385,13 +461,32 @@ class AssistantService:
             if self.cancelled.is_set() or (monitor_only and not self.monitoring): break
             with self.guard:
                 self.progress = {'done':index,'total':len(candidates),'changed':count}
+            matched_combinations = []
             def validate(actual):
                 if self.cancelled.is_set() or (monitor_only and not self.monitoring): return False
                 if not by_rules: return True
                 observation = self.adapter.adapt_item(actual, snapshot_token='fresh-'+uuid.uuid4().hex,session_id=str(self.client.pid)).observation
+                matched_combinations[:] = [r.name for r in self._rules() if r.enabled
+                    and evaluate(r,observation,self.catalog).status=='match']
                 return LockPlanner(self.catalog).plan(observation,self._rules()).should_lock
             action = self.client.unlock_equipment if unlock else self.client.lock_equipment
-            result = action(row, validate)
+            name, item_type = self._describe_item(row.get('internal_name') or row['name_key'])
+            try: result = action(row, validate)
+            except Exception as exc:
+                self.journal.append('error','unlock_failed' if unlock else 'lock_failed',
+                    ('解锁失败：' if unlock else '锁定失败：')+name+' · '+str(exc),item_key=row['name_key'],
+                    item_name=name,item_kind=item_type,quantity=row.get('count',1),
+                    source={'container':row.get('container'),'slot_index':row.get('slot_index')},
+                    context={'error':str(exc),'automatic':monitor_only})
+                raise
+            position={'container':result.get('container',row.get('container')),
+                      'slot_index':result.get('slot_index',row.get('slot_index'))}
+            self.journal.append('lock','equipment_unlocked' if unlock else 'equipment_locked',
+                ('解锁' if unlock else '锁定')+('（状态已满足）' if result['status'].startswith('already_') else '')+'：'+name,
+                item_key=row['name_key'],item_name=name,item_kind=item_type,quantity=row.get('count',1),destination=position,
+                context={'automatic':monitor_only,'by_rules':by_rules,'status':result['status'],
+                         'identity':row.get('item_uid'),'locked_before':row.get('locked'),'locked_after':not unlock,
+                         'matched_combinations':matched_combinations})
             count += result['status']==('unlocked' if unlock else 'locked')
             with self.guard: self.progress = {'done':index+1,'total':len(candidates),'changed':count}
         return count
@@ -413,6 +508,7 @@ class AssistantService:
                 self.loot_state = None
                 self.message = '监控已关闭。'
             self.monitoring = enabled
+            self.journal.append('settings','monitor_changed','开启自动锁定监控' if enabled else '关闭自动锁定监控')
 
     def stop(self):
         self.cancelled.set()
@@ -422,6 +518,7 @@ class AssistantService:
             self.automation_status = '自动整理已暂停。'
             self.loot_state = None
             self.message = '正在停止后续操作；已经完成的操作会保留。' if self.busy else '已停止操作和监控。'
+            self.journal.append('system','operations_stopped',self.message)
 
     def _carriage_payload(self):
         value=deepcopy(self.carriage)
@@ -442,6 +539,7 @@ class AssistantService:
             self.automation_settings=settings
             self.pressure_active=False
             self.revision+=1
+            self.journal.append('settings','automation_saved','保存自动整理设置',context={'settings':settings})
             return deepcopy(settings)
 
     def set_automation_running(self,enabled):
@@ -456,6 +554,7 @@ class AssistantService:
             self.automation_running=enabled
             self.pressure_active=False
             self.automation_status='自动整理运行中，每 2 秒检查一次。' if enabled else '自动整理已暂停。'
+            self.journal.append('settings','automation_changed','启动自动整理' if enabled else '暂停自动整理')
 
     def _monitor_once(self):
         from .carriage_transfer import CarriageUnavailable
@@ -476,6 +575,7 @@ class AssistantService:
             with self.guard:
                 return self.automation_running and not self.cancelled.is_set() and settings==self.automation_settings
         snapshot=self.client.snapshot()
+        self._publish(snapshot)
         if not snapshot.get('complete'):
             self._publish(snapshot)
             with self.guard: self.automation_status='物品正在变化，等待下一次完整读取。'
@@ -488,15 +588,18 @@ class AssistantService:
                 waiting.append('搬运条件尚未核验，等待刷新。');return False
             try:
                 result=self.client.move_items([row],'storage',active)
+                self._record_item_commit('items_transferred',result)
             except MemoryReadError as exc:
                 if any(v in str(exc) for v in ('空格不足','发生变化','正在变化','已取消')):
                     waiting.append(str(exc));return False
+                self._record_transfer_failure(row,'storage',exc,automatic=True)
                 raise
             budget-=1
             name=self.item_names.get(row['internal_name'],{}).get('Chinese (Simplified)') or row['internal_name']
             suffix='（合并堆叠）' if result.get('stacked_count') else ''
             changes.append('移入仓库 '+name+suffix)
             snapshot=self.client.snapshot()
+            self._publish(snapshot)
             if not snapshot.get('complete'): raise CarriageUnavailable('搬运后物品正在变化，等待下一次读取。')
             return True
         if settings['gems']['enabled']:
@@ -515,6 +618,7 @@ class AssistantService:
                 candidates,self.pressure_active=pressure_candidates(snapshot,settings['pressure'],self.pressure_active)
         if settings['carriage']['enabled'] and budget and active():
             carriage=self.client.carriage_snapshot()
+            self.activity.observe(snapshot,carriage)
             with self.guard: self.carriage=carriage
             if not carriage.get('available'): waiting.append(carriage.get('reason','马车尚未出现。'))
             else:
@@ -526,12 +630,15 @@ class AssistantService:
                         waiting.append('背包已满，马车物品保留，等待腾出空格。');break
                     try:
                         result=self.client.collect_carriage(row['selection_id'],active)
+                        self._record_item_commit('carriage_collected',result)
                     except CarriageUnavailable as exc: waiting.append(str(exc));break
                     except MemoryReadError as exc:
                         if '发生变化' in str(exc): waiting.append('马车正在收集物品，等待下一次检查。');break
+                        self._record_transfer_failure(row,'inventory',exc,carriage=True,automatic=True)
                         raise
                     changes.append('从马车收取 '+(self.item_names.get(result['name'],{}).get('Chinese (Simplified)') or result['name']))
                     budget-=1;snapshot=self.client.snapshot()
+                    self._publish(snapshot)
                     if not snapshot.get('complete'): break
         self._publish(snapshot)
         message='自动整理：'+'；'.join(changes) if changes else '自动整理运行中，等待符合设置的物品。'
@@ -542,6 +649,7 @@ class AssistantService:
 
     def _lock_monitor_once(self):
         snapshot = self.client.snapshot()
+        self._publish(snapshot)
         with self.guard:
             previous = self.loot_state
             active = self.monitoring
@@ -566,9 +674,10 @@ class AssistantService:
     def _monitor_loop(self):
         while not self.closed.wait(2):
             with self.guard:
-                if not (self.monitoring or self.automation_running) or self.busy or not self.client.connected: continue
+                if self.busy or not self.client.connected: continue
                 self.busy = True
-                self.worker = threading.Thread(target=self._work,args=('monitor',{}),daemon=True)
+                self.operation_kind = 'monitor' if self.monitoring or self.automation_running else 'observe'
+                self.worker = threading.Thread(target=self._work,args=(self.operation_kind,{}),daemon=True)
                 self.worker.start()
 
     def close(self):

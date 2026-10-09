@@ -11,6 +11,7 @@ import struct
 import time
 from .native_memory import K, MemoryReadError
 from .paths import RESOURCE_ROOT
+from .activity_journal import operation_id
 
 NT = C.WinDLL('ntdll')
 GC_MODE_RVA = 0x3bc782c
@@ -48,6 +49,7 @@ def plan_transfers(sources, targets):
     staged = dict(original)
     unique_uids = {r['address']:r.get('has_unique_uid',bool(struct.unpack_from('<Q',r['header'],32)[0])) for r in (*sources,*targets)}
     destinations = []
+    movements = []
     stacked_count = 0
     new_slots = set()
     for source in sources:
@@ -73,6 +75,9 @@ def plan_transfers(sources, targets):
                 if not amount: continue
                 staged[target['address']] = replace_fields(current,{24:struct.pack('<i',present+amount),40:bytes([int(bool(current[40] or header[40]))])})
                 destinations.append({'slot_index':target['slot_index'],'name':source['name'],'count':amount,'merged':True})
+                movements.append({'name':source['name'],'identity':source.get('identity',''), 'count':amount,
+                    'merged':True, 'source':{'slot_index':source.get('slot_index'), 'count_before':remaining,'count_after':remaining-amount},
+                    'destination':{'slot_index':target['slot_index'],'count_before':present,'count_after':present+amount}})
                 stacked_count += amount
                 remaining -= amount
                 if not remaining: break
@@ -85,10 +90,13 @@ def plan_transfers(sources, targets):
             staged[empty['address']] = replace_fields(staged[empty['address']],values)
             unique_uids[empty['address']] = unique_uids[address]
             destinations.append({'slot_index':empty['slot_index'],'name':source['name'],'count':remaining,'merged':False})
+            movements.append({'name':source['name'],'identity':source.get('identity',''), 'count':remaining,
+                'merged':False, 'source':{'slot_index':source.get('slot_index'),'count_before':remaining,'count_after':0},
+                'destination':{'slot_index':empty['slot_index'],'count_before':0,'count_after':remaining}})
             new_slots.add(empty['address'])
         staged[address] = replace_fields(header,{16:b'\0'*8,24:b'\0'*4,32:b'\0'*8,40:b'\0'})
     changes = [(a,original[a],new) for a,new in staged.items() if new!=original[a]]
-    return {'changes':changes,'destinations':destinations,'stacked_count':stacked_count,'new_slots':len(new_slots)}
+    return {'changes':changes,'destinations':destinations,'movements':movements,'stacked_count':stacked_count,'new_slots':len(new_slots)}
 
 
 def access_state(reader):
@@ -269,7 +277,7 @@ class FrozenSlotTransaction:
             self.handle = None
 
 
-def move_items(reader,expected,target,validate=lambda:True):
+def move_items(reader,expected,target,validate=lambda:True,on_commit=None):
     if target not in ('inventory','storage') or not expected:
         raise MemoryReadError('请选择物品和移动方向')
     snapshot = reader.snapshot()
@@ -312,6 +320,7 @@ def move_items(reader,expected,target,validate=lambda:True):
         maximum = p.i32(item+136) if stackable else 1
         if stackable: guards.append((item+136,struct.pack('<i',maximum)))
         sources.append({'address':source,'header':head,'name':row['internal_name'],
+                        'slot_index':row['slot_index'],'identity':row.get('item_uid') or row.get('instance_id') or '',
                         'stackable':stackable,'max_stack':maximum,'has_unique_uid':bool(row.get('item_uid'))})
     allocation = plan_transfers(sources,targets)
     guards.extend(reader.snapshot_stamps)
@@ -319,5 +328,10 @@ def move_items(reader,expected,target,validate=lambda:True):
     tx = FrozenSlotTransaction(reader)
     try: result = tx.apply_slots(allocation['changes'],guards,moved=len(expected))
     finally: tx.close()
-    return {**result,'destinations':[{'container':target,**d} for d in allocation['destinations']],
+    result = {**result,'operation_id':operation_id(),
+            'movements':[{**m,'source':{'container':source_name,**m['source']},
+                'destination':{'container':target,**m['destination']}} for m in allocation['movements']],
+            'destinations':[{'container':target,**d} for d in allocation['destinations']],
             'stacked_count':allocation['stacked_count'],'new_slots':allocation['new_slots']}
+    if on_commit: on_commit(result)
+    return result

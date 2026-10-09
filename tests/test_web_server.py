@@ -14,6 +14,11 @@ class FakeService:
     def start(self,kind,data):self.actions.append(kind)
     def catalog_payload(self):return {'equipment':[]}
     def state(self):return {'connected':False}
+    def log_page(self,**filters):
+        from deskrawl_assistant.activity_journal import CATEGORIES
+        if filters.get('category') and filters['category'] not in CATEGORIES:raise ValueError('日志分类无效')
+        if not 1<=filters.get('limit',50)<=200:raise ValueError('每页日志数量无效')
+        return {'entries':[],'filters':filters}
 
 
 class HttpTests(unittest.TestCase):
@@ -78,6 +83,15 @@ class HttpTests(unittest.TestCase):
         for path in ('/../web_service.py','/%2e%2e/web_service.py','/../../config/lock-rules.json'):
             code,_,_=self.request(path)
             self.assertEqual(code,404)
+
+    def test_log_query_preserves_chinese_filter_cursor_and_limit(self):
+        code,_,body=self.request('/api/logs?category=transfer&query=%E5%AE%9D%E7%9F%B3&before=123&limit=20')
+        self.assertEqual(code,200)
+        self.assertEqual(json.loads(body)['filters'],dict(category='transfer',query='宝石',before=123,limit=20))
+
+    def test_invalid_log_filters_are_client_errors(self):
+        for query in ('limit=bad','limit=10000','category=invalid','unknown=1','limit=2&limit=3'):
+            with self.subTest(query=query):self.assertEqual(self.request('/api/logs?'+query)[0],400)
 
 
 if __name__=='__main__':unittest.main()

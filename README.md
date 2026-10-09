@@ -2,6 +2,8 @@
 
 Windows x64 装备筛选与物品整理工具，当前版本 **v1.1.3**，适配 **Deskrawl 1.0.2（Steam build 25817367）**。使用 WebView2 独立窗体显示网页界面，外部读取游戏的背包、仓库与马车，根据玩家配置锁定装备、移动和自动整理物品。
 
+如果觉得本软件对你有帮助，欢迎在 [GitHub 项目](https://github.com/awesomehy/Deskrawl-Assistant) 点亮 **Star**，感谢支持！助手顶部也提供 GitHub 快捷入口。
+
 ## 快速使用
 
 1. 打开 [Releases 下载页面](https://github.com/awesomehy/Deskrawl-Assistant/releases)，选择最新版；也可直接下载 [Deskrawl-Assistant-v1.1.3.exe](https://github.com/awesomehy/Deskrawl-Assistant/releases/download/v1.1.3/Deskrawl-Assistant-v1.1.3.exe)。

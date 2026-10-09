@@ -86,7 +86,7 @@ def main(port=18741):
     verify_runtime()
     import webview
     webview.settings['ALLOW_DOWNLOADS'] = True
-    webview.settings['OPEN_EXTERNAL_LINKS_IN_BROWSER'] = False
+    webview.settings['OPEN_EXTERNAL_LINKS_IN_BROWSER'] = True
     webview.settings['OPEN_DEVTOOLS_IN_DEBUG'] = False
     host = AssistantServer(port)
     try:

@@ -10,6 +10,94 @@
     "globalgamemanagers.assets": "e0dbf8deb7a296c139d5cba8213a6308ec6c650b60f73bd318302844a2c604e7"
   },
   "enums": {
+    "PrimaryStat": [
+      [
+        "Strength",
+        0
+      ],
+      [
+        "Dexterity",
+        1
+      ],
+      [
+        "Intelligence",
+        2
+      ]
+    ],
+    "AbilityTag": [
+      [
+        "None",
+        9999
+      ],
+      [
+        "BasicAttack",
+        0
+      ],
+      [
+        "StrongAttack",
+        1
+      ],
+      [
+        "Special",
+        2
+      ],
+      [
+        "AOE",
+        3
+      ],
+      [
+        "Warcry",
+        4
+      ],
+      [
+        "Bleed",
+        5
+      ],
+      [
+        "Enchanted",
+        6
+      ],
+      [
+        "Physical",
+        7
+      ],
+      [
+        "Fire",
+        8
+      ],
+      [
+        "Frost",
+        9
+      ],
+      [
+        "Lightning",
+        10
+      ],
+      [
+        "Poison",
+        11
+      ],
+      [
+        "Chi",
+        12
+      ],
+      [
+        "Aracane",
+        13
+      ],
+      [
+        "Trap",
+        14
+      ],
+      [
+        "Summon",
+        15
+      ],
+      [
+        "BlindingShot",
+        16
+      ]
+    ],
     "StatType": [
       [
         "Strength",
@@ -417,13 +505,55 @@
         "Back",
         11
       ]
+    ],
+    "WorldDifficulty": [
+      [
+        "Normal",
+        0
+      ],
+      [
+        "Nightmare",
+        1
+      ],
+      [
+        "Inferno1",
+        2
+      ]
+    ],
+    "PlayerState": [
+      [
+        "Running",
+        0
+      ],
+      [
+        "Attacking",
+        1
+      ],
+      [
+        "Stopped",
+        2
+      ],
+      [
+        "Dead",
+        3
+      ],
+      [
+        "Channeling",
+        4
+      ]
     ]
   },
   "native_layout": {
     "game_manager_rva": 60914904,
     "cloud_client_rva": 60941336,
     "gc_mode_rva": 62678524,
-    "gc_bitmap_rva": 63044000
+    "gc_bitmap_rva": 63044000,
+    "player_data_rva": 60930712,
+    "ability_book_rva": 60914952,
+    "equipment_manager_rva": 60921424,
+    "rune_manager_rva": 60930696,
+    "talent_book_rva": 60930688,
+    "difficulty_rva": 60941368
   },
   "native_methods": {
     "ACTk.Runtime.dll|<>internal:52e811923fd5d69c94fcc9fa4e67c9409a6a571cc9bfd2a167de8a532bdc3c1f|0f1e9dd02f8db254550d3e7aab4a3da6070ea752d3ef69ebfec35ef6779e9d5a": "1d8c0eb4882d24b2e83c3b12dc7f49301fc291465c419f047b87d6f769f71205",

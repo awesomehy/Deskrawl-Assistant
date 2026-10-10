@@ -26,7 +26,8 @@ def main():
         if not target.exists():os.link(source/'Deskrawl_Data'/name,target)
     i=MetadataInspector(source/'Deskrawl_Data/il2cpp_data/Metadata/global-metadata.dat',source/'GameAssembly.dll')
     meta=bytearray(i.meta)
-    for old,new in (('gj','zz'),):
+    for old,new in (('gj','zz'),('ey','xy')):
+        assert not any(d['name']==new and not d['namespace'] for d in i.defs)
         index=next(n for n,d in enumerate(i.defs) if not d['namespace'] and d['name']==old)
         string_index=struct.unpack_from('<i',meta,i.type_offset+index*76)[0]
         position=i.string_offset+string_index
@@ -66,8 +67,17 @@ def main():
     assert result['native_layout']['game_manager_rva']==new_rva
     registry=next(t for t in result['profiles']['runtime-type-hints.json']['types'] if t.get('logicalName')=='gj')
     assert registry['name']=='zz'
+    difficulty=next(t for t in result['profiles']['recommendation-types.json']['types'] if t.get('logicalName')=='ey')
+    assert difficulty['name']=='xy'
+    for name in ('experience-types.json','recommendation-types.json'):
+        profile=result['profiles'][name]
+        assert profile['metadataSha256']==result['profiles']['runtime-type-hints.json']['metadataSha256']
+        assert profile['gameAssemblySha256']==result['profiles']['runtime-type-hints.json']['gameAssemblySha256']
+        save=next(t for t in profile['types'] if t.get('logicalName')=='SaveSystem')
+        assert next(f for f in save['fields'] if f['rawRegistrationOffset']==92)['name']=='zzz'
     report={'success':True,'seconds':round(time.monotonic()-started,2),'status':result['status'],
-        'save_field':'nly → zzz','registry_type':'gj → zz',
+        'save_field':'nly → zzz','registry_type':'gj → zz','difficulty_type':'ey → xy',
+        'additional_readers_adapted':['experience-types.json','recommendation-types.json'],
         'old_game_manager_rva':hex(old_rva),'new_game_manager_rva':hex(new_rva),
         'original_game_files_modified':False,'game_writes':False}
     (folder/'verification.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

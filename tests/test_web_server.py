@@ -14,6 +14,14 @@ from deskrawl_assistant.web_server import make_handler
 class FakeService:
     def __init__(self):self.actions=[]
     def start(self,kind,data):self.actions.append(kind)
+    def recommendation_page(self):
+        return {'available':False,'rows':[],'error':'尚未连接角色'}
+    def recommendation_settings(self,data):
+        from deskrawl_assistant.recommendation_book import validate_settings
+        return {'settings':validate_settings(data.get('settings',data),['Normal','Nightmare','Inferno'])}
+    def recommendation_reset(self):
+        self.actions.append('recommendation-reset')
+        return {'ok':True}
     def catalog_payload(self):return {'equipment':[]}
     def state(self):return {'connected':False}
     def log_page(self,**filters):
@@ -46,6 +54,15 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(headers['Content-Type'],'text/javascript; charset=utf-8')
         self.assertIn(b'async function api',body)
 
+    def test_main_page_renders_current_version_and_session(self):
+        from deskrawl_assistant.version import VERSION
+        code,_,body=self.request('/')
+        self.assertEqual(code,200)
+        self.assertNotIn(b'__APP_VERSION__',body)
+        self.assertNotIn(b'__SESSION_TOKEN__',body)
+        self.assertIn(('v'+VERSION).encode(),body)
+        self.assertIn(b'test-session-token',body)
+
     def test_update_actions_require_session_and_never_accept_unsaved_drafts(self):
         updater=Mock();self.server.updater=updater
         self.server.desktop=SimpleNamespace(dirty=False)
@@ -68,6 +85,32 @@ class HttpTests(unittest.TestCase):
         updater.check.assert_called_once_with()
         code,_,_=self.request('/api/update/install',{'saved':True,'target':'C:/other.exe'},headers)
         self.assertEqual(code,400);updater.install.assert_not_called()
+
+    def test_update_keeps_running_and_stopped_unsaved_experience_samples(self):
+        updater=Mock();self.server.updater=updater
+        self.server.desktop=SimpleNamespace(dirty=False)
+        book=Mock();self.service.experience=book
+        headers={'Origin':self.url,'X-Assistant-Token':'test-session-token'}
+        for active in ({'stage':'test','stopped':False},{'stage':'test','stopped':True}):
+            book.active_payload.return_value=active
+            code,_,body=self.request('/api/update/install',{'saved':True},headers)
+            self.assertEqual(code,400)
+            self.assertIn('经验采样',json.loads(body)['error'])
+        updater.install.assert_not_called()
+        book.active_payload.return_value=None
+        self.assertEqual(self.request('/api/update/install',{'saved':True},headers)[0],200)
+        updater.install.assert_called_once_with()
+
+    def test_update_preparation_rechecks_sample_started_during_download(self):
+        from deskrawl_assistant.web_server import AssistantServer
+        self.service.guard=threading.RLock()
+        self.service.updating=False
+        self.service.experience=Mock()
+        self.service.experience.active_payload.return_value={'stage':'new sample'}
+        owner=SimpleNamespace(server=SimpleNamespace(desktop=SimpleNamespace(dirty=False)),service=self.service)
+        with self.assertRaisesRegex(ValueError,'经验采样'):
+            AssistantServer.prepare_update(owner)
+        self.assertFalse(self.service.updating)
 
     def test_stale_session_recovery_does_not_execute_rejected_action(self):
         code,_,body=self.request('/api/action',{'kind':'connect'},{'X-Assistant-Token':'old-token'})
@@ -135,6 +178,26 @@ class HttpTests(unittest.TestCase):
         code,_,body=self.request('/api/logs?category=transfer&query=%E5%AE%9D%E7%9F%B3&before=123&limit=20')
         self.assertEqual(code,200)
         self.assertEqual(json.loads(body)['filters'],dict(category='transfer',query='宝石',before=123,limit=20))
+
+    def test_recommendation_status_and_query_validation(self):
+        code,_,body=self.request('/api/recommendations')
+        self.assertEqual(code,200)
+        self.assertEqual(json.loads(body)['rows'],[])
+        self.assertEqual(self.request('/api/recommendations?minutes=bad')[0],400)
+
+    def test_recommendation_mutations_require_session_and_validate_values(self):
+        endpoint='/api/recommendations/settings'
+        self.assertEqual(self.request(endpoint,{'minutes':30})[0],403)
+        headers={'X-Assistant-Token':'test-session-token','Origin':self.url}
+        code,_,body=self.request(endpoint,{'minutes':30},headers)
+        self.assertEqual(code,200)
+        self.assertEqual(json.loads(body)['settings']['minutes'],30)
+        for value in ({'minutes':float('nan')},{'difficulty':'Other'},{'include_locked':1},{'sort':'bad'}):
+            self.assertEqual(self.request(endpoint,value,headers)[0],400)
+        self.assertEqual(self.request('/api/recommendations/calibration/reset',{})[0],403)
+        self.assertFalse(self.service.actions)
+        self.assertEqual(self.request('/api/recommendations/calibration/reset',{},headers)[0],200)
+        self.assertEqual(self.service.actions,['recommendation-reset'])
 
     def test_invalid_log_filters_are_client_errors(self):
         for query in ('limit=bad','limit=10000','category=invalid','unknown=1','limit=2&limit=3'):

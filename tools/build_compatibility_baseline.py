@@ -16,7 +16,8 @@ def main():
     result={'schema_version':1,'game_version':known['gameVersion'],'game_build':known['steamBuildId'],
         'metadata_sha256':known['metadataSha256'],'assembly_sha256':known['gameAssemblySha256'],
         'assets':{n:hashlib.sha256((g/'Deskrawl_Data'/n).read_bytes()).hexdigest() for n in ASSET_FILES},
-        'enums':enum_contract(i,('StatType','EquipSlotType','AttributeCategory','ModifierType','ItemRarity','ItemType')),
+        'enums':enum_contract(i,('StatType','EquipSlotType','AttributeCategory','ModifierType','ItemRarity','ItemType',
+            'WorldDifficulty','PrimaryStat','AbilityTag','PlayerState')),
         'native_layout':layout,'native_methods':methods}
     target=R/'data/compatibility-baseline.json'
     target.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

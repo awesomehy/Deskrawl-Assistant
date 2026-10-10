@@ -21,6 +21,12 @@ WEB = Path(__file__).resolve().parent / 'web'
 PORT = 18741
 
 
+def check_experience_sampling(service):
+    book = getattr(service, 'experience', None)
+    if book is not None and book.active_payload() is not None:
+        raise ValueError('请先结束并保存或取消经验采样，再进行更新。')
+
+
 def make_handler(service, token):
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args): pass
@@ -64,13 +70,24 @@ def make_handler(service, token):
                     for field in ('before','limit'):
                         if field in params: params[field] = int(params[field])
                     return self.reply(service.log_page(**params))
+                if path=='/api/experience':
+                    query = parse_qs(urlsplit(self.path).query, keep_blank_values=True)
+                    if set(query)-{'minutes','profile','sort'} or any(len(v)!=1 for v in query.values()):
+                        raise ValueError('经验查询参数无效。')
+                    params = {k:v[0] for k,v in query.items()}
+                    if 'minutes' in params: params['minutes'] = float(params['minutes'])
+                    return self.reply(service.experience_page(**params))
+                if path=='/api/recommendations':
+                    if urlsplit(self.path).query:
+                        raise ValueError('刷图推荐不接受额外查询参数。')
+                    return self.reply(service.recommendation_page())
                 if path=='/api/export/rules': return self.reply(service.export_rules())
                 if path=='/api/export/items':
                     with service.guard: value = service.snapshot
                     service.journal.append('system','items_exported','导出当前背包与仓库清单。')
                     return self.reply(value or {'items':[]})
                 if path=='/':
-                    body = (WEB / 'index.html').read_text(encoding='utf-8').replace('__SESSION_TOKEN__',token)
+                    body = (WEB / 'index.html').read_text(encoding='utf-8').replace('__SESSION_TOKEN__',token).replace('__APP_VERSION__',VERSION)
                     return self.reply(body,content_type='text/html; charset=utf-8')
                 file = (WEB / path.lstrip('/')).resolve()
                 if WEB.resolve() not in file.parents or not file.is_file(): return self.reply({'error':'页面不存在。'},404)
@@ -110,6 +127,7 @@ def make_handler(service, token):
                         if desktop is None: raise ValueError('请在 exe 独立窗口中更新。')
                         if data.get('saved') is not True or desktop.dirty:
                             raise ValueError('请先保存规则和整理设置，再进行更新。')
+                        check_experience_sampling(service)
                         updater.install()
                 elif path=='/api/window/draft':
                     desktop = getattr(self.server,'desktop',None)
@@ -119,6 +137,12 @@ def make_handler(service, token):
                     desktop = getattr(self.server,'desktop',None)
                     if desktop is None: raise ValueError('当前助手没有独立窗口。')
                     desktop.activate()
+                elif path in {'/api/experience/sample','/api/experience/delete','/api/experience/start','/api/experience/finish','/api/experience/cancel'}:
+                    return self.reply(service.experience_action(path.rsplit('/',1)[-1], data))
+                elif path=='/api/recommendations/settings':
+                    return self.reply(service.recommendation_settings(data))
+                elif path=='/api/recommendations/calibration/reset':
+                    return self.reply(service.recommendation_reset())
                 elif path=='/api/rule/save': return self.reply({'rule':service.save_rule(data)})
                 elif path=='/api/rule/delete':
                     return self.reply({'deleted':service.delete_rules(data.get('ids',[data.get('id')]),data.get('equipment_key'))})
@@ -188,7 +212,9 @@ class AssistantServer:
         desktop = getattr(self.server,'desktop',None)
         if desktop is None or desktop.dirty:
             raise ValueError('请保存未完成的配置后再更新。')
-        with self.service.guard: self.service.updating = True
+        with self.service.guard:
+            check_experience_sampling(self.service)
+            self.service.updating = True
         self.service.stop()
         worker = self.service.worker
         if worker and worker is not threading.current_thread(): worker.join(20)

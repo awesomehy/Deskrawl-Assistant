@@ -34,13 +34,13 @@ class RuleManagementTests(unittest.TestCase):
             self.service.save_rule(self.rule(id,key))
         self.assertEqual(self.service.delete_rules(['first'],SOURCE),1)
         self.assertEqual([r.id for r in self.service.rules],['second','other'])
-        self.assertEqual([r['id'] for r in json.loads(self.config.read_text())['rules']],['second','other'])
+        self.assertEqual([r['id'] for r in json.loads(self.config.read_text(encoding='utf-8'))['rules']],['second','other'])
         self.assertFalse(self.client.actions)
 
     def test_delete_all_leaves_a_valid_empty_file(self):
         self.service.save_rule(self.rule())
         self.service.delete_rules(['source'],SOURCE)
-        self.assertEqual(json.loads(self.config.read_text()),{'version':2,'rules':[]})
+        self.assertEqual(json.loads(self.config.read_text(encoding='utf-8')),{'version':2,'rules':[]})
 
     def test_invalid_batch_delete_is_atomic(self):
         self.service.save_rule(self.rule())

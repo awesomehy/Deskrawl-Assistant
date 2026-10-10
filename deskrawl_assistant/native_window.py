@@ -5,7 +5,7 @@ import json
 import threading
 import urllib.request
 
-from .paths import data_root
+from .paths import data_root, cache_root
 from .action_log import record
 from .web_server import AssistantServer, existing_service
 from .version import VERSION
@@ -55,7 +55,7 @@ class WindowHooks:
     def closing(self):
         if self.dirty and not self.exiting:
             return bool(self.window.create_confirmation_dialog('退出装备助手？',
-                '当前规则有未保存的改动。退出将放弃改动，并停止持续监控。'))
+                '当前配置或经验采样尚未保存。退出将放弃改动，并停止持续监控。'))
         return True
 
     def closed(self):
@@ -114,7 +114,7 @@ def main(port=18741):
                 hooks.exiting = True
                 window.destroy()
         threading.Thread(target=close_after_shutdown,daemon=True).start()
-        cache = data_root() / 'webview-cache'
+        cache = cache_root()
         cache.mkdir(parents=True,exist_ok=True)
         webview.start(gui='edgechromium',debug=False,private_mode=True,storage_path=str(cache))
     finally:

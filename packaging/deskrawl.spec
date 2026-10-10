@@ -1,9 +1,13 @@
 from pathlib import Path
+import os
 from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
 
 root = Path(SPECPATH).parent
 assets = [
     'game-catalog.json',
+    'experience-types.json',
+    'recommendation-types.json',
+    'recommendation-catalog.json',
     'equipment-ui.json',
     'affix-groups-static.json',
     'runtime-type-hints.json',
@@ -38,7 +42,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='Deskrawl装备助手-v1.1.8',
+    name='Deskrawl装备助手-v1.2.0',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -47,4 +51,5 @@ exe = EXE(
     disable_windowed_traceback=False,
     version=str(root / 'packaging' / 'version-info.txt'),
     uac_admin=False,
+    runtime_tmpdir=os.environ.get('DESKRAWL_ASSISTANT_BUNDLE_DIR'),
 )

@@ -59,11 +59,11 @@ class Signatures:
         return '.'.join(filter(None,(d['namespace'],d['name'])))
 
     def type_name(self,name,stack=()):
-        if name in self.aliases:return self.aliases[name]
+        if self.aliases.get(name)=='gj':return 'gj'
         # Type/method obfuscation can rename short internal classes as well.
         def replace(m):
             raw=m.group()
-            if raw in self.aliases:return self.aliases[raw]
+            if self.aliases.get(raw)=='gj':return 'gj'
             if raw in self.defs and re.fullmatch('[a-z]{1,4}',raw):
                 if raw in stack:return 'cycle'
                 if len(stack)>6:raise ValueError('Internal type shape exceeds supported depth')
@@ -211,6 +211,22 @@ class Signatures:
         if len(locations)!=1:raise ValueError('Singleton type reference is not unique: '+name)
         return locations.pop()
 
+    def type_info_rva(self,name):
+        """Find the unique TypeInfo referenced by this static class's methods."""
+        from capstone.x86 import X86_OP_MEM,X86_REG_RIP
+        locations=set();module=self.modules['Assembly-CSharp.dll']
+        for m in self.i.methods(self.defs[name]):
+            if not m['isStatic']:continue
+            ptr=self.pe.unpack('<Q',module['methods']+((int(m['token'],16)&0xffffff)-1)*8)[0]
+            if not ptr:continue
+            for ins in self.instructions(ptr):
+                for op in ins.operands:
+                    if op.type==X86_OP_MEM and op.mem.base==X86_REG_RIP and op.size==8:
+                        addr=ins.address+ins.size+op.mem.disp
+                        if self.reference(addr,8)==('type',self.type_name(name)):locations.add(addr-self.pe.base)
+        if len(locations)!=1:raise ValueError('Static type reference is not unique: '+name)
+        return locations.pop()
+
     def native_layout(self):
         from capstone.x86 import X86_OP_MEM,X86_REG_RIP
         rows=self.instructions(self.exports['il2cpp_gc_wbarrier_set_field'])
@@ -225,5 +241,13 @@ class Signatures:
         mode,bitmap=mode[0],bitmap[0]
         if not self.pe.contains(self.pe.base+mode,4) or not self.pe.contains(self.pe.base+bitmap,262144) or bitmap%8:
             raise ValueError('GC barrier data range changed')
-        return {'game_manager_rva':self.singleton_rva('GameManager'),'cloud_client_rva':self.singleton_rva('CloudClient'),
+        result={'game_manager_rva':self.singleton_rva('GameManager'),'cloud_client_rva':self.singleton_rva('CloudClient'),
                 'gc_mode_rva':mode,'gc_bitmap_rva':bitmap}
+        for name,key in (('PlayerData','player_data_rva'),('PlayerAbilityBook','ability_book_rva'),
+                         ('EquipmentManager','equipment_manager_rva'),('RuneManager','rune_manager_rva'),
+                         ('PlayerTalentBook','talent_book_rva')):
+            result[key]=self.singleton_rva(name)
+        difficulty=next((name for name in self.defs if self.aliases.get(name,name)=='ey'),None)
+        if difficulty is None:raise ValueError('Difficulty state type is missing')
+        result['difficulty_rva']=self.type_info_rva(difficulty)
+        return result

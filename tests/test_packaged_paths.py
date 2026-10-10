@@ -34,6 +34,25 @@ class PackagedPathsTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     write_runtime_json('../outside.json', {})
 
+    def test_installed_cache_can_be_redirected_without_global_environment_changes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            exe=Path(folder)/'assistant.exe'
+            cache=Path(folder)/'cache'
+            exe.with_name('runtime-paths.json').write_text(json.dumps({'cache_dir':str(cache)}),encoding='utf-8')
+            with patch.object(sys,'frozen',True,create=True), patch.object(sys,'executable',str(exe)):
+                with patch.dict(os.environ,{'DESKRAWL_ASSISTANT_CACHE_DIR':''}):
+                    self.assertEqual(paths.cache_root(),cache/'webview')
+
+    def test_installed_runtime_data_can_follow_configured_download_drive(self):
+        with tempfile.TemporaryDirectory() as folder:
+            exe=Path(folder)/'assistant.exe'
+            root=Path(folder)/'persistent'
+            exe.with_name('runtime-paths.json').write_text(json.dumps({'data_dir':str(root)}),encoding='utf-8')
+            with patch.object(sys,'frozen',True,create=True), patch.object(sys,'executable',str(exe)):
+                with patch.dict(os.environ,{'DESKRAWL_ASSISTANT_DATA_DIR':''}):
+                    self.assertEqual(paths.data_root(),root)
+                    self.assertEqual(paths.runtime_dir(),root/'data/runtime')
+
     def test_frozen_missing_localappdata_uses_windows_user_directory(self):
         with patch.object(sys, 'frozen', True, create=True), patch.object(Path, 'home', return_value=Path('C:/Users/Example')):
             with patch.dict(os.environ, {'LOCALAPPDATA': '', 'DESKRAWL_ASSISTANT_DATA_DIR': ''}):

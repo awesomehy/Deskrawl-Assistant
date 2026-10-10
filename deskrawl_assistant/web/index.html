@@ -11,7 +11,7 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><img src="/mark.svg" alt=""><div><strong>DESKRAWL <span>装备助手 · v1.1.8</span></strong><small>挑选值得保留的每一件装备</small></div></div>
+    <div class="brand"><img src="/mark.svg" alt=""><div><strong>DESKRAWL <span>装备助手 · v__APP_VERSION__</span></strong><small>挑选值得保留的每一件装备</small></div></div>
     <div class="topbar-actions">
       <div class="project-support"><a id="github-link" class="github-link" href="https://github.com/awesomehy/Deskrawl-Assistant" target="_blank" rel="noopener noreferrer" title="在浏览器中打开 GitHub 项目">GitHub <span aria-hidden="true">↗</span></a><small>如果觉得本软件对你有帮助，欢迎点亮 Star。</small></div>
       <div class="connection"><span id="connection-state" class="status-pill"><i></i>未连接游戏</span><button id="connect" class="button primary">连接游戏</button><button id="disconnect" class="button ghost" hidden>断开</button><button id="exit" class="icon-button" aria-label="退出助手" title="退出助手并停止监控"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v10M6.2 5.8a9 9 0 1 0 11.6 0"/></svg></button></div>
@@ -24,7 +24,7 @@
     <a id="update-release" href="https://github.com/awesomehy/Deskrawl-Assistant/releases" target="_blank" rel="noopener noreferrer">发行记录 ↗</a>
     <button id="check-update" class="button ghost">检查更新</button><button id="install-update" class="button primary" hidden>下载并更新（重启）</button>
   </section>
-  <nav class="tabs" aria-label="功能页签"><button class="tab active" data-tab="rules" role="tab" aria-selected="true">装备筛选规则 <span id="rule-count">0</span></button><button class="tab" data-tab="inventory" role="tab" aria-selected="false">背包与仓库</button><button class="tab" data-tab="logs" role="tab" aria-selected="false">日志</button><span id="monitor-badge" hidden><i></i>持续监控中</span></nav>
+  <nav class="tabs" aria-label="功能页签"><button class="tab active" data-tab="rules" role="tab" aria-selected="true">装备筛选规则 <span id="rule-count">0</span></button><button class="tab" data-tab="inventory" role="tab" aria-selected="false">背包与仓库</button><button class="tab" data-tab="recommendations" role="tab" aria-selected="false">刷图推荐</button><button class="tab" data-tab="experience" role="tab" aria-selected="false">经验收益</button><button class="tab" data-tab="logs" role="tab" aria-selected="false">日志</button><span id="monitor-badge" hidden><i></i>持续监控中</span></nav>
   <main>
     <section id="rules-page" role="tabpanel">
       <div class="page-heading"><div><h1>装备筛选规则</h1><p>先找到传说装备，再设定要保留的词条组合。</p></div><div class="heading-actions"><button id="import-rules" class="button ghost">导入规则</button><button id="export-rules" class="button ghost">导出规则</button><input id="import-file" type="file" accept="application/json,.json" hidden></div></div>
@@ -59,6 +59,70 @@
         <div class="inventory-body"><div class="table-scroll"><table><thead><tr><th class="check-column"><input type="checkbox" id="select-visible" aria-label="选择当前列表物品"></th><th>物品</th><th>位置</th><th>数量</th><th>等级</th><th>锁状态</th><th>规则结果</th></tr></thead><tbody id="item-rows"></tbody></table><div id="inventory-empty" class="empty-state">连接游戏，查看背包和仓库物品</div></div><aside id="item-detail" class="item-detail"><div class="empty-state">点击物品查看详情</div></aside></div>
       </section>
       <div class="bottom-notes"><span id="usage-note">监控只自动处理新增装备；已有装备请用“一键按规则锁定”。关闭网页后监控仍可继续，点右上角退出才会停止。</span><button id="history-toggle" class="text-button">查看日志 →</button></div><div id="history-list" class="panel history" hidden></div>
+    </section>
+    <section id="recommendations-page" role="tabpanel" hidden>
+      <div class="page-heading"><div><h1>刷图推荐</h1><p>按平均伤害粗估用时，正常刷图自动校准；根据当前角色和地图直接比较经验收益。</p></div><button id="recommendation-refresh" class="button">刷新推荐</button></div>
+      <div class="recommendation-character panel"><span id="recommendation-read-dot" class="experience-live-dot"></span><div><strong id="recommendation-character-name">等待读取当前角色</strong><small id="recommendation-read-state">连接游戏后自动读取角色和地图。</small></div><span id="recommendation-updated" class="note"></span></div>
+      <div id="recommendation-error" class="inline-error" role="status" hidden></div>
+      <div id="recommendation-warnings" class="recommendation-warnings" hidden></div>
+      <div class="recommendation-layout">
+        <div class="recommendation-main">
+          <section class="panel recommendation-best">
+            <div class="recommendation-best-heading"><span class="eyebrow">推荐前往</span><span id="recommendation-best-badges" class="recommendation-badges"></span></div>
+            <h2 id="recommendation-best-stage">等待读取地图</h2><p id="recommendation-best-subtitle">无需逐图录入，连接游戏即可开始比较。</p>
+            <div class="recommendation-best-metrics"><div><span id="recommendation-plan-label">60 分钟计划可获经验</span><strong id="recommendation-best-xp">—</strong><small id="recommendation-plan-note">按完整通关估算</small></div><div><span>预计单次用时</span><strong id="recommendation-best-time">—</strong><small id="recommendation-best-overhead">含载入、结算与重开开销</small></div><div><span>每小时经验</span><strong id="recommendation-best-hourly">—</strong><small id="recommendation-best-runs">等待计算完成次数</small></div></div>
+            <p id="recommendation-best-reason" class="recommendation-best-reason">推荐结果会标明风险和可信度；没有完整读取数据时不会猜测收益。</p>
+          </section>
+          <section class="panel recommendation-current"><div class="experience-panel-heading"><div><h2>当前地图</h2><p id="recommendation-current-stage">等待读取当前地图</p></div><span id="recommendation-current-phase" class="badge miss">未读取</span></div><div class="recommendation-current-body"><div><span id="recommendation-current-plan-label">本轮计划总经验（单次全清）</span><strong id="recommendation-current-xp">—</strong></div><p id="recommendation-current-note">读取后可与推荐地图对照。</p></div></section>
+          <section class="panel recommendation-ranking"><div class="experience-panel-heading"><div><h2>地图比较</h2><p id="recommendation-ranking-note">优先比较时限内可完成的关卡收益。</p></div><span id="recommendation-map-count" class="note">等待读取地图范围</span></div><div class="recommendation-table-scroll"><table class="recommendation-table"><thead><tr><th>地图 / 状态</th><th>预计单次经验 / 用时</th><th>每小时经验</th><th id="recommendation-table-plan">60 分钟计划收益</th><th>完整通关次数</th><th>风险与可信度</th></tr></thead><tbody id="recommendation-rows"></tbody></table><div id="recommendation-empty" class="empty-state">连接游戏，读取当前角色与地图后查看推荐。</div></div><p class="experience-footnote">计划收益默认按完整通关估算；积累足够的成功与失败样本后，计入失败时保留的经验，并单独标明。完整通关次数只统计成功通关；每小时经验按预计速度折算。未开放地图不参与当前推荐。</p></section>
+        </div>
+        <aside class="recommendation-side">
+          <section class="panel recommendation-settings"><div class="experience-panel-heading"><div><h2>刷图计划</h2><p>按你的可用时间和难度比较。</p></div></div><form id="recommendation-settings-form" class="experience-form"><label>计划时长（分钟）<input id="recommendation-minutes" type="number" value="60" min="1" max="10080" step="1" required></label><label>比较目标<select id="recommendation-sort"><option value="completed">计划可获经验</option><option value="rate">单位时间效率</option></select></label><label>地图难度<select id="recommendation-difficulty"><option value="current">跟随当前地图难度</option></select></label><label>重开耗时模式<select id="recommendation-overhead-mode"><option value="auto">自动观测</option><option value="manual">手动指定</option></select></label><label>每次额外开销（秒）<input id="recommendation-overhead" type="number" value="8" min="0" max="300" step="0.1" required disabled><span id="recommendation-overhead-note" class="note">自动观测重开耗时；没有样本时采用 8 秒。</span></label><label class="recommendation-checkbox"><input id="recommendation-include-locked" type="checkbox" checked>显示尚未开放的地图</label><button id="recommendation-save" class="button primary" type="submit">更新推荐</button><p id="recommendation-settings-state" class="note">设置已应用</p></form></section>
+          <section class="panel recommendation-calibration"><div class="experience-panel-heading"><div><h2>自动校准</h2><p>让预估贴近当前角色和配装。</p></div></div><div class="recommendation-calibration-body"><span id="recommendation-calibration-status" class="badge miss">等待观察</span><strong id="recommendation-calibration-samples">尚无校准记录</strong><p id="recommendation-calibration-detail">保持助手连接并正常刷图。观察到完整、有效的战斗后，会自动更新地图耗时和经验估计。</p><small id="recommendation-calibration-time"></small><button id="recommendation-calibration-reset" class="button ghost" type="button">重新校准当前配装</button><p class="note">更换配装后可重新校准；无需逐图手动填写经验。</p></div></section>
+        </aside>
+      </div>
+    </section>
+    <section id="experience-page" role="tabpanel" hidden>
+      <div class="page-heading"><div><h1>经验收益</h1><p>记录每关实际经验和用时，找到同等条件下刷经验最快的关卡。</p></div><button id="experience-refresh" class="button">刷新数据</button></div>
+      <div class="experience-controls panel">
+        <label>计划刷图 <span class="experience-inline-input"><input id="experience-minutes" type="number" min="1" max="10080" step="1" value="60" aria-label="计划刷图分钟"> 分钟</span></label>
+        <label>比较口径 <select id="experience-sort" aria-label="经验收益比较口径"><option value="rate">平均经验速度</option><option value="completed">仅完整通关</option></select></label>
+        <label>比较条件 <select id="experience-filter" aria-label="经验收益条件筛选"><option value="">全部条件</option></select></label>
+        <small>将难度、角色、配装或经验加成写入“条件”，相同关卡按条件分别统计。</small>
+      </div>
+      <div id="experience-error" class="inline-error" role="status" hidden></div>
+      <div class="overview experience-overview">
+        <div class="metric"><span>当前最优关卡</span><strong id="experience-best">—</strong><small id="experience-best-profile">等待采样</small></div>
+        <div class="metric"><span>每小时经验</span><strong id="experience-hourly">—</strong><small>按累计经验 ÷ 累计用时</small></div>
+        <div class="metric"><span id="experience-projection-label">60 分钟计划可获经验</span><strong id="experience-projection">—</strong><small id="experience-projection-note">按实测平均速度估算</small></div>
+        <div class="metric"><span>当前筛选样本</span><strong id="experience-samples">0</strong><small id="experience-coverage">尚未记录关卡</small></div>
+      </div>
+      <div class="experience-layout">
+        <section class="panel experience-ranking">
+          <div class="experience-panel-heading"><div><h2>关卡效率排行</h2><p id="experience-ranking-note">按 60 分钟计划可获经验从高到低排列。</p></div><span class="badge match" id="experience-count">0 个关卡 / 条件</span></div>
+          <div class="experience-table-scroll"><table class="experience-table"><thead><tr><th>关卡 / 条件</th><th>样本</th><th>平均经验</th><th>平均用时</th><th>每小时经验</th><th id="experience-projected-heading">60 分钟预计</th><th id="experience-completed-heading">60 分钟完整通关</th></tr></thead><tbody id="experience-rows"></tbody></table><div id="experience-empty" class="empty-state">还没有经验样本<br>完成一次计时采样，或手动录入关卡经验与用时，开始比较。</div></div>
+          <p class="experience-footnote">“平均经验速度”按实测用时线性估算；“仅完整通关”按平均通关用时取整，仅计算时限内完成的次数。实际经验以游戏结算为准。重复刷图时，请将载入、结算和重开耗时计入用时。结果以你的样本为准，单次样本可能有波动。</p>
+        </section>
+        <section class="panel experience-capture">
+          <div class="experience-panel-heading"><div><h2>计时采样</h2><p>进入关卡前开始，结算并准备重开后结束。</p></div></div>
+          <div class="experience-live"><span class="experience-live-dot" id="experience-live-dot"></span><div><strong id="experience-live-state">等待读取游戏经验</strong><small id="experience-live-detail">未连接时仍可手动录入经验。</small></div><button id="experience-use-current" class="button ghost" type="button" disabled>填入当前关卡 / 角色</button></div>
+          <form id="experience-timer-form" class="experience-form">
+            <label>关卡<input id="experience-stage" maxlength="120" placeholder="例如：第 12 关 / 深渊 3" required autocomplete="off"></label>
+            <label>条件<input id="experience-profile" maxlength="120" placeholder="例如：困难 · 法师 · 双倍经验" autocomplete="off"></label>
+            <div class="experience-timer"><span id="experience-timer-label">准备开始</span><strong id="experience-elapsed">00:00</strong><small id="experience-active-label">每次记录一个关卡的实际收益</small></div>
+            <label id="experience-finish-field" hidden>本次获得经验 <span id="experience-finish-help" class="note">自动读取时可留空；也可手动填写覆盖自动结果。</span><input id="experience-finish-xp" type="number" min="0" step="1" placeholder="自动读取，或填写实际经验"></label>
+            <p id="experience-timer-note" class="note">连接游戏可自动记录经验差值。未连接时，结束采样需要填写本次获得经验。</p>
+            <div class="experience-form-actions"><button id="experience-start" class="button primary" type="submit">开始采样</button><button id="experience-finish" class="button primary" type="button" hidden>结束并保存</button><button id="experience-cancel" class="button ghost" type="button" hidden>取消采样</button></div>
+          </form>
+          <details class="experience-manual"><summary>手动录入已完成的关卡</summary><form id="experience-manual-form" class="experience-form">
+            <label>关卡<input id="experience-manual-stage" maxlength="120" placeholder="填写关卡名称" required autocomplete="off"></label>
+            <label>条件<input id="experience-manual-profile" maxlength="120" placeholder="难度 / 角色 / 配装 / 加成" autocomplete="off"></label>
+            <div class="experience-form-pair"><label>获得经验<input id="experience-manual-xp" type="number" min="0" step="1" placeholder="例如：12000" required></label><label>总用时（秒）<input id="experience-manual-seconds" type="number" min="0.1" step="0.1" placeholder="例如：180" required></label></div>
+            <button id="experience-add" class="button" type="submit">保存样本</button>
+          </form></details>
+        </section>
+      </div>
+      <section class="panel experience-history"><div class="experience-panel-heading"><div><h2>最近采样</h2><p>录入错误或异常测试数据，可在这里删除。</p></div><span id="experience-history-count" class="note"></span></div><div class="experience-table-scroll"><table class="experience-history-table"><thead><tr><th>记录时间</th><th>关卡 / 条件</th><th>获得经验</th><th>用时</th><th>每小时经验</th><th>操作</th></tr></thead><tbody id="experience-history-rows"></tbody></table><div id="experience-history-empty" class="empty-state">尚无采样记录</div></div></section>
     </section>
     <section id="logs-page" role="tabpanel" hidden>
       <div class="page-heading"><div><h1>日志</h1><p>查看物品获取与整理过程，核对每一组物品的位置和数量。</p></div><button id="log-refresh" class="button">刷新日志</button></div>

@@ -85,6 +85,7 @@ class NativeReader:
         from .game_compatibility import resolve, type_rows
         result = resolve(root, Path(module['path']), self.on_compatibility)
         self.metadata = result['metadata']
+        self.resolved_profiles = result['profiles']
         self.profile = result['profiles']['runtime-type-hints.json']
         self.types = {t.get('logicalName',t['name']):t for t in self.profile['types'] if not t['namespace']}
         self.types.update({t.get('logicalName',t['name']):t for t in type_rows(result['profiles']['ui-runtime-hints.json'])})

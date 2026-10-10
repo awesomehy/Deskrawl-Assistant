@@ -46,6 +46,14 @@ class ProfileTests(unittest.TestCase):
         self.i.defs.append(deepcopy(self.i.defs[0]))
         with self.assertRaises(CompatibilityError):match_profiles(self.i,self.original)
 
+    def test_extra_readers_receive_current_hashes_names_and_tokens(self):
+        original=deepcopy(self.original)
+        original['experience-types.json']={'metadataSha256':'old','gameAssemblySha256':'old','types':deepcopy(original['runtime-type-hints.json']['types'])}
+        result,_=match_profiles(self.i,original)
+        self.assertEqual(result['experience-types.json']['metadataSha256'],result['runtime-type-hints.json']['metadataSha256'])
+        self.assertEqual(result['experience-types.json']['gameAssemblySha256'],result['runtime-type-hints.json']['gameAssemblySha256'])
+        self.assertEqual(result['experience-types.json']['types'][0]['fields'][0]['name'],'new')
+
     def test_registry_rename_needs_a_unique_complete_shape(self):
         self.original['runtime-type-hints.json']['types'][0]['name']='gj'
         self.i.defs[0]['name']='zz'
@@ -54,6 +62,13 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(result['runtime-type-hints.json']['types'][0]['logicalName'],'gj')
         self.i.defs.append({'name':'aa','namespace':''})
         with self.assertRaises(CompatibilityError):match_profiles(self.i,self.original)
+
+    def test_recommendation_internal_type_rename_retains_its_own_identity(self):
+        self.original['runtime-type-hints.json']['types'][0]['name']='ey'
+        self.i.defs[0]['name']='xy'
+        result,aliases=match_profiles(self.i,self.original)
+        self.assertEqual(aliases,{'xy':'ey'})
+        self.assertEqual(result['runtime-type-hints.json']['types'][0]['logicalName'],'ey')
 
     def test_enum_change_stops_before_native_analysis(self):
         with patch('deskrawl_assistant.game_compatibility.match_profiles',return_value=({},{})), \
@@ -112,6 +127,13 @@ class AssetAndSessionTests(unittest.TestCase):
 
 
 class NativeCodeTests(unittest.TestCase):
+    def test_obfuscated_static_state_rename_keeps_native_type_signature(self):
+        def signature(name,aliases):
+            s=object.__new__(Signatures);s.aliases={'gj':'gj',**aliases};s.defs={name:0};s.shape_cache={}
+            s.i=SimpleNamespace(defs=[{'isValueType':False}],fields=lambda _: [field('difficulty',0,'WorldDifficulty')])
+            return s.type_name(name)
+        self.assertEqual(signature('ey',{}),signature('zz',{'zz':'ey'}))
+
     def signature(self,code,rva=0,data=b'',data_rva=100):
         s=object.__new__(Signatures)
         base=0x180000000;content=bytearray(512)

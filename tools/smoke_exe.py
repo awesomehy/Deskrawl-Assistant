@@ -18,7 +18,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.1.8'
+NAME = 'Deskrawl装备助手-v1.2.0'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -42,12 +42,17 @@ def main():
     assert all('deskrawl_assistant/web'+i['icon'] in icons for i in item_ui['items'].values())
     assert all(i['effect_groups'] for i in item_ui['items'].values())
     assert not any('lock-rules.json' in n or 'latest-snapshot.json' in n or 'assistant-actions.jsonl' in n for n in names)
-    assert not any('activity.sqlite3' in n for n in names)
+    assert not any('activity.sqlite3' in n or 'experience.sqlite3' in n for n in names)
+    assert 'data/experience-types.json' in normalized
+    assert 'data/recommendation-types.json' in normalized
+    assert 'data/recommendation-catalog.json' in normalized
+    assert not any('recommendations.sqlite3' in n for n in names)
     assert any('_sqlite3' in n for n in names)
     assert not any('frida' in n.lower() or 'unitypy' in n.lower() for n in names)
     assert any(n.replace('\\','/').endswith('webview/js/api.js') for n in names)
     assert any(n.endswith('Python.Runtime.dll') for n in names)
     assert 'deskrawl_assistant/web/rule-tools.js' in normalized
+    assert 'deskrawl_assistant/update_replace.ps1' in normalized
     assert 'data/compatibility-baseline.json' in normalized
     assert any('capstone' in n.lower() and n.lower().endswith('.dll') for n in names)
     folder = ROOT / 'build' / ('exe独立测试 '+uuid.uuid4().hex[:8])
@@ -63,6 +68,10 @@ def main():
     system_root = os.environ.get('SystemRoot', 'C:/Windows')
     env['PATH'] = str(Path(system_root) / 'System32') + os.pathsep + system_root
     env['DESKRAWL_ASSISTANT_DATA_DIR'] = str(persistent)
+    env['DESKRAWL_ASSISTANT_CACHE_DIR'] = str(folder / '缓存')
+    temp = folder / '临时目录'
+    temp.mkdir()
+    env['TEMP'] = env['TMP'] = str(temp)
     with socket.socket() as listener:
         listener.bind(('127.0.0.1', 0))
         port = listener.getsockname()[1]
@@ -97,7 +106,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.1.8'
+                assert request('/api/state')['app_version'] == '1.2.0'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -128,6 +137,12 @@ def main():
         assert b'async function api' in request('/app.js')
         assert b'openCombinationManager' in request('/rule-tools.js')
         assert request('/style.css')
+        recommendation = request('/api/recommendations')
+        assert recommendation['available'] is False and not recommendation['rows']
+        recommendation_settings = {'minutes':30,'difficulty':'current','overhead_seconds':7,'overhead_mode':'manual','include_locked':True,'sort':'completed'}
+        assert request('/api/recommendations/settings',recommendation_settings)['settings'] == recommendation_settings
+        assert request('/api/recommendations')['settings'] == recommendation_settings
+        report['checks'].append('刷图推荐资源内置，断线状态明确，推荐设置持久保存')
         catalog = request('/api/catalog')
         assert len(catalog['equipment']) == 209
         assert sum(i['legendary'] for i in catalog['equipment']) == 52
@@ -172,6 +187,12 @@ def main():
         assert logs_before >= 3
         assert request('/api/state')['rules'][0]['enabled'] is False
         report['checks'].append('同件装备的两个可命名组合成功保存，导出保留全部组合；配置操作进入持久日志')
+        xp_sample = request('/api/experience/sample', {'stage':'打包测试关卡','profile':'测试隔离条件','xp':100,'seconds':20})
+        experience = request('/api/experience?minutes=60')
+        assert experience['rows'][0]['projected_xp'] == 18000
+        assert experience['rows'][0]['completed_runs_xp'] == 18000
+        assert 'experience-page' in request('/').decode('utf-8')
+        report['checks'].append('经验收益页面及内置字段资源可读取；单文件版本的一小时收益计算正确')
         # A second launch must attach to the same service and exit, leaving
         # the first instance's session and rule data intact.
         second_command = [str(exe), '--port', str(port)]
@@ -192,6 +213,34 @@ def main():
             assert state['connected'] and state['complete'] and not state['error'], state['message']
             assert state['items']
             assert not state['monitoring']
+            live = request('/api/experience')['live']
+            if live['available']:
+                assert live['total_xp'] >= live['current_xp'], live
+                request('/api/experience/start', {'stage':live.get('stage') or '实际游戏只读测试','profile':'测试隔离条件'})
+                time.sleep(1)
+                xp_receipt = request('/api/experience/finish', {})
+                assert xp_receipt['source'] == 'live_timer' and xp_receipt['xp'] >= 0
+                request('/api/experience/delete', {'id':xp_receipt['id']})
+                report['checks'].append('单文件 exe 只读取得实际游戏经验和关卡，自动计时经验结算成功')
+            else:
+                assert '巅峰' in live.get('reason',''), live
+                report['checks'].append('实际角色已满级：巅峰经验明确返回不可自动读取，未将零值计作实测收益')
+            report['experience_reading']={'available':live['available'],'reason':live.get('reason')}
+            recommendation = request('/api/recommendations')
+            # Connection and the periodic recommendation observer complete
+            # independently; wait for its first stable read-only snapshot.
+            deadline = time.monotonic()+20
+            while not recommendation['available'] and time.monotonic()<deadline:
+                time.sleep(.2)
+                recommendation = request('/api/recommendations')
+            assert recommendation['available'], recommendation.get('error')
+            assert recommendation['coverage']['supported'] == 71 and recommendation['coverage']['total'] == 76
+            assert len(recommendation['rows']) == 71
+            assert recommendation['best']['accessible'] is True
+            assert recommendation['best']['seconds_per_run'] > 0
+            assert recommendation['best']['effective_budget_xp'] >= 0
+            report['checks'].append('单文件 exe 实机读取当前角色，71张常规图自动推荐与准入检查正常')
+
             report['game_pid'] = state['pid']
             report['equipment_count'] = len(state['items'])
             assert all('base' in item['groups'] for item in state['items'])
@@ -217,6 +266,11 @@ def main():
         assert request('/api/logs?category=settings')['total'] >= logs_before
         assert state['connected'] is False and state['monitoring'] is False
         assert state['automation']['settings'] == settings and not state['automation']['running']
+        assert request('/api/recommendations')['settings'] == recommendation_settings
+        assert request('/api/experience')['recent'][0]['id'] == xp_sample['id']
+        request('/api/experience/delete', {'id':xp_sample['id']})
+        assert not request('/api/experience')['rows']
+        report['checks'].append('经验样本重启后保留，删除后排行正确更新')
         assert token != old_token
         report['checks'].append('退出后重启仍保留规则；不会自动连接或开启监控')
         report['checks'].append('自动整理选择与偏好重启后保留，仍默认暂停')

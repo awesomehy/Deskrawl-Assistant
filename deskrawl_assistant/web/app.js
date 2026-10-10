@@ -9,7 +9,10 @@ const gearMap=new Map(), statMap=new Map();
 let lastRules='';
 let automationDraft=null, automationDirty=false, collectionSignature='';
 let activeTab='rules', logBefore=null, logNext=null, logRequest=0, logTimer;
+let experienceData=null, experienceRequest=0, experienceLoading=false, experienceBusy=false, experienceReceivedAt=0, experienceInputTimer;
+let recommendationData=null, recommendationRequest=0, recommendationLoading=false, recommendationBusy=false, recommendationDirty=false;
 let updateState=null, updatePolling=false, updateSaving=false, updateNoticeShown=false;
+let experienceManualSavedValues=['','','',''];
 
 async function api(path,data,retry=true){
   const response=await fetch('/api/'+path,data===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Assistant-Token':token},body:JSON.stringify(data)});
@@ -46,9 +49,11 @@ function rulesFor(key){return (state?.rules||[]).filter(r=>r.equipment_keys.incl
 function switchTab(tab){
   activeTab=tab;
   document.querySelectorAll('.tab').forEach(button=>{let active=button.dataset.tab===tab;button.classList.toggle('active',active);button.setAttribute('aria-selected',active);});
-  $('rules-page').hidden=tab!=='rules';$('inventory-page').hidden=tab!=='inventory';$('logs-page').hidden=tab!=='logs';
+  $('rules-page').hidden=tab!=='rules';$('inventory-page').hidden=tab!=='inventory';$('logs-page').hidden=tab!=='logs';$('experience-page').hidden=tab!=='experience';$('recommendations-page').hidden=tab!=='recommendations';
   if(tab==='inventory')renderInventory();
   if(tab==='logs')loadLogs();
+  if(tab==='experience')loadExperience();
+  if(tab==='recommendations')loadRecommendations();
 }
 function buildCatalog(){
   catalog.equipment.forEach(g=>gearMap.set(g.key,g));catalog.stats.forEach(s=>statMap.set(s.key,s));
@@ -111,7 +116,11 @@ function renderEditor(){
     <div class="editor-actions"><small class="saved-state">${existing.length} 个已保存组合</small><span class="spacer"></span><button id="reset-rule" class="button ghost">重置改动</button><button id="save-rule" class="button primary">${draft.id?'保存修改':'保存并应用'}</button></div>`;
   updateSummary();
 }
-function setDirty(value){dirty=value;if(desktopMode)api('window/draft',{dirty:dirty||automationDirty}).catch(()=>{});}
+function experienceManualValues(){return ['experience-manual-stage','experience-manual-profile','experience-manual-xp','experience-manual-seconds'].map(id=>$(id).value.trim());}
+function hasExperienceManualDraft(){const values=experienceManualValues();return values.some(Boolean)&&values.some((value,index)=>value!==experienceManualSavedValues[index]);}
+function hasPendingDrafts(){return dirty||automationDirty||recommendationDirty||hasExperienceManualDraft()||!!experienceData?.active;}
+function syncDraftState(){if(desktopMode)api('window/draft',{dirty:hasPendingDrafts()}).catch(()=>{});}
+function setDirty(value){dirty=value;syncDraftState();}
 function markDirty(){setDirty(true);$('draft-status').textContent='有未保存的改动';updateSummary();}
 function validation(){
   if(!draft.name.trim())return '请填写组合名称。';
@@ -376,11 +385,13 @@ $('save-automation').addEventListener('click',saveAutomation);
 $('run-automation').addEventListener('click',async()=>{try{await api('automation/run',{enabled:!state.automation.running});await pollState();}catch(error){toast(error.message,true);}});
 $('stop').addEventListener('click',async()=>{try{await api('stop',{});await pollState();}catch(error){toast(error.message,true);}});
 $('history-toggle').addEventListener('click',()=>switchTab('logs'));
-$('exit').addEventListener('click',async()=>{
-  if((dirty||automationDirty)&&!await confirmAction('退出助手？','当前配置还未保存。退出将放弃改动，并停止持续监控和自动整理。','退出',false))return;
+async function requestExit(){
+  const pending=[dirty||automationDirty||recommendationDirty?'未保存的配置或刷图设置':'',experienceData?.active?'未完成的经验采样':'',hasExperienceManualDraft()?'未提交的经验样本':''].filter(Boolean);
+  if(pending.length&&!await confirmAction('退出助手？',`当前有${pending.join('、')}。退出将放弃这些内容，并停止持续监控和自动整理。`,'退出',false))return;
   try{await api('shutdown',{});exiting=true;document.body.innerHTML='<div class="empty-state"><h2>助手已退出</h2><p class="note">持续监控已停止。可关闭此页面，或双击启动文件重新打开。</p></div>';}catch(error){toast(error.message,true);}
-});
-window.addEventListener('beforeunload',e=>{if(dirty||automationDirty){e.preventDefault();e.returnValue='';}});
+}
+$('exit').addEventListener('click',requestExit);
+window.addEventListener('beforeunload',e=>{if(!exiting&&hasPendingDrafts()){e.preventDefault();e.returnValue='';}});
 async function boot(){
   if(desktopMode)$('usage-note').textContent='监控只自动处理新增装备；已有装备请用“一键按规则锁定”。最小化窗口可继续监控，关闭窗口会退出助手并停止监控。';
   try{catalog=await api('catalog');buildCatalog();await pollState();const first=state.rules[0]?.equipment_keys[0]||'LegendaryBelt3';if(first)await chooseGear(first);await pollUpdate();setInterval(pollState,1000);setInterval(pollUpdate,1500);setInterval(()=>{if(activeTab==='logs'&&!logBefore)loadLogs(true);},2000);}catch(error){toast(error.message,true);}
@@ -399,7 +410,7 @@ function renderUpdate(){
   $('install-update').textContent=updateSaving?'正在保存配置…':active?'更新中…':`下载 v${updateState.latest_version} 并更新（重启）`;
   $('install-update').title=updateState.can_install?'下载至当前程序目录，校验后替换当前 exe 并重启；规则和日志保留。':'请在 exe 独立窗口中更新；源码模式可从发行记录下载。';
   $('update-progress').hidden=!active||!updateState.progress;$('update-progress').value=updateState.progress?.percent||0;
-  $('rules-page').inert=active||updateSaving;$('automation-panel').inert=active||updateSaving;
+  for(const id of ['rules-page','automation-panel','recommendations-page','experience-page'])$(id).inert=active||updateSaving;
   if(updateState.notice&&!updateNoticeShown){updateNoticeShown=true;toast(updateState.notice.message,!updateState.notice.success);}
 }
 async function pollUpdate(){
@@ -410,8 +421,14 @@ $('check-update').addEventListener('click',async()=>{try{await api('update/check
 $('install-update').addEventListener('click',async()=>{
   if(updateSaving)return;updateSaving=true;renderUpdate();
   try{
+    const sample=await api('experience?minutes=60&sort=rate');
+    if(experienceData?.active||sample.active)throw new Error('更新前请先结束并保存，或取消当前经验采样。');
+    if(hasExperienceManualDraft())throw new Error('更新前请保存手动录入的经验样本，或清空未提交内容。');
+    if(experienceBusy||recommendationBusy)throw new Error('请等待经验采样或刷图设置保存完成后再更新。');
     if(dirty&&(!await saveRule()||dirty))throw new Error('更新前请修正规则配置并保存。');
     if(automationDirty&&(!await saveAutomation()||automationDirty))throw new Error('更新前请修正整理设置并保存。');
+    if(recommendationDirty&&(!await saveRecommendationSettings()||recommendationDirty))throw new Error('更新前请修正刷图设置并保存。');
+    if(hasPendingDrafts())throw new Error('更新前请先保存未完成的配置和经验样本。');
     if(desktopMode)await api('window/draft',{dirty:false});
     await api('update/install',{saved:true});await pollUpdate();
   }catch(error){toast(error.message,true);}finally{updateSaving=false;renderUpdate();}
@@ -446,4 +463,255 @@ $('log-search').addEventListener('input',()=>{clearTimeout(logTimer);logTimer=se
 $('log-refresh').addEventListener('click',()=>loadLogs());
 $('log-latest').addEventListener('click',resetLogs);
 $('log-older').addEventListener('click',()=>{if(logNext){logBefore=logNext;loadLogs();}});
+const experienceNumber=new Intl.NumberFormat('zh-CN',{maximumFractionDigits:2});
+function formatExperience(value){return Number.isFinite(Number(value))?experienceNumber.format(Number(value)):'—';}
+function formatExperienceTime(value){
+  const seconds=Math.max(0,Number(value)||0),whole=Math.floor(seconds);
+  if(seconds<60)return `${formatExperience(seconds)} 秒`;
+  const hours=Math.floor(whole/3600),minutes=Math.floor(whole%3600/60),rest=whole%60;
+  return `${hours?hours+' 小时 ':''}${minutes?minutes+' 分 ':''}${rest?rest+' 秒':''}`.trim();
+}
+function experienceMinutes(){
+  const field=$('experience-minutes'),minutes=Number(field.value);
+  return field.value!==''&&Number.isInteger(minutes)&&minutes>=1&&minutes<=10080?minutes:null;
+}
+function experienceElapsed(){
+  if(!experienceData?.active)return 0;
+  return Math.max(0,Number(experienceData.active.elapsed_seconds)||0)+(experienceData.active.stopped?0:(Date.now()-experienceReceivedAt)/1000);
+}
+function updateExperienceTimer(){
+  if(exiting||!$('experience-elapsed'))return;
+  const seconds=Math.floor(experienceElapsed()),hours=Math.floor(seconds/3600),minutes=Math.floor(seconds%3600/60),rest=seconds%60;
+  $('experience-elapsed').textContent=[...(hours?[String(hours).padStart(2,'0')]:[]),String(minutes).padStart(2,'0'),String(rest).padStart(2,'0')].join(':');
+}
+function renderExperience(){
+  if(!experienceData||exiting)return;
+  const data=experienceData,minutes=data.minutes||experienceMinutes()||60,rows=data.rows||[],best=rows[0],active=data.active,live=data.live||{},completed=(data.sort||$('experience-sort').value)==='completed';
+  const filter=$('experience-filter'),selected=filter.value;
+  const profiles=[...new Set(data.profiles||[])].filter(Boolean);
+  if(selected&&!profiles.includes(selected))profiles.push(selected);
+  filter.innerHTML='<option value="">全部条件</option>'+profiles.map(profile=>`<option value="${esc(profile)}" ${profile===selected?'selected':''}>${esc(profile)}</option>`).join('');
+  $('experience-best').textContent=best?.stage||'—';
+  $('experience-best-profile').textContent=best?`${best.profile||'未标注条件'} · ${formatExperience(best.samples)} 次采样`:'等待采样';
+  $('experience-hourly').textContent=best?formatExperience(best.xp_per_hour):'—';
+  $('experience-projection').textContent=best?formatExperience(completed?best.completed_runs_xp:best.projected_xp):'—';
+  $('experience-projection-label').textContent=`${minutes} 分钟${completed?'完整通关':'预计'}经验`;
+  $('experience-projection-note').textContent=completed?'仅计时限内完整通关的经验':'按实测平均速度估算';
+  $('experience-samples').textContent=formatExperience(rows.reduce((sum,row)=>sum+(Number(row.samples)||0),0));
+  $('experience-coverage').textContent=rows.length?`${new Set(rows.map(row=>row.stage)).size} 个关卡 · ${rows.length} 个关卡 / 条件`:'尚未记录关卡';
+  $('experience-count').textContent=`${rows.length} 个关卡 / 条件`;
+  $('experience-ranking-note').textContent=`按 ${minutes} 分钟${completed?'完整通关':'预计'}经验从高到低排列${selected?' · '+selected:''}。`;
+  $('experience-projected-heading').textContent=`${minutes} 分钟预计`;
+  $('experience-completed-heading').textContent=`${minutes} 分钟完整通关`;
+  $('experience-rows').innerHTML=rows.map((row,index)=>`<tr class="${index===0?'experience-leading':''}"><td><div class="experience-stage-cell"><span class="experience-rank">${index+1}</span><div><strong>${esc(row.stage)}</strong><small>${esc(row.profile||'未标注条件')}</small></div></div></td><td>${formatExperience(row.samples)}${Number(row.samples)===1?'<small>单次样本</small>':''}</td><td>${formatExperience(row.average_xp)}</td><td>${esc(formatExperienceTime(row.average_seconds))}</td><td>${formatExperience(row.xp_per_hour)}</td><td class="${completed?'':'experience-value'}">${formatExperience(row.projected_xp)}</td><td class="${completed?'experience-value':''}">${formatExperience(row.completed_runs_xp)}<small>${formatExperience(row.completed_runs)} 次完整通关</small></td></tr>`).join('');
+  $('experience-empty').hidden=rows.length>0;
+  $('experience-empty').innerHTML=selected?'这个条件下还没有经验样本<br>尝试其他条件，或录入这个条件的关卡数据。':'还没有经验样本<br>完成一次计时采样，或手动录入关卡经验与用时，开始比较。';
+  $('experience-live-dot').classList.toggle('available',!!live.available);
+  $('experience-live-state').textContent=live.available?'游戏经验已连接':'暂时无法自动读取经验';
+  $('experience-live-detail').textContent=live.available?[live.character,live.stage?`关卡：${live.stage}`:'',live.total_xp!=null?`累计经验 ${formatExperience(live.total_xp)}`:''].filter(Boolean).join(' · ')||'开始与结束采样时自动读取经验。':(live.error||'未连接时仍可手动录入经验。');
+  $('experience-use-current').disabled=!live.stage||!!active||experienceBusy;
+  if(active){$('experience-stage').value=active.stage;$('experience-profile').value=active.profile||'';}
+  $('experience-stage').disabled=!!active||experienceBusy;
+  $('experience-profile').disabled=!!active||experienceBusy;
+  $('experience-start').hidden=!!active;
+  $('experience-finish').hidden=!active;
+  $('experience-cancel').hidden=!active;
+  $('experience-finish-field').hidden=!active;
+  $('experience-finish-help').textContent=active?.auto_xp===false?'开始时没有经验基线，请手动填写本次获得经验。':'自动读取时可留空；也可手动填写覆盖自动结果。';
+  $('experience-finish-xp').placeholder=active?.auto_xp===false?'填写实际获得经验':'自动读取，或填写实际经验';
+  $('experience-timer-label').textContent=active?(active.stopped?'已停止，待补录':'正在采样'):'准备开始';
+  $('experience-finish').textContent=active?.stopped?'补录并保存':'结束并保存';
+  $('experience-timer-form').classList.toggle('sampling',!!active);
+  $('experience-active-label').textContent=active?`${active.stage} · ${active.profile||'未标注条件'}`:'每次记录一个关卡的实际收益';
+  $('experience-timer-note').textContent=active?(active.stopped?'计时已停止。请填写本次获得经验并保存，这段补录时间不会计入用时。':live.available&&active.auto_xp!==false?'结算并准备重开后结束。经验可自动读取；手动填写时以填写值为准。':'需要手动填写本次获得经验。也可先点击结束冻结计时，再补录经验。'):'连接游戏可自动记录经验差值。未连接时，结束采样需要填写本次获得经验。';
+  for(const id of ['experience-start','experience-finish','experience-cancel','experience-add','experience-refresh'])$(id).disabled=experienceBusy;
+  const recent=data.recent||[];
+  $('experience-history-count').textContent=recent.length?`显示最近 ${recent.length} 次${selected?' · 当前条件':''}`:'';
+  $('experience-history-rows').innerHTML=recent.map(row=>{
+    const date=new Date(row.recorded_at),time=Number.isNaN(date.getTime())?esc(row.recorded_at||'—'):date.toLocaleString('zh-CN',{hour12:false});
+    const hourly=Number(row.seconds)>0?Number(row.xp)*3600/Number(row.seconds):null;
+    return `<tr><td><time>${time}</time></td><td><strong>${esc(row.stage)}</strong><small>${esc(row.profile||'未标注条件')}</small></td><td>${formatExperience(row.xp)}</td><td>${esc(formatExperienceTime(row.seconds))}</td><td>${hourly==null?'—':formatExperience(hourly)}</td><td><button class="text-button experience-delete" data-experience-delete="${esc(row.id)}" type="button" ${experienceBusy?'disabled':''} aria-label="删除${esc(row.stage)}这次采样">删除</button></td></tr>`;
+  }).join('');
+  $('experience-history-empty').hidden=recent.length>0;
+  updateExperienceTimer();
+}
+async function loadExperience(quiet=false){
+  if(exiting||quiet&&experienceLoading)return;
+  const minutes=experienceMinutes();
+  if(minutes===null){if(!quiet){$('experience-error').textContent='计划刷图时间请输入 1 至 10080 的整数分钟。';$('experience-error').hidden=false;}return;}
+  const request=++experienceRequest,params=new URLSearchParams({minutes:String(minutes),sort:$('experience-sort').value}),profile=$('experience-filter').value;
+  if(profile)params.set('profile',profile);
+  experienceLoading=true;
+  try{
+    const result=await api('experience?'+params);if(request!==experienceRequest||exiting)return;
+    experienceData=result;experienceReceivedAt=Date.now();renderExperience();syncDraftState();$('experience-error').hidden=true;
+  }catch(error){if(request!==experienceRequest||exiting)return;$('experience-error').textContent=error.message;$('experience-error').hidden=false;if(!quiet)toast(error.message,true);}
+  finally{if(request===experienceRequest)experienceLoading=false;}
+}
+async function mutateExperience(path,payload,message){
+  if(experienceBusy)return;
+  experienceBusy=true;renderExperience();
+  try{await api('experience/'+path,payload);await loadExperience();toast(message);return true;}
+  catch(error){if(path==='finish')await loadExperience();toast(error.message,true);return false;}
+  finally{experienceBusy=false;renderExperience();}
+}
+$('experience-refresh').addEventListener('click',()=>loadExperience());
+$('experience-filter').addEventListener('change',()=>loadExperience());
+$('experience-sort').addEventListener('change',()=>loadExperience());
+$('experience-use-current').addEventListener('click',()=>{
+  const live=experienceData?.live;if(!live?.stage||experienceData.active||experienceBusy)return;
+  $('experience-stage').value=live.stage;$('experience-profile').value=live.profile||live.character||'';
+  toast('已填入当前关卡与角色，可补充配装或经验加成条件。');
+});
+$('experience-minutes').addEventListener('input',()=>{clearTimeout(experienceInputTimer);experienceInputTimer=setTimeout(()=>loadExperience(),350);});
+$('experience-timer-form').addEventListener('submit',async e=>{
+  e.preventDefault();if(experienceData?.active||experienceBusy)return;
+  const stage=$('experience-stage').value.trim();if(!stage){toast('请填写这次采样的关卡。',true);return;}
+  if(await mutateExperience('start',{stage,profile:$('experience-profile').value.trim()},'计时已开始；结算并准备重开后结束采样。'))$('experience-finish-xp').value='';
+});
+$('experience-finish').addEventListener('click',async()=>{
+  if(!experienceData?.active||experienceBusy)return;
+  const field=$('experience-finish-xp'),payload={};
+  if(field.value!==''){
+    const xp=Number(field.value);if(!Number.isFinite(xp)||!Number.isInteger(xp)||xp<0){toast('获得经验请输入大于或等于 0 的整数。',true);field.focus();return;}
+    payload.xp=xp;
+  }
+  if(await mutateExperience('finish',payload,'采样已保存，效率排行已更新。'))field.value='';
+});
+$('experience-cancel').addEventListener('click',async()=>{
+  if(!experienceData?.active||experienceBusy)return;
+  if(await confirmAction('取消这次采样？','这次计时和经验收益不会保存。之前的样本保留。','取消采样',false))mutateExperience('cancel',{},'本次采样已取消。');
+});
+$('experience-manual-form').addEventListener('input',syncDraftState);
+$('experience-manual-form').addEventListener('change',syncDraftState);
+$('experience-manual-form').addEventListener('submit',async e=>{
+  e.preventDefault();if(experienceBusy)return;
+  const stage=$('experience-manual-stage').value.trim(),profile=$('experience-manual-profile').value.trim(),xp=Number($('experience-manual-xp').value),seconds=Number($('experience-manual-seconds').value);
+  if(!stage||!Number.isInteger(xp)||xp<0||!Number.isFinite(seconds)||seconds<0.1){toast('请填写关卡、非负整数经验和至少 0.1 秒的用时。',true);return;}
+  if(await mutateExperience('sample',{stage,profile,xp,seconds},'经验样本已保存，效率排行已更新。')){$('experience-manual-xp').value='';$('experience-manual-seconds').value='';experienceManualSavedValues=experienceManualValues();syncDraftState();}
+});
+$('experience-history-rows').addEventListener('click',async e=>{
+  const button=e.target.closest('[data-experience-delete]');if(!button||experienceBusy)return;
+  if(await confirmAction('删除这次经验采样？','删除后会重新计算该关卡的经验效率。','删除样本'))mutateExperience('delete',{id:Number(button.dataset.experienceDelete)},'样本已删除，效率排行已更新。');
+});
+setInterval(()=>{if(!exiting&&activeTab==='experience'&&!experienceBusy)loadExperience(true);},2000);
+setInterval(updateExperienceTimer,250);
+function recommendationValue(value){return value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value))?Number(value):null;}
+function recommendationNumber(value){const number=recommendationValue(value);return number===null?'—':formatExperience(number);}
+function recommendationTime(value){const number=recommendationValue(value);return number===null?'—':formatExperienceTime(number);}
+function recommendationRunTime(row){
+  const seconds=recommendationValue(row?.seconds_per_run);if(seconds===null)return '—';
+  if(row.calibrated===true)return recommendationTime(seconds);
+  const step=seconds>=300?30:15;return `约 ${recommendationTime(Math.max(step,Math.round(seconds/step)*step))}`;
+}
+function recommendationPlanXp(row){return recommendationNumber(row.effective_budget_xp??row.completed_runs_xp);}
+function recommendationConfidence(value){
+  const labels={high:'较高',medium:'中等',low:'较低',unknown:'待确认',calibrated:'实战校准',estimated:'理论估计'};
+  if(value==null||value==='')return '待确认';
+  if(typeof value==='number')return `${formatExperience(value<=1?value*100:value)}%`;
+  return labels[value]||String(value);
+}
+function recommendationRisk(value){return {low:'较低风险',medium:'中等风险',high:'较高风险',unknown:'风险待确认',observed_failure:'有失败记录',unverified:'生存待校准'}[value]||String(value||'风险待确认');}
+function recommendationRiskClass(value){return value==='high'||value==='较高'||value==='observed_failure'?'review':value==='low'||value==='较低'?'match':'unlocked';}
+function recommendationDifficulty(value){return (recommendationData?.difficulty_options||[]).find(option=>String(option.value)===String(value))?.label||String(value??'');}
+function recommendationBadges(row){
+  const available=row.accessible===true,known=typeof row.accessible==='boolean';
+  return `<span class="badge ${available?'match':known?'unlocked':'review'}">${available?'已开放':known?'未开放':'开放状态待确认'}</span>${row.boss?'<span class="badge recommendation-boss">Boss 关卡</span>':''}<span class="badge ${row.calibrated===true?'match':'unlocked'}">${row.calibrated===true?'已校准':'预估'}</span>`;
+}
+function recommendationDate(value){if(!value)return '';const date=new Date(value);return Number.isNaN(date.getTime())?'':date.toLocaleString('zh-CN',{hour12:false});}
+function recommendationSettings(){return {minutes:Number($('recommendation-minutes').value),difficulty:$('recommendation-difficulty').value,sort:$('recommendation-sort').value,overhead_seconds:Number($('recommendation-overhead').value),overhead_mode:$('recommendation-overhead-mode').value,include_locked:$('recommendation-include-locked').checked};}
+function markRecommendationDirty(){recommendationDirty=true;syncDraftState();$('recommendation-settings-state').textContent='设置有改动，点击“更新推荐”应用。';}
+function renderRecommendations(){
+  if(!recommendationData||exiting)return;
+  const data=recommendationData,settings=data.settings||{},minutes=data.minutes||settings.minutes||60,character=data.character||{},rows=data.rows||[],best=data.available===true&&data.best?.accessible===true?data.best:null,calibration=data.calibration||{},current=data.current||{};
+  const options=data.difficulty_options?.length?data.difficulty_options:[{value:'current',label:'跟随当前地图难度'}];
+  if(!recommendationDirty){
+    $('recommendation-minutes').value=settings.minutes??minutes;
+    $('recommendation-overhead').value=settings.overhead_mode==='auto'?8:(settings.overhead_seconds??8);
+    $('recommendation-overhead-mode').value=settings.overhead_mode||'auto';
+    $('recommendation-include-locked').checked=settings.include_locked!==false;
+    $('recommendation-sort').value=settings.sort||'completed';
+    $('recommendation-difficulty').innerHTML=options.map(option=>`<option value="${esc(option.value)}" ${String(option.value)===String(settings.difficulty??data.difficulty??'current')?'selected':''}>${esc(option.label)}</option>`).join('');
+    $('recommendation-settings-state').textContent='设置已应用';
+  }
+  const sort=settings.sort||'completed',eligible=rows.filter(row=>row.accessible===true&&recommendationValue(row.seconds_per_run)>0),minimumRow=eligible.reduce((first,row)=>!first||Number(row.seconds_per_run)<Number(first.seconds_per_run)?row:first,null),minimum=minimumRow?Number(minimumRow.seconds_per_run):null,tooShort=data.available===true&&!best&&minimum!==null&&minimum>minutes*60;
+  $('recommendation-read-dot').classList.toggle('available',data.available===true);
+  const identity=[character.name,character.class,character.level!=null?`等级 ${recommendationNumber(character.level)}`:''].filter(Boolean);
+  $('recommendation-character-name').textContent=identity.join(' · ')||'等待读取当前角色';
+  $('recommendation-read-state').textContent=data.available===true?`角色与地图已读取 · ${recommendationDifficulty(data.difficulty||settings.difficulty)} · ${sort==='rate'?'单位时间效率优先':'计划可获经验优先'}`:(data.error||'连接游戏后自动读取角色和地图。');
+  const updated=recommendationDate(data.updated_at);$('recommendation-updated').textContent=updated?`更新于 ${updated}`:'';
+  $('recommendation-error').hidden=!data.error;$('recommendation-error').textContent=data.error||'';
+  const warnings=Array.isArray(data.warnings)?data.warnings:[];
+  $('recommendation-warnings').hidden=warnings.length===0;$('recommendation-warnings').innerHTML=warnings.map(warning=>`<p>${esc(warning)}</p>`).join('');
+  $('recommendation-best-stage').textContent=best?best.stage:tooShort?'计划时间暂不足':data.available===true?'暂无可推荐地图':'等待读取地图';
+  $('recommendation-best-subtitle').textContent=best?`${recommendationDifficulty(best.difficulty||data.difficulty)} · ${minutes} 分钟刷图计划 · ${sort==='rate'?'单位时间效率优先':'计划可获经验优先'}`:tooShort?`最短一轮预计需 ${recommendationRunTime(minimumRow)}，请延长计划时长。`:data.available===true?'没有已确认开放且可计算收益的地图。':(data.error||'无需逐图录入，连接游戏即可开始比较。');
+  $('recommendation-best-badges').innerHTML=best?recommendationBadges(best):'';
+  $('recommendation-plan-label').textContent=`${minutes} 分钟计划可获经验`;
+  $('recommendation-plan-note').textContent=best?.cycle_estimate?'计划可获经验（含失败保留经验）':'按完整通关估算';
+  $('recommendation-best-xp').textContent=best?recommendationPlanXp(best):tooShort?'0':'—';
+  $('recommendation-best-time').textContent=best?recommendationRunTime(best):tooShort?recommendationRunTime(minimumRow):'—';
+  $('recommendation-best-hourly').textContent=best?recommendationNumber(best.xp_per_hour):'—';
+  $('recommendation-best-runs').textContent=best?`预计完整通关 ${recommendationNumber(best.completed_runs)} 次`:tooShort?'当前时限内可完成 0 次':'等待计算完成次数';
+  const overheadLabels={observed:'自动观测',manual:'手动指定',default:'暂无观测，使用默认值'};
+  $('recommendation-best-overhead').textContent=best?.overhead_seconds!=null?`重开开销 ${recommendationNumber(best.overhead_seconds)} 秒 · ${overheadLabels[best.overhead_source]||'估计'}`:'含载入、结算与重开开销';
+  $('recommendation-best-reason').textContent=best?[best.calibrated===true?'耗时采用实战校准均值':'按平均伤害粗估，正常刷图自动校准',`${recommendationRisk(best.risk)} · 可信度${recommendationConfidence(best.confidence)}`,...(best.cycle_estimate?['计划可获经验（含失败保留经验）']:[]),...(Array.isArray(best.reasons)?best.reasons:[])].join('；'):tooShort?'时限内尚不能完整通关，计划经验为 0；延长计划后会重新比较。':'推荐结果会标明风险和可信度；没有完整读取数据时不会猜测收益。';
+  $('recommendation-current-stage').textContent=current.stage||'等待读取当前地图';
+  const phases={combat:'战斗中',normal:'清理怪物',boss:'Boss 战',fighting:'战斗中',cleared:'已通关',completed:'已通关',finished:'已结束',failed:'本次失败',idle:'等待刷图',loading:'载入中',unknown:'状态待确认'};
+  $('recommendation-current-phase').textContent=phases[current.phase]||current.phase||'未读取';
+  $('recommendation-current-plan-label').textContent=current.xp_source==='static_formula_fallback'?'本轮全清经验估计（当前等级与加成）':'本轮计划总经验（单次全清）';
+  $('recommendation-current-xp').textContent=recommendationNumber(current.planned_xp);
+  const currentRow=rows.find(row=>String(row.map_id)===String(current.map_id)&&(current.difficulty==null||String(row.difficulty)===String(current.difficulty)));
+  $('recommendation-current-note').textContent=(current.xp_source==='static_formula_fallback'?'部分奖励按当前等级与经验加成估计；途中升级或加成变化会重新计算。 ':'')+(currentRow?`地图常规预估：每轮 ${recommendationNumber(currentRow.xp_per_run)} · ${recommendationRunTime(currentRow)} · ${currentRow.calibrated===true?'已校准':'预估'}`:current.stage?'本轮经验以当前生成计划为准；地图常规预估随选择的难度比较。':'读取后可与推荐地图对照。');
+  $('recommendation-ranking-note').textContent=`${sort==='rate'?'按单位时间经验效率':'按时限内计划可获经验'}比较，未开放地图不参与当前推荐。`;
+  const coverage=data.coverage,supported=recommendationValue(coverage?.supported),total=recommendationValue(coverage?.total);
+  $('recommendation-map-count').textContent=`${supported!==null&&total!==null?`支持 ${recommendationNumber(supported)}/${recommendationNumber(total)} 个地图 · `:''}当前 ${rows.length} 个 · 已开放 ${rows.filter(row=>row.accessible===true).length} 个`;
+  $('recommendation-table-plan').textContent=`${minutes} 分钟计划收益`;
+  $('recommendation-rows').innerHTML=rows.map(row=>{
+    const leading=best&&String(row.map_id)===String(best.map_id)&&String(row.difficulty)===String(best.difficulty),reasons=Array.isArray(row.reasons)?row.reasons:[];
+    const extra=[row.calibrated===true?'耗时采用实战校准均值。':'按平均伤害粗估，正常刷图自动校准。',...reasons,...(row.cycle_estimate?[`计划可获经验（含失败保留经验）：${recommendationPlanXp(row)}`,`完整通关经验：${recommendationNumber(row.completed_runs_xp)}`]:[]),`速度折算经验：${recommendationNumber(row.projected_xp)}`,row.fixed_seconds!=null?`固定开销：${recommendationNumber(row.fixed_seconds)} 秒`:'',row.samples?`已校准样本：${recommendationNumber(row.samples)} 次`:''].filter(Boolean);
+    return `<tr class="${leading?'experience-leading':''} ${row.accessible===false?'recommendation-locked':''}"><td><strong>${esc(row.stage||'未命名地图')}</strong><small>${esc(recommendationDifficulty(row.difficulty))}</small><div class="recommendation-badges">${recommendationBadges(row)}</div></td><td><strong>${recommendationNumber(row.xp_per_run)}</strong><small>${esc(recommendationRunTime(row))}</small></td><td>${recommendationNumber(row.xp_per_hour)}</td><td class="experience-value">${recommendationPlanXp(row)}${row.cycle_estimate?'<small>含失败保留经验</small>':''}</td><td>${recommendationNumber(row.completed_runs)}</td><td><span class="badge ${recommendationRiskClass(row.risk)}">${esc(recommendationRisk(row.risk))}</span><small>可信度 ${esc(recommendationConfidence(row.confidence))}</small><details class="recommendation-reasons"><summary>查看依据</summary>${extra.map(reason=>`<p>${esc(reason)}</p>`).join('')}</details></td></tr>`;
+  }).join('');
+  $('recommendation-empty').hidden=rows.length>0;$('recommendation-empty').textContent=data.error||'当前没有可比较的地图。连接游戏后自动读取，无需逐图录入。';
+  const count=recommendationValue(calibration.samples);
+  $('recommendation-calibration-samples').textContent=count===null?'尚无校准记录':`已记录 ${recommendationNumber(count)} 次有效样本`;
+  const statuses={observing:'正在观察',active:'正在观察',waiting:'等待完整战斗',idle:'等待观察',calibrated:'已校准',unavailable:'等待连接',paused:'已暂停'};
+  $('recommendation-calibration-status').textContent=statuses[calibration.status]||(calibration.active?'正在观察':count>0?'已有校准':'等待观察');
+  $('recommendation-calibration-status').className=`badge ${calibration.active?'match':'miss'}`;
+  $('recommendation-calibration-detail').textContent=(calibration.status&&!statuses[calibration.status]?calibration.status+' ':'')+(calibration.active?'正常刷图即可。完整有效的战斗会自动更新耗时和经验估计。':'保持助手连接并正常刷图，完整有效的战斗会自动更新地图耗时和经验估计。');
+  const last=recommendationDate(calibration.last_recorded_at);$('recommendation-calibration-time').textContent=last?`最近记录：${last}`:'';
+  for(const id of ['recommendation-refresh','recommendation-save','recommendation-calibration-reset'])$(id).disabled=recommendationBusy;
+  for(const id of ['recommendation-minutes','recommendation-difficulty','recommendation-sort','recommendation-overhead-mode','recommendation-overhead','recommendation-include-locked'])$(id).disabled=recommendationBusy;
+  $('recommendation-overhead').disabled=recommendationBusy||$('recommendation-overhead-mode').value==='auto';
+  $('recommendation-overhead-note').textContent=$('recommendation-overhead-mode').value==='auto'?'使用同图或同系列连续重开的观测中位数；没有样本时采用 8 秒。':'手动指定每次载入、结算和重开的额外秒数，不会被观测值覆盖。';
+}
+async function loadRecommendations(quiet=false){
+  if(exiting||quiet&&recommendationLoading)return;
+  const request=++recommendationRequest;recommendationLoading=true;
+  try{const data=await api('recommendations');if(request!==recommendationRequest||exiting)return;recommendationData=data;renderRecommendations();}
+  catch(error){if(request!==recommendationRequest||exiting)return;$('recommendation-error').textContent=error.message;$('recommendation-error').hidden=false;$('recommendation-read-state').textContent=recommendationData?'刷新失败，显示上次读取的结果。':'暂时无法读取推荐数据，请重试。';if(!quiet)toast(error.message,true);}
+  finally{if(request===recommendationRequest)recommendationLoading=false;}
+}
+$('recommendation-refresh').addEventListener('click',()=>loadRecommendations());
+$('recommendation-settings-form').addEventListener('input',markRecommendationDirty);
+$('recommendation-settings-form').addEventListener('change',markRecommendationDirty);
+$('recommendation-overhead-mode').addEventListener('change',()=>{if($('recommendation-overhead-mode').value==='auto')$('recommendation-overhead').value=8;renderRecommendations();});
+async function saveRecommendationSettings(){
+  if(recommendationBusy)return false;
+  const settings=recommendationSettings();
+  if(!Number.isInteger(settings.minutes)||settings.minutes<1||settings.minutes>10080||!Number.isFinite(settings.overhead_seconds)||settings.overhead_seconds<0||settings.overhead_seconds>300){toast('请输入 1 至 10080 的整数分钟和 0 至 300 秒的固定开销。',true);return false;}
+  recommendationBusy=true;renderRecommendations();
+  try{await api('recommendations/settings',settings);recommendationDirty=false;syncDraftState();await loadRecommendations();toast('刷图计划已更新。');return true;}
+  catch(error){toast(error.message,true);return false;}
+  finally{recommendationBusy=false;renderRecommendations();}
+}
+$('recommendation-settings-form').addEventListener('submit',async e=>{e.preventDefault();await saveRecommendationSettings();});
+$('recommendation-calibration-reset').addEventListener('click',async()=>{
+  if(recommendationBusy)return;
+  if(!await confirmAction('重新校准当前配装？','将清除当前配装已积累的校准。正常刷图会重新积累数据，推荐暂时使用预估值。','重新校准',false))return;
+  recommendationBusy=true;renderRecommendations();
+  try{await api('recommendations/calibration/reset',{});await loadRecommendations();toast('当前配装的校准已重置，正常刷图即可重新积累。');}
+  catch(error){toast(error.message,true);}
+  finally{recommendationBusy=false;renderRecommendations();}
+});
+setInterval(()=>{if(!exiting&&activeTab==='recommendations'&&!recommendationBusy)loadRecommendations(true);},3000);
 boot();

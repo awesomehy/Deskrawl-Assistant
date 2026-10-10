@@ -8,6 +8,7 @@ from copy import deepcopy
 import hashlib
 import json
 from pathlib import Path
+import re
 import struct
 import time
 
@@ -15,7 +16,8 @@ from .il2cpp_metadata import MetadataInspector
 from .native_memory import MemoryReadError
 from .paths import RESOURCE_ROOT, runtime_dir
 
-PROFILE_FILES=('runtime-type-hints.json','ui-runtime-hints.json','container-transfer-types.json','carriage-types.json')
+PROFILE_FILES=('runtime-type-hints.json','ui-runtime-hints.json','container-transfer-types.json','carriage-types.json',
+    'experience-types.json','recommendation-types.json')
 ASSET_FILES=('resources.assets','sharedassets0.assets','globalgamemanagers.assets')
 EXPORTS=('il2cpp_class_get_name','il2cpp_class_get_namespace','il2cpp_class_get_parent','il2cpp_class_get_fields',
     'il2cpp_field_get_name','il2cpp_field_get_offset','il2cpp_class_get_static_field_data',
@@ -56,11 +58,11 @@ def match_profiles(inspector,originals):
             key=(t.get('namespace',''),t['name'])
             if key in indices:continue
             found=[n for n,d in enumerate(defs) if (d['namespace'],d['name'])==key]
-            if not found and key==('','gj'):
-                # This registry type is obfuscated; match its entire unique shape.
+            if not found and not key[0] and re.fullmatch('[a-z]{1,4}',key[1]):
+                # Obfuscated types require a unique complete layout match.
                 shape=field_shape(t['fields'])
                 found=[n for n,d in enumerate(defs) if not d['namespace'] and field_shape(inspector.fields(n))==shape]
-                if len(found)==1:aliases[defs[found[0]]['name']]='gj'
+                if len(found)==1:aliases[defs[found[0]]['name']]=key[1]
             if len(found)!=1:raise CompatibilityError('类型缺失或存在歧义',key[1])
             n=found[0];fields=inspector.fields(n)
             canonical=lambda name:aliases.get(name,name)
@@ -69,8 +71,11 @@ def match_profiles(inspector,originals):
     for source in output.values():
         for t in type_rows(source):
             key=(t.get('namespace',''),t['name']);n=indices[key]
-            t.update({'name':defs[n]['name'],'logicalName':key[1],'typeDefinitionIndex':n,
+            t.update({'name':defs[n]['name'],'logicalName':t.get('logicalName',key[1]),'typeDefinitionIndex':n,
                 'fields':deepcopy(inspector.fields(n)),'methods':deepcopy(inspector.methods(n))})
+        if isinstance(source,dict):
+            if 'metadataSha256' in source:source['metadataSha256']=hashlib.sha256(inspector.meta).hexdigest()
+            if 'gameAssemblySha256' in source:source['gameAssemblySha256']=hashlib.sha256(inspector.pe.data).hexdigest()
     runtime=output['runtime-type-hints.json']
     runtime['metadataSha256']=hashlib.sha256(inspector.meta).hexdigest()
     runtime['gameAssemblySha256']=hashlib.sha256(inspector.pe.data).hexdigest()
@@ -222,3 +227,16 @@ def native_rva(reader,key,default):return getattr(reader,'native_layout',{}).get
 def assert_current(reader):
     check=getattr(reader,'check_game_files',None)
     if check:check()
+
+
+def resolved_profile(reader,filename):
+    """Use connection-verified profiles; exact baseline fallback supports tests."""
+    assert_current(reader)
+    available=getattr(reader,'resolved_profiles',None)
+    if available is not None:
+        if filename not in available:raise CompatibilityError('读取配置未经兼容性核验',filename)
+        return available[filename]
+    profile=json.loads((RESOURCE_ROOT/'data'/filename).read_text(encoding='utf-8'))
+    if any(reader.profile.get(k)!=profile[k] for k in ('metadataSha256','gameAssemblySha256')):
+        raise CompatibilityError('游戏版本与读取结构不一致',filename)
+    return profile

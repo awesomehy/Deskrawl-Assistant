@@ -17,6 +17,8 @@ from .loot_monitor import LootState
 from .action_log import record
 from .paths import RESOURCE_ROOT, rules_file, runtime_dir
 from .activity_journal import ActivityJournal, ItemActivityTracker, operation_id
+from .experience import ExperienceBook
+from .recommendation_book import RecommendationBook
 from .automation import DEFAULT_SETTINGS, validate_settings, pressure_candidates, free_slots
 from copy import deepcopy
 from .version import VERSION
@@ -57,6 +59,12 @@ class AssistantService:
         self.client = client or RuntimeClient()
         self.config = Path(config) if config else rules_file()
         self.journal = ActivityJournal((self.config.parent if config else runtime_dir()) / 'activity.sqlite3')
+        self.experience = ExperienceBook((self.config.parent if config else runtime_dir()) / 'experience.sqlite3')
+        self.recommendations = RecommendationBook((self.config.parent if config else runtime_dir()) / 'recommendations.sqlite3')
+        self.recommendation_live = {'available': False, 'reason': '连接游戏后可自动推荐刷图。'}
+        self.recommendation_updated_at = None
+        self.recommendation_catalog = None
+        self.recommendation_guard = threading.RLock()
         self.activity = ItemActivityTracker(self.journal, self._describe_item)
         self.client.item_events = self._record_item_commit
         self.operation_kind = None
@@ -94,6 +102,8 @@ class AssistantService:
         self.worker = None
         self.monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
         self.monitor_thread.start()
+        self.recommendation_thread = threading.Thread(target=self._recommendation_loop, daemon=True)
+        self.recommendation_thread.start()
 
     def _describe_item(self, key):
         entry = self.item_names.get(key, {})
@@ -104,6 +114,140 @@ class AssistantService:
 
     def log_page(self, **filters):
         return self.journal.page(**filters)
+
+    def experience_live(self):
+        if not self.client.connected:
+            return {'available': False, 'error': '连接游戏后可读取角色经验；也可手动录入采样。'}
+        try:
+            return self.client.experience_snapshot()
+        except Exception as exc:
+            return {'available': False, 'error': '经验读取暂不可用：' + str(exc)}
+
+    def experience_page(self, **filters):
+        payload = self.experience.page(**filters)
+        payload['live'] = self.experience_live()
+        return payload
+
+    def experience_action(self, action, data):
+        with self.guard:
+            if self.closed.is_set():
+                raise ValueError('助手已退出。')
+            if self.updating:
+                raise ValueError('正在更新程序，请稍候。')
+            if action == 'sample':
+                result = self.experience.add(data)
+            elif action == 'delete':
+                self.experience.delete(data.get('id'))
+                result = {'ok': True}
+            elif action == 'start':
+                live = self.experience_live()
+                data = dict(data)
+                if not data.get('profile') and live.get('available'):
+                    data['profile'] = live.get('profile') or live.get('character') or ''
+                result = self.experience.start(data, live)
+            elif action == 'finish':
+                result = self.experience.finish(data, self.experience_live() if data.get('xp') is None else None)
+            elif action == 'cancel':
+                self.experience.cancel()
+                return {'ok': True}
+            else:
+                raise ValueError('经验操作不存在。')
+            return result
+
+    def _recommendation_data(self):
+        if self.recommendation_catalog is None:
+            from .recommendation import load_recommendation_catalog
+            self.recommendation_catalog = load_recommendation_catalog()
+        return self.recommendation_catalog
+
+    def _recommendation_difficulties(self):
+        catalog = self._recommendation_data()
+        return list(catalog.get('difficulties', {'Normal': {}}))
+
+    def _observe_recommendation(self):
+        from datetime import datetime, timezone
+        with self.recommendation_guard:
+            if not self.client.connected or not hasattr(self.client, 'recommendation_snapshot'):
+                value = {'available': False, 'reason': '连接游戏后可自动推荐刷图。'}
+                self.recommendations.invalidate()
+            else:
+                try:
+                    value = self.client.recommendation_snapshot()
+                    if value.get('available'):
+                        from .recommendation import profile_effective_combat
+                        profile = value.get('profile') or {}
+                        profile['combat'] = profile_effective_combat(profile, self._recommendation_data())
+                        profile['combat']['xp_gain_multiplier'] = profile.get('xp_gain_multiplier')
+                        value['profile'] = profile
+                        run = value.get('run') or {}
+                        stage = next((m for m in self._recommendation_data()['maps'] if m['map_id']==run.get('map_id')), None)
+                        if stage:
+                            run['family'] = stage['family']
+                            from .recommendation import estimate_run
+                            summary = {'normal_health':run.get('planned_normal_health',0), 'boss_health':run.get('planned_boss_health',0),
+                                'normal_waves':run.get('normal_waves',max(0,stage['waves']-int(stage['boss']))),
+                                'boss_waves':run.get('boss_waves',int(stage['boss'])), 'waves':run.get('wave_count',stage['waves'])}
+                            estimated = estimate_run(profile, summary, self._recommendation_data())
+                            if estimated.get('available'):
+                                for field in ('normal_fixed_seconds','boss_fixed_seconds','fixed_seconds'):
+                                    run[field] = estimated[field]
+                            value['run'] = run
+                    experience = self.experience_live()
+                    self.recommendations.observe(value, experience)
+                except Exception as exc:
+                    value = {'available': False, 'reason': '角色读取暂不可用：' + str(exc)}
+                    self.recommendations.invalidate('读取暂时中断，等待下一轮完整刷图。')
+            self.recommendation_live = value
+            self.recommendation_updated_at = datetime.now(timezone.utc).isoformat()
+            return value
+
+    def _recommendation_loop(self):
+        while not self.closed.wait(0.75):
+            if self.client.connected and hasattr(self.client, 'recommendation_snapshot'):
+                self._observe_recommendation()
+            else:
+                with self.recommendation_guard:
+                    self.recommendation_live = {'available': False, 'reason': '连接游戏后可自动推荐刷图。'}
+                    self.recommendations.invalidate()
+
+    def recommendation_page(self):
+        from .recommendation import recommend_maps
+        from datetime import datetime, timezone
+        with self.recommendation_guard:
+            value = deepcopy(self.recommendation_live)
+            settings = self.recommendations.settings(self._recommendation_difficulties())
+            profile = value.get('profile') or {}
+            calibration = self.recommendations.calibration(profile)
+            payload = recommend_maps(profile, self._recommendation_data(), calibration, settings) if value.get('available') else {
+                'available': False, 'rows': [], 'best': None, 'reason': value.get('reason') or '角色数据尚不可读取。'}
+            run = value.get('run') or {}
+            current = {k:run.get(k) for k in ('map_id','stage','planned_xp','phase','difficulty','xp_source')}
+            if run.get('map_id'):
+                current['stage'] = next((m['stage'] for m in self._recommendation_data()['maps'] if m['map_id']==run['map_id']), run.get('stage') or run['map_id'])
+                current['phase'] = {'normal':'普通波','boss':'Boss 波','idle':'准备中'}.get(run.get('phase'), run.get('phase'))
+            payload.update(settings=settings, minutes=settings['minutes'], difficulty=settings['difficulty'],
+                character={'level':profile.get('level'), 'name':profile.get('label') or profile.get('character'), 'class':profile.get('class')},
+                current=current if run.get('map_id') else None,
+                calibration={k:v for k,v in calibration.items() if k!='runs'},
+                updated_at=self.recommendation_updated_at or datetime.now(timezone.utc).isoformat(),
+                error=payload.get('reason') if not payload.get('available') else None,
+                difficulty_options=[{'value':'current','label':'跟随当前图'}] + [
+                    {'value':d.get('value', d.get('id')),'label':d['label']}
+                    for d in self._recommendation_data().get('difficulty_options', [])])
+            payload['warnings'] = list(dict.fromkeys(payload.get('warnings', []) + value.get('warnings', [])))
+            return payload
+
+    def recommendation_settings(self, data):
+        with self.recommendation_guard:
+            if self.closed.is_set():
+                raise ValueError('助手已退出。')
+            value = data.get('settings', data)
+            return {'settings':self.recommendations.save_settings(value, self._recommendation_difficulties())}
+
+    def recommendation_reset(self):
+        with self.recommendation_guard:
+            self.recommendations.reset((self.recommendation_live.get('profile') or {}))
+            return {'ok':True}
 
     def _record_item_commit(self, event, result):
         if result.get('journal_recorded'): return
@@ -763,4 +907,5 @@ class AssistantService:
         self.closed.set()
         worker = self.worker
         if worker and worker is not threading.current_thread(): worker.join(10)
+        if self.recommendation_thread is not threading.current_thread(): self.recommendation_thread.join(10)
         self.client.close()

@@ -14,9 +14,10 @@ import struct
 
 from .native_memory import MemoryReadError, SnapshotChangedError
 from .paths import RESOURCE_ROOT
+from .game_compatibility import native_rva, resolved_profile
 
-GAME_MANAGER_RVA = 0x3A18BF8
-PLAYER_DATA_RVA = 0x3A1CBB8
+GAME_MANAGER_RVA = 0x3A17CD8
+PLAYER_DATA_RVA = 0x3A1BA98
 
 
 def _hash32(raw):
@@ -104,10 +105,8 @@ def _profile():
 
 
 def _snapshot(reader):
-    profile = _profile()
-    if any(reader.profile.get(key) != profile[key] for key in ('metadataSha256', 'gameAssemblySha256')):
-        raise MemoryReadError('游戏版本与已验证经验结构不一致。')
-    profiles = {entry['name']: entry for entry in profile['types']}
+    profile = resolved_profile(reader, 'experience-types.json')
+    profiles = {entry.get('logicalName',entry['name']): entry for entry in profile['types']}
     memory = reader.memory
     guards = []
 
@@ -122,7 +121,7 @@ def _snapshot(reader):
     def verify_class(klass, name):
         expected = [{'name': field['name'], 'offset': field['rawRegistrationOffset'],
                      'token': int(field['token'], 16)} for field in profiles[name]['fields']]
-        if not klass or reader.class_name(klass) != name or reader.fields(klass) != expected:
+        if not klass or reader.class_name(klass) != profiles[name]['name'] or reader.fields(klass) != expected:
             raise MemoryReadError(f'{name} 的经验读取字段与已验证版本不一致。')
         return klass
 
@@ -137,10 +136,10 @@ def _snapshot(reader):
         static = pointer(klass + 184)
         return verify(pointer(static), name)
 
-    manager = singleton(GAME_MANAGER_RVA, 'GameManager')
+    manager = singleton(native_rva(reader,'game_manager_rva',GAME_MANAGER_RVA), 'GameManager')
     if struct.unpack('<i', read(manager + 168, 4))[0] != 1:
         raise MemoryReadError('游戏尚未进入角色，暂停读取经验。')
-    player = singleton(PLAYER_DATA_RVA, 'PlayerData')
+    player = singleton(native_rva(reader,'player_data_rva',PLAYER_DATA_RVA), 'PlayerData')
     config_obj = verify(pointer(manager + 32), 'GameConfig')
     save = verify(reader.singleton('SaveSystem'), 'SaveSystem')
     # Copy all related numeric fields as a single range; recheck after decoding.

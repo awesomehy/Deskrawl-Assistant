@@ -34,7 +34,7 @@ def decode_obscured_float(data: bytes) -> float:
     saved_hash, hidden, key, _, _ = struct.unpack("<IIIfI", data)
     if saved_hash == hidden == key == 0:
         return 0.0
-    # Verified from ACTk.Runtime!op_Implicit -> jyr (RVA 0x454aa0):
+    # Verified from 1.0.2a ACTk.Runtime!op_Implicit -> kdh (RVA 0x453aa0):
     # exchange hidden bytes 1 and 2, then XOR with this value's key.
     encoded = bytearray(struct.pack("<I", hidden))
     encoded[1], encoded[2] = encoded[2], encoded[1]
@@ -52,7 +52,7 @@ def decode_obscured_float(data: bytes) -> float:
 
 
 class NativeReader:
-    def __init__(self, pid: int):
+    def __init__(self, pid: int, on_compatibility=lambda state: None):
         self.memory = ProcessMemory(pid)
         self.pid = pid
         self.session_id = f"{pid}-{uuid.uuid4().hex}"
@@ -61,6 +61,7 @@ class NativeReader:
         self.field_cache = {}
         self.item_cache = {}
         self.snapshot_stamps = []
+        self.on_compatibility = on_compatibility
         self.catalog = load_catalog(BASE / "data/game-catalog.json")
         self.profile = json.loads((BASE / "data/runtime-type-hints.json").read_text(encoding="utf-8"))
         self.types = {entry["name"]: entry for entry in self.profile["types"] if not entry["namespace"]}
@@ -81,13 +82,40 @@ class NativeReader:
         root = self.memory.path.parent
         if Path(module["path"]).parent != root:
             raise MemoryReadError("游戏模块路径与进程不一致")
-        meta_path = root / "Deskrawl_Data/il2cpp_data/Metadata/global-metadata.dat"
-        self.metadata = meta_path.read_bytes()
-        if hashlib.sha256(self.metadata).hexdigest() != self.profile["metadataSha256"]:
-            raise MemoryReadError("游戏版本已变化，需要重新适配读取结构")
-        if hashlib.sha256(Path(module["path"]).read_bytes()).hexdigest() != self.profile["gameAssemblySha256"]:
-            raise MemoryReadError("游戏程序版本与已验证布局不一致")
+        from .game_compatibility import resolve, type_rows
+        result = resolve(root, Path(module['path']), self.on_compatibility)
+        self.metadata = result['metadata']
+        self.resolved_profiles = result['profiles']
+        self.profile = result['profiles']['runtime-type-hints.json']
+        self.types = {t.get('logicalName',t['name']):t for t in self.profile['types'] if not t['namespace']}
+        self.types.update({t.get('logicalName',t['name']):t for t in type_rows(result['profiles']['ui-runtime-hints.json'])})
+        self._transfer_profiles = {t.get('logicalName',t['name']):t for t in type_rows(result['profiles']['container-transfer-types.json'])}
+        self._transfer_verified = set()
+        self._carriage_profiles = {t.get('logicalName',t['name']):t for t in type_rows(result['profiles']['carriage-types.json'])}
+        self.native_layout = result['native_layout']
+        self.compatibility_bindings = result['bindings']
+        self.compatibility_status = result['status']
+        self.file_stamps = result['file_stamps']
         self.module = module
+
+    def check_game_files(self):
+        from .game_compatibility import CompatibilityError
+        assets = {p.name for p in (self.memory.path.parent/'Deskrawl_Data').glob('*.assets')}
+        expected_assets = {Path(p).name for p in self.file_stamps if p.endswith('.assets')}
+        if assets != expected_assets:
+            self.compatibility_status = {'phase':'changed','message':'游戏资源文件已变化，请重新连接检测。'}
+            self.on_compatibility(self.compatibility_status)
+            raise CompatibilityError('连接期间游戏资源文件有增减，请重新连接')
+        for filename, expected in self.file_stamps.items():
+            try:
+                current = Path(filename).stat()
+                unchanged = (current.st_size,current.st_mtime_ns) == expected
+            except OSError:
+                unchanged = False
+            if not unchanged:
+                self.compatibility_status = {'phase':'changed','message':'游戏文件已更新，请断开并重新连接，自动检测兼容性。'}
+                self.on_compatibility(self.compatibility_status)
+                raise CompatibilityError('连接期间游戏文件已变化，请重新连接')
 
     def _locate_classes(self):
         p = self.memory
@@ -426,9 +454,11 @@ class NativeReader:
         return {"pid": self.pid, "backend": "external_read_only", "bridge_version": "0.2.0-external",
             "bridge_session": self.session_id, "module": {"path": self.module["path"]},
             "metadata_sha256": self.profile["metadataSha256"], "classes": list(self.classes),
+            "compatibility": self.compatibility_status,
             "discovery_seconds": self.discovery_seconds, "capabilities": {"read_only": True, "injection": False, "writes": False}}
 
     def snapshot(self, max_items=2048):
+        self.check_game_files()
         started = time.monotonic()
         p = self.memory
         self.capture += 1

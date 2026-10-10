@@ -147,7 +147,7 @@ class ObservationTests(unittest.TestCase):
         self.assertIsNotNone(self.book.active)
 
     def test_settings_persist_without_importing_rule_data(self):
-        value = {'minutes':30,'difficulty':'Normal','sort':'rate','overhead_seconds':0,'include_locked':False}
+        value = {'minutes':30,'difficulty':'Normal','sort':'rate','overhead_seconds':0,'overhead_mode':'manual','include_locked':False}
         self.book.save_settings(value,['Normal'])
         other=RecommendationBook(self.book.path)
         self.assertEqual(other.settings(['Normal']),value)
@@ -164,6 +164,15 @@ class ObservationTests(unittest.TestCase):
                       {'difficulty':'Unknown'},{'sort':'bad'},{'include_locked':1},{'untrusted':1}):
             with self.subTest(value=value):
                 with self.assertRaises(ValueError):validate_settings(value,['Normal'])
+
+    def test_overhead_mode_persists_and_migrates_explicit_legacy_values(self):
+        self.assertEqual(self.book.settings(['Normal'])['overhead_mode'],'auto')
+        value=self.book.save_settings({'overhead_seconds':8},['Normal'])
+        self.assertEqual(value['overhead_mode'],'manual')
+        self.assertEqual(RecommendationBook(self.book.path).settings(['Normal'])['overhead_mode'],'manual')
+        self.book.save_settings({'overhead_mode':'auto','overhead_seconds':8},['Normal'])
+        self.assertEqual(RecommendationBook(self.book.path).settings(['Normal'])['overhead_mode'],'auto')
+        with self.assertRaises(ValueError):self.book.save_settings({'overhead_mode':'invalid'},['Normal'])
 
 
 if __name__=='__main__':unittest.main()

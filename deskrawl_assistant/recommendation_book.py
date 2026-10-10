@@ -15,7 +15,7 @@ import sqlite3
 import threading
 import time
 
-DEFAULTS = {"minutes": 60, "difficulty": "current", "overhead_seconds": 8,
+DEFAULTS = {"minutes": 60, "difficulty": "current", "overhead_seconds": 8, "overhead_mode": "auto",
             "include_locked": True, "sort": "completed"}
 
 
@@ -23,6 +23,10 @@ def validate_settings(value, difficulties):
     if not isinstance(value, dict) or set(value) - set(DEFAULTS):
         raise ValueError("刷图推荐设置无效。")
     result = DEFAULTS | value
+    if 'overhead_mode' not in value and 'overhead_seconds' in value:
+        result['overhead_mode']='manual'
+    if result['overhead_mode'] not in ('auto','manual'):
+        raise ValueError('重开耗时模式无效。')
     for key, maximum, positive in (("minutes", 10080, True), ("overhead_seconds", 300, False)):
         number = result[key]
         if type(number) not in (int, float) or not math.isfinite(number) or number < 0 or number > maximum or (positive and number <= 0):

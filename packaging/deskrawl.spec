@@ -1,6 +1,6 @@
 from pathlib import Path
 import os
-from PyInstaller.utils.hooks import collect_data_files
+from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
 
 root = Path(SPECPATH).parent
 assets = [
@@ -15,6 +15,7 @@ assets = [
     'container-transfer-types.json',
     'carriage-types.json',
     'item-ui.json',
+    'compatibility-baseline.json',
 ]
 datas = [(str(root / 'data' / name), 'data') for name in assets]
 datas.append((str(root / 'deskrawl_assistant' / 'web'), 'deskrawl_assistant/web'))
@@ -24,7 +25,7 @@ datas += collect_data_files('webview', subdir='js')
 a = Analysis(
     [str(root / 'run_assistant.pyw')],
     pathex=[str(root)],
-    binaries=[],
+    binaries=collect_dynamic_libs('capstone'),
     datas=datas,
     hiddenimports=[],
     hookspath=[],
@@ -41,7 +42,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='Deskrawl装备助手-v1.1.7',
+    name='Deskrawl装备助手-v1.2.0',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

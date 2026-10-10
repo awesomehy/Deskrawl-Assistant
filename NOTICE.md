@@ -2,7 +2,7 @@
 
 装备、宝石与符文图标、物品名称、效果说明、游戏本地化字典，以及推荐所需的地图、怪物和波次配置来自 Deskrawl，相关权利归游戏权利人所有。本仓库没有包含游戏程序或游戏存档。README 中的使用截图由用户提供。
 
-运行及打包使用 Python、pywebview、pythonnet、PyInstaller 等组件；发行包由 `tools/build_exe.py` 自动收集对应组件的许可证，写入“第三方许可.txt”。提取资源时使用 UnityPy，日常运行助手不依赖它。
+运行及打包使用 Python、pywebview、pythonnet、PyInstaller、Capstone 等组件；发行包由 `tools/build_exe.py` 自动收集对应组件的许可证，写入“第三方许可.txt”。Capstone 用于只读分析未知游戏版本的本地指令。提取资源时使用 UnityPy，日常运行助手不依赖它。
 
 WebView2 Runtime 属于 Microsoft。可选安装程序从微软官方下载，不纳入源码仓库；安装程序显示其适用许可条款。
 

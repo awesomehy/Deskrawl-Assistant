@@ -15,11 +15,12 @@ from .experience_reader import decode_obscured_int, decode_obscured_long
 from .native_memory import MemoryReadError, SnapshotChangedError
 from .native_reader import decode_obscured_float
 from .paths import RESOURCE_ROOT
+from .game_compatibility import native_rva, resolved_profile
 
-MANAGER_RVA = 0x3A18BF8
-DATA_RVA = 0x3A1CBB8
-BOOK_RVA = 0x3A18C08
-DIFFICULTY_RVA = 0x3A1F840
+MANAGER_RVA = 0x3A17CD8
+DATA_RVA = 0x3A1BA98
+BOOK_RVA = 0x3A17D08
+DIFFICULTY_RVA = 0x3A1E438
 
 
 def decode_obscured_double(raw):
@@ -118,10 +119,8 @@ def _catalog():
 class _Copy:
     def __init__(self, reader):
         self.reader, self.memory, self.guards = reader, reader.memory, []
-        hints = _hints()
-        if any(reader.profile.get(k) != hints[k] for k in ('metadataSha256', 'gameAssemblySha256')):
-            raise MemoryReadError('游戏版本与推荐属性结构不一致。')
-        self.types = {entry['name']: entry for entry in hints['types']}
+        hints = resolved_profile(reader, 'recommendation-types.json')
+        self.types = {entry.get('logicalName',entry['name']): entry for entry in hints['types']}
         self.verified = set()
 
     def read(self, address, size, stable=True):
@@ -152,7 +151,7 @@ class _Copy:
         if (klass, name) not in self.verified:
             expected = [{'name': f['name'], 'offset': f['rawRegistrationOffset'], 'token': int(f['token'], 16)}
                         for f in self.types[name]['fields']]
-            if not klass or self.reader.class_name(klass) != name or self.reader.fields(klass) != expected:
+            if not klass or self.reader.class_name(klass) != self.types[name]['name'] or self.reader.fields(klass) != expected:
                 raise MemoryReadError(f'{name} 的推荐字段与已验证版本不一致。')
             self.verified.add((klass, name))
         return klass
@@ -164,6 +163,9 @@ class _Copy:
         return obj
 
     def singleton(self, rva, name):
+        key={'GameManager':'game_manager_rva','PlayerData':'player_data_rva','PlayerAbilityBook':'ability_book_rva',
+             'EquipmentManager':'equipment_manager_rva','RuneManager':'rune_manager_rva','PlayerTalentBook':'talent_book_rva'}.get(name)
+        if key:rva=native_rva(self.reader,key,rva)
         klass = self.klass(self.ptr(self.reader.module['base'] + rva), name)
         return self.verify(self.ptr(self.ptr(klass + 184)), name)
 
@@ -345,8 +347,8 @@ def _skills(copy, controller, player, stats, warnings):
     return slots, frequency
 
 
-def _run(copy, manager, wave, catalog, difficulty):
-    from .recommendation import enemy_health, enemy_xp
+def _run(copy, manager, wave, catalog, difficulty, *, player_level, xp_gain_multiplier):
+    from .recommendation import difficulty_id, enemy_health, enemy_xp
     config = catalog['config']
     plan = copy.ptr(manager + 120)
     active_map = copy.ptr(manager + 112)
@@ -358,7 +360,7 @@ def _run(copy, manager, wave, catalog, difficulty):
         raise SnapshotChangedError('当前关卡计划正在切换。')
     raw_id = copy.reader.string(copy.ptr(plan + 16)) or ''
     map_id = copy.reader.string(copy.ptr(plan + 24)) or ''
-    plan_difficulty = copy.reader.string(copy.ptr(plan + 48)) or ''
+    plan_difficulty = difficulty_id(copy.reader.string(copy.ptr(plan + 48)) or '')
     if not raw_id or map_id != copy.reader.asset_name(active_map) or plan_difficulty != difficulty:
         raise SnapshotChangedError('关卡身份尚未稳定。')
     wave_index = copy.integer(wave + 48)
@@ -370,9 +372,6 @@ def _run(copy, manager, wave, catalog, difficulty):
     difficulty_config = dict(catalog['difficulties'][difficulty])
     if health_multiplier > 0:
         difficulty_config['health_multiplier'] = health_multiplier
-    finds = copy.verify(copy.ptr(plan + 56), 'RunFinds')
-    run_xp_multiplier = 1 + copy.number(finds + 32)
-    run_player_level = copy.integer(plan + 40)
     normal_health = boss_health = total_xp = 0
     xp_fallback = False
     normal_waves = boss_waves = 0
@@ -391,8 +390,6 @@ def _run(copy, manager, wave, catalog, difficulty):
         level = copy.integer(current + 32)
         if not 1 <= level <= 200:
             raise MemoryReadError('规划敌人等级无效。')
-        growth = math.prod((1 + coefficient) ** n for coefficient, n in zip(config['health_growth'],
-                          (min(level - 1, 29), min(max(level - 30, 0), 20), min(max(level - 50, 0), 20))))
         subtotal = 0
         for enemy_raw in copy.array(copy.ptr(current + 40), 8, 'PlanEnemy', limit=1024):
             enemy = copy.verify(struct.unpack('<Q', enemy_raw)[0], 'PlanEnemy')
@@ -409,7 +406,7 @@ def _run(copy, manager, wave, catalog, difficulty):
                 raise MemoryReadError('规划敌人收益无效。')
             subtotal += count * enemy_health(base_health, level, difficulty_config, config, elite=wave_type.casefold() == 'elite')
             if xp <= 0:
-                xp = enemy_xp(base_health, level, run_player_level, run_xp_multiplier, difficulty_config['xp_multiplier'], config)
+                xp = enemy_xp(base_health, level, player_level, xp_gain_multiplier, difficulty_config['xp_multiplier'], config)
                 xp_fallback = True
             total_xp += count * xp
         if is_boss_wave:
@@ -439,13 +436,13 @@ def _run(copy, manager, wave, catalog, difficulty):
 
 def _loadout_identity(copy):
     """Permanent asset/UID identity; no snapshot scan or native calls."""
-    equipment = copy.singleton(0x3A1A580, 'EquipmentManager')
+    equipment = copy.singleton(0x3A19650, 'EquipmentManager')
     items = copy.dictionary(copy.ptr(equipment + 40), 'pointer')
     item_uids = copy.dictionary(copy.ptr(equipment + 48), 'pointer')
     equipped = [{'slot': slot, 'asset_id': copy.reader.asset_name(item),
                  'uid': copy.reader.string(item_uids.get(slot, 0)) or ''}
                 for slot, item in sorted(items.items()) if item]
-    rune_manager = copy.singleton(0x3A1CB70, 'RuneManager')
+    rune_manager = copy.singleton(0x3A1BA88, 'RuneManager')
     rune_objects = copy.array(copy.ptr(rune_manager + 48), 8, 'RuneData', limit=64)
     rune_uids = copy.array(copy.ptr(rune_manager + 56), 8, 'String', limit=64)
     if len(rune_objects) != len(rune_uids):
@@ -457,7 +454,7 @@ def _loadout_identity(copy):
             copy.verify(rune, 'RuneData')
             runes.append({'slot': slot, 'asset_id': copy.reader.asset_name(rune),
                           'uid': copy.reader.string(uid) or ''})
-    talent_book = copy.singleton(0x3A1CB68, 'PlayerTalentBook')
+    talent_book = copy.singleton(0x3A1BA80, 'PlayerTalentBook')
     talents = []
     for talent, points in copy.dictionary(copy.ptr(talent_book + 40), 'int', 'object').items():
         if points:
@@ -520,7 +517,7 @@ def _snapshot(reader):
     if not 0 <= hp_current <= hp_max <= 1e15:
         raise MemoryReadError('当前生命数值无效。')
     dead = copy.boolean(player + 296)
-    diff_klass = copy.klass(copy.ptr(reader.module['base'] + DIFFICULTY_RVA), 'ey')
+    diff_klass = copy.klass(copy.ptr(reader.module['base'] + native_rva(reader,'difficulty_rva',DIFFICULTY_RVA)), 'ey')
     diff_enum = copy.integer(copy.ptr(diff_klass + 184))
     difficulty = {0: 'Normal', 1: 'Nightmare', 2: 'Inferno'}.get(diff_enum)
     if not difficulty:
@@ -559,7 +556,7 @@ def _snapshot(reader):
         provenance[key] = {'unit': 'HP', 'source': 'PlayerData_live_final_field', 'quality': 'verified'}
     for key in ('normal_dps', 'boss_dps'):
         provenance[key] = {'unit': 'damage_per_second', 'source': 'model_required', 'quality': 'theoretical'}
-    run = _run(copy, manager, wave, catalog, difficulty)
+    run = _run(copy, manager, wave, catalog, difficulty, player_level=level, xp_gain_multiplier=max(0,1+stats[41]))
     if run:
         run['dead'] = dead
         if dead:

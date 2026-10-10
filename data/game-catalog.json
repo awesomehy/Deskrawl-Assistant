@@ -3,13 +3,13 @@
   "scope": "Static shipped localization only. No character, save, account or UI TextAsset data.",
   "source": {
     "path": "G:\\SteamLibrary\\steamapps\\common\\Deskrawl\\Deskrawl_Data\\resources.assets",
-    "size_bytes": 15695192,
-    "sha256": "ff823400ac4fa0a0b1d62034192604dc17da52d9b213f86b49085ac931750de0",
+    "size_bytes": 15698248,
+    "sha256": "a2613ec5654eaf488cd8dd04da676165491e4178a1cf613e9eef9178babdf9ae",
     "unity_version": "6000.3.6f1",
     "game_version": null,
     "game_version_note": "Not inferred from localization or Unity version; verify separately in the running client."
   },
-  "extracted_at_utc": "2026-10-09T01:27:36.548597+00:00",
+  "extracted_at_utc": "2026-10-10T01:27:59.713320+00:00",
   "extractor": {
     "name": "extract_catalog.py",
     "unitypy_version": "1.25.2"
@@ -2205,7 +2205,7 @@
       }
     },
     "Equipments": {
-      "source_path_id": 676,
+      "source_path_id": 677,
       "columns": [
         "Key",
         "English",
@@ -13993,7 +13993,7 @@
       }
     },
     "Abilities": {
-      "source_path_id": 680,
+      "source_path_id": 681,
       "columns": [
         "Key",
         "English",
@@ -16958,19 +16958,19 @@
         },
         "Dizzy.Desc": {
           "Key": "Dizzy.Desc",
-          "English": "Movement Speed is reduced by {moveSpeed}.",
-          "Chinese (Simplified)": "移动速度降低{moveSpeed}。",
-          "Chinese (Traditional)": "移動速度降低{moveSpeed}。",
-          "Russian": "Скорость передвижения снижена на {moveSpeed}.",
-          "Spanish": "La velocidad de movimiento se reduce en {moveSpeed}.",
-          "French": "La vitesse de déplacement est réduite de {moveSpeed}.",
-          "German": "Bewegungsgeschwindigkeit wird um {moveSpeed} verringert.",
-          "Portuguese (Brazil)": "A velocidade de movimento é reduzida em {moveSpeed}.",
-          "Polish": "Szybkość ruchu jest zmniejszona o {moveSpeed}.",
-          "Korean": "이동 속도가 {moveSpeed} 감소합니다.",
-          "Japanese": "移動速度が{moveSpeed}低下する。",
-          "Thai": "ความเร็วเคลื่อนที่ลดลง {moveSpeed}",
-          "Turkish": "Hareket Hızı {moveSpeed} azalır."
+          "English": "Attack Speed is reduced by {attackSpeed} and Movement Speed by {moveSpeed}.",
+          "Chinese (Simplified)": "攻击速度降低{attackSpeed}，移动速度降低{moveSpeed}。",
+          "Chinese (Traditional)": "攻擊速度降低{attackSpeed}，移動速度降低{moveSpeed}。",
+          "Russian": "Скорость атаки снижена на {attackSpeed}, а скорость передвижения — на {moveSpeed}.",
+          "Spanish": "La velocidad de ataque se reduce en {attackSpeed} y la velocidad de movimiento en {moveSpeed}.",
+          "French": "La vitesse d'attaque est réduite de {attackSpeed} et la vitesse de déplacement de {moveSpeed}.",
+          "German": "Angriffsgeschwindigkeit wird um {attackSpeed} und Bewegungsgeschwindigkeit um {moveSpeed} verringert.",
+          "Portuguese (Brazil)": "A velocidade de ataque é reduzida em {attackSpeed} e a velocidade de movimento em {moveSpeed}.",
+          "Polish": "Szybkość ataku jest zmniejszona o {attackSpeed} oraz szybkość ruchu o {moveSpeed}.",
+          "Korean": "공격 속도가 {attackSpeed} 및 이동 속도가 {moveSpeed} 감소합니다.",
+          "Japanese": "攻撃速度が{attackSpeed}、移動速度が{moveSpeed}低下する。",
+          "Thai": "ความเร็วโจมตีลดลง {attackSpeed} และความเร็วเคลื่อนที่ลดลง {moveSpeed}",
+          "Turkish": "Saldırı Hızı {attackSpeed} ve Hareket Hızı {moveSpeed} azalır."
         },
         "HunterBasicAttack1": {
           "Key": "HunterBasicAttack1",
@@ -17310,19 +17310,19 @@
         },
         "HunterSpecial3.Desc": {
           "Key": "HunterSpecial3.Desc",
-          "English": "Set a trap that detonates when an enemy steps on it, dealing {weaponDamage} weapon damage as Arcane damage to everything nearby with a {chance} chance to inflict [Arcane Grip].",
-          "Chinese (Simplified)": "布置一个陷阱，当敌人踏上时引爆，对周围所有敌人造成相当于{weaponDamage}武器伤害的奥术伤害，并有{chance}概率使其陷入[奥术禁锢]。",
-          "Chinese (Traditional)": "布置一個陷阱，當敵人踏上時引爆，對周圍所有敵人造成相當於{weaponDamage}武器傷害的奧術傷害，並有{chance}機率使其陷入[奧術禁錮]。",
-          "Russian": "Установите ловушку, которая взрывается, когда на неё наступает враг, нанося всем вокруг {weaponDamage} урона от оружия в виде тайного урона с {chance} шансом наложить [Тайную Хватку].",
-          "Spanish": "Coloca una trampa que detona cuando un enemigo la pisa, infligiendo a todos los cercanos {weaponDamage} de daño de arma como daño arcano, con un {chance} de probabilidad de aplicar [Agarre Arcano].",
-          "French": "Posez un piège qui explose lorsqu'un ennemi marche dessus, infligeant à tous les ennemis proches {weaponDamage} des dégâts d'arme en dégâts arcaniques, avec {chance} de chance d'infliger [Étreinte Arcanique].",
-          "German": "Legt eine Falle, die explodiert, sobald ein Feind sie betritt, und allen Feinden in der Nähe {weaponDamage} des Waffenschadens als Arkanschaden zufügt, mit {chance} Chance, [Arkaner Griff] zu verursachen.",
-          "Portuguese (Brazil)": "Coloca uma armadilha que detona quando um inimigo a pisa, causando a todos por perto {weaponDamage} do dano da arma como dano arcano, com {chance} de chance de infligir [Aperto Arcano].",
-          "Polish": "Zastaw pułapkę, która wybucha, gdy nadepnie na nią wróg, zadając wszystkim w pobliżu {weaponDamage} obrażeń od broni jako obrażenia arkaniczne, z {chance} szansą na zadanie [Arkanicznego Uścisku].",
-          "Korean": "적이 밟으면 폭발하는 덫을 설치하여 주변의 모든 적에게 무기 피해의 {weaponDamage}를 비전 피해로 입히고 {chance} 확률로 [비전 속박]을 부여합니다.",
-          "Japanese": "敵が踏むと起爆する罠を設置し、周囲のすべての敵に武器ダメージの{weaponDamage}を秘術ダメージとして与え、{chance}の確率で[秘術の束縛]を付与する。",
-          "Thai": "วางกับดักที่จะระเบิดเมื่อศัตรูเหยียบ สร้างความเสียหายอาวุธ {weaponDamage} เป็นความเสียหายอาร์เคนแก่ทุกเป้าหมายใกล้เคียง พร้อมโอกาส {chance} ทำให้ติด [พันธนาการอาร์เคน]",
-          "Turkish": "Bir düşman üzerine bastığında patlayan bir tuzak kurar; yakındaki herkese {weaponDamage} silah hasarını Gizemli Hasar olarak verir ve {chance} ihtimalle [Gizemli Kavrayış] uygular."
+          "English": "Set a trap that detonates when an enemy steps on it, dealing {weaponDamage} weapon damage as Arcane damage to everything nearby with a {chance} chance to inflict [Arcane Grip]. Also inflicts [Dizzy] on all enemies hit.",
+          "Chinese (Simplified)": "布置一个陷阱，当敌人踏上时引爆，对周围所有敌人造成相当于{weaponDamage}武器伤害的奥术伤害，并有{chance}概率使其陷入[奥术禁锢]。同时使所有命中的敌人陷入[头晕]。",
+          "Chinese (Traditional)": "布置一個陷阱，當敵人踏上時引爆，對周圍所有敵人造成相當於{weaponDamage}武器傷害的奧術傷害，並有{chance}機率使其陷入[奧術禁錮]。同時使所有命中的敵人陷入[頭暈]。",
+          "Russian": "Установите ловушку, которая взрывается, когда на неё наступает враг, нанося всем вокруг {weaponDamage} урона от оружия в виде тайного урона с {chance} шансом наложить [Тайную Хватку]. Также накладывает [Головокружение] на всех поражённых врагов.",
+          "Spanish": "Coloca una trampa que detona cuando un enemigo la pisa, infligiendo a todos los cercanos {weaponDamage} de daño de arma como daño arcano, con un {chance} de probabilidad de aplicar [Agarre Arcano]. También inflige [Mareado] a todos los enemigos alcanzados.",
+          "French": "Posez un piège qui explose lorsqu'un ennemi marche dessus, infligeant à tous les ennemis proches {weaponDamage} des dégâts d'arme en dégâts arcaniques, avec {chance} de chance d'infliger [Étreinte Arcanique]. Inflige également [Vertige] à tous les ennemis touchés.",
+          "German": "Legt eine Falle, die explodiert, sobald ein Feind sie betritt, und allen Feinden in der Nähe {weaponDamage} des Waffenschadens als Arkanschaden zufügt, mit {chance} Chance, [Arkaner Griff] zu verursachen. Fügt außerdem allen getroffenen Feinden [Schwindlig] zu.",
+          "Portuguese (Brazil)": "Coloca uma armadilha que detona quando um inimigo a pisa, causando a todos por perto {weaponDamage} do dano da arma como dano arcano, com {chance} de chance de infligir [Aperto Arcano]. Também inflige [Tonto] a todos os inimigos atingidos.",
+          "Polish": "Zastaw pułapkę, która wybucha, gdy nadepnie na nią wróg, zadając wszystkim w pobliżu {weaponDamage} obrażeń od broni jako obrażenia arkaniczne, z {chance} szansą na zadanie [Arkanicznego Uścisku]. Nakłada również [Zawroty głowy] na wszystkich trafionych wrogów.",
+          "Korean": "적이 밟으면 폭발하는 덫을 설치하여 주변의 모든 적에게 무기 피해의 {weaponDamage}를 비전 피해로 입히고 {chance} 확률로 [비전 속박]을 부여합니다. 또한 적중한 모든 적에게 [어지러움]을 부여합니다.",
+          "Japanese": "敵が踏むと起爆する罠を設置し、周囲のすべての敵に武器ダメージの{weaponDamage}を秘術ダメージとして与え、{chance}の確率で[秘術の束縛]を付与する。さらに、命中したすべての敵に[めまい]を付与する。",
+          "Thai": "วางกับดักที่จะระเบิดเมื่อศัตรูเหยียบ สร้างความเสียหายอาวุธ {weaponDamage} เป็นความเสียหายอาร์เคนแก่ทุกเป้าหมายใกล้เคียง พร้อมโอกาส {chance} ทำให้ติด [พันธนาการอาร์เคน] ทำให้ศัตรูทั้งหมดที่โดนติด [เวียนหัว] ด้วย",
+          "Turkish": "Bir düşman üzerine bastığında patlayan bir tuzak kurar; yakındaki herkese {weaponDamage} silah hasarını Gizemli Hasar olarak verir ve {chance} ihtimalle [Gizemli Kavrayış] uygular. Ayrıca vurulan tüm düşmanlara [Baş Dönmesi] uygular."
         },
         "HunterSpecial4": {
           "Key": "HunterSpecial4",
@@ -18639,7 +18639,7 @@
       }
     },
     "Talents": {
-      "source_path_id": 674,
+      "source_path_id": 673,
       "columns": [
         "Key",
         "English",
@@ -24357,7 +24357,7 @@
       }
     },
     "Slaves": {
-      "source_path_id": 673,
+      "source_path_id": 672,
       "columns": [
         "Key",
         "English",
@@ -28011,7 +28011,7 @@
       }
     },
     "Lifeskills": {
-      "source_path_id": 681,
+      "source_path_id": 682,
       "columns": [
         "Key",
         "English",

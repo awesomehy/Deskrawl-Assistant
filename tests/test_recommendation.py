@@ -223,6 +223,22 @@ class RankingAndCalibrationTests(unittest.TestCase):
         custom = recommend_maps(tiny_profile(), tiny_catalog(), {'runs': runs}, {'overhead_seconds': 12})['rows'][0]
         self.assertEqual(custom['overhead_seconds'], 12)
 
+    def test_manual_default_value_is_never_replaced_by_observations(self):
+        run=dict(fingerprint='same-build',map_id='SnowHill1',difficulty='Normal',outcome='success',run_seconds=11.5,overhead_seconds=4)
+        manual=recommend_maps(tiny_profile(),tiny_catalog(),{'runs':[run]},
+                              {'overhead_mode':'manual','overhead_seconds':8})['rows'][0]
+        auto=recommend_maps(tiny_profile(),tiny_catalog(),{'runs':[run]},
+                            {'overhead_mode':'auto','overhead_seconds':8})['rows'][0]
+        self.assertEqual(manual['overhead_seconds'],8)
+        self.assertEqual(manual['overhead_source'],'manual')
+        self.assertEqual(auto['overhead_seconds'],4)
+        self.assertGreater(auto['completed_runs'],manual['completed_runs'])
+
+    def test_auto_overhead_without_samples_uses_documented_default(self):
+        row=recommend_maps(tiny_profile(),tiny_catalog(),options={'overhead_mode':'auto','overhead_seconds':20})['rows'][0]
+        self.assertEqual(row['overhead_seconds'],8)
+        self.assertEqual(row['overhead_source'],'default')
+
     def test_failure_cycle_uses_known_retained_xp_and_normalizes_bonus(self):
         p = tiny_profile()
         base = dict(fingerprint='same-build', map_id='SnowHill1', difficulty='Normal', level=1, combat={'xp_gain_multiplier': 2})

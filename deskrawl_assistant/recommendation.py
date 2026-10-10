@@ -278,9 +278,12 @@ def _timing(profile, features, combat, options):
     normal_fixed = initial+max(0, features['normal_waves']-1)*between+features['normal_waves']*approach if features['normal_waves'] else 0.0
     boss_fixed = features['boss_waves']*(between+approach) if features['normal_waves'] else features['boss_waves']*(initial+approach)
     fixed = normal_fixed+boss_fixed
+    mode=options.get('overhead_mode','manual' if 'overhead_seconds' in options else 'auto')
+    if mode not in ('auto','manual'):raise ValueError('重开耗时模式无效。')
     return {'normal_seconds': features['normal_health']/combat['normal_dps'], 'boss_seconds': features['boss_health']/combat['boss_dps'],
             'fixed_seconds': fixed, 'normal_fixed_seconds': normal_fixed, 'boss_fixed_seconds': boss_fixed,
-            'overhead_seconds': max(0.0, _number(options.get('overhead_seconds'), 8.0))}
+            'overhead_seconds': 8.0 if mode=='auto' else max(0.0, _number(options.get('overhead_seconds'), 8.0)),
+            'overhead_mode':mode,'overhead_source':'manual' if mode=='manual' else 'default'}
 
 
 def _calibrated_timing(profile, stage, difficulty, features, timing, combat, calibration):
@@ -304,7 +307,7 @@ def _calibrated_timing(profile, stage, difficulty, features, timing, combat, cal
             if hp and seconds and dps and seconds > fixed:
                 ratios.append((seconds-fixed)/(hp/dps))
     adjusted = dict(timing)
-    if not (calibration or {}).get('overhead_user_set') and abs(timing['overhead_seconds']-8.0) < 1e-9:
+    if timing['overhead_mode']=='auto':
         observed_overheads = [r['overhead_seconds'] for r in runs if (r.get('family') or re.sub(r'\d+$', '', r.get('map_id', ''))) == stage['family'] and _number(r.get('overhead_seconds')) is not None and 0 <= r['overhead_seconds'] <= 30]
         same_overheads = [r['overhead_seconds'] for r in runs if r.get('map_id') == stage['map_id'] and _number(r.get('overhead_seconds')) is not None and 0 <= r['overhead_seconds'] <= 30]
         if same_overheads or observed_overheads:

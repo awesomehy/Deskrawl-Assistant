@@ -22,6 +22,10 @@ class RuntimeClient:
         self.pid: int | None = None
         self.last_error: str | None = None
         self.item_events = None
+        self.compatibility = {'phase':'idle','message':'连接时自动检测游戏兼容性'}
+
+    def _compatibility_changed(self, state):
+        self.compatibility = dict(state)
 
     @property
     def connected(self) -> bool:
@@ -33,13 +37,15 @@ class RuntimeClient:
         from .native_reader import NativeReader
         with self._guard:
             self.close()
+            self._compatibility_changed({'phase':'checking','message':'正在检测游戏兼容性…'})
             games = game_pids()
             if pid is not None:
                 games = [value for value in games if value == pid]
             if len(games) != 1:
+                self._compatibility_changed({'phase':'idle','message':'请启动游戏后连接，自动检测兼容性。'})
                 raise RuntimeConnectionError("请先启动 Deskrawl，并只保留一个游戏进程。")
             try:
-                self._reader = NativeReader(games[0])
+                self._reader = NativeReader(games[0], on_compatibility=self._compatibility_changed)
                 self.pid = games[0]
                 self.last_error = None
                 result = self._reader.diagnostics()
@@ -47,6 +53,9 @@ class RuntimeClient:
                 result['background_lock_available'] = True
                 return result
             except Exception as exc:
+                from .game_compatibility import CompatibilityError
+                self._compatibility_changed({'phase':'blocked' if isinstance(exc,CompatibilityError) else 'error',
+                    'message':str(exc)})
                 self.last_error = str(exc)
                 self.close()
                 raise
@@ -96,7 +105,7 @@ class RuntimeClient:
                 value['error'] = value.get('reason') or '经验读取尚不可用。'
                 return value
             value['stage_id'] = value['stage']
-            difficulty = {'Normal':'普通', 'Hard':'困难', 'Nightmare':'噩梦', 'Hell':'地狱'}.get(value['difficulty'],value['difficulty'])
+            difficulty = {'Normal':'普通', 'Hard':'困难', 'Nightmare':'噩梦', 'Hell':'地狱', 'Inferno':'炼狱', 'Inferno1':'炼狱'}.get(value['difficulty'],value['difficulty'])
             if value['stage'] and difficulty:
                 value['stage'] += ' · ' + difficulty
             raw_character = value['character']

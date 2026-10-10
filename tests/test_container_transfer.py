@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 from deskrawl_assistant.container_transfer import FrozenSlotTransaction, move_items, plan_transfers, replace_fields
+from deskrawl_assistant.native_memory import MemoryReadError
 from test_container_transfer_probe import FakeMemory
 
 
@@ -54,6 +55,18 @@ class TransferTests(unittest.TestCase):
         for src,dst,full,empty in pairs:
             self.assertEqual(self.p.read(src,48),full)
             self.assertEqual(self.p.read(dst,48),empty)
+
+        self.assertEqual(self.p.read(self.save+92,1),b'\0')
+        self.resume.assert_called_once()
+
+    def test_game_item_gate_rejects_transfer_without_any_write(self):
+        pair=self.pair()
+        self.p.put(self.save+193,b'\1')
+        with self.assertRaisesRegex(MemoryReadError,'暂时禁止'):
+            self.tx.move_many([pair],[])
+        src,dst,full,empty=pair
+        self.assertEqual(self.p.read(src,48),full)
+        self.assertEqual(self.p.read(dst,48),empty)
         self.assertEqual(self.p.read(self.save+92,1),b'\0')
         self.resume.assert_called_once()
 

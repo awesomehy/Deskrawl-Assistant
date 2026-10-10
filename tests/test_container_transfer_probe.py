@@ -48,7 +48,7 @@ class TransactionTests(unittest.TestCase):
         self.assertEqual(p.read(target,48),full)
         self.assertTrue(result['save_requested'])
         page=((target+32)>>12)&0x1fffff
-        self.assertTrue(p.u64(0x10000000+0x3bda8e0+(page>>6)*8)&(1<<(page&63)))
+        self.assertTrue(p.u64(0x10000000+0x3c1f9a0+(page>>6)*8)&(1<<(page&63)))
         resume.assert_called_once()
 
     @patch('verify_container_transfer.NT.NtSuspendProcess',return_value=0)
@@ -105,6 +105,26 @@ class TransactionTests(unittest.TestCase):
         self.assertGreater(struct.unpack('<f',p.read(drop+160,4))[0],0)
         self.assertEqual(p.u64(drop+16),0x900000)
         self.assertEqual(result['cleanup'],'game_expiry_sweep')
+        resume.assert_called_once()
+
+    @patch('verify_carriage_transfer.NT.NtSuspendProcess',return_value=0)
+    @patch('verify_carriage_transfer.NT.NtResumeProcess',return_value=0)
+    def test_carriage_game_item_gate_preserves_drop_and_target(self,resume,suspend):
+        p,tx,source,target,full,empty=self.make()
+        drop=0x700000
+        header=bytearray(216)
+        for offset,value in ((0,0x800000),(16,0x900000),(120,0x500000),(136,0x600000)):
+            struct.pack_into('<Q',header,offset,value)
+        struct.pack_into('<i',header,168,1)
+        p.put(drop,header)
+        p.put(tx.reader.singleton('SaveSystem')+193,b'\1')
+        tx.reader.classes['LootDrop']=0x800000
+        collector=object.__new__(FrozenCarriageTransaction)
+        collector.reader=tx.reader;collector.handle=123;collector.write=p.put
+        with self.assertRaisesRegex(RuntimeError,'暂时禁止'):
+            collector.collect(drop,bytes(header),target,empty,[])
+        self.assertEqual(p.read(drop,216),bytes(header))
+        self.assertEqual(p.read(target,48),empty)
         resume.assert_called_once()
 
     @patch('verify_carriage_transfer.NT.NtSuspendProcess',return_value=0)

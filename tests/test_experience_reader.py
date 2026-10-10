@@ -90,6 +90,30 @@ class FakeReader:
 
 
 class ExperienceReaderTests(unittest.TestCase):
+    def test_ordinary_adaptation_uses_resolved_fields_and_relocated_singletons(self):
+        from copy import deepcopy
+        reader=FakeReader();adapted=deepcopy(_profile())
+        adapted.update(metadataSha256='adapted-metadata',gameAssemblySha256='adapted-assembly')
+        for t in adapted['types']:
+            for f in t['fields']:
+                f['name']='renamed_'+f['name'];f['token']=hex(int(f['token'],16)+100)
+        reader.profile=adapted
+        reader.resolved_profiles={'experience-types.json':adapted}
+        reader.profiles={t['name']:t for t in adapted['types']}
+        reader.native_layout={'game_manager_rva':0x11000,'player_data_rva':0x12000}
+        for old,key in ((GAME_MANAGER_RVA,'game_manager_rva'),(PLAYER_DATA_RVA,'player_data_rva')):
+            source=reader.module['base']+old
+            reader.memory.put(reader.module['base']+reader.native_layout[key],reader.memory.read(source,8))
+            reader.memory.put(source,bytes(8))
+        self.assertTrue(read_experience(reader)['available'])
+
+    def test_changed_game_file_blocks_experience_before_memory_reads(self):
+        reader=FakeReader()
+        def changed():raise MemoryReadError('游戏文件已更新')
+        reader.check_game_files=changed
+        reader.memory.read=lambda *_:self.fail('Changed files must block before memory reads')
+        self.assertFalse(read_experience(reader)['available'])
+
     def test_verified_copied_wrappers(self):
         self.assertEqual(decode_obscured_int(bytes.fromhex('91380f5daf630087ed31804300000000')), 47)
         self.assertEqual(decode_obscured_long(bytes.fromhex(

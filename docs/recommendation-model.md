@@ -12,16 +12,18 @@
 
 `profile` 使用普通数值字段：`level`、`xp_gain_multiplier`、`fingerprint`、`difficulty`、`combat`、`skills`、`timing`、`unlocked_maps`、`entry_items`、`is_demo`。经验倍率是真正的 `1 + bonus`，不是 `RunFinds.xpGain` 原始 bonus。`unlocked_maps` 按难度分组；完成关卡集须通过前置关卡规则派生为可选关卡，不能直接当作可选集。未读取的其他难度进度显示待确认，不作为最佳图候选。
 
-`options` 为 `minutes`（默认60、最多10080）、`difficulty`（默认current）、`overhead_seconds`（默认8）、`include_locked`（默认true）、`sort`（completed或rate）。默认按预算内完成刷图尝试的预期经验排序；rate按长期经验速度排序，不要求预算够一轮。预算模式只有当前可进入且预计至少完成一次通关的关卡能成为最佳图。
+`options` 为 `minutes`（默认60、最多10080）、`difficulty`（默认current）、`overhead_mode`（默认auto）、`overhead_seconds`（默认8）、`include_locked`（默认true）、`sort`（completed或rate）。auto 使用连续重开观测，没有样本时8秒；manual 始终使用填写的值。旧设置明确提供秒数时按 manual 迁移，避免丢失用户选择。默认按预算内完成刷图尝试的预期经验排序；rate按长期经验速度排序，不要求预算够一轮。预算模式只有当前可进入且预计至少完成一次通关的关卡能成为最佳图。
 
 资源目录含76张图，其中71张常规图参与排序、65种引用敌人；5张特殊/神话图依赖动态参数，列在 `coverage.excluded`，不把常规图最佳结果宣称为所有特殊图的最佳。地图和难度名称来自游戏 `World`/`UI` 简中本地化表。
 
 ## 已核验规则和证据
 
-只适用于以下游戏构建；提取工具先校验两个 hash，再按已验证序列化布局读取资源。更新构建后应重新核验布局及公式。
+v1.2.0 的静态目录已从 Deskrawl 1.0.2a / Steam build 25842017 重新提取，76张地图、65种怪物、难度与计算配置均与贡献版本相同。提取工具先校验当前基准的两个 hash，再按已验证序列化布局读取资源。连接读取沿用统一适配保护；新资源或逻辑变化需要维护。
 
-- metadata SHA256：`2c0ae47e1ee26b6c787d5294f04680b6b875d84e8d5f6db1e574446892e3f2ad`
-- GameAssembly SHA256：`c242676ed070072388b4231a5c215812c8bc3d53c21f9277c7c0afa4fa4fa2da`
+- metadata SHA256：`57627070d0fe8a00f82e373100768f529c4829f02d6aeb8ac3057aaab13cacfc`
+- GameAssembly SHA256：`d46f0a321e8e07646cca37c7460e58fbfecc47ade5027ea2e00fc71f0fec0565`
+
+下面方法地址和47级观测来自贡献者在 1.0.2 / build 25817367 的原始核验，作为历史证据保留；静态目录的 `evidence` 字段同样记录旧构建方法地址，读取器不会使用这些地址。新版入口从本次连接的程序字节重新定位。
 
 | 规则 | 已核验原生方法 RVA |
 | --- | --- |
@@ -37,7 +39,7 @@
 
 基础奖励为 `max(1, round_even(baseHP × XPperBaseHP × (1 + float32((enemyLevel-1) × scale))))`。HP与外层乘积为double，等级乘法为float32。fallback再依次做float32等级惩罚、角色经验倍率、难度经验倍率的乘法，最后round-even并至少给1。等级惩罚为 `clamp((6 - (playerLevel-enemyLevel))/6, 0, 1)`。低等级怪惩罚到零时原生仍给1，不自行改成0。
 
-正数 `PlanEnemy.xp` 已包含当时的等级、经验加成和难度规则，死亡路径直接发放，不能再乘加成。零或负数计划XP走当前角色fallback，不能一概认为所有计划奖励都是精确正数。
+正数 `PlanEnemy.xp` 已包含当时的等级、经验加成和难度规则，死亡路径直接发放，不能再乘加成。零或负数计划XP走当前角色fallback，不能一概认为所有计划奖励都是精确正数。v1.2.0 修复了使用计划初始等级 / 加成的错误，改用同一快照里的当前等级和经验倍率，并在界面标为回退估计。
 
 血量增长的三个指数分别为 `min(level-1,29)`、`clamp(level-30,0,20)`、`clamp(level-50,0,20)`，基数为 `1 + float32(.12/.08/.06)`，使用double幂；精英血量×3，难度血量普通×1/噩梦×3.5/炼狱×6。正数高难度基础覆盖先替换asset基础HP，也影响基础XP。
 
@@ -55,7 +57,7 @@
 
 普通攻击优先使用已经按技能等级、攻击缩放、属性和伤害类型加成计算的 `DamageEffect.damage`，按可暴击标识加入暴击期望。施放周期取有效CD、全局CD、站桩和引导时间中的最大值。可读取的EveryNth替换攻击按完整周期平均；额外弹道不假设全部命中同一个目标。AoE缺少可靠密度时默认只覆盖1目标。额外技能、耗蓝循环、穿透命中、控制和未知触发不假装精确，结果附提示并由实测时间校准。
 
-`calibration.runs` 记录起始fingerprint、map_id、family、difficulty、level、combat、阶段HP、阶段时间、阶段固定等待、总run_seconds、outcome、retained xp和可观察的overhead_seconds。配装/角色指纹与难度不一致的记录不混用。阶段校准以 `(observedPhaseSeconds-phaseFixed)/(phaseHP/savedPhaseDPS)` 的中位数校正当前阶段，可迁移同系列。只有整轮总时长时只校准同图，不能虚构普通/Boss分别的DPS。手填的重开开销优先；默认8秒可由同图或同系列连续重开的观测中位数替代。
+`calibration.runs` 记录起始fingerprint、map_id、family、difficulty、level、combat、阶段HP、阶段时间、阶段固定等待、总run_seconds、outcome、retained xp和可观察的overhead_seconds。配装/角色指纹与难度不一致的记录不混用。阶段校准以 `(observedPhaseSeconds-phaseFixed)/(phaseHP/savedPhaseDPS)` 的中位数校正当前阶段，可迁移同系列。只有整轮总时长时只校准同图，不能虚构普通/Boss分别的DPS。手动模式的重开开销优先，包括明确填写的8秒；自动模式使用同图或同系列连续重开的观测中位数，没有观测时采用8秒。
 
 失败记录不凭等级差或血量自行生成成功概率。至少3个同级、同配装、同图、同难度的完整成功/失败观察，并且失败保留经验已知，才估计成功比例及含失败部分XP的周期收益。全为失败时也计算已观测失败的收益和耗时，完整通关模式不把该图当成成功通关的推荐。旧记录失败经验按保存的起始经验倍率归一化到当前倍率，避免临时buff混用。少量样本仍提示波动；资料不足时只标失败风险和成功全清收益。
 

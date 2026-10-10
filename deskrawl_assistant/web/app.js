@@ -275,6 +275,9 @@ function updateControls(){
   $('monitor-badge').hidden=!state.monitoring&&!state.automation?.running;
 }
 function renderState(){
+  const compatibility=state.compatibility||{phase:'idle',message:'连接时自动检测游戏兼容性'};
+  $('compatibility-message').textContent=compatibility.message;
+  $('compatibility-bar').dataset.phase=compatibility.phase;
   const connection=$('connection-state');connection.className='status-pill'+(state.connected?' online':'')+(state.busy?' busy':'');
   connection.innerHTML='<i></i>'+ (state.connected?`已连接${state.busy?' · 处理中':''}`:state.busy?'正在连接…':'未连接游戏');
   connection.title=state.pid?`游戏进程 ${state.pid}`:'';
@@ -616,7 +619,7 @@ function recommendationBadges(row){
   return `<span class="badge ${available?'match':known?'unlocked':'review'}">${available?'已开放':known?'未开放':'开放状态待确认'}</span>${row.boss?'<span class="badge recommendation-boss">Boss 关卡</span>':''}<span class="badge ${row.calibrated===true?'match':'unlocked'}">${row.calibrated===true?'已校准':'预估'}</span>`;
 }
 function recommendationDate(value){if(!value)return '';const date=new Date(value);return Number.isNaN(date.getTime())?'':date.toLocaleString('zh-CN',{hour12:false});}
-function recommendationSettings(){return {minutes:Number($('recommendation-minutes').value),difficulty:$('recommendation-difficulty').value,sort:$('recommendation-sort').value,overhead_seconds:Number($('recommendation-overhead').value),include_locked:$('recommendation-include-locked').checked};}
+function recommendationSettings(){return {minutes:Number($('recommendation-minutes').value),difficulty:$('recommendation-difficulty').value,sort:$('recommendation-sort').value,overhead_seconds:Number($('recommendation-overhead').value),overhead_mode:$('recommendation-overhead-mode').value,include_locked:$('recommendation-include-locked').checked};}
 function markRecommendationDirty(){recommendationDirty=true;syncDraftState();$('recommendation-settings-state').textContent='设置有改动，点击“更新推荐”应用。';}
 function renderRecommendations(){
   if(!recommendationData||exiting)return;
@@ -624,7 +627,8 @@ function renderRecommendations(){
   const options=data.difficulty_options?.length?data.difficulty_options:[{value:'current',label:'跟随当前地图难度'}];
   if(!recommendationDirty){
     $('recommendation-minutes').value=settings.minutes??minutes;
-    $('recommendation-overhead').value=settings.overhead_seconds??8;
+    $('recommendation-overhead').value=settings.overhead_mode==='auto'?8:(settings.overhead_seconds??8);
+    $('recommendation-overhead-mode').value=settings.overhead_mode||'auto';
     $('recommendation-include-locked').checked=settings.include_locked!==false;
     $('recommendation-sort').value=settings.sort||'completed';
     $('recommendation-difficulty').innerHTML=options.map(option=>`<option value="${esc(option.value)}" ${String(option.value)===String(settings.difficulty??data.difficulty??'current')?'selected':''}>${esc(option.label)}</option>`).join('');
@@ -648,15 +652,16 @@ function renderRecommendations(){
   $('recommendation-best-time').textContent=best?recommendationRunTime(best):tooShort?recommendationRunTime(minimumRow):'—';
   $('recommendation-best-hourly').textContent=best?recommendationNumber(best.xp_per_hour):'—';
   $('recommendation-best-runs').textContent=best?`预计完整通关 ${recommendationNumber(best.completed_runs)} 次`:tooShort?'当前时限内可完成 0 次':'等待计算完成次数';
-  $('recommendation-best-overhead').textContent=best?.fixed_seconds!=null?`含每次 ${recommendationNumber(best.fixed_seconds)} 秒固定开销`:'含载入、结算与重开开销';
+  const overheadLabels={observed:'自动观测',manual:'手动指定',default:'暂无观测，使用默认值'};
+  $('recommendation-best-overhead').textContent=best?.overhead_seconds!=null?`重开开销 ${recommendationNumber(best.overhead_seconds)} 秒 · ${overheadLabels[best.overhead_source]||'估计'}`:'含载入、结算与重开开销';
   $('recommendation-best-reason').textContent=best?[best.calibrated===true?'耗时采用实战校准均值':'按平均伤害粗估，正常刷图自动校准',`${recommendationRisk(best.risk)} · 可信度${recommendationConfidence(best.confidence)}`,...(best.cycle_estimate?['计划可获经验（含失败保留经验）']:[]),...(Array.isArray(best.reasons)?best.reasons:[])].join('；'):tooShort?'时限内尚不能完整通关，计划经验为 0；延长计划后会重新比较。':'推荐结果会标明风险和可信度；没有完整读取数据时不会猜测收益。';
   $('recommendation-current-stage').textContent=current.stage||'等待读取当前地图';
   const phases={combat:'战斗中',normal:'清理怪物',boss:'Boss 战',fighting:'战斗中',cleared:'已通关',completed:'已通关',finished:'已结束',failed:'本次失败',idle:'等待刷图',loading:'载入中',unknown:'状态待确认'};
   $('recommendation-current-phase').textContent=phases[current.phase]||current.phase||'未读取';
-  $('recommendation-current-plan-label').textContent='本轮计划总经验（单次全清）';
+  $('recommendation-current-plan-label').textContent=current.xp_source==='static_formula_fallback'?'本轮全清经验估计（当前等级与加成）':'本轮计划总经验（单次全清）';
   $('recommendation-current-xp').textContent=recommendationNumber(current.planned_xp);
   const currentRow=rows.find(row=>String(row.map_id)===String(current.map_id)&&(current.difficulty==null||String(row.difficulty)===String(current.difficulty)));
-  $('recommendation-current-note').textContent=currentRow?`地图常规预估：每轮 ${recommendationNumber(currentRow.xp_per_run)} · ${recommendationRunTime(currentRow)} · ${currentRow.calibrated===true?'已校准':'预估'}`:current.stage?'本轮经验以当前生成计划为准；地图常规预估随选择的难度比较。':'读取后可与推荐地图对照。';
+  $('recommendation-current-note').textContent=(current.xp_source==='static_formula_fallback'?'部分奖励按当前等级与经验加成估计；途中升级或加成变化会重新计算。 ':'')+(currentRow?`地图常规预估：每轮 ${recommendationNumber(currentRow.xp_per_run)} · ${recommendationRunTime(currentRow)} · ${currentRow.calibrated===true?'已校准':'预估'}`:current.stage?'本轮经验以当前生成计划为准；地图常规预估随选择的难度比较。':'读取后可与推荐地图对照。');
   $('recommendation-ranking-note').textContent=`${sort==='rate'?'按单位时间经验效率':'按时限内计划可获经验'}比较，未开放地图不参与当前推荐。`;
   const coverage=data.coverage,supported=recommendationValue(coverage?.supported),total=recommendationValue(coverage?.total);
   $('recommendation-map-count').textContent=`${supported!==null&&total!==null?`支持 ${recommendationNumber(supported)}/${recommendationNumber(total)} 个地图 · `:''}当前 ${rows.length} 个 · 已开放 ${rows.filter(row=>row.accessible===true).length} 个`;
@@ -675,7 +680,9 @@ function renderRecommendations(){
   $('recommendation-calibration-detail').textContent=(calibration.status&&!statuses[calibration.status]?calibration.status+' ':'')+(calibration.active?'正常刷图即可。完整有效的战斗会自动更新耗时和经验估计。':'保持助手连接并正常刷图，完整有效的战斗会自动更新地图耗时和经验估计。');
   const last=recommendationDate(calibration.last_recorded_at);$('recommendation-calibration-time').textContent=last?`最近记录：${last}`:'';
   for(const id of ['recommendation-refresh','recommendation-save','recommendation-calibration-reset'])$(id).disabled=recommendationBusy;
-  for(const id of ['recommendation-minutes','recommendation-difficulty','recommendation-sort','recommendation-overhead','recommendation-include-locked'])$(id).disabled=recommendationBusy;
+  for(const id of ['recommendation-minutes','recommendation-difficulty','recommendation-sort','recommendation-overhead-mode','recommendation-overhead','recommendation-include-locked'])$(id).disabled=recommendationBusy;
+  $('recommendation-overhead').disabled=recommendationBusy||$('recommendation-overhead-mode').value==='auto';
+  $('recommendation-overhead-note').textContent=$('recommendation-overhead-mode').value==='auto'?'使用同图或同系列连续重开的观测中位数；没有样本时采用 8 秒。':'手动指定每次载入、结算和重开的额外秒数，不会被观测值覆盖。';
 }
 async function loadRecommendations(quiet=false){
   if(exiting||quiet&&recommendationLoading)return;
@@ -687,6 +694,7 @@ async function loadRecommendations(quiet=false){
 $('recommendation-refresh').addEventListener('click',()=>loadRecommendations());
 $('recommendation-settings-form').addEventListener('input',markRecommendationDirty);
 $('recommendation-settings-form').addEventListener('change',markRecommendationDirty);
+$('recommendation-overhead-mode').addEventListener('change',()=>{if($('recommendation-overhead-mode').value==='auto')$('recommendation-overhead').value=8;renderRecommendations();});
 async function saveRecommendationSettings(){
   if(recommendationBusy)return false;
   const settings=recommendationSettings();

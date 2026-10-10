@@ -1,6 +1,7 @@
 """Build the Windows one-file release using an explicit asset allowlist."""
 from __future__ import annotations
 
+import argparse
 import hashlib
 from importlib.metadata import distribution, version
 import json
@@ -13,7 +14,7 @@ import sys
 from zipfile import ZipFile, ZIP_DEFLATED
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.1.7'
+NAME = 'Deskrawl装备助手-v1.2.0'
 
 
 def license_text(package):
@@ -25,11 +26,14 @@ def license_text(package):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output-dir', type=Path, help='Use a fresh staging directory while an older exe is running.')
+    args = parser.parse_args()
     if os.name != 'nt' or struct.calcsize('P') != 8:
         raise RuntimeError('Build on Windows with 64-bit Python.')
     if version('pyinstaller') != '6.22.3':
         raise RuntimeError('Install requirements-build.txt before building.')
-    output = ROOT / 'release' / NAME
+    output = args.output_dir.resolve() if args.output_dir else ROOT / 'release' / NAME
     output.mkdir(parents=True, exist_ok=True)
     subprocess.run([sys.executable, '-m', 'PyInstaller', '--noconfirm',
         '--distpath', str(output), '--workpath', str(ROOT / 'build' / 'pyinstaller'),
@@ -51,7 +55,7 @@ def main():
         'Source: https://go.microsoft.com/fwlink/p/?LinkId=2124703\n'
         'Distribution: https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution\n'
         'The installer displays its applicable Microsoft license terms.\n')
-    for package in ('pywebview','pythonnet','clr_loader','cffi','pycparser','bottle','proxy_tools','typing_extensions'):
+    for package in ('pywebview','pythonnet','clr_loader','cffi','pycparser','bottle','proxy_tools','typing_extensions','capstone'):
         info = distribution(package)
         files = [f for f in info.files if 'license' in str(f).lower() or 'copying' in str(f).lower()]
         license_note += '\n===== '+package+' =====\n'
@@ -61,12 +65,14 @@ def main():
             license_note += 'License: '+str(info.metadata.get('License',''))+'\n'
     (output / '第三方许可.txt').write_text(license_note, encoding='utf-8-sig')
     profile = json.loads((ROOT / 'data/runtime-type-hints.json').read_text(encoding='utf-8'))
-    report = {'name': NAME, 'version': '1.1.7', 'platform': 'Windows x64', 'presentation':'native WebView2 window',
+    report = {'name': NAME, 'version': '1.2.0', 'platform': 'Windows x64', 'presentation':'native WebView2 window',
         'python': sys.version.split()[0], 'pyinstaller': version('pyinstaller'),
         'exe_bytes': exe.stat().st_size, 'exe_sha256': hashlib.sha256(exe.read_bytes()).hexdigest(),
         'supported_game_metadata_sha256': profile['metadataSha256'],
         'supported_game_assembly_sha256': profile['gameAssemblySha256'],
+        'supported_game_version': profile['gameVersion'], 'supported_steam_build': profile['steamBuildId'],
         'bundled_personal_rules': False, 'bundled_player_snapshots': False}
+    report['game_compatibility'] = 'local_verified_name_and_address_adaptation'
     report['webview2_setup_bytes'] = setup.stat().st_size
     report['webview2_setup_sha256'] = hashlib.sha256(setup.read_bytes()).hexdigest()
     (ROOT / 'release' / 'build-report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')

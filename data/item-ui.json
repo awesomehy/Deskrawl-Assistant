@@ -13346,5 +13346,5 @@
     "UncommonRune2"
   ],
   "source": "Shipped GemData and RuneData assets; verified stat units and protected float checksum.",
-  "resources_sha256": "ff823400ac4fa0a0b1d62034192604dc17da52d9b213f86b49085ac931750de0"
+  "resources_sha256": "a2613ec5654eaf488cd8dd04da676165491e4178a1cf613e9eef9178babdf9ae"
 }

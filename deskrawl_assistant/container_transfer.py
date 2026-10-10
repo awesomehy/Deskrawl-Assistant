@@ -1,6 +1,6 @@
 """Build-verified, atomic transfers between physical inventory/storage slots.
 
-Mirrors 1.0.2 Storage.fqi's four slot fields. Virtual currencies (Inventory.nyl) are
+Mirrors 1.0.2a Storage's four slot fields. Virtual currencies are
 separate from physical slots and are never modified. No injected code or calls.
 """
 from __future__ import annotations
@@ -12,18 +12,31 @@ import time
 from .native_memory import K, MemoryReadError
 from .paths import RESOURCE_ROOT
 from .activity_journal import operation_id
+from .game_compatibility import native_rva, assert_current
 
 NT = C.WinDLL('ntdll')
-GC_MODE_RVA = 0x3bc782c
-GC_BITMAP_RVA = 0x3bda8e0
-GAME_MANAGER_RVA = 0x3a18bf8
-CLOUD_CLIENT_RVA = 0x3a1f820
+GC_MODE_RVA = 0x3bc65fc
+GC_BITMAP_RVA = 0x3c1f9a0
+GAME_MANAGER_RVA = 0x3a17cd8
+CLOUD_CLIENT_RVA = 0x3a1e418
 for _name in ('NtSuspendProcess', 'NtResumeProcess'):
     _fn = getattr(NT, _name)
     _fn.argtypes = (W.HANDLE,)
     _fn.restype = C.c_long
 K.WriteProcessMemory.argtypes = (W.HANDLE,C.c_void_p,C.c_void_p,C.c_size_t,C.POINTER(C.c_size_t))
 K.WriteProcessMemory.restype = W.BOOL
+
+
+def ensure_items_writable(reader, save=None):
+    """Respect the SaveSystem gate checked by 1.0.2a inventory/storage methods."""
+    assert_current(reader)
+    save = reader.singleton('SaveSystem') if save is None else save
+    blocked = reader.memory.read(save+193,1)
+    if blocked == b'\1':
+        raise MemoryReadError('游戏暂时禁止物品操作，请稍后重试')
+    if blocked != b'\0':
+        raise MemoryReadError('游戏物品操作状态异常，未写入')
+    return save
 
 
 def slot_fields(header):
@@ -100,7 +113,8 @@ def plan_transfers(sources, targets):
 
 
 def access_state(reader):
-    """Read the page gates verified in 1.0.2 Storage.fpl and SaveSystem."""
+    """Read the page gates verified in 1.0.2a Storage and SaveSystem."""
+    assert_current(reader)
     p = reader.memory
     profiles = getattr(reader, '_transfer_profiles', None)
     if profiles is None:
@@ -134,7 +148,7 @@ def access_state(reader):
         obj = pointer(pointer(klass+184))
         return verify(obj,name)
 
-    manager = singleton(GAME_MANAGER_RVA,'GameManager')
+    manager = singleton(native_rva(reader,'game_manager_rva',GAME_MANAGER_RVA),'GameManager')
     controller = verify(pointer(manager+64),'PlayerCombatController')
     player = verify(pointer(controller+32),'Player')
     pages = struct.unpack('<i',observe(player+616,4))[0]
@@ -146,8 +160,8 @@ def access_state(reader):
     mode = struct.unpack('<i',observe(save+32,4))[0]
     if mode not in (0,1): raise MemoryReadError('当前角色模式未适配搬运')
     if mode == 1:
-        cloud = singleton(CLOUD_CLIENT_RVA,'CloudClient')
-        dlc = pointer(cloud+408)
+        cloud = singleton(native_rva(reader,'cloud_client_rva',CLOUD_CLIENT_RVA),'CloudClient')
+        dlc = pointer(cloud+416)
         owned = observe(verify(dlc,'DlcState')+16,1) if dlc else b'\0'
     else:
         dlc = pointer(save+216)
@@ -235,18 +249,19 @@ class FrozenSlotTransaction:
                 raise MemoryReadError('物品或仓库权限发生变化，请刷新后重试')
             if time.monotonic()-started>1: raise MemoryReadError('验证耗时异常，未移动物品')
             base = self.reader.module['base']
-            if p.i32(base+GC_MODE_RVA) not in (0,1): raise MemoryReadError('GC 写屏障状态未确认')
+            if p.i32(base+native_rva(self.reader,'gc_mode_rva',GC_MODE_RVA)) not in (0,1): raise MemoryReadError('GC 写屏障状态未确认')
             bitmap = {}
             for slot in addresses:
                 for offset in (16,32):
                     page = ((slot+offset)>>12)&0x1fffff
-                    word = base+GC_BITMAP_RVA+(page>>6)*8
+                    word = base+native_rva(self.reader,'gc_bitmap_rva',GC_BITMAP_RVA)+(page>>6)*8
                     bitmap[word] = bitmap.get(word,p.u64(word)) | (1<<(page&63))
             # Dirty cards before publishing reference fields; threads are paused.
             plan = [(a,struct.pack('<Q',bits)) for a,bits in bitmap.items()]
             for address,_,after in changes:
                 plan.extend((address+off,data) for off,data in slot_fields(after).items())
             save = self.reader.singleton('SaveSystem')
+            ensure_items_writable(self.reader,save)
             if p.read(save+92,1) not in (b'\0',b'\1'): raise MemoryReadError('保存状态异常')
             plan.append((save+92,b'\1'))
             for address,data in plan:

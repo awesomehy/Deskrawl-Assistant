@@ -221,7 +221,7 @@ class AssistantService:
             payload = recommend_maps(profile, self._recommendation_data(), calibration, settings) if value.get('available') else {
                 'available': False, 'rows': [], 'best': None, 'reason': value.get('reason') or '角色数据尚不可读取。'}
             run = value.get('run') or {}
-            current = {k:run.get(k) for k in ('map_id','stage','planned_xp','phase','difficulty')}
+            current = {k:run.get(k) for k in ('map_id','stage','planned_xp','phase','difficulty','xp_source')}
             if run.get('map_id'):
                 current['stage'] = next((m['stage'] for m in self._recommendation_data()['maps'] if m['map_id']==run['map_id']), run.get('stage') or run['map_id'])
                 current['phase'] = {'normal':'普通波','boss':'Boss 波','idle':'准备中'}.get(run.get('phase'), run.get('phase'))
@@ -465,6 +465,7 @@ class AssistantService:
             result['automation'] = {'settings':deepcopy(self.automation_settings),'running':self.automation_running,
                 'status':self.automation_status,'carriage':self._carriage_payload()}
             result['app_version'] = VERSION
+            result['compatibility'] = dict(getattr(self.client,'compatibility',{'phase':'idle','message':'连接时自动检测游戏兼容性'}))
         if not snap: return result
         adapted = self.adapter.adapt_snapshot(snap)
         observations = {(i.container,i.index):i for i in adapted.items}

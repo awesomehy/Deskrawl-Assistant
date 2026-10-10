@@ -79,7 +79,7 @@ class RecommendationServiceTests(unittest.TestCase):
         self.assertEqual(page['current']['phase'],'普通波')
 
     def test_settings_change_budget_and_survive_new_book(self):
-        settings={'minutes':30,'difficulty':'Normal','overhead_seconds':7,'include_locked':False,'sort':'completed'}
+        settings={'minutes':30,'difficulty':'Normal','overhead_seconds':7,'overhead_mode':'manual','include_locked':False,'sort':'completed'}
         self.service.recommendation_settings(settings)
         page=self.refresh()
         self.assertEqual(page['settings'],settings)

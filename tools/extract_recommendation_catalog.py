@@ -15,8 +15,8 @@ import struct
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-METADATA_HASH = '2c0ae47e1ee26b6c787d5294f04680b6b875d84e8d5f6db1e574446892e3f2ad'
-ASSEMBLY_HASH = 'c242676ed070072388b4231a5c215812c8bc3d53c21f9277c7c0afa4fa4fa2da'
+METADATA_HASH = '57627070d0fe8a00f82e373100768f529c4829f02d6aeb8ac3057aaab13cacfc'
+ASSEMBLY_HASH = 'd46f0a321e8e07646cca37c7460e58fbfecc47ade5027ea2e00fc71f0fec0565'
 CONFIG = {'XpPerBaseHealth': 1.0, 'XpPerLevelScale': 0.10000000149011612,
           'XpZeroUnderLevel': 6, 'MaxPlayerLevel': 70,
           'health_growth': [0.11999999731779099, 0.07999999821186066, 0.05999999865889549],
@@ -29,7 +29,9 @@ DIFFICULTIES = {'Normal': {'value': 0, 'health_multiplier': 1.0, 'damage_multipl
 
 def file_hash(path):
     with Path(path).open('rb') as handle:
-        return hashlib.file_digest(handle, 'sha256').hexdigest()
+        digest=hashlib.sha256()
+        for chunk in iter(lambda:handle.read(4*1024*1024),b''):digest.update(chunk)
+        return digest.hexdigest()
 
 
 def extract(game, unitypy_path=None):

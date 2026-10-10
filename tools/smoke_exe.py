@@ -18,7 +18,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.1.7'
+NAME = 'Deskrawl装备助手-v1.2.0'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -53,6 +53,8 @@ def main():
     assert any(n.endswith('Python.Runtime.dll') for n in names)
     assert 'deskrawl_assistant/web/rule-tools.js' in normalized
     assert 'deskrawl_assistant/update_replace.ps1' in normalized
+    assert 'data/compatibility-baseline.json' in normalized
+    assert any('capstone' in n.lower() and n.lower().endswith('.dll') for n in names)
     folder = ROOT / 'build' / ('exe独立测试 '+uuid.uuid4().hex[:8])
     folder.mkdir(parents=True)
     exe = folder / '仅此一个文件.exe'
@@ -104,7 +106,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.1.7'
+                assert request('/api/state')['app_version'] == '1.2.0'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -137,7 +139,7 @@ def main():
         assert request('/style.css')
         recommendation = request('/api/recommendations')
         assert recommendation['available'] is False and not recommendation['rows']
-        recommendation_settings = {'minutes':30,'difficulty':'current','overhead_seconds':7,'include_locked':True,'sort':'completed'}
+        recommendation_settings = {'minutes':30,'difficulty':'current','overhead_seconds':7,'overhead_mode':'manual','include_locked':True,'sort':'completed'}
         assert request('/api/recommendations/settings',recommendation_settings)['settings'] == recommendation_settings
         assert request('/api/recommendations')['settings'] == recommendation_settings
         report['checks'].append('刷图推荐资源内置，断线状态明确，推荐设置持久保存')
@@ -212,14 +214,25 @@ def main():
             assert state['items']
             assert not state['monitoring']
             live = request('/api/experience')['live']
-            assert live['available'] and live['total_xp'] >= live['current_xp'], live
-            request('/api/experience/start', {'stage':live.get('stage') or '实际游戏只读测试','profile':'测试隔离条件'})
-            time.sleep(1)
-            xp_receipt = request('/api/experience/finish', {})
-            assert xp_receipt['source'] == 'live_timer' and xp_receipt['xp'] >= 0
-            request('/api/experience/delete', {'id':xp_receipt['id']})
-            report['checks'].append('单文件 exe 只读取得实际游戏经验和关卡，自动计时经验结算成功')
+            if live['available']:
+                assert live['total_xp'] >= live['current_xp'], live
+                request('/api/experience/start', {'stage':live.get('stage') or '实际游戏只读测试','profile':'测试隔离条件'})
+                time.sleep(1)
+                xp_receipt = request('/api/experience/finish', {})
+                assert xp_receipt['source'] == 'live_timer' and xp_receipt['xp'] >= 0
+                request('/api/experience/delete', {'id':xp_receipt['id']})
+                report['checks'].append('单文件 exe 只读取得实际游戏经验和关卡，自动计时经验结算成功')
+            else:
+                assert '巅峰' in live.get('reason',''), live
+                report['checks'].append('实际角色已满级：巅峰经验明确返回不可自动读取，未将零值计作实测收益')
+            report['experience_reading']={'available':live['available'],'reason':live.get('reason')}
             recommendation = request('/api/recommendations')
+            # Connection and the periodic recommendation observer complete
+            # independently; wait for its first stable read-only snapshot.
+            deadline = time.monotonic()+20
+            while not recommendation['available'] and time.monotonic()<deadline:
+                time.sleep(.2)
+                recommendation = request('/api/recommendations')
             assert recommendation['available'], recommendation.get('error')
             assert recommendation['coverage']['supported'] == 71 and recommendation['coverage']['total'] == 76
             assert len(recommendation['rows']) == 71

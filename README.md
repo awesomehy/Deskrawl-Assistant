@@ -1,12 +1,12 @@
 # Deskrawl 装备助手
 
-Windows x64 装备筛选与物品整理工具，当前版本 **v1.1.7**，适配 **Deskrawl 1.0.2（Steam build 25817367）**。使用 WebView2 独立窗体显示网页界面，外部读取游戏的背包、仓库与马车，根据玩家配置锁定装备、移动和自动整理物品。
+Windows x64 装备筛选与物品整理工具，当前版本 **v1.1.8**，以 **Deskrawl 1.0.2a（Steam build 25842017）** 为已验证基准，支持普通变化的自动检测适配。使用 WebView2 独立窗体显示网页界面，外部读取游戏的背包、仓库与马车，根据玩家配置锁定装备、移动和自动整理物品。
 
 如果觉得本软件对你有帮助，欢迎在 [GitHub 项目](https://github.com/awesomehy/Deskrawl-Assistant) 点亮 **Star**，感谢支持！
 
 ## 快速使用
 
-1. 打开 [Releases 下载页面](https://github.com/awesomehy/Deskrawl-Assistant/releases)，选择最新版；也可直接下载 [Deskrawl-Assistant-v1.1.7.exe](https://github.com/awesomehy/Deskrawl-Assistant/releases/download/v1.1.7/Deskrawl-Assistant-v1.1.7.exe)。
+1. 打开 [Releases 下载页面](https://github.com/awesomehy/Deskrawl-Assistant/releases)，下载最新的 [v1.1.8 exe](https://github.com/awesomehy/Deskrawl-Assistant/releases/download/v1.1.8/Deskrawl-Assistant-v1.1.8.exe)。该版本已适配游戏 1.0.2a，并支持普通变化的自动检测；v1.1.7 及更早版本适配游戏 1.0.2。
 2. 双击 exe，稍等片刻即可打开助手窗体，无需安装 Python。若提示缺少 WebView2，请使用[微软官方安装程序](https://go.microsoft.com/fwlink/p/?LinkId=2124703)联网安装后重试。
 3. 启动 Deskrawl 并进入角色，在助手顶部点击“连接游戏”，自动读取背包与仓库。主城和战斗场景均可使用。
 4. 进入“装备筛选规则”，按职业、部位或名称选择装备；勾选主词条并设置“至少命中 n 类”，按需启用副词条，保存并启用规则。每件装备可新增多个命名组合；任意一个启用组合满足即符合规则。
@@ -42,7 +42,7 @@ v1.1.7 修复了自动更新后重启报 Python DLL 错误的问题。v1.1.5 / v
 - 基础护甲、基础武器伤害与速度单独显示，不参与主副词条计数或高亮。
 - 背包和仓库支持全部解锁、锁定所选装备、按规则锁定，以及持续监控新增装备。
 - 支持背包与仓库双向移动实体装备、材料、宝石、符文和宝箱；保留数量、装备词条、强化和锁定状态。
-- 同种同等级宝石优先合并仓库中的堆叠，按游戏当前上限处理（1.0.2 为每组 99 颗），满堆后使用已开放的空格。
+- 同种同等级宝石优先合并仓库中的堆叠，按游戏当前上限处理（1.0.2a 为每组 99 颗），满堆后使用已开放的空格。
 - 按物品名称将马车物品自动收进背包；按类型、名称筛选后可全选 / 全不选当前结果，保留其他选择。
 - 背包宝石自动入库；背包快满时装备自动入库，可配置触发剩余空格、预留空格目标及全部 / 已锁定 / 未锁定装备范围。
 - 内置 36 种宝石和 199 种符文的图标、效果说明，包含游戏 1.0.2 新增的 48 种技能符文。
@@ -59,7 +59,7 @@ v1.1.7 修复了自动更新后重启报 Python DLL 错误的问题。v1.1.5 / v
 
 ## 使用与数据保存
 
-在 [GitHub Releases](https://github.com/awesomehy/Deskrawl-Assistant/releases) 下载打包好的程序，推荐使用 [v1.1.7](https://github.com/awesomehy/Deskrawl-Assistant/releases/tag/v1.1.7) 的 exe。直接双击即可打开窗体，无需安装 Python。页面每个版本只上传 exe，并提供更新记录；缺少 WebView2 时，可使用[微软官方安装程序](https://go.microsoft.com/fwlink/p/?LinkId=2124703)联网安装。
+在 [GitHub Releases](https://github.com/awesomehy/Deskrawl-Assistant/releases) 下载适配当前游戏版本的程序。直接双击即可打开窗体，无需安装 Python。页面每个版本只上传 exe，并提供更新记录；缺少 WebView2 时，可使用[微软官方安装程序](https://go.microsoft.com/fwlink/p/?LinkId=2124703)联网安装。
 
 历史版本 v1.1.0、v1.1.1 提供原始发布程序；这两个标签只保存发行说明和组件许可，没有对应构建时的完整源码快照。v1.1.2 起的标签提供各自完整源码，适配范围见对应 Release。
 
@@ -85,7 +85,7 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m unittest discover -s tests -q
 ```
 
-当前包含 249 项自动检查，使用合成或脱敏用例及模拟内存，不要求运行游戏或提供个人装备数据。检查覆盖组合删除、导入启用选择、同部位复制与去重、多组合任一命中和持久化、日志分页和精确数量、获取 / 搬运去重、提交后读取失败的记录保留，以及既有的规则计数、数值、身份验证、锁定、堆叠、马车收取、自动整理和读取变化重试。
+当前包含 276 项自动检查，使用合成或脱敏用例及模拟内存，不要求运行游戏或提供个人装备数据。检查覆盖自动适配的字段改名、结构与资源变化拦截、代码常量及分支验证、连接期间文件更新拦截，以及组合删除、导入启用选择、同部位复制与去重、多组合任一命中和持久化、日志分页和精确数量、获取 / 搬运去重、提交后读取失败的记录保留、规则计数、数值、身份验证、锁定、堆叠、马车收取、自动整理和读取变化重试。
 
 已另外验证单文件 exe 在独立中文目录及没有外部 Python 的环境启动，并只读连接实际游戏。背包 / 仓库互转、宝石堆叠和马车收取已在实际游戏验证，v1.1.3 已由用户测试验收。尚未在另一台电脑或全新 Windows 虚拟机上测试。
 
@@ -100,6 +100,8 @@ Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutF
 
 构建结果输出到 `release/`，包含单文件 exe、使用说明、第三方许可和可选的官方 WebView2 安装程序。资源清单只包含必要静态字典、网页和 444 张图标（209 张装备、36 张宝石、199 张符文），个人规则、装备快照、日志及游戏程序均不打包。
 
+兼容性基准随源码和 exe 内置。维护新版本时必须先人工核验游戏的读取、锁定、保存、搬运与资源，再运行 `tools/build_compatibility_baseline.py` 更新基准；未知版本不会自动生成或覆盖基准。`tools/verify_auto_compatibility.py` 在 `build/` 的文件副本中模拟字段、类型改名及地址移动，验证自动适配，不修改安装目录或游戏内存。
+
 可用以下命令验证打包后的独立窗体与数据持久化；最后一项需要本机正在运行受支持的游戏：
 
 ```powershell
@@ -109,10 +111,12 @@ Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutF
 
 ## 适配范围
 
-当前适配 Deskrawl 1.0.2（Steam build 25817367）；读取前会核对程序和元数据哈希。游戏更新后需要重新核验，版本不匹配时拒绝写入。
+连接时自动检查游戏程序、元数据和资源，以 Deskrawl 1.0.2a（Steam build 25842017）为已验证基准。检测到新版本后，重新解析本地 IL2CPP 类型和程序代码；仅字段改名、类型序号或程序地址移动，并且字段布局、词条枚举、资源数据及代码逻辑保持一致时，自动生成本次连接的适配数据。无需下载适配文件或手动修改地址。
 
-- `GameAssembly.dll` SHA256：`c242676ed070072388b4231a5c215812c8bc3d53c21f9277c7c0afa4fa4fa2da`
-- `global-metadata.dat` SHA256：`2c0ae47e1ee26b6c787d5294f04680b6b875d84e8d5f6db1e574446892e3f2ad`
+顶部显示检测进度和「已验证」或「自动适配通过」。资源数据有增减或变化、字段类型或布局变化、代码逻辑或编译结构变化，以及无法唯一定位的情况，显示「需要维护适配」并阻止连接和物品操作。即使只是资源描述修改，也可能触发维护提示；本版采取保守判断。连接期间游戏文件变化会停止自动操作，重新连接后再检测。诊断记录保存在 `data/runtime/game-compatibility.json`，不作为下次连接的可信缓存。在线仓库扩展页权限、GC 写屏障和保存行为均参与核验；游戏临时禁止物品操作时，工具同样暂停写入。
+
+- `GameAssembly.dll` SHA256：`d46f0a321e8e07646cca37c7460e58fbfecc47ade5027ea2e00fc71f0fec0565`
+- `global-metadata.dat` SHA256：`57627070d0fe8a00f82e373100768f529c4829f02d6aeb8ac3057aaab13cacfc`
 
 锁定动作会重新核验装备身份和字段，写入锁状态及游戏待保存标记，并回读确认。游戏自身负责正常保存；游戏锁图标可能在重新打开背包后刷新。
 

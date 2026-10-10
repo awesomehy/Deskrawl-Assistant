@@ -2,15 +2,13 @@
   {
     "name": "InventorySlotUI",
     "namespace": "",
-    "typeDefinitionIndex": 6338,
-    "isValueType": false,
-    "byvalTypeIndex": 24232,
+    "typeDefinitionIndex": 6336,
     "fields": [
       {
         "name": "IconImage",
-        "fieldIndex": 27901,
-        "token": "0x0400144C",
-        "typeIndex": 23665,
+        "fieldIndex": 27898,
+        "token": "0x04001449",
+        "typeIndex": 23658,
         "resolvedType": "UnityEngine.UI.Image",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -21,9 +19,9 @@
       },
       {
         "name": "CountText",
-        "fieldIndex": 27902,
-        "token": "0x0400144D",
-        "typeIndex": 30618,
+        "fieldIndex": 27899,
+        "token": "0x0400144A",
+        "typeIndex": 30611,
         "resolvedType": "TMPro.TextMeshProUGUI",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -34,9 +32,9 @@
       },
       {
         "name": "HighlightImage",
-        "fieldIndex": 27903,
-        "token": "0x0400144E",
-        "typeIndex": 23665,
+        "fieldIndex": 27900,
+        "token": "0x0400144B",
+        "typeIndex": 23658,
         "resolvedType": "UnityEngine.UI.Image",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -47,9 +45,9 @@
       },
       {
         "name": "RarityBgImage",
-        "fieldIndex": 27904,
-        "token": "0x0400144F",
-        "typeIndex": 23665,
+        "fieldIndex": 27901,
+        "token": "0x0400144C",
+        "typeIndex": 23658,
         "resolvedType": "UnityEngine.UI.Image",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -60,9 +58,9 @@
       },
       {
         "name": "LockIcon",
-        "fieldIndex": 27905,
-        "token": "0x04001450",
-        "typeIndex": 22173,
+        "fieldIndex": 27902,
+        "token": "0x0400144D",
+        "typeIndex": 22166,
         "resolvedType": "UnityEngine.GameObject",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -73,9 +71,9 @@
       },
       {
         "name": "CubeSelectionMark",
-        "fieldIndex": 27906,
-        "token": "0x04001451",
-        "typeIndex": 22173,
+        "fieldIndex": 27903,
+        "token": "0x0400144E",
+        "typeIndex": 22166,
         "resolvedType": "UnityEngine.GameObject",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -86,9 +84,9 @@
       },
       {
         "name": "SocketStrip",
-        "fieldIndex": 27907,
-        "token": "0x04001452",
-        "typeIndex": 22218,
+        "fieldIndex": 27904,
+        "token": "0x0400144F",
+        "typeIndex": 22211,
         "resolvedType": "GemSocketStripUI",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -99,9 +97,9 @@
       },
       {
         "name": "UpgradeStars",
-        "fieldIndex": 27908,
-        "token": "0x04001453",
-        "typeIndex": 31779,
+        "fieldIndex": 27905,
+        "token": "0x04001450",
+        "typeIndex": 31772,
         "resolvedType": "UpgradeStarsUI",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -112,9 +110,9 @@
       },
       {
         "name": "UnequipableTint",
-        "fieldIndex": 27909,
-        "token": "0x04001454",
-        "typeIndex": 19029,
+        "fieldIndex": 27906,
+        "token": "0x04001451",
+        "typeIndex": 19024,
         "resolvedType": "UnityEngine.Color",
         "typeKind": 17,
         "attributes": "0x0006",
@@ -125,9 +123,9 @@
       },
       {
         "name": "NewItemHighlight",
-        "fieldIndex": 27910,
-        "token": "0x04001455",
-        "typeIndex": 22173,
+        "fieldIndex": 27907,
+        "token": "0x04001452",
+        "typeIndex": 22166,
         "resolvedType": "UnityEngine.GameObject",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -138,9 +136,9 @@
       },
       {
         "name": "NewHighlightMaxAlpha",
-        "fieldIndex": 27911,
-        "token": "0x04001456",
-        "typeIndex": 29257,
+        "fieldIndex": 27908,
+        "token": "0x04001453",
+        "typeIndex": 29250,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -151,9 +149,9 @@
       },
       {
         "name": "NewHighlightPulseSpeed",
-        "fieldIndex": 27912,
-        "token": "0x04001457",
-        "typeIndex": 29257,
+        "fieldIndex": 27909,
+        "token": "0x04001454",
+        "typeIndex": 29250,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -163,10 +161,10 @@
         "rawRegistrationOffset": 124
       },
       {
-        "name": "<oqy>k__BackingField",
-        "fieldIndex": 27913,
-        "token": "0x04001458",
-        "typeIndex": 24027,
+        "name": "<orj>k__BackingField",
+        "fieldIndex": 27910,
+        "token": "0x04001455",
+        "typeIndex": 24020,
         "resolvedType": "System.Int32",
         "typeKind": 8,
         "attributes": "0x0001",
@@ -176,10 +174,10 @@
         "rawRegistrationOffset": 128
       },
       {
-        "name": "<oqz>k__BackingField",
-        "fieldIndex": 27914,
-        "token": "0x04001459",
-        "typeIndex": 24233,
+        "name": "<ork>k__BackingField",
+        "fieldIndex": 27911,
+        "token": "0x04001456",
+        "typeIndex": 24226,
         "resolvedType": "InventorySlotUI",
         "typeKind": 18,
         "attributes": "0x0011",
@@ -189,10 +187,10 @@
         "rawRegistrationOffset": 0
       },
       {
-        "name": "ora",
-        "fieldIndex": 27915,
-        "token": "0x0400145A",
-        "typeIndex": 24235,
+        "name": "orl",
+        "fieldIndex": 27912,
+        "token": "0x04001457",
+        "typeIndex": 24228,
         "resolvedType": "InventoryUI",
         "typeKind": 18,
         "attributes": "0x0001",
@@ -202,10 +200,10 @@
         "rawRegistrationOffset": 136
       },
       {
-        "name": "orb",
-        "fieldIndex": 27916,
-        "token": "0x0400145B",
-        "typeIndex": 18604,
+        "name": "orm",
+        "fieldIndex": 27913,
+        "token": "0x04001458",
+        "typeIndex": 18599,
         "resolvedType": "UnityEngine.CanvasGroup",
         "typeKind": 18,
         "attributes": "0x0001",
@@ -215,10 +213,10 @@
         "rawRegistrationOffset": 144
       },
       {
-        "name": "orc",
-        "fieldIndex": 27917,
-        "token": "0x0400145C",
-        "typeIndex": 18604,
+        "name": "orn",
+        "fieldIndex": 27914,
+        "token": "0x04001459",
+        "typeIndex": 18599,
         "resolvedType": "UnityEngine.CanvasGroup",
         "typeKind": 18,
         "attributes": "0x0001",
@@ -228,10 +226,10 @@
         "rawRegistrationOffset": 152
       },
       {
-        "name": "ord",
-        "fieldIndex": 27918,
-        "token": "0x0400145D",
-        "typeIndex": 6759,
+        "name": "oro",
+        "fieldIndex": 27915,
+        "token": "0x0400145A",
+        "typeIndex": 6757,
         "resolvedType": "System.Collections.Generic.HashSet`1<System.String>",
         "typeKind": 21,
         "attributes": "0x0031",
@@ -243,371 +241,371 @@
     ],
     "methods": [
       {
-        "name": "gjj",
-        "token": "0x06001514",
+        "name": "gjq",
+        "token": "0x06001519",
         "isStatic": false,
         "returnType": "System.Int32",
         "parameters": []
       },
       {
-        "name": "gjk",
-        "token": "0x06001515",
+        "name": "gjr",
+        "token": "0x0600151A",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24026,
+            "typeIndex": 24019,
             "resolvedType": "System.Int32"
           }
         ]
       },
       {
-        "name": "gjl",
-        "token": "0x06001516",
+        "name": "gjs",
+        "token": "0x0600151B",
         "isStatic": true,
         "returnType": "InventorySlotUI",
         "parameters": []
       },
       {
-        "name": "gjm",
-        "token": "0x06001517",
+        "name": "gjt",
+        "token": "0x0600151C",
         "isStatic": true,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24232,
+            "typeIndex": 24225,
             "resolvedType": "InventorySlotUI"
           }
         ]
       },
       {
-        "name": "gjn",
-        "token": "0x06001518",
+        "name": "gju",
+        "token": "0x0600151D",
         "isStatic": true,
         "returnType": "System.Boolean",
         "parameters": []
       },
       {
         "name": "InitNewItemTracking",
-        "token": "0x06001519",
+        "token": "0x0600151E",
         "isStatic": true,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "gjo",
-        "token": "0x0600151A",
+        "name": "gjv",
+        "token": "0x0600151F",
         "isStatic": true,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24293,
+            "typeIndex": 24286,
             "resolvedType": "ItemData"
           },
           {
             "name": "b",
-            "typeIndex": 29857,
+            "typeIndex": 29850,
             "resolvedType": "System.String"
           },
           {
             "name": "c",
-            "typeIndex": 26974,
+            "typeIndex": 26967,
             "resolvedType": "PickupSource"
           }
         ]
       },
       {
-        "name": "gjp",
-        "token": "0x0600151B",
+        "name": "gjw",
+        "token": "0x06001520",
         "isStatic": true,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 29857,
+            "typeIndex": 29850,
             "resolvedType": "System.String"
           }
         ]
       },
       {
-        "name": "gjq",
-        "token": "0x0600151C",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 24026,
-            "resolvedType": "System.Int32"
-          },
-          {
-            "name": "b",
-            "typeIndex": 24234,
-            "resolvedType": "InventoryUI"
-          }
-        ]
-      },
-      {
-        "name": "OnDisable",
-        "token": "0x0600151D",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "Update",
-        "token": "0x0600151E",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "gjr",
-        "token": "0x0600151F",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 24230,
-            "resolvedType": "InventorySlot"
-          }
-        ]
-      },
-      {
-        "name": "gjs",
-        "token": "0x06001520",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 24230,
-            "resolvedType": "InventorySlot"
-          }
-        ]
-      },
-      {
-        "name": "gjt",
+        "name": "gjx",
         "token": "0x06001521",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24230,
-            "resolvedType": "InventorySlot"
+            "typeIndex": 24019,
+            "resolvedType": "System.Int32"
+          },
+          {
+            "name": "b",
+            "typeIndex": 24227,
+            "resolvedType": "InventoryUI"
           }
         ]
       },
       {
-        "name": "gju",
+        "name": "OnDisable",
         "token": "0x06001522",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "gjv",
+        "name": "Update",
         "token": "0x06001523",
         "isStatic": false,
         "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 24230,
-            "resolvedType": "InventorySlot"
-          }
-        ]
+        "parameters": []
       },
       {
-        "name": "gjw",
+        "name": "gjy",
         "token": "0x06001524",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24230,
+            "typeIndex": 24223,
             "resolvedType": "InventorySlot"
           }
         ]
       },
       {
-        "name": "gjx",
+        "name": "gjz",
         "token": "0x06001525",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24230,
+            "typeIndex": 24223,
             "resolvedType": "InventorySlot"
           }
         ]
       },
       {
-        "name": "gjy",
+        "name": "gka",
         "token": "0x06001526",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 18211,
-            "resolvedType": "System.Boolean"
+            "typeIndex": 24223,
+            "resolvedType": "InventorySlot"
           }
         ]
       },
       {
-        "name": "OnPointerClick",
+        "name": "gkb",
         "token": "0x06001527",
         "isStatic": false,
         "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "eventData",
-            "typeIndex": 27115,
-            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
-          }
-        ]
+        "parameters": []
       },
       {
-        "name": "gjz",
+        "name": "gkc",
         "token": "0x06001528",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 28385,
-            "resolvedType": "RuneData"
+            "typeIndex": 24223,
+            "resolvedType": "InventorySlot"
           }
         ]
       },
       {
-        "name": "gka",
+        "name": "gkd",
         "token": "0x06001529",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 29857,
-            "resolvedType": "System.String"
-          },
-          {
-            "name": "args",
-            "typeIndex": 16177,
-            "resolvedType": "System.Object[]"
+            "typeIndex": 24223,
+            "resolvedType": "InventorySlot"
           }
         ]
       },
       {
-        "name": "OnBeginDrag",
+        "name": "gke",
         "token": "0x0600152A",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
-            "name": "eventData",
-            "typeIndex": 27115,
-            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+            "name": "a",
+            "typeIndex": 24223,
+            "resolvedType": "InventorySlot"
           }
         ]
       },
       {
-        "name": "OnDrag",
+        "name": "gkf",
         "token": "0x0600152B",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
-            "name": "eventData",
-            "typeIndex": 27115,
-            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+            "name": "a",
+            "typeIndex": 18206,
+            "resolvedType": "System.Boolean"
           }
         ]
       },
       {
-        "name": "OnEndDrag",
+        "name": "OnPointerClick",
         "token": "0x0600152C",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "eventData",
-            "typeIndex": 27115,
+            "typeIndex": 27108,
             "resolvedType": "UnityEngine.EventSystems.PointerEventData"
           }
         ]
       },
       {
-        "name": "gkb",
+        "name": "gkg",
         "token": "0x0600152D",
         "isStatic": false,
         "returnType": "System.Void",
-        "parameters": []
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 28378,
+            "resolvedType": "RuneData"
+          }
+        ]
       },
       {
-        "name": "OnDrop",
+        "name": "gkh",
         "token": "0x0600152E",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
-            "name": "eventData",
-            "typeIndex": 27115,
-            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+            "name": "a",
+            "typeIndex": 29850,
+            "resolvedType": "System.String"
+          },
+          {
+            "name": "args",
+            "typeIndex": 16172,
+            "resolvedType": "System.Object[]"
           }
         ]
       },
       {
-        "name": "OnPointerEnter",
+        "name": "OnBeginDrag",
         "token": "0x0600152F",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "eventData",
-            "typeIndex": 27115,
+            "typeIndex": 27108,
             "resolvedType": "UnityEngine.EventSystems.PointerEventData"
           }
         ]
       },
       {
-        "name": "OnPointerExit",
+        "name": "OnDrag",
         "token": "0x06001530",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "eventData",
-            "typeIndex": 27115,
+            "typeIndex": 27108,
             "resolvedType": "UnityEngine.EventSystems.PointerEventData"
           }
         ]
       },
       {
-        "name": "gkc",
+        "name": "OnEndDrag",
         "token": "0x06001531",
         "isStatic": false,
         "returnType": "System.Void",
-        "parameters": []
+        "parameters": [
+          {
+            "name": "eventData",
+            "typeIndex": 27108,
+            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+          }
+        ]
       },
       {
-        "name": ".ctor",
+        "name": "gki",
         "token": "0x06001532",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": ".cctor",
+        "name": "OnDrop",
         "token": "0x06001533",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "eventData",
+            "typeIndex": 27108,
+            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+          }
+        ]
+      },
+      {
+        "name": "OnPointerEnter",
+        "token": "0x06001534",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "eventData",
+            "typeIndex": 27108,
+            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+          }
+        ]
+      },
+      {
+        "name": "OnPointerExit",
+        "token": "0x06001535",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "eventData",
+            "typeIndex": 27108,
+            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+          }
+        ]
+      },
+      {
+        "name": "gkj",
+        "token": "0x06001536",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": ".ctor",
+        "token": "0x06001537",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": ".cctor",
+        "token": "0x06001538",
         "isStatic": true,
         "returnType": "System.Void",
         "parameters": []
@@ -617,15 +615,13 @@
   {
     "name": "InventoryUI",
     "namespace": "",
-    "typeDefinitionIndex": 6342,
-    "isValueType": false,
-    "byvalTypeIndex": 24234,
+    "typeDefinitionIndex": 6340,
     "fields": [
       {
-        "name": "<orh>k__BackingField",
-        "fieldIndex": 27927,
-        "token": "0x04001466",
-        "typeIndex": 24237,
+        "name": "<ors>k__BackingField",
+        "fieldIndex": 27924,
+        "token": "0x04001463",
+        "typeIndex": 24230,
         "resolvedType": "InventoryUI",
         "typeKind": 18,
         "attributes": "0x0011",
@@ -636,9 +632,9 @@
       },
       {
         "name": "SlotContainer",
-        "fieldIndex": 27928,
-        "token": "0x04001467",
-        "typeIndex": 31122,
+        "fieldIndex": 27925,
+        "token": "0x04001464",
+        "typeIndex": 31115,
         "resolvedType": "UnityEngine.Transform",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -649,9 +645,9 @@
       },
       {
         "name": "SlotPrefab",
-        "fieldIndex": 27929,
-        "token": "0x04001468",
-        "typeIndex": 22173,
+        "fieldIndex": 27926,
+        "token": "0x04001465",
+        "typeIndex": 22166,
         "resolvedType": "UnityEngine.GameObject",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -662,9 +658,9 @@
       },
       {
         "name": "CapacityText",
-        "fieldIndex": 27930,
-        "token": "0x04001469",
-        "typeIndex": 30618,
+        "fieldIndex": 27927,
+        "token": "0x04001466",
+        "typeIndex": 30611,
         "resolvedType": "TMPro.TextMeshProUGUI",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -675,9 +671,9 @@
       },
       {
         "name": "GoldText",
-        "fieldIndex": 27931,
-        "token": "0x0400146A",
-        "typeIndex": 30618,
+        "fieldIndex": 27928,
+        "token": "0x04001467",
+        "typeIndex": 30611,
         "resolvedType": "TMPro.TextMeshProUGUI",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -688,9 +684,9 @@
       },
       {
         "name": "ResourceCounters",
-        "fieldIndex": 27932,
-        "token": "0x0400146B",
-        "typeIndex": 16264,
+        "fieldIndex": 27929,
+        "token": "0x04001468",
+        "typeIndex": 16259,
         "resolvedType": "ResourceCounter[]",
         "typeKind": 29,
         "attributes": "0x0006",
@@ -701,9 +697,9 @@
       },
       {
         "name": "SortButton",
-        "fieldIndex": 27933,
-        "token": "0x0400146C",
-        "typeIndex": 18360,
+        "fieldIndex": 27930,
+        "token": "0x04001469",
+        "typeIndex": 18355,
         "resolvedType": "UnityEngine.UI.Button",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -714,9 +710,9 @@
       },
       {
         "name": "LeaderboardButton",
-        "fieldIndex": 27934,
-        "token": "0x0400146D",
-        "typeIndex": 18360,
+        "fieldIndex": 27931,
+        "token": "0x0400146A",
+        "typeIndex": 18355,
         "resolvedType": "UnityEngine.UI.Button",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -727,9 +723,9 @@
       },
       {
         "name": "Leaderboard",
-        "fieldIndex": 27935,
-        "token": "0x0400146E",
-        "typeIndex": 24703,
+        "fieldIndex": 27932,
+        "token": "0x0400146B",
+        "typeIndex": 24696,
         "resolvedType": "LeaderboardUI",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -740,9 +736,9 @@
       },
       {
         "name": "MailButton",
-        "fieldIndex": 27936,
-        "token": "0x0400146F",
-        "typeIndex": 18360,
+        "fieldIndex": 27933,
+        "token": "0x0400146C",
+        "typeIndex": 18355,
         "resolvedType": "UnityEngine.UI.Button",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -753,9 +749,9 @@
       },
       {
         "name": "MailPanel",
-        "fieldIndex": 27937,
-        "token": "0x04001470",
-        "typeIndex": 25170,
+        "fieldIndex": 27934,
+        "token": "0x0400146D",
+        "typeIndex": 25163,
         "resolvedType": "MailUI",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -766,9 +762,9 @@
       },
       {
         "name": "MailBadge",
-        "fieldIndex": 27938,
-        "token": "0x04001471",
-        "typeIndex": 22173,
+        "fieldIndex": 27935,
+        "token": "0x0400146E",
+        "typeIndex": 22166,
         "resolvedType": "UnityEngine.GameObject",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -779,9 +775,9 @@
       },
       {
         "name": "DragGhostIcon",
-        "fieldIndex": 27939,
-        "token": "0x04001472",
-        "typeIndex": 23665,
+        "fieldIndex": 27936,
+        "token": "0x0400146F",
+        "typeIndex": 23658,
         "resolvedType": "UnityEngine.UI.Image",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -792,9 +788,9 @@
       },
       {
         "name": "EquipmentUI",
-        "fieldIndex": 27940,
-        "token": "0x04001473",
-        "typeIndex": 21252,
+        "fieldIndex": 27937,
+        "token": "0x04001470",
+        "typeIndex": 21245,
         "resolvedType": "EquipmentUI",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -805,9 +801,9 @@
       },
       {
         "name": "ItemsTabButton",
-        "fieldIndex": 27941,
-        "token": "0x04001474",
-        "typeIndex": 18360,
+        "fieldIndex": 27938,
+        "token": "0x04001471",
+        "typeIndex": 18355,
         "resolvedType": "UnityEngine.UI.Button",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -818,9 +814,9 @@
       },
       {
         "name": "RunesTabButton",
-        "fieldIndex": 27942,
-        "token": "0x04001475",
-        "typeIndex": 18360,
+        "fieldIndex": 27939,
+        "token": "0x04001472",
+        "typeIndex": 18355,
         "resolvedType": "UnityEngine.UI.Button",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -831,9 +827,9 @@
       },
       {
         "name": "RuneEquipUI",
-        "fieldIndex": 27943,
-        "token": "0x04001476",
-        "typeIndex": 28390,
+        "fieldIndex": 27940,
+        "token": "0x04001473",
+        "typeIndex": 28383,
         "resolvedType": "RuneEquipUI",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -844,9 +840,9 @@
       },
       {
         "name": "RunesTabGlow",
-        "fieldIndex": 27944,
-        "token": "0x04001477",
-        "typeIndex": 22173,
+        "fieldIndex": 27941,
+        "token": "0x04001474",
+        "typeIndex": 22166,
         "resolvedType": "UnityEngine.GameObject",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -856,10 +852,10 @@
         "rawRegistrationOffset": 192
       },
       {
-        "name": "<ori>k__BackingField",
-        "fieldIndex": 27945,
-        "token": "0x04001478",
-        "typeIndex": 18212,
+        "name": "<ort>k__BackingField",
+        "fieldIndex": 27942,
+        "token": "0x04001475",
+        "typeIndex": 18207,
         "resolvedType": "System.Boolean",
         "typeKind": 2,
         "attributes": "0x0001",
@@ -869,10 +865,10 @@
         "rawRegistrationOffset": 200
       },
       {
-        "name": "orj",
-        "fieldIndex": 27946,
-        "token": "0x04001479",
-        "typeIndex": 16071,
+        "name": "oru",
+        "fieldIndex": 27943,
+        "token": "0x04001476",
+        "typeIndex": 16066,
         "resolvedType": "InventorySlotUI[]",
         "typeKind": 29,
         "attributes": "0x0001",
@@ -882,10 +878,10 @@
         "rawRegistrationOffset": 208
       },
       {
-        "name": "ork",
-        "fieldIndex": 27947,
-        "token": "0x0400147A",
-        "typeIndex": 24027,
+        "name": "orv",
+        "fieldIndex": 27944,
+        "token": "0x04001477",
+        "typeIndex": 24020,
         "resolvedType": "System.Int32",
         "typeKind": 8,
         "attributes": "0x0001",
@@ -895,10 +891,10 @@
         "rawRegistrationOffset": 216
       },
       {
-        "name": "orl",
-        "fieldIndex": 27948,
-        "token": "0x0400147B",
-        "typeIndex": 18212,
+        "name": "orw",
+        "fieldIndex": 27945,
+        "token": "0x04001478",
+        "typeIndex": 18207,
         "resolvedType": "System.Boolean",
         "typeKind": 2,
         "attributes": "0x0001",
@@ -908,10 +904,10 @@
         "rawRegistrationOffset": 220
       },
       {
-        "name": "orm",
-        "fieldIndex": 27949,
-        "token": "0x0400147C",
-        "typeIndex": 10268,
+        "name": "orx",
+        "fieldIndex": 27946,
+        "token": "0x04001479",
+        "typeIndex": 10266,
         "resolvedType": "System.Collections.Generic.List`1<UnityEngine.EventSystems.RaycastResult>",
         "typeKind": 21,
         "attributes": "0x0031",
@@ -923,383 +919,383 @@
     ],
     "methods": [
       {
-        "name": "gkg",
-        "token": "0x06001539",
+        "name": "gkn",
+        "token": "0x0600153E",
         "isStatic": true,
         "returnType": "InventoryUI",
         "parameters": []
       },
       {
-        "name": "gkh",
-        "token": "0x0600153A",
+        "name": "gko",
+        "token": "0x0600153F",
         "isStatic": true,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24234,
+            "typeIndex": 24227,
             "resolvedType": "InventoryUI"
           }
         ]
       },
       {
-        "name": "fsh",
-        "token": "0x0600153B",
+        "name": "fso",
+        "token": "0x06001540",
         "isStatic": false,
         "returnType": "UnityEngine.GameObject",
         "parameters": []
       },
       {
-        "name": "gki",
-        "token": "0x0600153C",
+        "name": "gkp",
+        "token": "0x06001541",
         "isStatic": false,
         "returnType": "System.Int32",
         "parameters": []
       },
       {
-        "name": "gkj",
-        "token": "0x0600153D",
+        "name": "gkq",
+        "token": "0x06001542",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": []
       },
       {
-        "name": "gkk",
-        "token": "0x0600153E",
+        "name": "gkr",
+        "token": "0x06001543",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 18211,
+            "typeIndex": 18206,
             "resolvedType": "System.Boolean"
           }
         ]
       },
       {
-        "name": "gkl",
-        "token": "0x0600153F",
+        "name": "gks",
+        "token": "0x06001544",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": []
       },
       {
-        "name": "gkm",
-        "token": "0x06001540",
+        "name": "gkt",
+        "token": "0x06001545",
         "isStatic": false,
         "returnType": "System.Int32",
         "parameters": []
       },
       {
-        "name": "gkn",
-        "token": "0x06001541",
+        "name": "gku",
+        "token": "0x06001546",
         "isStatic": false,
         "returnType": "UnityEngine.Vector3",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24026,
+            "typeIndex": 24019,
             "resolvedType": "System.Int32"
           }
         ]
       },
       {
-        "name": "gko",
-        "token": "0x06001542",
+        "name": "gkv",
+        "token": "0x06001547",
         "isStatic": false,
         "returnType": "UnityEngine.RectTransform",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24026,
+            "typeIndex": 24019,
             "resolvedType": "System.Int32"
           }
         ]
       },
       {
         "name": "Awake",
-        "token": "0x06001543",
+        "token": "0x06001548",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "Start",
-        "token": "0x06001544",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "gkp",
-        "token": "0x06001545",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "OnDestroy",
-        "token": "0x06001546",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "gkq",
-        "token": "0x06001547",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 24026,
-            "resolvedType": "System.Int32"
-          }
-        ]
-      },
-      {
-        "name": "gkr",
-        "token": "0x06001548",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 24026,
-            "resolvedType": "System.Int32"
-          }
-        ]
-      },
-      {
-        "name": "gks",
         "token": "0x06001549",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "fsk",
+        "name": "gkw",
         "token": "0x0600154A",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "ftk",
+        "name": "OnDestroy",
         "token": "0x0600154B",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "Update",
+        "name": "gkx",
         "token": "0x0600154C",
         "isStatic": false,
         "returnType": "System.Void",
-        "parameters": []
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 24019,
+            "resolvedType": "System.Int32"
+          }
+        ]
       },
       {
-        "name": "gkt",
+        "name": "gky",
         "token": "0x0600154D",
         "isStatic": false,
         "returnType": "System.Void",
-        "parameters": []
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 24019,
+            "resolvedType": "System.Int32"
+          }
+        ]
       },
       {
-        "name": "gku",
+        "name": "gkz",
         "token": "0x0600154E",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "gkv",
+        "name": "fsr",
         "token": "0x0600154F",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "gkw",
+        "name": "ftr",
         "token": "0x06001550",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "gkx",
+        "name": "Update",
         "token": "0x06001551",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "gky",
-        "token": "0x06001552",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 18211,
-            "resolvedType": "System.Boolean"
-          }
-        ]
-      },
-      {
-        "name": "gkz",
-        "token": "0x06001553",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
         "name": "gla",
-        "token": "0x06001554",
+        "token": "0x06001552",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "glb",
-        "token": "0x06001555",
+        "token": "0x06001553",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "glc",
-        "token": "0x06001556",
+        "token": "0x06001554",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "gld",
-        "token": "0x06001557",
+        "token": "0x06001555",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "gle",
-        "token": "0x06001558",
+        "token": "0x06001556",
         "isStatic": false,
         "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 24232,
-            "resolvedType": "InventorySlotUI"
-          },
-          {
-            "name": "b",
-            "typeIndex": 27115,
-            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
-          }
-        ]
+        "parameters": []
       },
       {
         "name": "glf",
-        "token": "0x06001559",
+        "token": "0x06001557",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 27115,
-            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+            "typeIndex": 18206,
+            "resolvedType": "System.Boolean"
           }
         ]
       },
       {
         "name": "glg",
-        "token": "0x0600155A",
+        "token": "0x06001558",
         "isStatic": false,
         "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 27115,
-            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
-          }
-        ]
+        "parameters": []
       },
       {
         "name": "glh",
-        "token": "0x0600155B",
+        "token": "0x06001559",
         "isStatic": false,
         "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 24026,
-            "resolvedType": "System.Int32"
-          },
-          {
-            "name": "b",
-            "typeIndex": 32041,
-            "resolvedType": "UnityEngine.Vector2"
-          }
-        ]
+        "parameters": []
       },
       {
         "name": "gli",
-        "token": "0x0600155C",
+        "token": "0x0600155A",
         "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 27115,
-            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
-          }
-        ]
+        "returnType": "System.Void",
+        "parameters": []
       },
       {
         "name": "glj",
+        "token": "0x0600155B",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "glk",
+        "token": "0x0600155C",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "gll",
         "token": "0x0600155D",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24232,
+            "typeIndex": 24225,
+            "resolvedType": "InventorySlotUI"
+          },
+          {
+            "name": "b",
+            "typeIndex": 27108,
+            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+          }
+        ]
+      },
+      {
+        "name": "glm",
+        "token": "0x0600155E",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 27108,
+            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+          }
+        ]
+      },
+      {
+        "name": "gln",
+        "token": "0x0600155F",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 27108,
+            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+          }
+        ]
+      },
+      {
+        "name": "glo",
+        "token": "0x06001560",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 24019,
+            "resolvedType": "System.Int32"
+          },
+          {
+            "name": "b",
+            "typeIndex": 32034,
+            "resolvedType": "UnityEngine.Vector2"
+          }
+        ]
+      },
+      {
+        "name": "glp",
+        "token": "0x06001561",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 27108,
+            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+          }
+        ]
+      },
+      {
+        "name": "glq",
+        "token": "0x06001562",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 24225,
             "resolvedType": "InventorySlotUI"
           }
         ]
       },
       {
-        "name": "glk",
-        "token": "0x0600155E",
+        "name": "glr",
+        "token": "0x06001563",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": ".ctor",
-        "token": "0x0600155F",
+        "token": "0x06001564",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": ".cctor",
-        "token": "0x06001560",
+        "token": "0x06001565",
         "isStatic": true,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "gll",
-        "token": "0x06001561",
+        "name": "gls",
+        "token": "0x06001566",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "glm",
-        "token": "0x06001562",
+        "name": "glt",
+        "token": "0x06001567",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
@@ -1309,15 +1305,13 @@
   {
     "name": "StorageSlotUI",
     "namespace": "",
-    "typeDefinitionIndex": 6488,
-    "isValueType": false,
-    "byvalTypeIndex": 29796,
+    "typeDefinitionIndex": 6486,
     "fields": [
       {
         "name": "IconImage",
         "fieldIndex": 29072,
         "token": "0x040018DF",
-        "typeIndex": 23665,
+        "typeIndex": 23658,
         "resolvedType": "UnityEngine.UI.Image",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -1330,7 +1324,7 @@
         "name": "CountText",
         "fieldIndex": 29073,
         "token": "0x040018E0",
-        "typeIndex": 30618,
+        "typeIndex": 30611,
         "resolvedType": "TMPro.TextMeshProUGUI",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -1343,7 +1337,7 @@
         "name": "HighlightImage",
         "fieldIndex": 29074,
         "token": "0x040018E1",
-        "typeIndex": 23665,
+        "typeIndex": 23658,
         "resolvedType": "UnityEngine.UI.Image",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -1356,7 +1350,7 @@
         "name": "RarityBgImage",
         "fieldIndex": 29075,
         "token": "0x040018E2",
-        "typeIndex": 23665,
+        "typeIndex": 23658,
         "resolvedType": "UnityEngine.UI.Image",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -1369,7 +1363,7 @@
         "name": "UnequipableTint",
         "fieldIndex": 29076,
         "token": "0x040018E3",
-        "typeIndex": 19029,
+        "typeIndex": 19024,
         "resolvedType": "UnityEngine.Color",
         "typeKind": 17,
         "attributes": "0x0006",
@@ -1382,7 +1376,7 @@
         "name": "LockIcon",
         "fieldIndex": 29077,
         "token": "0x040018E4",
-        "typeIndex": 22173,
+        "typeIndex": 22166,
         "resolvedType": "UnityEngine.GameObject",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -1395,7 +1389,7 @@
         "name": "SocketStrip",
         "fieldIndex": 29078,
         "token": "0x040018E5",
-        "typeIndex": 22218,
+        "typeIndex": 22211,
         "resolvedType": "GemSocketStripUI",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -1408,7 +1402,7 @@
         "name": "UpgradeStars",
         "fieldIndex": 29079,
         "token": "0x040018E6",
-        "typeIndex": 31779,
+        "typeIndex": 31772,
         "resolvedType": "UpgradeStarsUI",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -1418,10 +1412,10 @@
         "rawRegistrationOffset": 96
       },
       {
-        "name": "<phy>k__BackingField",
+        "name": "<pil>k__BackingField",
         "fieldIndex": 29080,
         "token": "0x040018E7",
-        "typeIndex": 24027,
+        "typeIndex": 24020,
         "resolvedType": "System.Int32",
         "typeKind": 8,
         "attributes": "0x0001",
@@ -1431,10 +1425,10 @@
         "rawRegistrationOffset": 104
       },
       {
-        "name": "<phz>k__BackingField",
+        "name": "<pim>k__BackingField",
         "fieldIndex": 29081,
         "token": "0x040018E8",
-        "typeIndex": 29797,
+        "typeIndex": 29790,
         "resolvedType": "StorageSlotUI",
         "typeKind": 18,
         "attributes": "0x0011",
@@ -1444,10 +1438,10 @@
         "rawRegistrationOffset": 0
       },
       {
-        "name": "pia",
+        "name": "pio",
         "fieldIndex": 29082,
         "token": "0x040018E9",
-        "typeIndex": 29804,
+        "typeIndex": 29797,
         "resolvedType": "StorageUI",
         "typeKind": 18,
         "attributes": "0x0001",
@@ -1457,10 +1451,10 @@
         "rawRegistrationOffset": 112
       },
       {
-        "name": "pib",
+        "name": "pip",
         "fieldIndex": 29083,
         "token": "0x040018EA",
-        "typeIndex": 18604,
+        "typeIndex": 18599,
         "resolvedType": "UnityEngine.CanvasGroup",
         "typeKind": 18,
         "attributes": "0x0001",
@@ -1472,237 +1466,237 @@
     ],
     "methods": [
       {
-        "name": "hnu",
-        "token": "0x06001A00",
+        "name": "hoc",
+        "token": "0x06001A06",
         "isStatic": false,
         "returnType": "System.Int32",
         "parameters": []
       },
       {
-        "name": "hnv",
-        "token": "0x06001A01",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 24026,
-            "resolvedType": "System.Int32"
-          }
-        ]
-      },
-      {
-        "name": "hnw",
-        "token": "0x06001A02",
-        "isStatic": true,
-        "returnType": "StorageSlotUI",
-        "parameters": []
-      },
-      {
-        "name": "hnx",
-        "token": "0x06001A03",
-        "isStatic": true,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 29796,
-            "resolvedType": "StorageSlotUI"
-          }
-        ]
-      },
-      {
-        "name": "hny",
-        "token": "0x06001A04",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 24026,
-            "resolvedType": "System.Int32"
-          },
-          {
-            "name": "b",
-            "typeIndex": 29803,
-            "resolvedType": "StorageUI"
-          }
-        ]
-      },
-      {
-        "name": "hnz",
-        "token": "0x06001A05",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 24230,
-            "resolvedType": "InventorySlot"
-          }
-        ]
-      },
-      {
-        "name": "hoa",
-        "token": "0x06001A06",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "hob",
+        "name": "hod",
         "token": "0x06001A07",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24230,
-            "resolvedType": "InventorySlot"
+            "typeIndex": 24019,
+            "resolvedType": "System.Int32"
           }
         ]
       },
       {
-        "name": "hoc",
+        "name": "hoe",
         "token": "0x06001A08",
+        "isStatic": true,
+        "returnType": "StorageSlotUI",
+        "parameters": []
+      },
+      {
+        "name": "hof",
+        "token": "0x06001A09",
+        "isStatic": true,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 29789,
+            "resolvedType": "StorageSlotUI"
+          }
+        ]
+      },
+      {
+        "name": "hog",
+        "token": "0x06001A0A",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24230,
+            "typeIndex": 24019,
+            "resolvedType": "System.Int32"
+          },
+          {
+            "name": "b",
+            "typeIndex": 29796,
+            "resolvedType": "StorageUI"
+          }
+        ]
+      },
+      {
+        "name": "hoh",
+        "token": "0x06001A0B",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 24223,
             "resolvedType": "InventorySlot"
           }
         ]
       },
       {
-        "name": "hod",
-        "token": "0x06001A09",
+        "name": "hoi",
+        "token": "0x06001A0C",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "hoj",
+        "token": "0x06001A0D",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 18211,
+            "typeIndex": 24223,
+            "resolvedType": "InventorySlot"
+          }
+        ]
+      },
+      {
+        "name": "hok",
+        "token": "0x06001A0E",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 24223,
+            "resolvedType": "InventorySlot"
+          }
+        ]
+      },
+      {
+        "name": "hol",
+        "token": "0x06001A0F",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 18206,
             "resolvedType": "System.Boolean"
           }
         ]
       },
       {
         "name": "OnPointerClick",
-        "token": "0x06001A0A",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "eventData",
-            "typeIndex": 27115,
-            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
-          }
-        ]
-      },
-      {
-        "name": "OnBeginDrag",
-        "token": "0x06001A0B",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "eventData",
-            "typeIndex": 27115,
-            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
-          }
-        ]
-      },
-      {
-        "name": "OnDrag",
-        "token": "0x06001A0C",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "eventData",
-            "typeIndex": 27115,
-            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
-          }
-        ]
-      },
-      {
-        "name": "OnEndDrag",
-        "token": "0x06001A0D",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "eventData",
-            "typeIndex": 27115,
-            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
-          }
-        ]
-      },
-      {
-        "name": "hoe",
-        "token": "0x06001A0E",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "OnDrop",
-        "token": "0x06001A0F",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "eventData",
-            "typeIndex": 27115,
-            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
-          }
-        ]
-      },
-      {
-        "name": "OnPointerEnter",
         "token": "0x06001A10",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "eventData",
-            "typeIndex": 27115,
+            "typeIndex": 27108,
             "resolvedType": "UnityEngine.EventSystems.PointerEventData"
           }
         ]
       },
       {
-        "name": "OnPointerExit",
+        "name": "OnBeginDrag",
         "token": "0x06001A11",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "eventData",
-            "typeIndex": 27115,
+            "typeIndex": 27108,
+            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+          }
+        ]
+      },
+      {
+        "name": "OnDrag",
+        "token": "0x06001A12",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "eventData",
+            "typeIndex": 27108,
+            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+          }
+        ]
+      },
+      {
+        "name": "OnEndDrag",
+        "token": "0x06001A13",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "eventData",
+            "typeIndex": 27108,
+            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+          }
+        ]
+      },
+      {
+        "name": "hom",
+        "token": "0x06001A14",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "OnDrop",
+        "token": "0x06001A15",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "eventData",
+            "typeIndex": 27108,
+            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+          }
+        ]
+      },
+      {
+        "name": "OnPointerEnter",
+        "token": "0x06001A16",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "eventData",
+            "typeIndex": 27108,
+            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+          }
+        ]
+      },
+      {
+        "name": "OnPointerExit",
+        "token": "0x06001A17",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "eventData",
+            "typeIndex": 27108,
             "resolvedType": "UnityEngine.EventSystems.PointerEventData"
           }
         ]
       },
       {
         "name": "OnDisable",
-        "token": "0x06001A12",
+        "token": "0x06001A18",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "hof",
-        "token": "0x06001A13",
+        "name": "hon",
+        "token": "0x06001A19",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": ".ctor",
-        "token": "0x06001A14",
+        "token": "0x06001A1A",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
@@ -1712,15 +1706,13 @@
   {
     "name": "StorageUI",
     "namespace": "",
-    "typeDefinitionIndex": 6490,
-    "isValueType": false,
-    "byvalTypeIndex": 29803,
+    "typeDefinitionIndex": 6488,
     "fields": [
       {
-        "name": "<pie>k__BackingField",
+        "name": "<pis>k__BackingField",
         "fieldIndex": 29084,
         "token": "0x040018EB",
-        "typeIndex": 29806,
+        "typeIndex": 29799,
         "resolvedType": "StorageUI",
         "typeKind": 18,
         "attributes": "0x0011",
@@ -1733,7 +1725,7 @@
         "name": "CloseButton",
         "fieldIndex": 29085,
         "token": "0x040018EC",
-        "typeIndex": 18360,
+        "typeIndex": 18355,
         "resolvedType": "UnityEngine.UI.Button",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -1746,7 +1738,7 @@
         "name": "SortButton",
         "fieldIndex": 29086,
         "token": "0x040018ED",
-        "typeIndex": 18360,
+        "typeIndex": 18355,
         "resolvedType": "UnityEngine.UI.Button",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -1759,7 +1751,7 @@
         "name": "StoreAllButton",
         "fieldIndex": 29087,
         "token": "0x040018EE",
-        "typeIndex": 18360,
+        "typeIndex": 18355,
         "resolvedType": "UnityEngine.UI.Button",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -1772,7 +1764,7 @@
         "name": "TakeAllButton",
         "fieldIndex": 29088,
         "token": "0x040018EF",
-        "typeIndex": 18360,
+        "typeIndex": 18355,
         "resolvedType": "UnityEngine.UI.Button",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -1785,7 +1777,7 @@
         "name": "SlotContainer",
         "fieldIndex": 29089,
         "token": "0x040018F0",
-        "typeIndex": 31122,
+        "typeIndex": 31115,
         "resolvedType": "UnityEngine.Transform",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -1798,7 +1790,7 @@
         "name": "SlotPrefab",
         "fieldIndex": 29090,
         "token": "0x040018F1",
-        "typeIndex": 22173,
+        "typeIndex": 22166,
         "resolvedType": "UnityEngine.GameObject",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -1811,7 +1803,7 @@
         "name": "CapacityText",
         "fieldIndex": 29091,
         "token": "0x040018F2",
-        "typeIndex": 30618,
+        "typeIndex": 30611,
         "resolvedType": "TMPro.TextMeshProUGUI",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -1824,7 +1816,7 @@
         "name": "DragGhostIcon",
         "fieldIndex": 29092,
         "token": "0x040018F3",
-        "typeIndex": 23665,
+        "typeIndex": 23658,
         "resolvedType": "UnityEngine.UI.Image",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -1837,7 +1829,7 @@
         "name": "SnapGap",
         "fieldIndex": 29093,
         "token": "0x040018F4",
-        "typeIndex": 29257,
+        "typeIndex": 29250,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -1850,7 +1842,7 @@
         "name": "PageTabs",
         "fieldIndex": 29094,
         "token": "0x040018F5",
-        "typeIndex": 16359,
+        "typeIndex": 16354,
         "resolvedType": "StoragePageTab[]",
         "typeKind": 29,
         "attributes": "0x0006",
@@ -1863,7 +1855,7 @@
         "name": "LockedPageTooltipKey",
         "fieldIndex": 29095,
         "token": "0x040018F6",
-        "typeIndex": 29862,
+        "typeIndex": 29855,
         "resolvedType": "System.String",
         "typeKind": 14,
         "attributes": "0x0006",
@@ -1873,10 +1865,10 @@
         "rawRegistrationOffset": 144
       },
       {
-        "name": "pif",
+        "name": "pit",
         "fieldIndex": 29096,
         "token": "0x040018F7",
-        "typeIndex": 16360,
+        "typeIndex": 16355,
         "resolvedType": "StorageSlotUI[]",
         "typeKind": 29,
         "attributes": "0x0001",
@@ -1886,10 +1878,10 @@
         "rawRegistrationOffset": 152
       },
       {
-        "name": "pig",
+        "name": "piu",
         "fieldIndex": 29097,
         "token": "0x040018F8",
-        "typeIndex": 24027,
+        "typeIndex": 24020,
         "resolvedType": "System.Int32",
         "typeKind": 8,
         "attributes": "0x0001",
@@ -1899,10 +1891,10 @@
         "rawRegistrationOffset": 160
       },
       {
-        "name": "pih",
+        "name": "piv",
         "fieldIndex": 29098,
         "token": "0x040018F9",
-        "typeIndex": 24027,
+        "typeIndex": 24020,
         "resolvedType": "System.Int32",
         "typeKind": 8,
         "attributes": "0x0001",
@@ -1914,352 +1906,352 @@
     ],
     "methods": [
       {
-        "name": "hoh",
-        "token": "0x06001A15",
+        "name": "hop",
+        "token": "0x06001A1B",
         "isStatic": true,
         "returnType": "StorageUI",
         "parameters": []
       },
       {
-        "name": "hoi",
-        "token": "0x06001A16",
+        "name": "hoq",
+        "token": "0x06001A1C",
         "isStatic": true,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 29803,
+            "typeIndex": 29796,
             "resolvedType": "StorageUI"
           }
         ]
       },
       {
-        "name": "fsh",
-        "token": "0x06001A17",
+        "name": "fso",
+        "token": "0x06001A1D",
         "isStatic": false,
         "returnType": "UnityEngine.GameObject",
         "parameters": []
       },
       {
-        "name": "hoj",
-        "token": "0x06001A18",
+        "name": "hor",
+        "token": "0x06001A1E",
         "isStatic": false,
         "returnType": "System.Int32",
         "parameters": []
       },
       {
         "name": "Awake",
-        "token": "0x06001A19",
+        "token": "0x06001A1F",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "Start",
-        "token": "0x06001A1A",
+        "token": "0x06001A20",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "OnDestroy",
-        "token": "0x06001A1B",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "fsk",
-        "token": "0x06001A1C",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "hok",
-        "token": "0x06001A1D",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 29251,
-            "resolvedType": "System.Single"
-          }
-        ]
-      },
-      {
-        "name": "hol",
-        "token": "0x06001A1E",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 24234,
-            "resolvedType": "InventoryUI"
-          }
-        ]
-      },
-      {
-        "name": "hom",
-        "token": "0x06001A1F",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 24234,
-            "resolvedType": "InventoryUI"
-          }
-        ]
-      },
-      {
-        "name": "hon",
-        "token": "0x06001A20",
-        "isStatic": true,
-        "returnType": "UnityEngine.RectTransform",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 27821,
-            "resolvedType": "UnityEngine.RectTransform"
-          }
-        ]
-      },
-      {
-        "name": "hoo",
         "token": "0x06001A21",
         "isStatic": false,
         "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 24234,
-            "resolvedType": "InventoryUI"
-          }
-        ]
+        "parameters": []
       },
       {
-        "name": "Update",
+        "name": "fsr",
         "token": "0x06001A22",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "ftk",
-        "token": "0x06001A23",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "hop",
-        "token": "0x06001A24",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "hoq",
-        "token": "0x06001A25",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "hor",
-        "token": "0x06001A26",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
         "name": "hos",
-        "token": "0x06001A27",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "hot",
-        "token": "0x06001A28",
+        "token": "0x06001A23",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24026,
-            "resolvedType": "System.Int32"
+            "typeIndex": 29244,
+            "resolvedType": "System.Single"
+          }
+        ]
+      },
+      {
+        "name": "hot",
+        "token": "0x06001A24",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 24227,
+            "resolvedType": "InventoryUI"
           }
         ]
       },
       {
         "name": "hou",
-        "token": "0x06001A29",
+        "token": "0x06001A25",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24026,
-            "resolvedType": "System.Int32"
+            "typeIndex": 24227,
+            "resolvedType": "InventoryUI"
           }
         ]
       },
       {
         "name": "hov",
-        "token": "0x06001A2A",
-        "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": []
+        "token": "0x06001A26",
+        "isStatic": true,
+        "returnType": "UnityEngine.RectTransform",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 27814,
+            "resolvedType": "UnityEngine.RectTransform"
+          }
+        ]
       },
       {
         "name": "how",
-        "token": "0x06001A2B",
+        "token": "0x06001A27",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24026,
-            "resolvedType": "System.Int32"
+            "typeIndex": 24227,
+            "resolvedType": "InventoryUI"
           }
         ]
       },
       {
+        "name": "Update",
+        "token": "0x06001A28",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "ftr",
+        "token": "0x06001A29",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
         "name": "hox",
-        "token": "0x06001A2C",
+        "token": "0x06001A2A",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "hoy",
-        "token": "0x06001A2D",
+        "token": "0x06001A2B",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "hoz",
-        "token": "0x06001A2E",
-        "isStatic": true,
+        "token": "0x06001A2C",
+        "isStatic": false,
         "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 18358,
-            "resolvedType": "UnityEngine.UI.Button"
-          },
-          {
-            "name": "result",
-            "typeIndex": 13175,
-            "resolvedType": "System.ValueTuple`2<System.Int32, System.Int32>"
-          },
-          {
-            "name": "b",
-            "typeIndex": 29857,
-            "resolvedType": "System.String"
-          }
-        ]
+        "parameters": []
       },
       {
         "name": "hpa",
-        "token": "0x06001A2F",
+        "token": "0x06001A2D",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "hpb",
-        "token": "0x06001A30",
+        "token": "0x06001A2E",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 29796,
-            "resolvedType": "StorageSlotUI"
-          },
-          {
-            "name": "b",
-            "typeIndex": 27115,
-            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+            "typeIndex": 24019,
+            "resolvedType": "System.Int32"
           }
         ]
       },
       {
         "name": "hpc",
+        "token": "0x06001A2F",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 24019,
+            "resolvedType": "System.Int32"
+          }
+        ]
+      },
+      {
+        "name": "hpd",
+        "token": "0x06001A30",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": []
+      },
+      {
+        "name": "hpe",
         "token": "0x06001A31",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 27115,
-            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
-          }
-        ]
-      },
-      {
-        "name": "hpd",
-        "token": "0x06001A32",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 27115,
-            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
-          }
-        ]
-      },
-      {
-        "name": "hpe",
-        "token": "0x06001A33",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 29796,
-            "resolvedType": "StorageSlotUI"
+            "typeIndex": 24019,
+            "resolvedType": "System.Int32"
           }
         ]
       },
       {
         "name": "hpf",
-        "token": "0x06001A34",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": ".ctor",
-        "token": "0x06001A35",
+        "token": "0x06001A32",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "hpg",
-        "token": "0x06001A36",
+        "token": "0x06001A33",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "hph",
-        "token": "0x06001A37",
+        "token": "0x06001A34",
+        "isStatic": true,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 18353,
+            "resolvedType": "UnityEngine.UI.Button"
+          },
+          {
+            "name": "result",
+            "typeIndex": 13172,
+            "resolvedType": "System.ValueTuple`2<System.Int32, System.Int32>"
+          },
+          {
+            "name": "b",
+            "typeIndex": 29850,
+            "resolvedType": "System.String"
+          }
+        ]
+      },
+      {
+        "name": "hpi",
+        "token": "0x06001A35",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "hpi",
+        "name": "hpj",
+        "token": "0x06001A36",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 29789,
+            "resolvedType": "StorageSlotUI"
+          },
+          {
+            "name": "b",
+            "typeIndex": 27108,
+            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+          }
+        ]
+      },
+      {
+        "name": "hpk",
+        "token": "0x06001A37",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 27108,
+            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+          }
+        ]
+      },
+      {
+        "name": "hpl",
         "token": "0x06001A38",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 27108,
+            "resolvedType": "UnityEngine.EventSystems.PointerEventData"
+          }
+        ]
+      },
+      {
+        "name": "hpm",
+        "token": "0x06001A39",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 29789,
+            "resolvedType": "StorageSlotUI"
+          }
+        ]
+      },
+      {
+        "name": "hpn",
+        "token": "0x06001A3A",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": ".ctor",
+        "token": "0x06001A3B",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "hpo",
+        "token": "0x06001A3C",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "hpp",
+        "token": "0x06001A3D",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "hpq",
+        "token": "0x06001A3E",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
@@ -2269,15 +2261,13 @@
   {
     "name": "TooltipUI",
     "namespace": "",
-    "typeDefinitionIndex": 6522,
-    "isValueType": false,
-    "byvalTypeIndex": 31018,
+    "typeDefinitionIndex": 6520,
     "fields": [
       {
         "name": "TitleText",
         "fieldIndex": 29405,
         "token": "0x04001A2C",
-        "typeIndex": 30618,
+        "typeIndex": 30611,
         "resolvedType": "TMPro.TextMeshProUGUI",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -2290,7 +2280,7 @@
         "name": "BodyText",
         "fieldIndex": 29406,
         "token": "0x04001A2D",
-        "typeIndex": 30618,
+        "typeIndex": 30611,
         "resolvedType": "TMPro.TextMeshProUGUI",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -2303,7 +2293,7 @@
         "name": "PanelRect",
         "fieldIndex": 29407,
         "token": "0x04001A2E",
-        "typeIndex": 27824,
+        "typeIndex": 27817,
         "resolvedType": "UnityEngine.RectTransform",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -2316,34 +2306,34 @@
     "methods": [
       {
         "name": "Awake",
-        "token": "0x06001B3D",
+        "token": "0x06001B43",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "Show",
-        "token": "0x06001B3E",
+        "token": "0x06001B44",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "content",
-            "typeIndex": 33546,
+            "typeIndex": 33539,
             "resolvedType": "mx"
           }
         ]
       },
       {
         "name": "Hide",
-        "token": "0x06001B3F",
+        "token": "0x06001B45",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": ".ctor",
-        "token": "0x06001B40",
+        "token": "0x06001B46",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []

@@ -5,9 +5,10 @@ import hashlib
 import struct
 import time
 from .native_memory import MemoryReadError
-from .container_transfer import FrozenSlotTransaction, NT, slot_fields, GC_MODE_RVA, GC_BITMAP_RVA, GAME_MANAGER_RVA
+from .container_transfer import FrozenSlotTransaction, NT, slot_fields, GC_MODE_RVA, GC_BITMAP_RVA, GAME_MANAGER_RVA, ensure_items_writable
 from .paths import RESOURCE_ROOT
 from .activity_journal import operation_id
+from .game_compatibility import native_rva, assert_current
 
 class FrozenCarriageTransaction(FrozenSlotTransaction):
     def collect(self,drop,drop_header,target,target_header,guards):
@@ -47,13 +48,14 @@ class FrozenCarriageTransaction(FrozenSlotTransaction):
                 raise MemoryReadError('容器或唯一编号发生变化，未收取')
             if time.perf_counter()-started>1: raise MemoryReadError('核验耗时异常，未收取')
             base=self.reader.module['base']
-            if p.i32(base+GC_MODE_RVA) not in (0,1): raise MemoryReadError('GC 屏障状态异常')
+            if p.i32(base+native_rva(self.reader,'gc_mode_rva',GC_MODE_RVA)) not in (0,1): raise MemoryReadError('GC 屏障状态异常')
             bitmap={}
             for field in (a+off for a,_,_ in targets for off in (16,32)):
                 page=(field>>12)&0x1fffff
-                word=base+GC_BITMAP_RVA+(page>>6)*8
+                word=base+native_rva(self.reader,'gc_bitmap_rva',GC_BITMAP_RVA)+(page>>6)*8
                 bitmap[word]=bitmap.get(word,p.u64(word))|(1<<(page&63))
             save=self.reader.singleton('SaveSystem')
+            ensure_items_writable(self.reader,save)
             if p.read(save+92,1) not in (b'\0',b'\1'): raise MemoryReadError('保存状态异常')
             plan=[(a,struct.pack('<Q',bits)) for a,bits in bitmap.items()]
             for target,_,amount in targets:
@@ -87,8 +89,11 @@ class CarriageUnavailable(MemoryReadError):
 
 
 def read_carriage(reader):
+    assert_current(reader)
     p=reader.memory
-    profiles={t['name']:t for t in json.loads((RESOURCE_ROOT/'data/carriage-types.json').read_text(encoding='utf-8'))}
+    profiles=getattr(reader,'_carriage_profiles',None)
+    if profiles is None:
+        profiles={t['name']:t for t in json.loads((RESOURCE_ROOT/'data/carriage-types.json').read_text(encoding='utf-8'))}
     guards=[]
     def read(address,size):
         value=p.read(address,size);guards.append((address,value));return value
@@ -101,7 +106,7 @@ def read_carriage(reader):
         if reader.class_name(klass)!=name or actual!=expected: raise MemoryReadError('马车对象字段与已验证版本不一致')
         if name=='LootDrop': reader.classes[name]=klass
         return obj
-    klass=ptr(reader.module['base']+GAME_MANAGER_RVA)
+    klass=ptr(reader.module['base']+native_rva(reader,'game_manager_rva',GAME_MANAGER_RVA))
     manager=verify(ptr(ptr(klass+184)),'GameManager')
     carriage=verify(ptr(manager+88),'HorseCarriage')
     def objects(root,element):

@@ -18,7 +18,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.1.7'
+NAME = 'Deskrawl装备助手-v1.1.8'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -48,6 +48,8 @@ def main():
     assert any(n.replace('\\','/').endswith('webview/js/api.js') for n in names)
     assert any(n.endswith('Python.Runtime.dll') for n in names)
     assert 'deskrawl_assistant/web/rule-tools.js' in normalized
+    assert 'data/compatibility-baseline.json' in normalized
+    assert any('capstone' in n.lower() and n.lower().endswith('.dll') for n in names)
     folder = ROOT / 'build' / ('exe独立测试 '+uuid.uuid4().hex[:8])
     folder.mkdir(parents=True)
     exe = folder / '仅此一个文件.exe'
@@ -95,7 +97,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.1.7'
+                assert request('/api/state')['app_version'] == '1.1.8'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:

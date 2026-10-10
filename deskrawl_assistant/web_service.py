@@ -321,6 +321,7 @@ class AssistantService:
             result['automation'] = {'settings':deepcopy(self.automation_settings),'running':self.automation_running,
                 'status':self.automation_status,'carriage':self._carriage_payload()}
             result['app_version'] = VERSION
+            result['compatibility'] = dict(getattr(self.client,'compatibility',{'phase':'idle','message':'连接时自动检测游戏兼容性'}))
         if not snap: return result
         adapted = self.adapter.adapt_snapshot(snap)
         observations = {(i.container,i.index):i for i in adapted.items}

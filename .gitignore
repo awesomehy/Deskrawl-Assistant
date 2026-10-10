@@ -31,6 +31,7 @@ data/*
 !data/container-transfer-types.json
 !data/carriage-types.json
 !data/item-ui.json
+!data/compatibility-baseline.json
 
 # The Microsoft bootstrapper is fetched separately before packaging.
 packaging/*.exe
@@ -38,6 +39,8 @@ packaging/*.exe
 # Keep the development tools used to build, extract or test this version.
 tools/*
 !tools/build_exe.py
+!tools/build_compatibility_baseline.py
+!tools/verify_auto_compatibility.py
 !tools/smoke_exe.py
 !tools/runtime_probe.py
 !tools/extract_catalog.py
@@ -57,4 +60,5 @@ docs/*
 !docs/1.1.5验收说明.md
 !docs/1.1.6验收说明.md
 !docs/1.1.7验收说明.md
+!docs/1.1.8验收说明.md
 !docs/screenshots/

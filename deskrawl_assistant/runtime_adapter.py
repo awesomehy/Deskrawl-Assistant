@@ -19,8 +19,8 @@ from .models import AffixObservation, ItemObservation, ValidationError, decimal_
 def headline_stats(slot_name: str) -> frozenset[str]:
     """Attributes shown in the game's headline rather than its affix lists.
 
-    Verified for the supported build from EquipmentTooltipUI.hok (0x625fd0)
-    and hob (0x623265, 0x6235dd, 0x62372f). WeaponDamage/WeaponSpeed are
+    Verified for 1.0.2a from EquipmentTooltipUI.hta (0x634270)
+    and its slot-dependent tooltip grouping. WeaponDamage/WeaponSpeed are
     always skipped; Armor is skipped only on these six armor slots. An
     unexpected Armor record on any other slot must still be checked normally.
     """

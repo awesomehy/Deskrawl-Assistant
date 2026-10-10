@@ -266,6 +266,9 @@ function updateControls(){
   $('monitor-badge').hidden=!state.monitoring&&!state.automation?.running;
 }
 function renderState(){
+  const compatibility=state.compatibility||{phase:'idle',message:'连接时自动检测游戏兼容性'};
+  $('compatibility-message').textContent=compatibility.message;
+  $('compatibility-bar').dataset.phase=compatibility.phase;
   const connection=$('connection-state');connection.className='status-pill'+(state.connected?' online':'')+(state.busy?' busy':'');
   connection.innerHTML='<i></i>'+ (state.connected?`已连接${state.busy?' · 处理中':''}`:state.busy?'正在连接…':'未连接游戏');
   connection.title=state.pid?`游戏进程 ${state.pid}`:'';

@@ -1,5 +1,6 @@
-# Local web UI and game service use Python 3.10+ standard library.
+# Local service uses the standard library; unknown-build code checks use Capstone.
 # tkinter is used only by the legacy UI; the exe launcher uses a Windows dialog.
 # Frida was an abandoned diagnostic experiment and is not used by the app.
 pywebview==6.2.1
 pythonnet==3.1.0
+capstone==5.0.7

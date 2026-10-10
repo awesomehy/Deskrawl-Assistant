@@ -10,6 +10,7 @@ import struct
 
 from .native_memory import K, MemoryReadError, SnapshotChangedError
 from .action_log import record
+from .container_transfer import ensure_items_writable
 
 K.WriteProcessMemory.argtypes = (W.HANDLE, C.c_void_p, C.c_void_p, C.c_size_t, C.POINTER(C.c_size_t))
 K.WriteProcessMemory.restype = W.BOOL
@@ -83,10 +84,12 @@ def _set_equipment_locked(reader, expected, locked, validate, writer_factory):
         raise MemoryReadError("装备词条已变化或未揭示，未写入")
     p = reader.memory
     save = reader.singleton('SaveSystem')
-    if reader.offsets['GeneratedItemData'].get('Locked') != 73 or reader.offsets['SaveSystem'].get('nlo') != 92:
+    bindings = getattr(reader, 'compatibility_bindings', {})
+    if reader.offsets['GeneratedItemData'].get(bindings.get('lock_field','Locked')) != 73 or reader.offsets['SaveSystem'].get(bindings.get('save_dirty_field','nly')) != 92:
         raise MemoryReadError("锁定或保存字段布局不一致，未写入")
     if p.read(save + 92, 1) not in (b'\0', b'\1'):
         raise MemoryReadError("游戏保存状态异常，未写入")
+    ensure_items_writable(reader,save)
     writer = writer_factory(reader.pid)
     try:
         # Re-read through the still-live original process handle immediately
@@ -100,6 +103,7 @@ def _set_equipment_locked(reader, expected, locked, validate, writer_factory):
             ('header' in stamp and p.read(stamp['object'] + 24, 24) != stamp['header'])):
             raise SnapshotChangedError("写入前装备注册表发生变化，未写入")
         desired = bytes([int(locked)])
+        ensure_items_writable(reader,save)
         if p.read(address + 73, 1) == desired:
             return {'status':'already_'+status,'item_uid':required[0],'instance_id':required[1]}
         if p.read(address + 73, 1) != bytes([int(not locked)]):
@@ -111,7 +115,7 @@ def _set_equipment_locked(reader, expected, locked, validate, writer_factory):
             writer.set_bool(address + 73, False)
         if p.read(address + 73, 1) != desired or reader.string(p.u64(address + 80)) != required[1]:
             raise MemoryReadError("锁状态写入未通过回读，操作停止")
-        # SaveSystem.eho/ehp/ehq/ehr/ehs/eht set nlo=true in game 1.0.2.
+        # The verified 1.0.2a SaveSystem methods set nly=true at offset 92.
         # Its normal town autosave then copies GeneratedItemData.Locked into
         # SavedRegistryEntry.Locked; we do not edit encrypted save files.
         writer.set_true(save + 92)

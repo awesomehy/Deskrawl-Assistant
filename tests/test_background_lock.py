@@ -15,7 +15,7 @@ REGISTRY = 0x400000
 
 class FakeMemory:
     def __init__(self):
-        self.bytes = {OBJECT+73:b'\0', SAVE+92:b'\0'}
+        self.bytes = {OBJECT+73:b'\0', SAVE+92:b'\0', SAVE+193:b'\0'}
         self.pointers = {OBJECT:0x110000, OBJECT+80:0x500000, SAVE:0x310000, REGISTRY+24:0x420000}
         self.ints = {REGISTRY+44:7}
     def read(self,address,size): return self.bytes[address]
@@ -26,7 +26,7 @@ class FakeMemory:
 class FakeReader:
     pid = 777
     classes = {'GeneratedItemData':0x110000,'SaveSystem':0x310000}
-    offsets = {'GeneratedItemData':{'Locked':73},'SaveSystem':{'nlo':92}}
+    offsets = {'GeneratedItemData':{'Locked':73},'SaveSystem':{'nly':92}}
     def __init__(self):
         self.memory = FakeMemory()
         self.row = copy.deepcopy(ITEM)
@@ -91,6 +91,41 @@ class BackgroundLockTests(unittest.TestCase):
         self.reader.complete=False
         with self.assertRaises(MemoryReadError): self.lock()
         self.assertFalse(self.writes)
+
+    def test_old_save_field_name_or_wrong_offset_never_writes(self):
+        for fields in ({'nlo':92}, {'nly':93}):
+            with self.subTest(fields=fields):
+                self.reader.offsets = {'GeneratedItemData':{'Locked':73},'SaveSystem':fields}
+                with self.assertRaisesRegex(MemoryReadError,'字段布局不一致'):
+                    self.lock()
+                self.assertFalse(self.writes)
+
+    def test_game_item_gate_blocks_writes_including_boundary_changes(self):
+        self.reader.memory.bytes[SAVE+193]=b'\1'
+        with self.assertRaisesRegex(MemoryReadError,'暂时禁止'):
+            self.lock()
+        self.assertFalse(self.writes)
+        self.reader.memory.bytes[SAVE+193]=b'\0'
+        def blocked(pid):
+            writer=self.factory(pid)
+            self.reader.memory.bytes[SAVE+193]=b'\1'
+            return writer
+        with self.assertRaisesRegex(MemoryReadError,'暂时禁止'):
+            self.lock(factory=blocked)
+        self.assertFalse(self.writes)
+        self.assertTrue(self.closed)
+
+    def test_verified_renamed_save_field_is_used(self):
+        self.reader.compatibility_bindings={'save_dirty_field':'zzz','lock_field':'Locked'}
+        self.reader.offsets={'GeneratedItemData':{'Locked':73},'SaveSystem':{'zzz':92}}
+        self.assertEqual(self.lock()['status'],'locked')
+        self.assertEqual(self.writes,[OBJECT+73,SAVE+92])
+
+    def test_file_change_guard_prevents_opening_write_handle(self):
+        def changed():raise MemoryReadError('游戏文件已变化')
+        self.reader.check_game_files=changed
+        with self.assertRaisesRegex(MemoryReadError,'文件已变化'):self.lock()
+        self.assertFalse(self.writes);self.assertFalse(self.closed)
 
     def test_registry_change_at_write_boundary_cancels_action(self):
         def changed(pid):

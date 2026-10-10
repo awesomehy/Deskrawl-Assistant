@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import operator
+from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Iterable, Mapping
@@ -170,6 +171,25 @@ def evaluate(rule: Rule, item: ItemObservation, catalog: Catalog,
     else:
         status = "match" if "match" in statuses else "uncertain" if "uncertain" in statuses else "miss"
     return Evaluation(status, rule.id, tuple(reason for _, reason in results))
+
+
+def primary_perfect_rules(item: ItemObservation, rules: Iterable[Rule], catalog: Catalog) -> list[Rule]:
+    """A display-only mark for four random primaries within one enabled pool."""
+    if not item.groups_complete.get('primary') or item.name_confidence < DEFAULT_MIN_CONFIDENCE:
+        return []
+    primaries = [(key, value) for key, values in item.affixes.items() for value in values if value.group == 'primary']
+    if len(primaries) != 4 or any(value.confidence < DEFAULT_MIN_CONFIDENCE or
+            value.group_confidence < DEFAULT_MIN_CONFIDENCE for _, value in primaries):
+        return []
+    matches = []
+    for rule in rules:
+        if not rule.enabled or not rule.is_count_rule:
+            continue
+        if all(key in rule.groups['primary'].selected_stats for key, _ in primaries):
+            primary_only = replace(rule, groups={'primary':rule.groups['primary']})
+            if evaluate(primary_only, item, catalog).status == 'match':
+                matches.append(rule)
+    return matches
 
 
 class LockPlanner:

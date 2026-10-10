@@ -28,6 +28,15 @@ class Client:
 
 
 class RecommendationServiceTests(unittest.TestCase):
+    def test_update_preparation_blocks_new_experience_sample(self):
+        self.service.updating=True
+        with self.assertRaisesRegex(ValueError,'正在更新'):
+            self.service.experience_action('start',{'stage':'测试关卡'})
+        self.assertIsNone(self.service.experience.active_payload())
+        self.service.updating=False
+        result=self.service.experience_action('start',{'stage':'测试关卡'})
+        self.assertEqual(result['stage'],'测试关卡')
+
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)

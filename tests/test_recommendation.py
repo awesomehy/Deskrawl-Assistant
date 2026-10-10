@@ -237,11 +237,56 @@ class RankingAndCalibrationTests(unittest.TestCase):
         runs[-1]['xp'] = None
         self.assertIsNone(recommend_maps(p, tiny_catalog(), {'runs': runs})['rows'][0]['cycle_estimate'])
 
+    def test_three_known_failures_use_partial_rewards_without_inventing_success(self):
+        runs = [dict(fingerprint='same-build', map_id='SnowHill1', difficulty='Normal', level=1,
+                     outcome='failed', run_seconds=5, xp=10, combat={'xp_gain_multiplier': 1}) for _ in range(3)]
+        result = recommend_maps(tiny_profile(), tiny_catalog(), {'runs': runs}, {'minutes': 1})
+        row = result['rows'][0]
+        self.assertEqual(row['cycle_estimate']['success_probability'], 0)
+        self.assertEqual(row['cycle_estimate']['seconds_per_cycle'], 13)
+        self.assertAlmostEqual(row['xp_per_hour'], 10/13*3600)
+        self.assertEqual(row['effective_budget_xp'], 40)
+        self.assertEqual(row['completed_runs'], 0)
+        self.assertEqual(row['completed_runs_xp'], 0)
+        self.assertIsNone(result['best'])
+        self.assertIn('尚无成功通关观测', result['reason'])
+        rate = recommend_maps(tiny_profile(), tiny_catalog(), {'runs': runs}, {'minutes': 1, 'sort': 'rate'})
+        self.assertEqual(rate['best']['map_id'], 'SnowHill1')
+        self.assertAlmostEqual(rate['best']['xp_per_hour'], 10/13*3600)
+        self.assertTrue(any('含失败前保留经验' in text for text in row['reasons']))
+
+    def test_insufficient_or_unknown_failure_rewards_keep_risk_without_probability(self):
+        run = dict(fingerprint='same-build', map_id='SnowHill1', difficulty='Normal', level=1,
+                   outcome='failed', run_seconds=5, xp=10, combat={'xp_gain_multiplier': 1})
+        for runs in ([copy.deepcopy(run)], [copy.deepcopy(run)]*2,
+                     [copy.deepcopy(run), copy.deepcopy(run), dict(run, xp=None)],
+                     [copy.deepcopy(run), copy.deepcopy(run), dict(run, combat={})]):
+            with self.subTest(runs=runs):
+                row = recommend_maps(tiny_profile(), tiny_catalog(), {'runs': runs})['rows'][0]
+                self.assertIsNone(row['cycle_estimate'])
+                self.assertEqual(row['risk'], 'observed_failure')
+                self.assertTrue(any('有失败记录' in text for text in row['reasons']))
+
+    def test_known_zero_failure_reward_is_not_missing_reward(self):
+        runs = [dict(fingerprint='same-build', map_id='SnowHill1', difficulty='Normal', level=1,
+                     outcome='failed', run_seconds=5, xp=0, combat={'xp_gain_multiplier': 1}) for _ in range(3)]
+        result = recommend_maps(tiny_profile(), tiny_catalog(), {'runs': runs}, {'minutes': 1})
+        self.assertEqual(result['rows'][0]['cycle_estimate']['failure_xp'], 0)
+        self.assertEqual(result['rows'][0]['effective_budget_xp'], 0)
+        self.assertEqual(result['rows'][0]['xp_per_hour'], 0)
+        self.assertIsNone(result['best'])
+
     def test_failed_samples_other_level_or_loadout_never_supply_probability(self):
         base = dict(fingerprint='same-build', map_id='SnowHill1', difficulty='Normal', level=2, combat={'xp_gain_multiplier': 1}, xp=0, run_seconds=5)
         runs = [dict(base, outcome='success'), dict(base, outcome='success'), dict(base, outcome='failure')]
         row = recommend_maps(tiny_profile(), tiny_catalog(), {'runs': runs})['rows'][0]
         self.assertIsNone(row['cycle_estimate'])
+        self.assertEqual(row['risk'], 'unverified')
+        for run in runs:
+            run.update(level=1, fingerprint='other-loadout')
+        row = recommend_maps(tiny_profile(), tiny_catalog(), {'runs': runs})['rows'][0]
+        self.assertIsNone(row['cycle_estimate'])
+        self.assertEqual(row['risk'], 'unverified')
 
     def test_consumed_keys_bound_full_attempts_without_mutating_inputs(self):
         catalog = tiny_catalog()

@@ -57,10 +57,10 @@
 
 `calibration.runs` 记录起始fingerprint、map_id、family、difficulty、level、combat、阶段HP、阶段时间、阶段固定等待、总run_seconds、outcome、retained xp和可观察的overhead_seconds。配装/角色指纹与难度不一致的记录不混用。阶段校准以 `(observedPhaseSeconds-phaseFixed)/(phaseHP/savedPhaseDPS)` 的中位数校正当前阶段，可迁移同系列。只有整轮总时长时只校准同图，不能虚构普通/Boss分别的DPS。手填的重开开销优先；默认8秒可由同图或同系列连续重开的观测中位数替代。
 
-失败记录不凭等级差或血量自行生成成功概率。至少3个同级、同配装、同图、同难度的完整成功/失败观察，并且失败保留经验已知，才估计成功比例及含失败部分XP的周期收益。旧记录失败经验按保存的起始经验倍率归一化到当前倍率，避免临时buff混用。少量样本仍提示波动；资料不足时只标失败风险和成功全清收益。
+失败记录不凭等级差或血量自行生成成功概率。至少3个同级、同配装、同图、同难度的完整成功/失败观察，并且失败保留经验已知，才估计成功比例及含失败部分XP的周期收益。全为失败时也计算已观测失败的收益和耗时，完整通关模式不把该图当成成功通关的推荐。旧记录失败经验按保存的起始经验倍率归一化到当前倍率，避免临时buff混用。少量样本仍提示波动；资料不足时只标失败风险和成功全清收益。
 
 `completed_runs_xp` 只表示预计完整成功通关部分；`effective_budget_xp` 表示预算可完成尝试的期望收益，满足失败采样条件时包含失败保留经验。界面有失败周期时应显示“计划可获经验”。`projected_xp` 为长期速度按预算折算，不能混作预算内完整通关经验。当前属性和等级用于本次估计，升级/换装后刷新，不预言未来升级或掉落改变配装。
 
 ## 重提取与验证
 
-提取只读取安装文件，UnityPy可安装在指定D盘临时target；工具不导入/执行游戏DLL。使用 `tools/extract_recommendation_catalog.py --game E:\Steam\steamapps\common\Deskrawl --unitypy-path D:\Download\Deskrawl-Assistant\cache\feasibility\libs` 可重建目录。`tests/test_recommendation.py` 覆盖原生float32经验、关卡资源、难度准入、完整预算/rate排序、技能周期、校准隔离和失败保留收益。
+提取只读取安装文件，UnityPy可安装到单独的分析目录；工具不导入/执行游戏DLL。使用 `python tools/extract_recommendation_catalog.py --game "<Deskrawl安装目录>" --unitypy-path "<UnityPy依赖目录>"` 可重建目录。`tests/test_recommendation.py` 覆盖原生float32经验、关卡资源、难度准入、完整预算/rate排序、技能周期、校准隔离和失败保留收益。

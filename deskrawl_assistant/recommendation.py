@@ -362,7 +362,7 @@ def _failure_cycle(profile, stage, difficulty, calibration, xp, seconds, overhea
         return None
     runs = [r for r in (calibration or {}).get('runs', []) if r.get('fingerprint') == fp
             and r.get('map_id') == stage['map_id'] and difficulty_id(r.get('difficulty')) == difficulty
-            and r.get('level', profile['level']) == profile['level']
+            and r.get('level') == profile['level']
             and r.get('outcome') in ('success', 'failure', 'failed') and _positive(r.get('run_seconds'))]
     successes = [r for r in runs if r['outcome'] == 'success']
     failures = [r for r in runs if r['outcome'] in ('failure', 'failed')]
@@ -372,7 +372,7 @@ def _failure_cycle(profile, stage, difficulty, calibration, xp, seconds, overhea
         old_bonus = _positive((r.get('combat') or {}).get('xp_gain_multiplier'), _positive(r.get('xp_gain_multiplier')))
         if reward is not None and reward >= 0 and old_bonus:
             known.append((reward*profile['xp_gain_multiplier']/old_bonus, r['run_seconds']+overhead))
-    if len(runs) < 3 or not successes or not failures or len(known) != len(failures):
+    if len(runs) < 3 or not failures or len(known) != len(failures):
         return None
     probability = len(successes)/len(runs)
     fail_xp = sum(x[0] for x in known)/len(known)
@@ -480,7 +480,7 @@ def recommend_maps(profile, catalog=None, calibration=None, options=None):
         elif stage['requirements']:
             reasons.append('重复次数可能受入场道具数量限制。')
         rate = features['xp_per_run']/seconds*3600
-        failures = [r for r in (calibration or {}).get('runs', []) if r.get('fingerprint') == profile.get('fingerprint') and r.get('map_id') == stage['map_id'] and difficulty_id(r.get('difficulty')) == key and r.get('outcome') in ('failure', 'failed')]
+        failures = [r for r in (calibration or {}).get('runs', []) if r.get('fingerprint') == profile.get('fingerprint') and r.get('map_id') == stage['map_id'] and difficulty_id(r.get('difficulty')) == key and r.get('level') == profile['level'] and r.get('outcome') in ('failure', 'failed')]
         risk = 'observed_failure' if failures else 'unverified'
         cycle = _failure_cycle(profile, stage, key, calibration, features['xp_per_run'], seconds, timing['overhead_seconds'])
         failure_budget_xp = None
@@ -518,7 +518,9 @@ def recommend_maps(profile, catalog=None, calibration=None, options=None):
     # invented probability or blanket level-gap safety threshold is applied.
     safe = [r for r in eligible if r['risk'] != 'observed_failure' or r['cycle_estimate'] is not None]
     best = (safe or eligible)[0] if eligible else None
-    reason = '' if best else '当前可进入关卡在指定时长内不足一次完整通关。' if any(r['accessible'] is True for r in rows) else '可进入关卡尚未确认，请等待当前角色读取。'
+    accessible_rows = [r for r in rows if r['accessible'] is True]
+    only_observed_failures = accessible_rows and all(r['cycle_estimate'] is not None and r['cycle_estimate']['success_probability'] == 0 for r in accessible_rows)
+    reason = '' if best else '当前配装尚无成功通关观测；已显示失败前保留经验的收益参考。' if only_observed_failures else '当前可进入关卡在指定时长内不足一次完整通关。' if accessible_rows else '可进入关卡尚未确认，请等待当前角色读取。'
     excluded = [{'map_id': m['map_id'], 'stage': m['stage'], 'reason': m.get('unsupported_reason', '生成参数尚未验证。')} for m in catalog['maps'] if not m['supported']]
     coverage = {'supported': sum(m['supported'] for m in catalog['maps']), 'total': len(catalog['maps']), 'excluded': excluded}
     return {'available': True, 'reason': reason, 'rows': rows, 'best': best, 'coverage': coverage,

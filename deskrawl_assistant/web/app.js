@@ -11,6 +11,8 @@ let automationDraft=null, automationDirty=false, collectionSignature='';
 let activeTab='rules', logBefore=null, logNext=null, logRequest=0, logTimer;
 let experienceData=null, experienceRequest=0, experienceLoading=false, experienceBusy=false, experienceReceivedAt=0, experienceInputTimer;
 let recommendationData=null, recommendationRequest=0, recommendationLoading=false, recommendationBusy=false, recommendationDirty=false;
+let updateState=null, updatePolling=false, updateSaving=false, updateNoticeShown=false;
+let experienceManualSavedValues=['','','',''];
 
 async function api(path,data,retry=true){
   const response=await fetch('/api/'+path,data===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Assistant-Token':token},body:JSON.stringify(data)});
@@ -102,18 +104,23 @@ function renderEditor(){
   const gear=gearMap.get(gearKey),existing=rulesFor(gearKey);
   $('rule-editor').innerHTML=`<div class="editor-head">${gearIcon(gear)}<div><div class="eyebrow">传说装备 · ${esc(gear.slot_label)} · ${esc(classesLabel(gear.class_mask))}</div><h2>${esc(gear.name)}</h2><small>${esc(gear.en)}</small></div></div>
     <div class="editor-content">${gear.description?`<div class="legendary-description">${esc(gear.description)}</div>`:''}
-    <div class="editor-rule-select"><select id="existing-rule" aria-label="选择词条组合">${!draft.id?'<option value="" selected>新组合 · 尚未保存</option>':''}${existing.map((r,index)=>`<option value="${esc(r.id)}" ${draft.id===r.id?'selected':''}>${index+1}. ${esc(r.name)}${r.enabled?' · 已启用':' · 已停用'}</option>`).join('')}</select><button id="new-rule" class="button ghost">新增组合</button><button id="copy-rule" class="button ghost" ${draft.id?'':'hidden'}>复制组合</button></div>
+    <div class="editor-rule-select"><select id="existing-rule" aria-label="选择词条组合">${!draft.id?'<option value="" selected>新组合 · 尚未保存</option>':''}${existing.map((r,index)=>`<option value="${esc(r.id)}" ${draft.id===r.id?'selected':''}>${index+1}. ${esc(r.name)}${r.enabled?' · 已启用':' · 已停用'}</option>`).join('')}</select></div>
+    <div class="combination-toolbar"><button id="new-rule" class="button ghost">新增组合</button><button id="copy-rule" class="button ghost" ${draft.id?'':'hidden'}>复制组合</button><button id="delete-rule" class="button danger" ${draft.id?'':'hidden'}>删除当前</button><button id="cancel-new-rule" class="button ghost" ${!draft.id&&dirty?'':'hidden'}>取消新建</button><button id="manage-rules" class="button ghost" ${existing.length?'':'disabled'}>管理组合</button><button id="copy-to-gear" class="button ghost" ${existing.length?'':'disabled'}>复制到同类装备</button></div>
     <label class="combination-name">组合名称<input id="rule-name" value="${esc(draft.name)}" maxlength="80" placeholder="例如：暴击流、冰伤流" aria-label="组合名称"></label>
     <p class="combination-note">这件装备有 ${existing.length} 个已保存组合，${existing.filter(r=>r.enabled).length} 个启用。满足任意一个启用组合，即符合规则。</p>
-    <div class="rule-state"><label><input type="checkbox" id="rule-enabled" ${draft.enabled?'checked':''}>启用当前词条组合</label><span id="draft-status">${draft.id?'已保存':'尚未配置'}</span></div>
+    <div class="rule-state"><label><input type="checkbox" id="rule-enabled" ${draft.enabled?'checked':''}>启用当前词条组合</label><span id="draft-status">${dirty?'有未保存的改动':draft.id?'已保存':'尚未配置'}</span></div>
     ${draft.legacy?'<div class="inline-error">这是旧版数值规则；保存将改为当前主、副词条数量规则。</div>':''}
     ${groupMarkup('primary','主词条')}<div class="flow-label">↓ 主词条达标后，再检查副词条</div>${groupMarkup('secondary','副词条')}
     <div id="rule-summary" class="rule-summary"></div><div id="rule-error" class="inline-error" hidden></div>
     <p class="note">每个组合独立判断主、副词条。只需所选池中任意 n 类达标；同类型只算一次，基础属性不参与计数。一键锁定和持续监控都会检查所有启用组合。</p></div>
-    <div class="editor-actions"><button id="delete-rule" class="text-button" ${draft.id?'':'hidden'}>删除组合</button><span class="spacer"></span><button id="reset-rule" class="button ghost">重置改动</button><button id="save-rule" class="button primary">${draft.id?'保存修改':'保存并应用'}</button></div>`;
+    <div class="editor-actions"><small class="saved-state">${existing.length} 个已保存组合</small><span class="spacer"></span><button id="reset-rule" class="button ghost">重置改动</button><button id="save-rule" class="button primary">${draft.id?'保存修改':'保存并应用'}</button></div>`;
   updateSummary();
 }
-function setDirty(value){dirty=value;if(desktopMode)api('window/draft',{dirty:dirty||automationDirty}).catch(()=>{});}
+function experienceManualValues(){return ['experience-manual-stage','experience-manual-profile','experience-manual-xp','experience-manual-seconds'].map(id=>$(id).value.trim());}
+function hasExperienceManualDraft(){const values=experienceManualValues();return values.some(Boolean)&&values.some((value,index)=>value!==experienceManualSavedValues[index]);}
+function hasPendingDrafts(){return dirty||automationDirty||recommendationDirty||hasExperienceManualDraft()||!!experienceData?.active;}
+function syncDraftState(){if(desktopMode)api('window/draft',{dirty:hasPendingDrafts()}).catch(()=>{});}
+function setDirty(value){dirty=value;syncDraftState();}
 function markDirty(){setDirty(true);$('draft-status').textContent='有未保存的改动';updateSummary();}
 function validation(){
   if(!draft.name.trim())return '请填写组合名称。';
@@ -146,19 +153,21 @@ async function saveRule(){
   $('save-rule').disabled=true;
   try{
     const result=await api('rule/save',{id:draft.id,name:draft.name,equipment_keys:[gearKey],enabled:draft.enabled,groups,group_mode:'all'});
-    setDirty(false);draft.id=result.rule.id;await pollState();renderEditor();toast(draft.enabled?'规则已保存并启用':'规则已保存，当前停用');
-  }catch(error){toast(error.message,true);updateSummary();}
+    setDirty(false);draft.id=result.rule.id;await pollState();renderEditor();toast(draft.enabled?'规则已保存并启用':'规则已保存，当前停用');return true;
+  }catch(error){toast(error.message,true);updateSummary();return false;}
 }
 function scopedItems(){const scope=$('action-scope').value;return state.items.filter(i=>i.is_equipment&&(scope==='all'||i.container===scope));}
 function visibleItems(){
   const query=$('item-search').value.trim().toLowerCase(),lock=$('lock-filter').value,kind=$('kind-filter').value;
   return (state?.items||[]).filter(i=>(!containerFilter||i.container===containerFilter)&&
     (!kind||i.kind===kind)&&(!query||(i.name+' '+(gearMap.get(i.name_key)?.en||'')).toLowerCase().includes(query))&&
-    (!lock||(i.is_equipment&&(lock==='locked'?i.locked===true:lock==='unlocked'?i.locked===false:i.matches))));
+    (!lock||(i.is_equipment&&(lock==='locked'?i.locked===true:lock==='unlocked'?i.locked===false:lock==='perfect'?i.primary_perfect:i.matches))));
 }
 function resultBadge(item){
   if(!item.is_equipment)return '<span class="badge miss">—</span>';
-  return item.matches?'<span class="badge match">符合规则</span>':item.review?'<span class="badge review">待核验</span>':'<span class="badge miss">未命中</span>';
+  const mark=item.primary_perfect?'<span class="badge primary-perfect" title="四条随机主词条全部命中同一个启用组合，不检查副词条">✦ 主词条全中</span>':'';
+  const normal=item.matches?'<span class="badge match">符合规则</span>':item.review?'<span class="badge review">待核验</span>':'<span class="badge miss">未命中</span>';
+  return `<span class="result-badges">${mark}${normal}</span>`;
 }
 function renderInventory(){
   if(!state)return;
@@ -168,7 +177,7 @@ function renderInventory(){
   const signature=JSON.stringify([view,detailId,[...selectedItems]]);
   if(signature!==itemSignature){
     itemSignature=signature;
-    $('item-rows').innerHTML=view.map(i=>`<tr data-item="${esc(i.selection_id)}" class="${i.selection_id===detailId?'active':''}" tabindex="0">
+    $('item-rows').innerHTML=view.map(i=>`<tr data-item="${esc(i.selection_id)}" class="${i.selection_id===detailId?'active':''} ${i.primary_perfect?'primary-perfect-item':''}" tabindex="0">
       <td><input type="checkbox" data-item-select="${esc(i.selection_id)}" aria-label="选择${esc(i.name)}" ${selectedItems.has(i.selection_id)?'checked':''} ${!i.selection_id?'disabled':''}></td>
       <td><div class="item-name">${i.icon?`<img src="${esc(i.icon)}" alt="">`:''}<div><strong>${esc(i.name)}</strong><small>${esc(i.slot_label)}</small></div></div></td>
       <td>${i.container==='inventory'?'背包':'仓库'} · ${Number(i.slot_index)+1}</td><td>${esc(i.count)}</td><td>${esc(i.level??'—')}${i.upgrade?` <small>+${i.upgrade}</small>`:''}</td>
@@ -194,7 +203,7 @@ function renderDetail(){
     <div class="detail-meta"><span>物品等级 ${esc(item.level)}</span><span>强化 +${esc(item.upgrade??0)}</span></div>
     ${['base','primary','secondary','unknown'].map(g=>{const values=item.groups[g]||[];return values.length?`<div class="detail-group"><h4>${{base:'基础属性 · 不参与筛选',primary:'主词条',secondary:'副词条',unknown:'待核验词条'}[g]}</h4><div class="type-list">${values.map(v=>`<div class="affix-row ${v.matched?'matched':''}" data-affix-key="${esc(v.key)}" title="${esc(v.value_note||(v.matched?'命中规则：'+v.matched_rules.join('、'):''))}"><span class="affix-name">${esc(v.name)}</span><strong class="affix-value">${esc(v.display_value??'未读取')}</strong>${v.matched?'<small class="affix-hit" aria-label="命中规则">✓</small>':''}</div>`).join('')}</div></div>`:'';}).join('')}
     <p class="detail-hint">绿色为命中已启用规则的词条；整件装备是否达标见下方结果。数值包含已确认的装备强化。</p>
-    <div class="detail-rule">${resultBadge(item)}${item.matched_combinations?.length?`<p class="matched-combinations">命中组合：${item.matched_combinations.map(esc).join('、')}</p>`:''}${item.reasons.map(r=>`<p>${esc(r)}</p>`).join('')}<button class="text-button" data-configure-item="${esc(item.name_key)}">配置这件装备的规则 →</button></div>${moveButton}`;
+    <div class="detail-rule">${resultBadge(item)}${item.primary_perfect_combinations?.length?`<p class="perfect-combinations">主词条全中组合：${item.primary_perfect_combinations.map(esc).join('、')}<small>四条随机主词条都在该组合的勾选范围内；此标记不检查副词条，不改变自动锁定条件。</small></p>`:''}${item.matched_combinations?.length?`<p class="matched-combinations">命中组合：${item.matched_combinations.map(esc).join('、')}</p>`:''}${item.reasons.map(r=>`<p>${esc(r)}</p>`).join('')}<button class="text-button" data-configure-item="${esc(item.name_key)}">配置这件装备的规则 →</button></div>${moveButton}`;
 }
 function renderEffects(item){
   const plain=s=>String(s??'').replace(/<[^>]+>/g,'');
@@ -336,14 +345,15 @@ $('rule-editor').addEventListener('click',async e=>{
       setDirty(true);renderEditor();$('draft-status').textContent='有未保存的改动';
     }
   }
-  if(button.id==='delete-rule'&&await confirmAction('删除这个词条组合？','只删除当前组合；这件装备的其他组合保留。','删除组合')){
-    try{await api('rule/delete',{id:draft.id});setDirty(false);draft=makeDraft(null);await pollState();await chooseGear(gearKey);toast('规则已删除');}catch(error){toast(error.message,true);}
-  }
+  if(button.id==='delete-rule')deleteCurrentCombination();
+  if(button.id==='cancel-new-rule'){setDirty(false);draft=makeDraft(rulesFor(gearKey)[0]);renderEditor();}
+  if(button.id==='manage-rules')openCombinationManager();
+  if(button.id==='copy-to-gear')openCopyDialog();
 });
 $('import-rules').addEventListener('click',()=>$('import-file').click());
 $('import-file').addEventListener('change',async e=>{
   const file=e.target.files[0];if(!file)return;
-  try{const payload=JSON.parse((await file.text()).replace(/^\uFEFF/,'')),result=await api('rule/import',{payload});await pollState();toast(`已导入 ${result.imported} 条规则，默认停用`);}catch(error){toast(error.message,true);}finally{e.target.value='';}
+  try{openImportDialog(JSON.parse((await file.text()).replace(/^\uFEFF/,'')),file.name);}catch(error){toast(error.message,true);}finally{e.target.value='';}
 });
 $('export-rules').addEventListener('click',()=>download('export/rules','Deskrawl筛选规则.json'));
 $('export-items').addEventListener('click',()=>download('export/items','Deskrawl装备清单.json'));
@@ -367,19 +377,59 @@ $('carriage-search').addEventListener('input',renderCollectionChoices);
 $('carriage-select-all').addEventListener('click',()=>setFilteredCollectionSelection(true));
 $('carriage-select-none').addEventListener('click',()=>setFilteredCollectionSelection(false));
 for(const id of ['pressure-threshold','pressure-target'])$(id).addEventListener('input',markAutomationDirty);
-$('save-automation').addEventListener('click',async()=>{try{const result=await api('automation/settings',{settings:readAutomationForm()});automationDraft=result.settings;automationDirty=false;setDirty(dirty);await pollState();toast('自动整理设置已保存');}catch(error){toast(error.message,true);}});
+async function saveAutomation(){try{const result=await api('automation/settings',{settings:readAutomationForm()});automationDraft=result.settings;automationDirty=false;setDirty(dirty);await pollState();toast('自动整理设置已保存');return true;}catch(error){toast(error.message,true);return false;}}
+$('save-automation').addEventListener('click',saveAutomation);
 $('run-automation').addEventListener('click',async()=>{try{await api('automation/run',{enabled:!state.automation.running});await pollState();}catch(error){toast(error.message,true);}});
 $('stop').addEventListener('click',async()=>{try{await api('stop',{});await pollState();}catch(error){toast(error.message,true);}});
 $('history-toggle').addEventListener('click',()=>switchTab('logs'));
-$('exit').addEventListener('click',async()=>{
-  if((dirty||automationDirty)&&!await confirmAction('退出助手？','当前配置还未保存。退出将放弃改动，并停止持续监控和自动整理。','退出',false))return;
+async function requestExit(){
+  const pending=[dirty||automationDirty||recommendationDirty?'未保存的配置或刷图设置':'',experienceData?.active?'未完成的经验采样':'',hasExperienceManualDraft()?'未提交的经验样本':''].filter(Boolean);
+  if(pending.length&&!await confirmAction('退出助手？',`当前有${pending.join('、')}。退出将放弃这些内容，并停止持续监控和自动整理。`,'退出',false))return;
   try{await api('shutdown',{});exiting=true;document.body.innerHTML='<div class="empty-state"><h2>助手已退出</h2><p class="note">持续监控已停止。可关闭此页面，或双击启动文件重新打开。</p></div>';}catch(error){toast(error.message,true);}
-});
-window.addEventListener('beforeunload',e=>{if(dirty||automationDirty){e.preventDefault();e.returnValue='';}});
+}
+$('exit').addEventListener('click',requestExit);
+window.addEventListener('beforeunload',e=>{if(!exiting&&hasPendingDrafts()){e.preventDefault();e.returnValue='';}});
 async function boot(){
   if(desktopMode)$('usage-note').textContent='监控只自动处理新增装备；已有装备请用“一键按规则锁定”。最小化窗口可继续监控，关闭窗口会退出助手并停止监控。';
-  try{catalog=await api('catalog');buildCatalog();await pollState();const first=state.rules[0]?.equipment_keys[0]||'LegendaryBelt3';if(first)await chooseGear(first);setInterval(pollState,1000);setInterval(()=>{if(activeTab==='logs'&&!logBefore)loadLogs(true);},2000);}catch(error){toast(error.message,true);}
+  try{catalog=await api('catalog');buildCatalog();await pollState();const first=state.rules[0]?.equipment_keys[0]||'LegendaryBelt3';if(first)await chooseGear(first);await pollUpdate();setInterval(pollState,1000);setInterval(pollUpdate,1500);setInterval(()=>{if(activeTab==='logs'&&!logBefore)loadLogs(true);},2000);}catch(error){toast(error.message,true);}
 }
+function renderUpdate(){
+  if(!updateState)return;
+  const active=['downloading','installing'].includes(updateState.phase),checking=updateState.phase==='checking';
+  $('update-bar').classList.toggle('available',!!updateState.has_update);
+  $('update-message').textContent=updateState.message+(active&&updateState.progress?` ${updateState.progress.percent}%`:'');
+  $('update-error').textContent=updateState.error||'';$('update-error').hidden=!updateState.error;
+  $('update-release').href=updateState.release_url||'https://github.com/awesomehy/Deskrawl-Assistant/releases';
+  $('check-update').disabled=active||checking||updateSaving;
+  $('check-update').textContent=checking?'正在检查…':'检查更新';
+  $('install-update').hidden=!updateState.has_update;
+  $('install-update').disabled=!updateState.can_install||active||checking||updateSaving;
+  $('install-update').textContent=updateSaving?'正在保存配置…':active?'更新中…':`下载 v${updateState.latest_version} 并更新（重启）`;
+  $('install-update').title=updateState.can_install?'下载至当前程序目录，校验后替换当前 exe 并重启；规则和日志保留。':'请在 exe 独立窗口中更新；源码模式可从发行记录下载。';
+  $('update-progress').hidden=!active||!updateState.progress;$('update-progress').value=updateState.progress?.percent||0;
+  for(const id of ['rules-page','automation-panel','recommendations-page','experience-page'])$(id).inert=active||updateSaving;
+  if(updateState.notice&&!updateNoticeShown){updateNoticeShown=true;toast(updateState.notice.message,!updateState.notice.success);}
+}
+async function pollUpdate(){
+  if(updatePolling||exiting)return;updatePolling=true;
+  try{updateState=await api('update');renderUpdate();}catch(error){if(updateState?.phase==='installing')$('update-message').textContent='正在替换程序并启动新版本…';}finally{updatePolling=false;}
+}
+$('check-update').addEventListener('click',async()=>{try{await api('update/check',{});await pollUpdate();}catch(error){toast(error.message,true);}});
+$('install-update').addEventListener('click',async()=>{
+  if(updateSaving)return;updateSaving=true;renderUpdate();
+  try{
+    const sample=await api('experience?minutes=60&sort=rate');
+    if(experienceData?.active||sample.active)throw new Error('更新前请先结束并保存，或取消当前经验采样。');
+    if(hasExperienceManualDraft())throw new Error('更新前请保存手动录入的经验样本，或清空未提交内容。');
+    if(experienceBusy||recommendationBusy)throw new Error('请等待经验采样或刷图设置保存完成后再更新。');
+    if(dirty&&(!await saveRule()||dirty))throw new Error('更新前请修正规则配置并保存。');
+    if(automationDirty&&(!await saveAutomation()||automationDirty))throw new Error('更新前请修正整理设置并保存。');
+    if(recommendationDirty&&(!await saveRecommendationSettings()||recommendationDirty))throw new Error('更新前请修正刷图设置并保存。');
+    if(hasPendingDrafts())throw new Error('更新前请先保存未完成的配置和经验样本。');
+    if(desktopMode)await api('window/draft',{dirty:false});
+    await api('update/install',{saved:true});await pollUpdate();
+  }catch(error){toast(error.message,true);}finally{updateSaving=false;renderUpdate();}
+});
 const logCategories={loot:'物品获取',lock:'锁定 / 解锁',transfer:'物品转移',settings:'配置操作',system:'运行操作',error:'失败'};
 function logPosition(position){
   if(!position)return '—';
@@ -491,7 +541,7 @@ async function loadExperience(quiet=false){
   experienceLoading=true;
   try{
     const result=await api('experience?'+params);if(request!==experienceRequest||exiting)return;
-    experienceData=result;experienceReceivedAt=Date.now();renderExperience();$('experience-error').hidden=true;
+    experienceData=result;experienceReceivedAt=Date.now();renderExperience();syncDraftState();$('experience-error').hidden=true;
   }catch(error){if(request!==experienceRequest||exiting)return;$('experience-error').textContent=error.message;$('experience-error').hidden=false;if(!quiet)toast(error.message,true);}
   finally{if(request===experienceRequest)experienceLoading=false;}
 }
@@ -529,11 +579,13 @@ $('experience-cancel').addEventListener('click',async()=>{
   if(!experienceData?.active||experienceBusy)return;
   if(await confirmAction('取消这次采样？','这次计时和经验收益不会保存。之前的样本保留。','取消采样',false))mutateExperience('cancel',{},'本次采样已取消。');
 });
+$('experience-manual-form').addEventListener('input',syncDraftState);
+$('experience-manual-form').addEventListener('change',syncDraftState);
 $('experience-manual-form').addEventListener('submit',async e=>{
   e.preventDefault();if(experienceBusy)return;
   const stage=$('experience-manual-stage').value.trim(),profile=$('experience-manual-profile').value.trim(),xp=Number($('experience-manual-xp').value),seconds=Number($('experience-manual-seconds').value);
   if(!stage||!Number.isInteger(xp)||xp<0||!Number.isFinite(seconds)||seconds<0.1){toast('请填写关卡、非负整数经验和至少 0.1 秒的用时。',true);return;}
-  if(await mutateExperience('sample',{stage,profile,xp,seconds},'经验样本已保存，效率排行已更新。')){$('experience-manual-xp').value='';$('experience-manual-seconds').value='';}
+  if(await mutateExperience('sample',{stage,profile,xp,seconds},'经验样本已保存，效率排行已更新。')){$('experience-manual-xp').value='';$('experience-manual-seconds').value='';experienceManualSavedValues=experienceManualValues();syncDraftState();}
 });
 $('experience-history-rows').addEventListener('click',async e=>{
   const button=e.target.closest('[data-experience-delete]');if(!button||experienceBusy)return;
@@ -565,7 +617,7 @@ function recommendationBadges(row){
 }
 function recommendationDate(value){if(!value)return '';const date=new Date(value);return Number.isNaN(date.getTime())?'':date.toLocaleString('zh-CN',{hour12:false});}
 function recommendationSettings(){return {minutes:Number($('recommendation-minutes').value),difficulty:$('recommendation-difficulty').value,sort:$('recommendation-sort').value,overhead_seconds:Number($('recommendation-overhead').value),include_locked:$('recommendation-include-locked').checked};}
-function markRecommendationDirty(){recommendationDirty=true;$('recommendation-settings-state').textContent='设置有改动，点击“更新推荐”应用。';}
+function markRecommendationDirty(){recommendationDirty=true;syncDraftState();$('recommendation-settings-state').textContent='设置有改动，点击“更新推荐”应用。';}
 function renderRecommendations(){
   if(!recommendationData||exiting)return;
   const data=recommendationData,settings=data.settings||{},minutes=data.minutes||settings.minutes||60,character=data.character||{},rows=data.rows||[],best=data.available===true&&data.best?.accessible===true?data.best:null,calibration=data.calibration||{},current=data.current||{};
@@ -635,15 +687,16 @@ async function loadRecommendations(quiet=false){
 $('recommendation-refresh').addEventListener('click',()=>loadRecommendations());
 $('recommendation-settings-form').addEventListener('input',markRecommendationDirty);
 $('recommendation-settings-form').addEventListener('change',markRecommendationDirty);
-$('recommendation-settings-form').addEventListener('submit',async e=>{
-  e.preventDefault();if(recommendationBusy)return;
+async function saveRecommendationSettings(){
+  if(recommendationBusy)return false;
   const settings=recommendationSettings();
-  if(!Number.isInteger(settings.minutes)||settings.minutes<1||settings.minutes>10080||!Number.isFinite(settings.overhead_seconds)||settings.overhead_seconds<0||settings.overhead_seconds>300){toast('请输入 1 至 10080 的整数分钟和 0 至 300 秒的固定开销。',true);return;}
+  if(!Number.isInteger(settings.minutes)||settings.minutes<1||settings.minutes>10080||!Number.isFinite(settings.overhead_seconds)||settings.overhead_seconds<0||settings.overhead_seconds>300){toast('请输入 1 至 10080 的整数分钟和 0 至 300 秒的固定开销。',true);return false;}
   recommendationBusy=true;renderRecommendations();
-  try{await api('recommendations/settings',settings);recommendationDirty=false;await loadRecommendations();toast('刷图计划已更新。');}
-  catch(error){toast(error.message,true);}
+  try{await api('recommendations/settings',settings);recommendationDirty=false;syncDraftState();await loadRecommendations();toast('刷图计划已更新。');return true;}
+  catch(error){toast(error.message,true);return false;}
   finally{recommendationBusy=false;renderRecommendations();}
-});
+}
+$('recommendation-settings-form').addEventListener('submit',async e=>{e.preventDefault();await saveRecommendationSettings();});
 $('recommendation-calibration-reset').addEventListener('click',async()=>{
   if(recommendationBusy)return;
   if(!await confirmAction('重新校准当前配装？','将清除当前配装已积累的校准。正常刷图会重新积累数据，推荐暂时使用预估值。','重新校准',false))return;

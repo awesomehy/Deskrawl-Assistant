@@ -18,7 +18,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.1.4-xp'
+NAME = 'Deskrawl装备助手-v1.1.7'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -26,8 +26,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--connect-game', action='store_true')
     parser.add_argument('--desktop', action='store_true')
+    parser.add_argument('--exe', type=Path, help='Test a separately packaged executable.')
+    parser.add_argument('--report', type=Path, help='Save verification without replacing another build report.')
     args = parser.parse_args()
-    source = ROOT / 'release' / NAME / (NAME + '.exe')
+    source = args.exe.resolve() if args.exe else ROOT / 'release' / NAME / (NAME + '.exe')
     archive = CArchiveReader(str(source))
     names = set(archive.toc)
     assert f'python{sys.version_info.major}{sys.version_info.minor}.dll' in names
@@ -49,6 +51,8 @@ def main():
     assert not any('frida' in n.lower() or 'unitypy' in n.lower() for n in names)
     assert any(n.replace('\\','/').endswith('webview/js/api.js') for n in names)
     assert any(n.endswith('Python.Runtime.dll') for n in names)
+    assert 'deskrawl_assistant/web/rule-tools.js' in normalized
+    assert 'deskrawl_assistant/update_replace.ps1' in normalized
     folder = ROOT / 'build' / ('exe独立测试 '+uuid.uuid4().hex[:8])
     folder.mkdir(parents=True)
     exe = folder / '仅此一个文件.exe'
@@ -62,6 +66,10 @@ def main():
     system_root = os.environ.get('SystemRoot', 'C:/Windows')
     env['PATH'] = str(Path(system_root) / 'System32') + os.pathsep + system_root
     env['DESKRAWL_ASSISTANT_DATA_DIR'] = str(persistent)
+    env['DESKRAWL_ASSISTANT_CACHE_DIR'] = str(folder / '缓存')
+    temp = folder / '临时目录'
+    temp.mkdir()
+    env['TEMP'] = env['TMP'] = str(temp)
     with socket.socket() as listener:
         listener.bind(('127.0.0.1', 0))
         port = listener.getsockname()[1]
@@ -96,6 +104,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
+                assert request('/api/state')['app_version'] == '1.1.7'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -124,6 +133,7 @@ def main():
         report['checks'].append('空规则、监控默认关闭；独立 exe 在中文和空格路径正常启动')
         assert '__SESSION_TOKEN__' not in request('/').decode('utf-8')
         assert b'async function api' in request('/app.js')
+        assert b'openCombinationManager' in request('/rule-tools.js')
         assert request('/style.css')
         recommendation = request('/api/recommendations')
         assert recommendation['available'] is False and not recommendation['rows']
@@ -151,6 +161,26 @@ def main():
         second_rule = {**rule,'id':'packaging-second-rule','name':'第二个流派组合（停用）'}
         request('/api/rule/save',second_rule)
         assert len(request('/api/export/rules')['rules']) == 2
+        originals = request('/api/export/rules')['rules']
+        # All mutations use this test's isolated data directory; monitoring
+        # and automation stay paused even when an imported rule is enabled.
+        target = next(i['key'] for i in catalog['equipment']
+            if i['legendary'] and i['slot'] == 'Belt' and i['key'] != 'LegendaryBelt3')
+        copied = request('/api/rule/copy', {'source_key':'LegendaryBelt3','target_key':target})
+        assert copied['copied'] == 2 and copied['replaced'] == 0
+        duplicate = request('/api/rule/copy', {'source_key':'LegendaryBelt3','target_key':target})
+        assert duplicate['copied'] == 0 and duplicate['skipped'] == 2
+        added = [r['id'] for r in request('/api/export/rules')['rules'] if target in r['equipment_keys']]
+        assert request('/api/rule/delete', {'ids':added,'equipment_key':target})['deleted'] == 2
+        imported = request('/api/rule/import', {'payload':{'version':2,'rules':[rule]},'enabled':True})
+        assert imported['imported'] == 1
+        incoming = [r for r in request('/api/export/rules')['rules']
+            if r['id'] not in {rule['id'],second_rule['id']}]
+        assert len(incoming) == 1 and incoming[0]['enabled'] is True
+        request('/api/rule/delete', {'ids':[incoming[0]['id']],'equipment_key':'LegendaryBelt3'})
+        assert request('/api/export/rules')['rules'] == originals
+        assert not request('/api/state')['monitoring'] and not request('/api/state')['automation']['running']
+        report['checks'].append('新版组合脚本已内置；跨装备复制、去重、批量删除及启用导入通过隔离配置验证')
         logs_before = request('/api/logs?category=settings')['total']
         assert logs_before >= 3
         assert request('/api/state')['rules'][0]['enabled'] is False
@@ -223,6 +253,7 @@ def main():
         assert request('/api/logs?category=settings')['total'] >= logs_before
         assert state['connected'] is False and state['monitoring'] is False
         assert state['automation']['settings'] == settings and not state['automation']['running']
+        assert request('/api/recommendations')['settings'] == recommendation_settings
         assert request('/api/experience')['recent'][0]['id'] == xp_sample['id']
         request('/api/experience/delete', {'id':xp_sample['id']})
         assert not request('/api/experience')['rows']
@@ -242,7 +273,8 @@ def main():
             subprocess.run(['taskkill', '/PID', str(process.pid), '/T', '/F'],
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=subprocess.CREATE_NO_WINDOW)
     report['native_window'] = args.desktop
-    (ROOT / 'release' / ('native-exe-verification.json' if args.desktop else 'exe-verification.json')).write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+    report_path = args.report or ROOT / 'release' / ('native-exe-verification.json' if args.desktop else 'exe-verification.json')
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
     print(json.dumps(report, ensure_ascii=False, indent=2))
 
 

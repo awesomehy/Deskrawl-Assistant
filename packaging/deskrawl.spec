@@ -18,6 +18,7 @@ assets = [
 ]
 datas = [(str(root / 'data' / name), 'data') for name in assets]
 datas.append((str(root / 'deskrawl_assistant' / 'web'), 'deskrawl_assistant/web'))
+datas.append((str(root / 'deskrawl_assistant' / 'update_replace.ps1'), 'deskrawl_assistant'))
 datas += collect_data_files('webview', subdir='js')
 
 a = Analysis(
@@ -40,7 +41,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='Deskrawl装备助手-v1.1.4-xp',
+    name='Deskrawl装备助手-v1.1.7',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

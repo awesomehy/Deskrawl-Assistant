@@ -164,7 +164,8 @@ class _Copy:
 
     def singleton(self, rva, name):
         key={'GameManager':'game_manager_rva','PlayerData':'player_data_rva','PlayerAbilityBook':'ability_book_rva',
-             'EquipmentManager':'equipment_manager_rva','RuneManager':'rune_manager_rva','PlayerTalentBook':'talent_book_rva'}.get(name)
+             'EquipmentManager':'equipment_manager_rva','RuneManager':'rune_manager_rva','PlayerTalentBook':'talent_book_rva',
+             'GameAreaManager':'game_area_manager_rva'}.get(name)
         if key:rva=native_rva(self.reader,key,rva)
         klass = self.klass(self.ptr(self.reader.module['base'] + rva), name)
         return self.verify(self.ptr(self.ptr(klass + 184)), name)

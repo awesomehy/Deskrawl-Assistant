@@ -3,7 +3,7 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const desktopMode=new URLSearchParams(location.search).get('desktop')==='1';
 let token = document.querySelector('meta[name="assistant-token"]').content;
-let catalog, state, gearKey, draft, dirty=false, selectedClass=0, containerFilter='', detailId=null;
+let catalog, state, gearKey, draft, dirty=false, selectedClass=0, detailId=null;
 let selectedItems=new Set(), itemSignature='', catalogSignature='', polling=false, toastTimer, exiting=false;
 const gearMap=new Map(), statMap=new Map();
 let lastRules='';
@@ -13,6 +13,15 @@ let experienceData=null, experienceRequest=0, experienceLoading=false, experienc
 let recommendationData=null, recommendationRequest=0, recommendationLoading=false, recommendationBusy=false, recommendationDirty=false;
 let updateState=null, updatePolling=false, updateSaving=false, updateNoticeShown=false;
 let experienceManualSavedValues=['','','',''];
+let detailTarget=null, characterSignature='', equippedPreviewId=null, equippedPreviewSignature='';
+let columnFilters={containers:null,locks:null,rules:null}, columnMenuKey=null, columnDraft=new Set(), columnAnchor=null;
+const columnMenus={
+  position:{label:'位置',sort:'position',filter:'containers',options:[['inventory','背包'],['storage','仓库']]},
+  level:{label:'物品等级',sort:'level'},upgrade:{label:'强化',sort:'upgrade'},sockets:{label:'总孔数',sort:'sockets'},
+  lock:{label:'锁状态',filter:'locks',options:[['locked','已锁定'],['unlocked','未锁定']]},
+  power:{label:'换装攻击力',sort:'power'},rules:{label:'规则结果',filter:'rules',options:[['matches','符合规则'],['miss','不符合规则'],['perfect','主词条全中']]}
+};
+const inventoryFilterIds=['inventory-class','inventory-slot','inventory-rarity','inventory-sockets','inventory-upgrade','inventory-level-min','inventory-level-max','inventory-power','inventory-sort','inventory-ancient','inventory-mist','inventory-divine'];
 
 async function api(path,data,retry=true){
   const response=await fetch('/api/'+path,data===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Assistant-Token':token},body:JSON.stringify(data)});
@@ -47,6 +56,7 @@ function gearIcon(gear,cls='gear-icon'){
 }
 function rulesFor(key){return (state?.rules||[]).filter(r=>r.equipment_keys.includes(key));}
 function switchTab(tab){
+  closeColumnMenu();
   activeTab=tab;
   document.querySelectorAll('.tab').forEach(button=>{let active=button.dataset.tab===tab;button.classList.toggle('active',active);button.setAttribute('aria-selected',active);});
   $('rules-page').hidden=tab!=='rules';$('inventory-page').hidden=tab!=='inventory';$('logs-page').hidden=tab!=='logs';$('experience-page').hidden=tab!=='experience';$('recommendations-page').hidden=tab!=='recommendations';
@@ -59,6 +69,7 @@ function buildCatalog(){
   catalog.equipment.forEach(g=>gearMap.set(g.key,g));catalog.stats.forEach(s=>statMap.set(s.key,s));
   $('class-filters').innerHTML=`<button class="selected" data-class="0">全部职业</button>`+catalog.classes.map(c=>`<button data-class="${c.value}">${esc(c.name)}</button>`).join('');
   $('slot-filter').innerHTML='<option value="">全部部位</option>'+catalog.slots.map(s=>`<option value="${esc(s.key)}">${esc(s.name)}</option>`).join('');
+  $('inventory-slot').innerHTML=$('slot-filter').innerHTML;
 }
 function renderCatalog(){
   let query=$('equipment-search').value.trim().toLowerCase(),slot=$('slot-filter').value,configured=$('configured-filter').value;
@@ -158,10 +169,50 @@ async function saveRule(){
 }
 function scopedItems(){const scope=$('action-scope').value;return state.items.filter(i=>i.is_equipment&&(scope==='all'||i.container===scope));}
 function visibleItems(){
-  const query=$('item-search').value.trim().toLowerCase(),lock=$('lock-filter').value,kind=$('kind-filter').value;
-  return (state?.items||[]).filter(i=>(!containerFilter||i.container===containerFilter)&&
-    (!kind||i.kind===kind)&&(!query||(i.name+' '+(gearMap.get(i.name_key)?.en||'')).toLowerCase().includes(query))&&
-    (!lock||(i.is_equipment&&(lock==='locked'?i.locked===true:lock==='unlocked'?i.locked===false:lock==='perfect'?i.primary_perfect:i.matches))));
+  const filters={...columnFilters,search:$('item-search').value,lock:$('lock-filter').value,kind:$('kind-filter').value,
+    class:$('inventory-class').value,slot:$('inventory-slot').value,rarity:$('inventory-rarity').value,sockets:$('inventory-sockets').value,
+    upgrade:$('inventory-upgrade').value,levelMin:$('inventory-level-min').value,levelMax:$('inventory-level-max').value,
+    power:$('inventory-power').value,sort:$('inventory-sort').value,
+    ancient:$('inventory-ancient').checked,mist:$('inventory-mist').checked,divine:$('inventory-divine').checked};
+  return InventoryTools.select((state?.items||[]).map(i=>({...i,en:gearMap.get(i.name_key)?.en})),filters,state?.character?.class_mask);
+}
+function equipmentTags(item){return `<span class="equipment-tags">${(item.tags||[]).map(t=>`<span class="equipment-tag ${t==='远古'?'ancient':t==='黑雾'?'mist':'divine'}">${esc(t)}</span>`).join('')}</span>`;}
+function powerNumber(value){return Number.isFinite(value)?Math.round(value).toLocaleString('zh-CN'):'—';}
+function powerDelta(value){return (value>0?'+':'')+powerNumber(value);}
+function powerClass(delta){return delta>0?'power-up':delta<0?'power-down':'power-equal';}
+function powerCell(item){
+  if(!item.is_equipment)return '<span class="note">—</span>';
+  const p=item.power;
+  if(!p?.available)return `<span class="power-unavailable" title="${esc(p?.reason||'等待读取角色')}">${p?.incompatible?'职业不符':'暂不能比较'}</span>`;
+  return `<div class="power-cell ${powerClass(p.delta)}" title="${esc(p.note)}"><strong>${p.delta>0?'↑ ':p.delta<0?'↓ ':'＝ '}${powerDelta(p.delta)}${p.percent==null?'':` <span>(${p.percent>0?'+':''}${p.percent.toFixed(1)}%)</span>`}</strong><small>换后 ${powerNumber(p.after)}${p.comparisons.length>1?' · '+esc(p.target_label):''}</small></div>`;
+}
+function renderGems(item){
+  if(!item.is_equipment)return '';
+  if(!item.gems_known)return '<p class="detail-hint">镶嵌宝石尚未读取</p>';
+  const gems=item.gems||[],slots=item.sockets??0;
+  return `<div class="detail-group gem-preview"><h4>镶嵌宝石 · ${gems.length} / ${esc(slots)} 孔</h4>${gems.map(g=>`<div class="socketed-gem">${g.icon?`<img src="${esc(g.icon)}" alt="">`:''}<div><strong>${esc(g.name)}</strong>${g.effects?g.effects.values.map(v=>`<p><span>${esc(v.name)}</span><b>${esc(v.display_value)}</b></p>`).join('')+(g.effects.texts||[]).map(t=>`<p>${esc(String(t).replace(/<[^>]+>/g,''))}</p>`).join(''):'<p>效果尚未适配</p>'}</div></div>`).join('')}${slots>gems.length?`<p class="detail-hint">${slots-gems.length} 个空孔</p>`:!slots?'<p class="detail-hint">无宝石孔位</p>':''}</div>`;
+}
+function renderComparison(item){
+  const p=item.power;
+  if(!p?.available)return `<div class="detail-comparison"><h4>换装预览</h4><p>${esc(p?.reason||'等待读取当前角色。')}</p></div>`;
+  const selected=p.comparisons.find(c=>c.target===detailTarget)||p.comparisons.find(c=>c.target===p.target);
+  const names=new Map((state.character?.attributes||[]).map(a=>[a.stat,a.name]));
+  return `<div class="detail-comparison"><div class="comparison-heading"><h4>换装预览 · 估算</h4>${p.comparisons.length>1?`<select id="detail-ring-target" aria-label="替换戒指位置">${p.comparisons.map(c=>`<option value="${c.target}" ${c.target===selected.target?'selected':''}>${esc(c.target_label)}</option>`).join('')}</select>`:`<small>${esc(selected.target_label)}</small>`}</div><div class="comparison-score"><span>${powerNumber(selected.before)}</span><span>→</span><strong>${powerNumber(selected.after)}</strong></div><div class="comparison-delta ${powerClass(selected.delta)}">${selected.delta>0?'↑ 上升':selected.delta<0?'↓ 下降':'＝ 不变'} ${powerDelta(selected.delta)}${selected.percent==null?'':` (${selected.percent>0?'+':''}${selected.percent.toFixed(2)}%)`}</div>${selected.attributes.length?`<details class="comparison-attributes"><summary>查看属性变化 · ${selected.attributes.length} 项</summary>${selected.attributes.map(a=>`<div><span>${esc(names.get(a.stat)||a.stat)}</span><small>${esc(a.before_text)}</small><b>${esc(a.after_text)}</b></div>`).join('')}</details>`:''}<p class="detail-hint">${esc(p.note)}</p>${(state.character?.warnings||[]).map(w=>`<p class="detail-hint">${esc(w)}</p>`).join('')}</div>`;
+}
+function renderCharacter(){
+  renderEquippedPreview();
+  const c=state.character||{available:false,reason:'等待读取角色。'},signature=JSON.stringify([c,equippedPreviewId]);
+  if(signature===characterSignature)return;characterSignature=signature;
+  $('character-name').textContent=c.available?`${c.name} · ${classesLabel(c.class_mask)} · Lv.${c.level}`:'角色数据暂不可用';
+  $('character-status').textContent=c.available?`主属性：${['力量','敏捷','智力'][c.primary]} · 属性采样 ${new Date(c.captured_at).toLocaleTimeString('zh-CN',{hour12:false})} · 换装战力按固定 Boss 场景计算`:c.reason;
+  $('character-attack').textContent=c.available?powerNumber(c.attack):'—';
+  const values=new Map((c.attributes||[]).map(a=>[a.stat,a]));
+  const main=[c.primary,4,5,8,9,13];
+  $('character-metrics').innerHTML=c.available?main.map(n=>`<div><span>${esc(values.get(n)?.name||'')}</span><strong>${esc(values.get(n)?.display_value??'—')}</strong></div>`).join('')+`<div><span>生命 / 最大生命</span><strong>${powerNumber(c.health)} / ${powerNumber(c.health_max)}</strong></div><div><span>每秒攻击次数</span><strong>${esc(c.attack_speed)}</strong></div>`:'';
+  $('character-warnings').hidden=!c.available||!c.warnings?.length;$('character-warnings').textContent=c.warnings?.join(' ')||'';
+  const slotLabels=['武器','头盔','胸甲','裤子','靴子','腰带','戒指 1','戒指 2','项链','护肩','手套','披风'];
+  const attributesOpen=$('character-content').querySelector('.all-character-attributes')?.open;
+  $('character-content').innerHTML=!c.available?'<div class="empty-state">'+esc(c.reason)+'</div>':`<div class="equipped-grid">${slotLabels.map((label,n)=>{const item=c.equipment.find(i=>i.equipped_slot===n);return item?`<button class="equipped-card ${equippedPreviewId===item.selection_id?'active':''}" data-equipped="${esc(item.selection_id)}"><span class="equipped-slot">${label}</span><div>${item.icon?`<img src="${esc(item.icon)}" alt="">`:''}<strong>${esc(item.name)}</strong></div>${equipmentTags(item)}<small>Lv.${esc(item.level)} · +${esc(item.upgrade??0)} · ${item.occupied_sockets}/${esc(item.sockets??'?')} 孔</small></button>`:`<div class="equipped-card empty"><span class="equipped-slot">${label}</span><small>未穿戴</small></div>`;}).join('')}</div><details class="all-character-attributes" ${attributesOpen?'open':''}><summary>全部角色属性 · ${c.attributes.length} 项</summary><div class="character-attribute-grid">${c.attributes.map(a=>`<div><span>${esc(a.name)}</span><strong>${esc(a.display_value)}</strong></div>`).join('')}</div></details>`;
 }
 function resultBadge(item){
   if(!item.is_equipment)return '<span class="badge miss">—</span>';
@@ -171,6 +222,7 @@ function resultBadge(item){
 }
 function renderInventory(){
   if(!state)return;
+  renderColumnButtons();
   const view=visibleItems();
   selectedItems=new Set([...selectedItems].filter(id=>state.items.some(i=>i.selection_id===id)));
   $('visible-count').textContent=`${view.length} 组物品`;
@@ -179,31 +231,87 @@ function renderInventory(){
     itemSignature=signature;
     $('item-rows').innerHTML=view.map(i=>`<tr data-item="${esc(i.selection_id)}" class="${i.selection_id===detailId?'active':''} ${i.primary_perfect?'primary-perfect-item':''}" tabindex="0">
       <td><input type="checkbox" data-item-select="${esc(i.selection_id)}" aria-label="选择${esc(i.name)}" ${selectedItems.has(i.selection_id)?'checked':''} ${!i.selection_id?'disabled':''}></td>
-      <td><div class="item-name">${i.icon?`<img src="${esc(i.icon)}" alt="">`:''}<div><strong>${esc(i.name)}</strong><small>${esc(i.slot_label)}</small></div></div></td>
-      <td>${i.container==='inventory'?'背包':'仓库'} · ${Number(i.slot_index)+1}</td><td>${esc(i.count)}</td><td>${esc(i.level??'—')}${i.upgrade?` <small>+${i.upgrade}</small>`:''}</td>
-      <td><span class="badge ${i.locked?'locked':'unlocked'}">${i.locked===true?'已锁定':i.locked===false?'未锁定':'未确认'}</span></td><td>${resultBadge(i)}</td></tr>`).join('');
+      <td><div class="item-name">${i.icon?`<img src="${esc(i.icon)}" alt="">`:''}<div><strong>${esc(i.name)}</strong><small>${esc(i.slot_label)} ${equipmentTags(i)}</small></div></div></td>
+      <td>${i.container==='inventory'?'背包':'仓库'} · ${Number(i.slot_index)+1}</td><td>${esc(i.count)}</td><td>${esc(i.level??'—')}</td><td>${i.is_equipment?i.upgrade==null?'未确认':'+'+esc(i.upgrade):'—'}</td><td title="已镶嵌 / 总孔位">${i.is_equipment?i.sockets==null?'未确认':(i.gems_known?i.occupied_sockets+'/':'')+i.sockets+' 孔':'—'}</td>
+      <td>${i.is_equipment?`<span class="badge ${i.locked?'locked':'unlocked'}">${i.locked===true?'已锁定':i.locked===false?'未锁定':'未确认'}</span>`:'<span class="note">—</span>'}</td><td>${powerCell(i)}</td><td>${resultBadge(i)}</td></tr>`).join('');
     $('inventory-empty').hidden=view.length>0;
     $('inventory-empty').textContent=state.connected?'当前筛选条件下没有物品':'连接游戏，查看背包和仓库物品';
-    renderDetail();
+    const previousDetail=$('item-detail').dataset.selection,scroll=$('item-detail').scrollTop,expanded=$('item-detail').querySelector('.comparison-attributes')?.open;
+    renderDetail();$('item-detail').dataset.selection=detailId||'';
+    if(previousDetail===detailId){$('item-detail').scrollTop=scroll;const attributes=$('item-detail').querySelector('.comparison-attributes');if(attributes)attributes.open=!!expanded;}
   }
   const available=view.filter(i=>i.selection_id);
   $('select-visible').checked=available.length>0&&available.every(i=>selectedItems.has(i.selection_id));
   $('select-visible').indeterminate=available.some(i=>selectedItems.has(i.selection_id))&&!$('select-visible').checked;
   $('select-visible').disabled=!available.length;
   $('selected-count').textContent=state.items.filter(i=>selectedItems.has(i.selection_id)&&i.is_equipment&&i.locked===false).length;
-  $('transfer-selection').textContent=selectedItems.size?`已选 ${selectedItems.size} 组物品`:'勾选物品后移动';
+  const hiddenSelection=[...selectedItems].filter(id=>!view.some(i=>i.selection_id===id)).length;
+  $('transfer-selection').textContent=selectedItems.size?`已选 ${selectedItems.size} 组${hiddenSelection?`（筛选外 ${hiddenSelection} 组）`:''}`:'勾选物品后移动';
   updateControls();
 }
 function renderDetail(){
   const item=state.items.find(i=>i.selection_id===detailId);
   if(!item){$('item-detail').innerHTML='<div class="empty-state">点击物品查看详情</div>';return;}
-  const moveButton=`<button class="button detail-move" data-move-item="${esc(item.selection_id)}" data-target="${item.container==='inventory'?'storage':'inventory'}" ${!item.movable||state.busy?'disabled':''}>${item.container==='inventory'?'移入仓库':'取回背包'}</button>`;
+  const worn=item.container==='equipped';
+  const moveButton=worn?'':`<button class="button detail-move" data-move-item="${esc(item.selection_id)}" data-target="${item.container==='inventory'?'storage':'inventory'}" ${!item.movable||state.busy?'disabled':''}>${item.container==='inventory'?'移入仓库':'取回背包'}</button>`;
   if(!item.is_equipment){$('item-detail').innerHTML=`<div class="detail-title">${item.icon?`<img src="${esc(item.icon)}" alt="">`:`<div class="item-placeholder">${esc(item.kind_label[0])}</div>`}<div><h3>${esc(item.name)}</h3><small>${esc(item.kind_label)}</small></div></div><div class="detail-meta">数量 ${esc(item.count)} · ${item.container==='inventory'?'背包':'仓库'}第 ${Number(item.slot_index)+1} 格</div>${renderEffects(item)}<p class="detail-hint">${esc(item.effect_note||'')}</p><p class="detail-hint">${item.kind==='gem'?`同种同等级宝石优先堆叠${item.max_stack>1?`，每组最多 ${esc(item.max_stack)} 颗`:''}，剩余数量放入空格。`:'整组移动到目标空格，保留原有数量。'}不参与装备词条筛选。</p>${moveButton}`;return;}
-  $('item-detail').innerHTML=`<div class="detail-title">${item.icon?`<img src="${esc(item.icon)}" alt="">`:''}<div><h3>${esc(item.name)}</h3><small>${esc(item.slot_label)} · ${esc(classesLabel(item.class_mask))}</small></div></div>
-    <div class="detail-meta"><span>物品等级 ${esc(item.level)}</span><span>强化 +${esc(item.upgrade??0)}</span></div>
+  $('item-detail').innerHTML=equipmentPreviewHtml(item,moveButton);
+}
+function equipmentPreviewHtml(item,moveButton=''){
+  const worn=item.container==='equipped';
+  return `<div class="detail-title">${item.icon?`<img src="${esc(item.icon)}" alt="">`:''}<div><h3>${esc(item.name)}</h3><small>${esc(item.slot_label)} · ${esc(classesLabel(item.class_mask))}</small></div></div>
+    <div class="detail-meta"><span>${worn?'已穿戴 · ':''}${esc(item.rarity_label)} · Lv.${esc(item.level)}</span><span>强化 ${item.upgrade==null?'未确认':'+'+esc(item.upgrade)} · ${esc(item.sockets??'未确认')} 孔</span></div>${equipmentTags(item)}
+    ${worn?'':renderComparison(item)}
     ${['base','primary','secondary','unknown'].map(g=>{const values=item.groups[g]||[];return values.length?`<div class="detail-group"><h4>${{base:'基础属性 · 不参与筛选',primary:'主词条',secondary:'副词条',unknown:'待核验词条'}[g]}</h4><div class="type-list">${values.map(v=>`<div class="affix-row ${v.matched?'matched':''}" data-affix-key="${esc(v.key)}" title="${esc(v.value_note||(v.matched?'命中规则：'+v.matched_rules.join('、'):''))}"><span class="affix-name">${esc(v.name)}</span><strong class="affix-value">${esc(v.display_value??'未读取')}</strong>${v.matched?'<small class="affix-hit" aria-label="命中规则">✓</small>':''}</div>`).join('')}</div></div>`:'';}).join('')}
-    <p class="detail-hint">绿色为命中已启用规则的词条；整件装备是否达标见下方结果。数值包含已确认的装备强化。</p>
-    <div class="detail-rule">${resultBadge(item)}${item.primary_perfect_combinations?.length?`<p class="perfect-combinations">主词条全中组合：${item.primary_perfect_combinations.map(esc).join('、')}<small>四条随机主词条都在该组合的勾选范围内；此标记不检查副词条，不改变自动锁定条件。</small></p>`:''}${item.matched_combinations?.length?`<p class="matched-combinations">命中组合：${item.matched_combinations.map(esc).join('、')}</p>`:''}${item.reasons.map(r=>`<p>${esc(r)}</p>`).join('')}<button class="text-button" data-configure-item="${esc(item.name_key)}">配置这件装备的规则 →</button></div>${moveButton}`;
+    <p class="detail-hint">${worn?'当前穿戴装备的属性预览。':'绿色为命中已启用规则的词条；整件装备是否达标见下方结果。'}数值包含已确认的装备强化。</p>
+    ${renderGems(item)}
+    <div class="detail-rule">${worn?'':resultBadge(item)}${item.primary_perfect_combinations?.length?`<p class="perfect-combinations">主词条全中组合：${item.primary_perfect_combinations.map(esc).join('、')}<small>四条随机主词条都在该组合的勾选范围内；此标记不检查副词条，不改变自动锁定条件。</small></p>`:''}${item.matched_combinations?.length?`<p class="matched-combinations">命中组合：${item.matched_combinations.map(esc).join('、')}</p>`:''}${item.reasons.map(r=>`<p>${esc(r)}</p>`).join('')}<button class="text-button" data-configure-item="${esc(item.name_key)}">配置这件装备的规则 →</button></div>${moveButton}`;
+}
+function renderEquippedPreview(){
+  const dialog=$('equipped-dialog');
+  if(!dialog.open)return;
+  const item=state?.character?.equipment?.find(i=>i.selection_id===equippedPreviewId);
+  if(!item){dialog.close();toast('该装备已不再穿戴或角色暂不可读，预览已关闭。');return;}
+  const signature=JSON.stringify(item);
+  if(signature===equippedPreviewSignature)return;
+  equippedPreviewSignature=signature;
+  const body=$('equipped-preview'),scroll=body.scrollTop;
+  $('equipped-title').textContent='身上装备 · '+item.slot_label;
+  body.innerHTML=equipmentPreviewHtml(item);body.scrollTop=scroll;
+}
+function openEquippedPreview(id){
+  closeColumnMenu();equippedPreviewId=id;equippedPreviewSignature='';
+  $('equipped-dialog').showModal();renderEquippedPreview();renderCharacter();
+}
+function closeColumnMenu(focus=false){
+  $('column-menu').hidden=true;columnMenuKey=null;
+  if(columnAnchor){columnAnchor.setAttribute('aria-expanded','false');if(focus)columnAnchor.focus({preventScroll:true});}
+  columnAnchor=null;
+}
+function renderColumnButtons(){
+  const sort=$('inventory-sort').value;
+  document.querySelectorAll('[data-column]').forEach(button=>{
+    const spec=columnMenus[button.dataset.column],filtered=spec.filter&&columnFilters[spec.filter]!==null;
+    const sorted=spec.sort&&sort.startsWith(spec.sort+'-');
+    button.classList.toggle('filtered',!!filtered);button.classList.toggle('sorted',!!sorted);
+    button.querySelector('.column-indicator').textContent=(filtered?'● ':'')+(sorted?(sort.endsWith('asc')?'↑ ':'↓ '):'')+'▾';
+    button.parentElement.setAttribute('aria-sort',sorted?(sort.endsWith('asc')?'ascending':'descending'):'none');
+  });
+}
+function openColumnMenu(key,button){
+  if(columnMenuKey===key){closeColumnMenu(true);return;}
+  closeColumnMenu();columnMenuKey=key;columnAnchor=button;
+  const spec=columnMenus[key],menu=$('column-menu');
+  columnDraft=new Set(spec.options?(columnFilters[spec.filter]??spec.options.map(o=>o[0])):[]);
+  menu.innerHTML=`<div class="column-menu-title">${esc(spec.label)}<button class="text-button" data-column-close aria-label="关闭表头菜单">×</button></div>
+    ${spec.sort?`<div class="column-sort-actions"><button data-column-sort="asc" class="${$('inventory-sort').value===spec.sort+'-asc'?'selected':''}">↑ 从小到大${key==='sockets'?' · 总孔数':''}</button><button data-column-sort="desc" class="${$('inventory-sort').value===spec.sort+'-desc'?'selected':''}">↓ 从大到小${key==='sockets'?' · 总孔数':''}</button></div>`:''}
+    ${spec.options?`<div class="column-filter-actions"><button class="text-button" data-column-all>全选</button><button class="text-button" data-column-none>全不选</button></div><div class="column-filter-options">${spec.options.map(([value,label])=>`<label><input type="checkbox" data-column-value="${value}" ${columnDraft.has(value)?'checked':''}>${label}</label>`).join('')}</div>${key==='rules'||key==='lock'?'<p class="column-menu-note">未筛选时包含材料和待核验物品。</p>':''}`:''}
+    <div class="column-menu-footer"><button class="button ghost" data-column-clear>清除此列设置</button>${spec.options?'<button class="button primary" data-column-apply>应用筛选</button>':''}</div>`;
+  menu.hidden=false;button.setAttribute('aria-expanded','true');
+  const rect=button.getBoundingClientRect();
+  menu.style.left=Math.max(10,Math.min(rect.left,window.innerWidth-menu.offsetWidth-10))+'px';
+  menu.style.top=Math.max(10,Math.min(rect.bottom+6,window.innerHeight-menu.offsetHeight-10))+'px';
+  menu.querySelector('button').focus({preventScroll:true});
 }
 function renderEffects(item){
   const plain=s=>String(s??'').replace(/<[^>]+>/g,'');
@@ -297,7 +405,7 @@ function renderState(){
   $('history-list').innerHTML=state.history.length?state.history.map(h=>`<div><time>${esc(h.time)}</time><span>${esc(h.text)}</span></div>`).join(''):'<div class="note">尚无操作记录</div>';
   const rulesSignature=JSON.stringify(state.rules);
   if(rulesSignature!==lastRules){lastRules=rulesSignature;renderCatalog();if(gearKey&&!dirty){const r=rulesFor(gearKey).find(r=>r.id===draft?.id);if(r){draft=makeDraft(r);renderEditor();}}}
-  renderInventory();updateControls();renderAutomation();
+  renderCharacter();renderInventory();updateControls();renderAutomation();
   $('logging-state').textContent=state.connected?'已连接 · 每 2 秒记录物品变化':'连接游戏后开始记录物品变化';
 }
 async function pollState(){
@@ -360,11 +468,38 @@ $('import-file').addEventListener('change',async e=>{
 });
 $('export-rules').addEventListener('click',()=>download('export/rules','Deskrawl筛选规则.json'));
 $('export-items').addEventListener('click',()=>download('export/items','Deskrawl装备清单.json'));
-$('container-filter').addEventListener('click',e=>{const button=e.target.closest('[data-container]');if(!button)return;containerFilter=button.dataset.container;document.querySelectorAll('[data-container]').forEach(b=>b.classList.toggle('selected',b===button));renderInventory();});
 $('item-search').addEventListener('input',renderInventory);$('lock-filter').addEventListener('change',renderInventory);$('kind-filter').addEventListener('change',renderInventory);$('action-scope').addEventListener('change',updateControls);
+inventoryFilterIds.forEach(id=>$(id).addEventListener($(id).type==='number'?'input':'change',renderInventory));
+$('inventory-reset').addEventListener('click',()=>{inventoryFilterIds.forEach(id=>{const input=$(id);if(input.type==='checkbox')input.checked=false;else input.value=id==='inventory-sort'?'position':'';});$('item-search').value='';$('kind-filter').value='';$('lock-filter').value='';columnFilters={containers:null,locks:null,rules:null};closeColumnMenu();renderInventory();});
+$('character-content').addEventListener('click',e=>{const button=e.target.closest('[data-equipped]');if(button)openEquippedPreview(button.dataset.equipped);});
+$('equipped-close').addEventListener('click',()=>$('equipped-dialog').close());
+$('equipped-dialog').addEventListener('close',()=>{equippedPreviewId=null;equippedPreviewSignature='';renderCharacter();});
+$('equipped-dialog').addEventListener('click',async e=>{if(e.target===$('equipped-dialog')){$('equipped-dialog').close();return;}const button=e.target.closest('[data-configure-item]');if(button&&gearMap.has(button.dataset.configureItem)){$('equipped-dialog').close();await chooseGear(button.dataset.configureItem);switchTab('rules');}});
+document.querySelector('.inventory-table thead').addEventListener('click',e=>{const button=e.target.closest('[data-column]');if(button)openColumnMenu(button.dataset.column,button);});
+$('column-menu').addEventListener('change',e=>{const value=e.target.dataset.columnValue;if(value){if(e.target.checked)columnDraft.add(value);else columnDraft.delete(value);}});
+$('column-menu').addEventListener('click',e=>{
+  const button=e.target.closest('button');if(!button||!columnMenuKey)return;
+  const spec=columnMenus[columnMenuKey];
+  if(button.hasAttribute('data-column-close')){closeColumnMenu(true);return;}
+  if(button.hasAttribute('data-column-all')||button.hasAttribute('data-column-none')){
+    const all=button.hasAttribute('data-column-all');columnDraft=new Set(all?spec.options.map(o=>o[0]):[]);
+    $('column-menu').querySelectorAll('[data-column-value]').forEach(input=>input.checked=all);return;
+  }
+  if(button.dataset.columnSort)$('inventory-sort').value=spec.sort+'-'+button.dataset.columnSort;
+  if(button.hasAttribute('data-column-apply')){
+    columnFilters[spec.filter]=columnDraft.size===spec.options.length?null:[...columnDraft];
+  }
+  if(button.hasAttribute('data-column-clear')){if(spec.filter)columnFilters[spec.filter]=null;if(spec.sort&&$('inventory-sort').value.startsWith(spec.sort+'-'))$('inventory-sort').value='position';}
+  closeColumnMenu(true);renderInventory();
+});
+document.addEventListener('click',e=>{if(columnMenuKey&&!e.target.closest('#column-menu')&&!e.target.closest('[data-column]'))closeColumnMenu();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&columnMenuKey){e.preventDefault();e.stopPropagation();closeColumnMenu(true);}});
+window.addEventListener('resize',()=>closeColumnMenu());
+document.addEventListener('scroll',e=>{if(columnMenuKey&&!$('column-menu').contains(e.target))closeColumnMenu();},true);
+$('item-detail').addEventListener('change',e=>{if(e.target.id==='detail-ring-target'){detailTarget=Number(e.target.value);renderDetail();}});
 $('item-rows').addEventListener('change',e=>{const id=e.target.dataset.itemSelect;if(!id)return;if(e.target.checked)selectedItems.add(id);else selectedItems.delete(id);renderInventory();});
-$('item-rows').addEventListener('click',e=>{if(e.target.matches('input'))return;const row=e.target.closest('[data-item]');if(row){detailId=row.dataset.item;renderInventory();}});
-$('item-rows').addEventListener('keydown',e=>{if(e.target.matches('input')||!['Enter',' '].includes(e.key))return;const row=e.target.closest('[data-item]');if(row){e.preventDefault();detailId=row.dataset.item;renderInventory();}});
+$('item-rows').addEventListener('click',e=>{if(e.target.matches('input'))return;const row=e.target.closest('[data-item]');if(row){if(detailId!==row.dataset.item)detailTarget=null;detailId=row.dataset.item;renderInventory();}});
+$('item-rows').addEventListener('keydown',e=>{if(e.target.matches('input')||!['Enter',' '].includes(e.key))return;const row=e.target.closest('[data-item]');if(row){e.preventDefault();if(detailId!==row.dataset.item)detailTarget=null;detailId=row.dataset.item;renderInventory();}});
 $('select-visible').addEventListener('change',e=>{visibleItems().filter(i=>i.selection_id).forEach(i=>e.target.checked?selectedItems.add(i.selection_id):selectedItems.delete(i.selection_id));renderInventory();});
 for(const target of ['storage','inventory'])$('move-'+target).addEventListener('click',()=>action('move_items',{target,items:state.items.filter(i=>selectedItems.has(i.selection_id)&&i.container!==target).map(i=>i.selection_id)}));
 $('item-detail').addEventListener('click',async e=>{const move=e.target.closest('[data-move-item]');if(move){await action('move_items',{target:move.dataset.target,items:[move.dataset.moveItem]});return;}const button=e.target.closest('[data-configure-item]');if(button&&gearMap.has(button.dataset.configureItem)){await chooseGear(button.dataset.configureItem);switchTab('rules');}});

@@ -122,6 +122,13 @@ class RuntimeClient:
                 raise RuntimeConnectionError('尚未连接游戏。')
             return read_recommendation(self._reader)
 
+    def character_snapshot(self):
+        from .character_reader import read_character
+        with self._guard:
+            if self._reader is None:
+                raise RuntimeConnectionError('尚未连接游戏。')
+            return read_character(self._reader)
+
     def lock_equipment(self, expected, validate=lambda row: True):
         from .background_lock import lock_equipment
         with self._guard:

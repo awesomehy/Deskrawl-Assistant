@@ -18,7 +18,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.2.0'
+NAME = 'Deskrawl装备助手-v1.2.1'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -52,6 +52,7 @@ def main():
     assert any(n.replace('\\','/').endswith('webview/js/api.js') for n in names)
     assert any(n.endswith('Python.Runtime.dll') for n in names)
     assert 'deskrawl_assistant/web/rule-tools.js' in normalized
+    assert 'deskrawl_assistant/web/inventory-tools.js' in normalized
     assert 'deskrawl_assistant/update_replace.ps1' in normalized
     assert 'data/compatibility-baseline.json' in normalized
     assert any('capstone' in n.lower() and n.lower().endswith('.dll') for n in names)
@@ -106,7 +107,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.2.0'
+                assert request('/api/state')['app_version'] == '1.2.1'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -137,6 +138,11 @@ def main():
         assert b'async function api' in request('/app.js')
         assert b'openCombinationManager' in request('/rule-tools.js')
         assert request('/style.css')
+        page = request('/').decode('utf-8')
+        assert 'id="equipped-dialog"' in page and page.count('data-column="') == 7
+        assert '单体 Boss 基准战力' in page
+        assert b'InventoryTools' in request('/inventory-tools.js')
+        report['checks'].append('角色装备独立弹窗、七个表头菜单及固定 Boss 场景说明已随 exe 内置')
         recommendation = request('/api/recommendations')
         assert recommendation['available'] is False and not recommendation['rows']
         recommendation_settings = {'minutes':30,'difficulty':'current','overhead_seconds':7,'overhead_mode':'manual','include_locked':True,'sort':'completed'}
@@ -243,6 +249,17 @@ def main():
 
             report['game_pid'] = state['pid']
             report['equipment_count'] = len(state['items'])
+            character = state['character']
+            assert character['available'], character.get('reason')
+            assert 0 < len(character['equipment']) <= 12
+            assert character['comparison_distance'] == (7 if character['class_mask'] in (2,4) else 2)
+            assert len(character['attributes']) >= 65 and character['attack'] > 0
+            comparable = [item for item in state['items'] if item.get('power',{}).get('available')]
+            assert comparable and all(item['power']['before'] == character['attack'] for item in comparable)
+            assert all('Boss' in item['power']['note'] for item in comparable)
+            assert all(isinstance(item['upgrade'],int) and isinstance(item['sockets'],int)
+                and isinstance(item['gems'],list) and isinstance(item['tags'],list) for item in character['equipment'])
+            report['checks'].append('单文件 exe 实机读取穿戴装备、强化、孔位、宝石及角色属性；所有换装比较使用同一固定 Boss 基准')
             assert all('base' in item['groups'] for item in state['items'])
             for item in state['items']:
                 for values in item['groups'].values():

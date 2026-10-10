@@ -358,7 +358,7 @@ class NativeReader:
             "name_key": name if name in self.catalog.equipment else None,
             "is_equipment": name in self.catalog.equipment, "item_type": p.i32(item + 32),
             "equip_slot": p.i32(item + 144), "base_rarity": p.i32(item + 36),
-            "max_stack": p.i32(item + 136)}
+            "max_stack": p.i32(item + 136), "class_mask": p.i32(item + 152)}
         self.item_cache[item] = out
         return out
 
@@ -379,6 +379,13 @@ class NativeReader:
         if mods_ptr and p.read(mods_ptr + 32, len(block)) != block:
             raise SnapshotChangedError("装备词条在读取期间发生变化")
         instance = self.string(struct.unpack_from("<Q", header, 80)[0])
+        gem_ptr = struct.unpack_from("<Q", header, 64)[0]
+        gems, gem_block = self.array(gem_ptr, "String", limit=64, stride=8)
+        gem_ids = [self.string(struct.unpack('<Q', raw)[0]) or '' for raw in gems]
+        if gem_ptr:
+            self.snapshot_stamps.append((gem_ptr + 24, struct.pack('<Q', len(gems))))
+            if gem_block:
+                self.snapshot_stamps.append((gem_ptr + 32, gem_block))
         if p.read(obj, 128) != header:
             raise SnapshotChangedError("装备实例在读取期间发生变化")
         self.snapshot_stamps.append((obj, header))
@@ -387,6 +394,7 @@ class NativeReader:
         return {"instance_id": instance, "item_level": struct.unpack_from("<i", header, 16)[0],
             "rarity": struct.unpack_from("<i", header, 20)[0], "modifiers": modifiers, "modifiers_complete": True,
             "upgrade_level": struct.unpack_from("<i", header, 32)[0], "socket_count": struct.unpack_from("<i", header, 56)[0],
+            "socketed_gems": gem_ids,
             "locked": bool(header[73]), "is_ancient": bool(header[72]), "is_black_mist": bool(header[105]),
             "bound": bool(header[120])}
 

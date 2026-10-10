@@ -9,7 +9,7 @@ import uuid
 from .catalog import load_catalog
 from .models import Rule, ValidationError
 from .rules import LockPlanner, rules_from_dict, evaluate, DEFAULT_MIN_CONFIDENCE, primary_perfect_rules
-from .runtime_adapter import RuntimeAdapter, headline_stats
+from .runtime_adapter import RuntimeAdapter, RuntimeReadEvidence, headline_stats
 from .stat_display import preview_value
 from .runtime_client import RuntimeClient
 from .native_memory import SnapshotChangedError
@@ -90,6 +90,7 @@ class AssistantService:
         except Exception as exc:
             self.config_error = '规则文件未能载入，已保留原文件：'+str(exc)
         self.snapshot = None
+        self.character = {'available':False,'reason':'连接游戏后读取当前角色。','equipment':[]}
         self.revision = 0
         self.busy = False
         self.updating = False
@@ -440,21 +441,80 @@ class AssistantService:
             try: carriage = self.client.carriage_snapshot()
             except Exception as exc: carriage = {'available':False,'complete':False,'count':0,'items':[],'reason':str(exc)}
         if snapshot: self.activity.observe(snapshot,carriage)
+        character = {'available':False,'reason':'连接游戏后读取当前角色。','equipment':[]}
+        if snapshot and hasattr(self.client, 'character_snapshot'):
+            try:
+                character = self.client.character_snapshot()
+                if character.get('available') and character.get('session') != snapshot.get('bridge_session'):
+                    character = {'available':False,'reason':'角色连接已变化，等待下一次读取。','equipment':[]}
+            except Exception as exc:
+                character = {'available':False,'reason':'角色读取暂不可用：'+str(exc),'equipment':[]}
         with self.guard:
             self.snapshot = snapshot
+            self.character = character
             if carriage is not None: self.carriage = carriage
             self.revision += 1
+
+    def _equipment_facts(self, row):
+        rarity = row.get('rarity', row.get('base_rarity'))
+        tags = [label for key,label in (('is_ancient','远古'),('is_black_mist','黑雾')) if row.get(key) is True]
+        if rarity == 4: tags.append('神圣')
+        category = 2 if row.get('equip_slot') == 1 else 1 if row.get('equip_slot') in (7,8) else 0
+        gems = []
+        for key in row.get('socketed_gems') or []:
+            if not key: continue
+            meta = self.item_ui['items'].get(key,{})
+            groups = meta.get('effect_groups',[])
+            gems.append({'key':key,'name':self._describe_item(key)[0],'icon':meta.get('icon'),
+                'effects':groups[category] if len(groups)==3 else None})
+        return {'rarity':rarity,'rarity_label':{0:'普通',1:'优秀',2:'稀有',3:'传说',4:'神圣',5:'符文套装'}.get(rarity,'未知'),
+            'is_ancient':row.get('is_ancient'),'is_black_mist':row.get('is_black_mist'),
+            'is_divine':rarity==4,'tags':tags,'sockets':row.get('socket_count'),
+            'gems':gems,'gems_known':'socketed_gems' in row,'occupied_sockets':len(gems)}
+
+    def _character_payload(self, character):
+        from .character import attribute_text, attack_speed, SLOT_LABELS, PREVIEW_NOTE
+        if not character.get('available'): return deepcopy(character)
+        stats = character['stats']
+        payload = {k:deepcopy(character.get(k)) for k in ('available','name','level','class_mask','primary',
+            'health','health_max','attack','warnings','captured_at','character_id','comparison_distance')}
+        payload['preview_note'] = PREVIEW_NOTE
+        payload['attack_speed'] = round(attack_speed(stats),3)
+        payload['attributes'] = [{'stat':n,'key':'Stats.'+self.adapter.stat_names[n],
+            'name':self.catalog.stats['Stats.'+self.adapter.stat_names[n]].label,
+            'value':stats[n],'display_value':attribute_text(n, stats[n])} for n in range(66)
+            if 'Stats.'+self.adapter.stat_names[n] in self.catalog.stats]
+        payload['equipment'] = []
+        evidence = RuntimeReadEvidence(enum_values_verified=True,native_affixes_verified=True,
+            provenance_verified=True,identity_verified=True,modifiers_complete=True,
+            slot_verified=True,snapshot_consistent=True)
+        for row in character['equipment']:
+            key=row.get('name_key');meta=self.ui['equipment'].get(key,{})
+            adapted=self.adapter.adapt_item(row,snapshot_token=character['captured_at'],session_id=character['session'],evidence=evidence)
+            groups={'base':[],'primary':[],'secondary':[],'unknown':[]}
+            for mod in adapted.display_modifiers:
+                groups[mod.group].append({'key':mod.stat_key,'name':self.catalog.stats[mod.stat_key].label if mod.stat_key in self.catalog.stats else mod.stat_key,
+                    **preview_value(mod,row),'matched':False,'matched_rules':[]})
+            payload['equipment'].append({'selection_id':'equipped:'+row['item_uid'],'is_equipment':True,
+                'name_key':key,'name':self._describe_item(row['internal_name'])[0],
+                'icon':meta.get('icon'),'slot':meta.get('slot'),'slot_label':SLOT_LABELS[row['equipped_slot']],
+                'equipped_slot':row['equipped_slot'],'class_mask':row.get('class_mask',meta.get('class_mask',0)),
+                'container':'equipped','level':row.get('item_level'),'upgrade':row.get('upgrade_level'),
+                'groups':groups,**self._equipment_facts(row),'reasons':[],'movable':False})
+        return payload
 
     def state(self):
         with self.guard:
             if self.snapshot and not self.client.connected and not self.busy:
                 self.snapshot = None
+                self.character = {'available':False,'reason':'游戏已退出，请重新连接。','equipment':[]}
                 self.monitoring = False
                 self.automation_running = False
                 self.carriage = {'available':False,'count':0,'items':[]}
                 self.loot_state = None
                 self.message = '游戏已退出，请重新启动游戏并连接。'
             snap = self.snapshot
+            character = deepcopy(self.character)
             rules = list(self.rules)
             result = {'connected':self.client.connected,'pid':self.client.pid,'busy':self.busy or self.updating,
                 'monitoring':self.monitoring,'message':self.message,'error':self.error,'progress':self.progress,
@@ -465,6 +525,7 @@ class AssistantService:
             result['automation'] = {'settings':deepcopy(self.automation_settings),'running':self.automation_running,
                 'status':self.automation_status,'carriage':self._carriage_payload()}
             result['app_version'] = VERSION
+            result['character'] = self._character_payload(character)
             result['compatibility'] = dict(getattr(self.client,'compatibility',{'phase':'idle','message':'连接时自动检测游戏兼容性'}))
         if not snap: return result
         adapted = self.adapter.adapt_snapshot(snap)
@@ -517,10 +578,14 @@ class AssistantService:
                 'name':entry.label if entry else localized.get('Chinese (Simplified)') or localized.get('English') or row.get('internal_name','未识别物品'),
                 'container':row.get('container'),'slot_index':row.get('slot_index'),
                 'locked':row.get('locked'),'level':row.get('item_level'),'upgrade':row.get('upgrade_level'),
+                **(self._equipment_facts(row) if kind=='equipment' else {}),
                 'icon':meta.get('icon'),'slot':meta.get('slot'),'slot_label':SLOT_LABELS.get(meta.get('slot'), '未知部位') if kind=='equipment' else kind_label,
                 'class_mask':meta.get('class_mask',0),'groups':groups,'matches':match,'matched_combinations':matched_combinations,
                 'review':review,'reasons':reasons,'primary_perfect':bool(primary_perfect),
                 'primary_perfect_combinations':primary_perfect})
+            if kind=='equipment':
+                from .character import preview
+                result['items'][-1]['power'] = preview(row,character,self.item_ui)
         for container in ('inventory','storage'):
             values = [i for i in result['items'] if i['container']==container]
             result['counts'][container] = {'equipment':sum(i['is_equipment'] for i in values),'locked':sum(i['is_equipment'] and i['locked'] is True for i in values),

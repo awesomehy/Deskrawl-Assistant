@@ -245,7 +245,7 @@ class Signatures:
                 'gc_mode_rva':mode,'gc_bitmap_rva':bitmap}
         for name,key in (('PlayerData','player_data_rva'),('PlayerAbilityBook','ability_book_rva'),
                          ('EquipmentManager','equipment_manager_rva'),('RuneManager','rune_manager_rva'),
-                         ('PlayerTalentBook','talent_book_rva')):
+                         ('PlayerTalentBook','talent_book_rva'),('GameAreaManager','game_area_manager_rva')):
             result[key]=self.singleton_rva(name)
         difficulty=next((name for name in self.defs if self.aliases.get(name,name)=='ey'),None)
         if difficulty is None:raise ValueError('Difficulty state type is missing')

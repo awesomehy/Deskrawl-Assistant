@@ -553,7 +553,8 @@
     "equipment_manager_rva": 60921424,
     "rune_manager_rva": 60930696,
     "talent_book_rva": 60930688,
-    "difficulty_rva": 60941368
+    "difficulty_rva": 60941368,
+    "game_area_manager_rva": 60930720
   },
   "native_methods": {
     "ACTk.Runtime.dll|<>internal:52e811923fd5d69c94fcc9fa4e67c9409a6a571cc9bfd2a167de8a532bdc3c1f|0f1e9dd02f8db254550d3e7aab4a3da6070ea752d3ef69ebfec35ef6779e9d5a": "1d8c0eb4882d24b2e83c3b12dc7f49301fc291465c419f047b87d6f769f71205",

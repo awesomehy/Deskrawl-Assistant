@@ -42,25 +42,153 @@ class PreviewReadTests(unittest.TestCase):
         copy.klass.assert_not_called();copy.dictionary.assert_not_called()
 
     def test_merchant_scan_skips_non_objects_with_invalid_text_before_valid_npc(self):
-        profile=load_profile();reader=Mock();reader.metadata_base=0
-        metadata=bytearray(516+profile['types']['DialogueInteractable']['typeDefinitionIndex']*76)
-        struct.pack_into('<I',metadata,32,100);struct.pack_into('<I',metadata,236,512)
-        reader.metadata=bytes(metadata)
-        reader.memory.regions.return_value=[SimpleNamespace(kind=0x20000,base=0x10000,size=256),
-                                           SimpleNamespace(kind=0x20000,base=0x20000,size=2*1024**3)]
-        classes=bytearray(256);struct.pack_into('<Q',classes,16,100)
-        objects=bytearray(256);struct.pack_into('<Q',objects,64,0x10000);struct.pack_into('<Q',objects,128,0x10000)
-        reader.memory.read.side_effect=[bytes(classes),bytes(objects)]
+        profile=load_profile();reader=Mock();reader.singleton.return_value=0x20000
+        reader.memory.regions.return_value=[SimpleNamespace(kind=0x20000,base=0x20000,size=512),
+                                           SimpleNamespace(kind=0x20000,base=0x30000,size=2*1024**3)]
+        objects=bytearray(512);struct.pack_into('<Q',objects,344,2);struct.pack_into('<Q',objects,408,2)
+        reader.memory.read.return_value=bytes(objects)
         read=Mock();read.guards=[];read.klass.side_effect=lambda obj,name:obj
         def verify(obj,name):
-            if obj==1 and name=='ItemData':raise UnicodeDecodeError('utf-8',b'\xb0',0,1,'invalid')
+            read.guards.append((obj,b'candidate'))
+            if obj==0x20000:raise UnicodeDecodeError('utf-8',b'\xb0',0,1,'invalid')
             return obj
         read.verify.side_effect=verify
-        read.ptr.side_effect=lambda address:1 if address in (0x10040+16,0x10040+344,0x10080+16) else 2
+        read.ptr.return_value=2
         stock=list(range(100,110));read.pointers.return_value=stock
         reader.asset_name.side_effect=lambda obj:'SoulShard' if obj==2 else catalog()['shop'][obj-100]['id']
         runtime=ProgressionRuntime(SimpleNamespace(reader=reader,profile=profile))
-        self.assertEqual(runtime._merchant_npc(read),0x10080)
+        self.assertEqual(runtime._merchant_npc(read,2),0x20040)
+        self.assertNotIn((0x20000,b'candidate'),read.guards)
+        reader.memory.read.assert_called_once_with(0x20000,512)
+
+    def lookup_fixture(self, regions, npc):
+        reader=Mock();read=Mock();read.guards=[]
+        currency=0x70000000;stock=list(range(100,110))
+        reader.singleton.return_value=npc
+        reader.memory.regions.return_value=regions
+        def block(address,size):
+            data=bytearray(size)
+            if address<=npc+344<address+size:
+                struct.pack_into('<Q',data,npc+344-address,currency)
+            return bytes(data)
+        reader.memory.read.side_effect=block
+        def verify(obj,name):
+            read.guards.append((obj,b'checked'))
+            if name=='DialogueInteractable' and obj!=npc:raise MemoryReadError('not a merchant')
+            return obj
+        read.verify.side_effect=verify
+        read.ptr.side_effect=lambda address:currency if address==npc+344 else 1
+        read.pointers.return_value=stock
+        reader.asset_name.side_effect=lambda obj:'SoulShard' if obj==currency else catalog()['shop'][obj-100]['id']
+        runtime=ProgressionRuntime(SimpleNamespace(reader=reader,profile=load_profile()))
+        return runtime,read,reader,currency
+
+    def test_lookup_skips_gigabytes_of_earlier_graphics_buffers(self):
+        regions=[SimpleNamespace(kind=0x20000,base=0x10000,size=2*1024**3),
+                 SimpleNamespace(kind=0x20000,base=0x90000000,size=4096)]
+        runtime,read,reader,currency=self.lookup_fixture(regions,0x90000040)
+        self.assertEqual(runtime._merchant_npc(read,currency),0x90000040)
+        reader.memory.read.assert_called_once_with(0x90000000,4096)
+
+    def test_lookup_starts_near_live_root_inside_large_heap(self):
+        base=0x10000000;npc=base+1500*1024**2+64
+        runtime,read,reader,currency=self.lookup_fixture(
+            [SimpleNamespace(kind=0x20000,base=base,size=2*1024**3)],npc)
+        self.assertEqual(runtime._merchant_npc(read,currency),npc)
+        reader.memory.read.assert_called_once_with(npc-64,1024**2)
+
+    def test_lookup_budget_retries_continue_at_unvisited_chunks(self):
+        base=0x10000000;chunk=1024**2;npc=base+2*chunk+64
+        runtime,read,reader,currency=self.lookup_fixture(
+            [SimpleNamespace(kind=0x20000,base=base,size=3*chunk)],npc)
+        reader.singleton.return_value=base
+        with patch('deskrawl_assistant.progression_runtime.MERCHANT_SCAN_BYTES',chunk):
+            for _ in range(2):
+                with self.assertRaisesRegex(GameBusyError,'自动继续'):
+                    runtime._merchant_npc(read,currency)
+            self.assertEqual(runtime._merchant_npc(read,currency),npc)
+        self.assertEqual([c.args[0] for c in reader.memory.read.call_args_list],
+                         [base,base+chunk,base+2*chunk])
+
+    def test_invalid_cached_object_leaves_no_stale_guards(self):
+        npc=0x10040
+        runtime,read,reader,currency=self.lookup_fixture(
+            [SimpleNamespace(kind=0x20000,base=0x10000,size=4096)],npc)
+        runtime.npc=0x20000
+        self.assertEqual(runtime._merchant_npc(read,currency),npc)
+        self.assertNotIn((0x20000,b'checked'),read.guards)
+
+    def test_missing_merchant_waits_without_invoking_or_reusing_old_scan(self):
+        runtime,read,reader,currency=self.lookup_fixture(
+            [SimpleNamespace(kind=0x20000,base=0x10000,size=4096)],0x20000)
+        for _ in range(2):
+            with self.assertRaisesRegex(GameBusyError,'暂未加载'):
+                runtime._merchant_npc(read,currency)
+            self.assertEqual(runtime._merchant_scanned,set())
+        self.assertEqual(reader.memory.read.call_count,2)
+
+    def test_cancelled_or_invalidated_lookup_does_not_scan(self):
+        runtime,read,reader,currency=self.lookup_fixture(
+            [SimpleNamespace(kind=0x20000,base=0x10000,size=4096)],0x10040)
+        for kwargs in ({'cancel_event':SimpleNamespace(is_set=lambda:True)}, {'validate':lambda:False}):
+            with self.assertRaisesRegex(NativeActionError,'已取消'):
+                runtime._merchant_npc(read,currency,**kwargs)
+        reader.memory.read.assert_not_called()
+
+    def test_lookup_wall_clock_budget_defers_before_memory_scan(self):
+        runtime,read,reader,currency=self.lookup_fixture(
+            [SimpleNamespace(kind=0x20000,base=0x10000,size=4096)],0x10040)
+        with patch('deskrawl_assistant.progression_runtime.time.monotonic',side_effect=[0,4]):
+            with self.assertRaisesRegex(GameBusyError,'自动继续'):
+                runtime._merchant_npc(read,currency)
+        reader.memory.read.assert_not_called()
+
+    def test_lookup_budget_includes_region_enumeration(self):
+        region=SimpleNamespace(kind=0x20000,base=0x10000,size=4096)
+        runtime,read,reader,currency=self.lookup_fixture([region],0x10040)
+        clock=[0]
+        def regions():
+            yield region
+            clock[0]=4
+            yield SimpleNamespace(kind=0x20000,base=0x20000,size=4096)
+        reader.memory.regions.side_effect=regions
+        with patch('deskrawl_assistant.progression_runtime.time.monotonic',side_effect=lambda:clock[0]):
+            with self.assertRaisesRegex(GameBusyError,'自动继续'):
+                runtime._merchant_npc(read,currency)
+        reader.memory.read.assert_not_called()
+
+    def test_lookup_yields_between_candidates_and_resumes_inside_the_same_chunk(self):
+        base=0x10000;npc=base+64
+        runtime,read,reader,currency=self.lookup_fixture(
+            [SimpleNamespace(kind=0x20000,base=base,size=4096)],npc)
+        block=bytearray(4096)
+        struct.pack_into('<Q',block,344,currency)
+        struct.pack_into('<Q',block,408,currency)
+        reader.memory.read.side_effect=lambda address,size:bytes(block)
+        clock=[0];checked=[];verify=read.verify.side_effect
+        def slow_invalid_candidate(obj,name):
+            if name=='DialogueInteractable':
+                checked.append(obj)
+                if obj==base:clock[0]+=4
+            return verify(obj,name)
+        read.verify.side_effect=slow_invalid_candidate
+        with patch('deskrawl_assistant.progression_runtime.time.monotonic',side_effect=lambda:clock[0]):
+            with self.assertRaisesRegex(GameBusyError,'自动继续'):
+                runtime._merchant_npc(read,currency)
+            self.assertEqual(checked,[base])
+            self.assertNotIn((base,b'checked'),read.guards)
+            clock[0]=10
+            self.assertEqual(runtime._merchant_npc(read,currency),npc)
+        self.assertEqual(checked,[base,npc])
+        self.assertEqual(reader.memory.read.call_count,2)
+
+    def test_currency_reference_alone_is_not_a_valid_shop(self):
+        runtime,read,reader,currency=self.lookup_fixture(
+            [SimpleNamespace(kind=0x20000,base=0x10000,size=4096)],0x10040)
+        read.pointers.return_value=list(range(100,109))  # Incomplete original stock.
+        with self.assertRaises(GameBusyError):runtime._merchant_npc(read,currency)
+        self.assertIsNone(runtime.npc)
+        self.assertNotIn((0x10040,b'checked'),read.guards)
 
     def test_cached_merchant_lookup_uses_real_profile_for_currency_and_stock(self):
         from deskrawl_assistant.game_actions import _Read
@@ -78,7 +206,7 @@ class PreviewReadTests(unittest.TestCase):
         assets={currency:'SoulShard',**{obj:row['id'] for obj,row in zip(stock,catalog()['shop'])}}
         reader.asset_name.side_effect=assets.get
         runtime=ProgressionRuntime(SimpleNamespace(reader=reader,profile=profile));runtime.npc=npc
-        self.assertEqual(runtime._merchant_npc(_Read(reader,profile)),npc)
+        self.assertEqual(runtime._merchant_npc(_Read(reader,profile),currency),npc)
         reader.array.assert_called_once_with(array,'ItemData',stride=8,limit=32)
 
     def snapshot_fixture(self, *, ability=500, scene=2):
@@ -168,13 +296,14 @@ class PreviewReadTests(unittest.TestCase):
 
 class RuntimeBoundaryTests(unittest.TestCase):
     def fixture(self, before, after):
-        before = dict(before, _guards=[])
+        before = dict(before, _guards=[], _item_map={'SoulShard':123, **before.get('_item_map',{})})
         profile = load_profile()
         reader, read, copy = Mock(), Mock(), Mock()
         read.guards = [(10, b'\0' * 8)]
         read.boolean.return_value = False
         read.singleton.return_value = 900
         copy.action_guards = []
+        copy.boolean.return_value = False
         copy.copied_only.side_effect = nullcontext
         copy.verify.side_effect = lambda obj, name: obj
         copy.ptr.side_effect = lambda address: {1056:2000,1064:3000,3032:4000,3112:5000,2080:6000}.get(address, 7000)
@@ -291,6 +420,42 @@ class RuntimeBoundaryTests(unittest.TestCase):
             self.assertEqual(len(calls),1)
             if kind == 'merchant_open': actions._require_empty_town.assert_called_once()
             else: actions._require_empty_town.assert_not_called()
+
+    def test_live_open_soul_shop_skips_lookup_and_reopening_even_with_stale_plan(self):
+        for snapshot_open in (True,False):
+            before=state();before['merchant']['open']=snapshot_open
+            runtime,actions,copy=self.fixture(before,before)
+            copy.boolean.return_value=True
+            copy.ptr.side_effect=lambda address:123 if address==900+192 else 7000
+            result=runtime.execute('merchant_open',{'class_mask':4})
+            self.assertTrue(result['effect_confirmed'])
+            runtime._merchant_npc.assert_not_called()
+            actions.dispatcher.invoke.assert_not_called()
+            copy.finish.assert_called_once();actions._context.return_value[0].finish.assert_called_once()
+
+    def test_other_currency_shop_still_requires_verified_soul_shard_merchant(self):
+        before=state();after=deepcopy(before);after['merchant']['open']=True
+        runtime,actions,copy=self.fixture(before,after)
+        copy.boolean.return_value=True
+        self.assertTrue(runtime.execute('merchant_open',{'class_mask':4})['effect_confirmed'])
+        self.assertEqual(runtime._merchant_npc.call_args.args[1],123)
+        self.assertEqual(actions.dispatcher.invoke.call_args.args[0][0].method,'DialogueInteractable.clw')
+
+    def test_open_shop_noop_does_not_confirm_a_panel_that_changed_during_read(self):
+        before=state();runtime,actions,copy=self.fixture(before,before)
+        copy.boolean.return_value=True
+        copy.ptr.side_effect=lambda address:123 if address==900+192 else 7000
+        copy.finish.side_effect=SnapshotChangedError('商人窗口或货币已变化')
+        with self.assertRaises(SnapshotChangedError):
+            runtime.execute('merchant_open',{'class_mask':4})
+        runtime._merchant_npc.assert_not_called()
+        actions.dispatcher.invoke.assert_not_called()
+
+    def test_lookup_wait_happens_before_any_purchase_or_native_submission(self):
+        before=state();runtime,actions,_=self.fixture(before,before)
+        runtime._merchant_npc.side_effect=GameBusyError('定位仍在进行')
+        with self.assertRaises(GameBusyError):runtime.execute('merchant_open',{'class_mask':4})
+        actions.dispatcher.invoke.assert_not_called()
 
     def test_merchant_purchase_requires_new_uid_correct_slot_and_exact_currency_drop(self):
         before = state(); quote = before['merchant']['stock'][0]

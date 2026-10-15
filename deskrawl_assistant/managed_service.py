@@ -583,8 +583,7 @@ class ManagedServiceMixin:
                 if not planned or any(action.get(k) != v for k, v in planned.items() if k != 'reason'):
                     return {'verified': False, 'retryable': True, 'reason': '成长目标或角色状态已变化，重新规划。'}
             elif kind == 'merchant_buy':
-                if (any(row.get('container')=='inventory' for row in observation['items'])
-                        and not self.managed.merchant_batch_ready(observation)):
+                if not self.managed.merchant_batch_ready(observation):
                     return {'verified':False, 'retryable':True, 'reason':'先完成新装备的筛选和整理，再继续购买。'}
                 planned = next_purchase(self.managed.settings['merchant'], state, self.managed.merchant_counts,
                     max_quantity=min(PURCHASE_BATCH_LIMIT,self.managed._bag_free(observation)))

@@ -32,6 +32,12 @@ def equipment(index=0, *, container='inventory', key='LegendaryBelt3', **extra):
     return value
 
 
+def potion(index=0, *, key='MovementPotion1', count=14):
+    return equipment(index,key=key,is_equipment=False,item_type=2,item_class='ItemData',
+        kind='material',item_uid='',instance_id='',identity_verified=False,
+        base_rarity=0,count=count)
+
+
 class FakeManagedClient:
     def __init__(self, items=()):
         self.connected = True
@@ -152,6 +158,128 @@ class ManagedServiceTests(unittest.TestCase):
         self.service.managed_growth={'available':False,'reason':'PlayerAbilityController 尚未加载。'}
         self.assertEqual(self.service.managed_page()['blocked_reasons'],
             ['成长读取：PlayerAbilityController 尚未加载。'])
+
+    def test_merchant_lookup_then_buys_cleans_and_refills_with_uidless_potions_left_in_bag(self):
+        from test_progression import state
+        from deskrawl_assistant.native_memory import GameBusyError
+        kept=potion();self.client.items=[deepcopy(kept)]
+        snapshot=self.client.snapshot
+        def small_bag():
+            value=snapshot();value['containers']['inventory']['slot_count']=4
+            return value
+        self.client.snapshot=small_bag
+        growth=state();growth['merchant']['stock'][1].update(price=200,available_count=10)
+        growth['merchant']['open']=False
+        self.client.progression_snapshot=Mock(side_effect=lambda **kw:deepcopy(growth))
+        self.client.capabilities['merchant']={'available':True,'native_verified':True}
+        self.service._managed_refresh_control()
+        cfg=self.settings();cfg['merchant']['enabled']=True;cfg['merchant']['weights']['2']=10
+        cfg['background'].update(rule_monitoring=False,inventory_automation=False)
+        cfg['cleanup'].update(equipment_action='store',equipment_fallback='salvage')
+        self.service.save_managed(cfg);self.service.set_managed_running(True)
+        bought=[];lookup_deferred=[]
+        def native(kind,payload):
+            if kind=='merchant_open' and not lookup_deferred:
+                lookup_deferred.append(True)
+                raise GameBusyError('神秘商人定位仍在进行，稍后自动继续；尚未提交购买。')
+            if kind=='merchant_buy':
+                self.assertTrue(growth['merchant']['open'])
+                quantity=payload.get('quantity',1)
+                occupied={r['slot_index'] for r in self.client.items if r['container']=='inventory'}
+                free=[n for n in range(4) if n not in occupied]
+                self.assertEqual(quantity,len(free))
+                uids=[]
+                for slot in free[:quantity]:
+                    uid='purchase-'+str(len(bought));bought.append(uid);uids.append(uid)
+                    self.client.items.append(equipment(slot,item_uid=uid,instance_id=uid,
+                        is_black_mist=len(bought)==1))
+                growth['soul_shards']['current']-=payload['expected_price']*quantity
+                return {'effect_confirmed':True,'merchant_open':True,'received_uids':uids,'quantity':quantity}
+            if kind in ('merchant_close','merchant_open'):
+                growth['merchant']['open']=kind=='merchant_open'
+            else:
+                self.assertEqual(kind,'salvage')
+                self.assertFalse(growth['merchant']['open'])
+                self.assertTrue(payload['item']['is_equipment'])
+                self.assertFalse(payload['item']['is_black_mist'])
+                self.client.items=[r for r in self.client.items if identity(r)!=identity(payload['item'])]
+            return {'effect_confirmed':True,'quantity':1}
+        self.client.native_handler=native
+        for tick in range(50):
+            with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=100+3*tick):
+                self.service._work('managed',{})
+            self.assertTrue(self.service.managed.running,self.service.managed.status)
+            self.assertEqual(self.client.items[0],kept)
+            if tick==0:
+                self.assertEqual(self.service.managed_retry['action_kind'],'merchant_open')
+                self.assertEqual(bought,[])
+            if not self.service.managed.merchant_pending:break
+        self.assertEqual(lookup_deferred,[True])
+        self.assertFalse(self.service.managed.merchant_pending,self.service.managed.status)
+        self.assertEqual(growth['soul_shards']['current'],100)  # Unspendable remainder at a 0% target.
+        kinds=[a[0] for a in self.client.actions]
+        self.assertEqual(kinds.count('merchant_buy'),3)
+        self.assertEqual(kinds.count('salvage'),8)
+        self.assertLess(kinds.index('lock'),kinds.index('salvage'))
+        self.assertEqual([r for r in self.client.items if r['container']=='inventory'],[kept])
+        stored=[r for r in self.client.items if r['container']=='storage']
+        self.assertEqual(len(stored),1);self.assertTrue(stored[0]['locked']);self.assertTrue(stored[0]['is_black_mist'])
+
+    def test_merchant_fresh_preflight_still_blocks_new_gear_and_uncollected_rewards(self):
+        from test_progression import state
+        growth=state();self.client.items=[potion()]
+        self.client.progression_snapshot=Mock(side_effect=lambda **kw:deepcopy(growth))
+        self.client.capabilities['merchant']={'available':True,'native_verified':True}
+        self.service._managed_refresh_control()
+        cfg=self.settings();cfg['merchant']['enabled']=True;cfg['merchant']['weights']['2']=1
+        self.service.save_managed(cfg);self.service.set_managed_running(True)
+        world=self.service._managed_observation();action=self.service.managed.next_action(world)
+        self.assertEqual(action['kind'],'merchant_buy')
+        self.client.items.append(equipment(1,modifiers_complete=False))
+        result=self.service._managed_execute(action,world)
+        self.assertTrue(result['retryable']);self.assertEqual(self.client.actions,[])
+        self.client.items=[]
+        self.client.ground=[equipment(2,container='ground',selection_id='new-drop')]
+        result=self.service._managed_execute(action,world)
+        self.assertTrue(result['retryable']);self.assertEqual(self.client.actions,[])
+
+    def test_merchant_lookup_wait_recovers_without_stopping_or_purchasing(self):
+        from test_progression import state
+        from deskrawl_assistant.native_memory import GameBusyError
+        self.client.items=[]
+        growth=state();growth['merchant']['open']=False
+        self.client.progression_snapshot=Mock(side_effect=lambda **kw:deepcopy(growth))
+        self.client.capabilities['merchant']={'available':True,'native_verified':True}
+        self.service._managed_refresh_control()
+        cfg=self.settings();cfg['merchant']['enabled']=True;cfg['merchant']['weights']['2']=1
+        self.service.save_managed(cfg);self.service.set_managed_running(True)
+        attempts=[]
+        def native(kind,payload):
+            self.assertEqual(kind,'merchant_open')
+            attempts.append(kind)
+            if len(attempts)==1:
+                raise GameBusyError('神秘商人定位仍在进行，稍后自动继续；尚未提交购买。')
+            growth['merchant']['open']=True
+            return {'effect_confirmed':True}
+        self.client.native_handler=native
+        stats=deepcopy(self.service.managed.metrics.state())
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=100):
+            self.service._work('managed',{})
+        self.assertTrue(self.service.managed.running)
+        self.assertEqual(self.service.error,'')
+        self.assertIn('自动继续',self.service.managed.status)
+        self.assertIsNone(self.service.managed.pending)
+        self.assertEqual(self.service.managed_retry['action_kind'],'merchant_open')
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=101):
+            self.service._work('managed',{})
+        self.assertEqual(len(attempts),1)
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=103):
+            self.service._work('managed',{})
+        self.assertEqual(attempts,['merchant_open','merchant_open'])
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNone(self.service.managed_retry)
+        self.assertEqual(self.service.managed.metrics.state(),stats)
+        self.assertNotIn('merchant_buy',[kind for kind,_ in self.client.actions])
 
     def test_disposal_reuses_receipt_and_wakes_next_step_with_fresh_inventory_and_scene(self):
         self.client.items=[equipment(0),equipment(1)]

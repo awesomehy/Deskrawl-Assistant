@@ -14,6 +14,11 @@ from .progression import catalog, merchant_prices
 from .action_log import record
 
 
+MERCHANT_SCAN_CHUNK = 1024 * 1024
+MERCHANT_SCAN_BYTES = 256 * 1024 * 1024
+MERCHANT_SCAN_SECONDS = 3
+
+
 class _GrowthCopy(_Copy):
     """Keep complete read consistency checks and compact command predicates.
 
@@ -58,6 +63,9 @@ class ProgressionRuntime:
     def __init__(self, actions):
         self.actions, self.reader = actions, actions.reader
         self.npc = None
+        self._merchant_search_key = None
+        self._merchant_scanned = set()
+        self._merchant_scan_positions = {}
 
     def _copy(self):
         value = _GrowthCopy(self.reader)
@@ -264,73 +272,116 @@ class ProgressionRuntime:
             result['_guards'] = read.guards + copy.action_guards
         return result
 
-    def _merchant_npc(self, read):
+    def _merchant_npc(self, read, currency, *, cancel_event=None, validate=lambda: True):
         """Bounded read-only lookup of original stock; never fabricated shop assets.
 
         clw only uses its original GameObject name, stock and currency. Equivalent
         live/prefab instances may share these stock assets; no NPC movement occurs.
+        Search references to the already verified currency instead of scanning
+        once for metadata and again for objects. Graphics allocations can precede
+        both; prefer live roots to avoid spending the scan budget on them.
         """
+        deadline = time.monotonic() + MERCHANT_SCAN_SECONDS
+        scanned = 0; chunks = []
+
+        def check_budget(*, bytes_limit=False):
+            if (cancel_event is not None and cancel_event.is_set()) or not validate():
+                raise NativeActionError('神秘商人定位已取消。')
+            if time.monotonic() >= deadline or bytes_limit and scanned >= MERCHANT_SCAN_BYTES:
+                record('merchant_lookup_wait', reason='scan_budget', scanned_bytes=scanned,
+                       completed_chunks=len(self._merchant_scanned), total_chunks=len(chunks))
+                raise GameBusyError('神秘商人定位仍在进行，稍后自动继续；尚未提交购买。')
+
+        check_budget()
+        read.verify(currency, 'ItemData')
+        if self.reader.asset_name(currency) != 'SoulShard':
+            raise MemoryReadError('神秘商人货币资源未确认。')
+
         def valid(obj):
             read.verify(obj, 'DialogueInteractable')
             if not read.ptr(obj + 16): raise MemoryReadError('商人物体已失效。')
-            currency = read.verify(read.ptr(obj + 344), 'ItemData')
-            if self.reader.asset_name(currency) != 'SoulShard': raise MemoryReadError('商人货币不一致。')
+            if read.ptr(obj + 344) != currency: raise MemoryReadError('商人货币不一致。')
             stock = read.pointers(read.ptr(obj + 336), 'ItemData', limit=32)
             names = {self.reader.asset_name(read.verify(p, 'RandomEquipment')) for p in stock}
             if names != {r['id'] for r in catalog()['shop']} or len(stock) != len(names):
                 raise MemoryReadError('神秘商人原始货架不完整。')
             return obj
         if self.npc:
+            mark = len(read.guards)
             try: return valid(self.npc)
-            except (MemoryReadError, UnicodeDecodeError, struct.error): self.npc = None
-        p = self.reader.memory; regions = [r for r in p.regions() if r.kind == 0x20000]
-        metadata = self.reader.metadata
-        names_offset = struct.unpack_from('<I', metadata, 32)[0]
-        defs_offset = struct.unpack_from('<I', metadata, 236)[0]
-        index = self.actions.profile['types']['DialogueInteractable']['typeDefinitionIndex']
-        string_index = struct.unpack_from('<I', metadata, defs_offset + index * 76)[0]
-        name_pointer = self.reader.metadata_base + names_offset + string_index
-        deadline = time.monotonic() + 15; scanned = 0
-        def matches(needle, delta):
-            nonlocal scanned
-            for region in regions:
-                for offset in range(0, region.size, 8 * 1024 * 1024):
-                    if time.monotonic() > deadline or scanned > 1024 * 1024 * 1024:
-                        raise MemoryReadError('神秘商人定位超时，请回城后重试。')
-                    size = min(8 * 1024 * 1024, region.size - offset)
-                    try: block = p.read(region.base + offset, size)
-                    except MemoryReadError: continue
-                    scanned += size; pos = -1
-                    while True:
-                        pos = block.find(needle, pos + 1)
-                        if pos < 0: break
-                        address = region.base + offset + pos + delta
-                        if address % 8 == 0: yield address
-        classes = set()
-        for address in matches(struct.pack('<Q', name_pointer), -16):
-            try: read.klass(address, 'DialogueInteractable'); classes.add(address)
-            except (MemoryReadError, UnicodeDecodeError, struct.error): pass
-            if classes: break
-        if len(classes) != 1: raise MemoryReadError('神秘商人类型入口未确认。')
-        # Unity/native graphics buffers can precede the managed heap and use
-        # several GiB. Prefer small allocations near the live inventory when
-        # looking for component instances, after resolving the exact class.
+            except (MemoryReadError, UnicodeDecodeError, struct.error):
+                self.npc = None
+                del read.guards[mark:]
+        p = self.reader.memory
         anchor = self.reader.singleton('Inventory')
         if type(anchor) is not int: anchor = 0
-        regions.sort(key=lambda r: (r.size > 16 * 1024 * 1024, abs(r.base - anchor)))
-        scanned = 0; found = []
-        for obj in matches(struct.pack('<Q', next(iter(classes))), 0):
-            # Failed scan candidates must not become mutation guards.
-            mark = len(read.guards)
-            try: found.append(valid(obj))
-            except (MemoryReadError, UnicodeDecodeError, struct.error): pass
-            finally: del read.guards[mark:]
-            # One fully verified original stock/currency pair is enough. Do not
-            # keep searching for extra scene/prefab copies until the scan cap.
-            if found: break
-        if not found: raise MemoryReadError('当前主城未找到灵魂碎片商人。')
-        self.npc = min(found)
-        return valid(self.npc)
+        key = (currency, anchor)
+        if self._merchant_search_key != key:
+            self._merchant_search_key = key
+            self._merchant_scanned.clear()
+            self._merchant_scan_positions.clear()
+        anchors = [value for value in key if value]
+        # Start around live roots even when they are inside a large allocation.
+        # Small allocations follow, then the remaining large native buffers.
+        for region in p.regions():
+            check_budget()
+            if region.kind != 0x20000: continue
+            for offset in range(0, region.size, MERCHANT_SCAN_CHUNK):
+                check_budget()
+                address = region.base + offset
+                size = min(MERCHANT_SCAN_CHUNK, region.size - offset)
+                distances = {value:max(address-value, value-(address+size-1), 0) for value in anchors}
+                nearby = [value for value in anchors if region.base <= value < region.base+region.size
+                          and distances[value] <= 4*MERCHANT_SCAN_CHUNK]
+                priority = 0 if anchor and anchor in nearby else 1 if nearby else 2 if region.size <= 16*MERCHANT_SCAN_CHUNK else 3
+                distance = min(distances.values())
+                chunks.append((priority, distance, address, size))
+        chunks.sort()
+        live_chunks = {(address, size) for _, _, address, size in chunks}
+        self._merchant_scanned.intersection_update(live_chunks)
+        self._merchant_scan_positions = {key:pos for key,pos in self._merchant_scan_positions.items()
+                                         if key in live_chunks}
+        needle = struct.pack('<Q', currency)
+        for _, _, address, size in chunks:
+            check_budget()
+            if (address, size) in self._merchant_scanned: continue
+            check_budget(bytes_limit=True)
+            scanned += size
+            try: block = p.read(address, size)
+            except MemoryReadError:
+                self._merchant_scanned.add((address, size))
+                self._merchant_scan_positions.pop((address, size), None)
+                continue
+            # A dense block can take longer to validate than to read. Retain
+            # only its cursor, re-read its bytes and verify each remaining
+            # candidate afresh on retry; never carry mutation guards forward.
+            pos = self._merchant_scan_positions.get((address, size), -1)
+            while True:
+                check_budget()
+                pos = block.find(needle, pos + 1)
+                if pos < 0: break
+                self._merchant_scan_positions[address, size] = pos
+                obj = address + pos - 344
+                if obj < 0x10000 or obj % 8: continue
+                mark = len(read.guards)
+                try:
+                    valid(obj)
+                except (MemoryReadError, UnicodeDecodeError, struct.error):
+                    del read.guards[mark:]
+                    continue
+                self.npc = obj
+                self._merchant_scanned.clear()
+                self._merchant_scan_positions.clear()
+                record('merchant_lookup_found', scanned_bytes=scanned)
+                return obj
+            self._merchant_scanned.add((address, size))
+            self._merchant_scan_positions.pop((address, size), None)
+        # Scene loading can replace objects in an already visited chunk. Start
+        # another fresh sweep on retry, retaining no stale object/read guards.
+        self._merchant_scanned.clear()
+        self._merchant_scan_positions.clear()
+        record('merchant_lookup_wait', reason='not_loaded', scanned_bytes=scanned)
+        raise GameBusyError('主城神秘商人对象暂未加载，稍后自动重试；尚未提交购买。')
 
     def execute(self, kind, payload, *, cancel_event=None, validate=lambda: True):
         before = self.snapshot(merchant=kind.startswith('merchant'), internal=True,
@@ -408,7 +459,12 @@ class ProgressionRuntime:
             if kind == 'merchant_close':
                 calls = [Invocation('PanelBase.Close', ui)]
             elif kind == 'merchant_open':
-                calls = [Invocation('DialogueInteractable.clw', self._merchant_npc(read))]
+                currency = before['_item_map']['SoulShard']
+                # An open soul-shard shop is already the requested result. A
+                # stale planner or a manually opened dialog must not scan/reopen.
+                if not (copy.boolean(ui + 40) and copy.ptr(ui + 192) == currency):
+                    npc = self._merchant_npc(read, currency, cancel_event=cancel_event, validate=validate)
+                    calls = [Invocation('DialogueInteractable.clw', npc)]
             elif kind == 'merchant_refresh':
                 required=payload.get('shop_slots')
                 if not isinstance(required,list) or not required or any(type(slot) is not int or not 1<=slot<=10 for slot in required) or len(set(required))!=len(required):
@@ -439,7 +495,9 @@ class ProgressionRuntime:
                 # batch, with all stock/currency/capacity checks made up front.
                 calls = [Invocation('MerchantUI.gzr', ui, (Argument.reference(item), Argument.integer(1))) for _ in range(quantity)]
         else: raise NativeActionError('未知成长动作。')
-        if not calls: return {'effect_confirmed': True}
+        if not calls:
+            copy.finish(); read.finish()
+            return {'effect_confirmed': True}
         copy.finish(); read.guards.extend(copy.action_guards); read.finish()
         guards = list(dict.fromkeys(read.guards))
         diagnostic = {'kind':kind, 'target':payload.get('node_id', payload.get('stock_id')),

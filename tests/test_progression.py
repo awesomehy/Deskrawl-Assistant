@@ -10,7 +10,7 @@ from deskrawl_assistant.managed_service import required_capabilities
 from deskrawl_assistant.game_actions import GameActions
 from deskrawl_assistant.native_dispatcher import NativeActionError, load_profile
 from deskrawl_assistant.models import ValidationError
-from test_managed_mode import observation, equipment, settings as managed_settings, verified
+from test_managed_mode import observation, equipment, loot, settings as managed_settings, verified
 
 
 def settings(*args, **kwargs):
@@ -98,6 +98,53 @@ class GrowthPolicyTests(unittest.TestCase):
         self.assertEqual(engine.next_action(world)['kind'],'merchant_buy')
         self.assertFalse(engine.merchant_batch_ready(observation([equipment('unknown')],town=True,progression=current)))
         self.assertFalse(engine.merchant_batch_ready(observation([equipment('bought',rarity=4)],town=True,progression=current)))
+
+    def test_retained_potions_allow_first_purchase_and_batch_refill_in_actual_free_slots(self):
+        cfg=settings();cfg['merchant']['enabled']=True
+        cfg['merchant']['weights']={str(n):0 for n in range(1,11)}
+        cfg['merchant']['weights'].update({'2':1,'7':10})
+        current=state()
+        for quote in current['merchant']['stock']:quote['available_count']=10
+        potions=[loot('potion-'+str(n),'material',name,n,count=14,
+                      item_type=2,item_class='ItemData',item_uid='',identity_verified=False)
+                 for n,name in enumerate(('MovementPotion1','ExpPotion1'))]
+        original=deepcopy(potions)
+        world=observation(potions,town=True,capacity=5,progression=current)
+        engine=ManagedMode(cfg);engine.start(world)
+        self.assertTrue(engine.merchant_batch_ready(world))
+        buy=engine.next_action(world)
+        self.assertEqual((buy['kind'],buy['shop_slot'],buy.get('quantity',1)),('merchant_buy',2,1))
+        verified_receipt={'verified':True,'merchant_open':True,'received_uids':['bought']}
+        engine.complete(buy['action_id'],result=verified_receipt)
+        current['soul_shards']['current']-=buy['expected_price']
+        world=observation(potions+[equipment('bought',2)],town=True,capacity=5,progression=current)
+        buy=engine.next_action(world)
+        self.assertEqual((buy['kind'],buy['shop_slot'],buy['quantity']),('merchant_buy',7,2))
+        self.assertEqual(potions,original)
+
+    def test_retained_potions_do_not_bypass_reward_review_collection_or_capacity(self):
+        engine=ManagedMode(settings());engine.merchant_received_uids={'bought'}
+        potion=loot('potion','material','MovementPotion1',item_type=2,item_class='ItemData',count=14,item_uid='')
+        self.assertTrue(engine.merchant_batch_ready(observation([potion],town=True)))
+        for row in (equipment('unknown'),equipment('bought',review=True),equipment('bought',rarity=4),
+                    equipment('bought',is_black_mist=True),
+                    loot('chest','chest','TreasureChest1',item_type=2,item_class='ItemData'),
+                    loot('gem','gem','GemSapphire4'),loot('rune','rune','LegendaryRune_A'),
+                    dict(potion,kind='equipment',is_equipment=True),
+                    dict(potion,item_class='RuneData'),dict(potion,issues=['unreadable']),
+                    dict(potion,item_type=3),dict(potion,count=0)):
+            with self.subTest(row=row):
+                self.assertFalse(engine.merchant_batch_ready(observation([potion,row],town=True)))
+        for key in ('ground','carriage'):
+            world=observation([potion],town=True);world[key]['items']=[equipment('outside')]
+            self.assertFalse(engine.merchant_batch_ready(world))
+            world[key].update(items=[],complete=False)
+            self.assertFalse(engine.merchant_batch_ready(world))
+        self.assertFalse(engine.merchant_batch_ready(observation([potion],town=True,capacity=1)))
+        cfg=settings();cfg['merchant']['enabled']=True
+        engine=ManagedMode(cfg);world=observation([potion],town=True,capacity=1,progression=state())
+        engine.start(world);self.assertIsNone(engine.next_action(world))
+        self.assertEqual(engine.phase,'paused');self.assertIn('背包没有空格',engine.status)
 
     def test_new_merchant_plan_skips_all_slots_but_preserves_saved_weights(self):
         self.assertEqual(set(DEFAULT_SETTINGS['merchant']['weights'].values()), {0})

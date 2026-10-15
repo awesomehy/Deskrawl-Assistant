@@ -184,6 +184,15 @@ def storage_material_kind(row):
     return None
 
 
+def retained_potion(row):
+    """Native consumable potions stay in the bag; they have no equipment UID."""
+    name = row.get('internal_name') or row.get('name_key')
+    return (item_kind(row) == 'material' and row.get('item_class') == 'ItemData'
+            and row.get('item_type') == 2 and isinstance(name, str) and 'Potion' in name
+            and not row.get('issues') and not mandatory_storage(row)
+            and type(row.get('count')) is int and row['count'] > 0)
+
+
 def equip_candidate_allowed(row, score, settings, character):
     """Use the same slot policy when planning and just before executing a swap."""
     if divine_equipment(row) or not isinstance(score, dict): return False
@@ -1113,10 +1122,12 @@ class ManagedMode:
         return self._action('return_town', **data)
 
     def merchant_batch_ready(self, observation):
+        # Keep player consumables in place. Capacity still comes from ALL
+        # occupied slots, not just the equipment eligible for batch screening.
         bag=[r for r in observation['items'] if r.get('container')=='inventory']
-        return (bool(bag) and self._bag_free(observation)>0 and all(r.get('item_uid') in self.merchant_received_uids
-                and item_kind(r)=='equipment' and self._safe(r) and not self._review(r)
-                and self._quality_known(r) for r in bag)
+        return (self._bag_free(observation)>0 and all(retained_potion(r) or (
+                r.get('item_uid') in self.merchant_received_uids and item_kind(r)=='equipment'
+                and self._safe(r) and not self._review(r) and self._quality_known(r)) for r in bag)
                 and town_rewards_clear(observation))
 
     def _merchant_purchase(self, observation):

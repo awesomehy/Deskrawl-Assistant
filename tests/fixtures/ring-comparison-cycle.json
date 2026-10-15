@@ -1,0 +1,619 @@
+{
+  "description": "Anonymized 1.3.2 ring-cycle stat layers; fixed single-boss context. Both baseline scores match recorded observations. No game process or methods needed.",
+  "wearing_a": {
+    "available": true,
+    "level": 70,
+    "max_level": 70,
+    "class_mask": 8,
+    "primary": 1,
+    "comparison_distance": 2,
+    "equipment": [
+      {
+        "is_equipment": true,
+        "class_mask": 15,
+        "equip_slot": 7,
+        "modifiers_complete": true,
+        "item_level": 832,
+        "base_rarity": 3,
+        "is_black_mist": false,
+        "modifiers": [
+          {
+            "stat": 6,
+            "stat_name": "AttackSpeed",
+            "type": 0,
+            "value": 0.18799999356269836,
+            "source": "generated_modifiers",
+            "display_unit": null
+          },
+          {
+            "stat": 65,
+            "stat_name": "DamagePercent",
+            "type": 0,
+            "value": 0.4819999933242798,
+            "source": "generated_modifiers",
+            "display_unit": null
+          },
+          {
+            "stat": 9,
+            "stat_name": "MagicResist",
+            "type": 0,
+            "value": 614.0,
+            "source": "generated_modifiers",
+            "display_unit": null
+          },
+          {
+            "stat": 40,
+            "stat_name": "VulnerableDamage",
+            "type": 0,
+            "value": 1.5240000486373901,
+            "source": "generated_modifiers",
+            "display_unit": null
+          },
+          {
+            "stat": 15,
+            "stat_name": "GoldFind",
+            "type": 0,
+            "value": 0.30300000309944153,
+            "source": "generated_modifiers",
+            "display_unit": null
+          }
+        ],
+        "upgrade_level": 0,
+        "rarity": 3,
+        "socket_count": 0,
+        "socketed_gems": [],
+        "name_key": "LegendaryRing7",
+        "internal_name": "LegendaryRing7",
+        "item_uid": "ring-a",
+        "instance_id": "ring-a",
+        "selection_id": "ring-a",
+        "kind": "equipment",
+        "container": "equipped",
+        "slot_index": 6,
+        "count": 1,
+        "movable": true,
+        "locked": false,
+        "matches": false,
+        "review": false,
+        "equipped_slot": 6
+      },
+      {
+        "is_equipment": true,
+        "class_mask": 15,
+        "equip_slot": 7,
+        "modifiers_complete": true,
+        "item_level": 769,
+        "base_rarity": 3,
+        "is_black_mist": false,
+        "modifiers": [
+          {
+            "stat": 65,
+            "stat_name": "DamagePercent",
+            "type": 0,
+            "value": 0.4959999918937683,
+            "source": "generated_modifiers",
+            "display_unit": null
+          },
+          {
+            "stat": 4,
+            "stat_name": "CritChance",
+            "type": 0,
+            "value": 0.0989999994635582,
+            "source": "generated_modifiers",
+            "display_unit": null
+          },
+          {
+            "stat": 6,
+            "stat_name": "AttackSpeed",
+            "type": 0,
+            "value": 0.20900000631809235,
+            "source": "generated_modifiers",
+            "display_unit": null
+          },
+          {
+            "stat": 40,
+            "stat_name": "VulnerableDamage",
+            "type": 0,
+            "value": 1.125,
+            "source": "generated_modifiers",
+            "display_unit": null
+          },
+          {
+            "stat": 15,
+            "stat_name": "GoldFind",
+            "type": 0,
+            "value": 0.24300000071525574,
+            "source": "generated_modifiers",
+            "display_unit": null
+          }
+        ],
+        "upgrade_level": 0,
+        "rarity": 3,
+        "socket_count": 1,
+        "socketed_gems": [],
+        "name_key": "LegendaryRing5",
+        "internal_name": "LegendaryRing5",
+        "item_uid": "ring-other",
+        "instance_id": "ring-other",
+        "selection_id": "ring-other",
+        "kind": "equipment",
+        "container": "equipped",
+        "slot_index": 7,
+        "count": 1,
+        "movable": true,
+        "locked": false,
+        "matches": false,
+        "review": false,
+        "equipped_slot": 7
+      }
+    ],
+    "comparison_model": {
+      "base": {
+        "7": 1204,
+        "3": 0,
+        "14": 100,
+        "1": 10.0,
+        "10": 3.0,
+        "4": 0.05000000074505806,
+        "5": 1.5,
+        "6": 0.0,
+        "22": 0.05000000074505806,
+        "11": 0.0,
+        "12": 0.0,
+        "13": 0.0
+      },
+      "caches": {
+        "536": {
+          "21": 1.1100000143051147,
+          "20": 279.0,
+          "23": 2.1019999384880066,
+          "5": 0.9020000100135803,
+          "30": 2.9480000138282776,
+          "6": 0.6219999939203262,
+          "12": 90.0,
+          "8": 4189.200012207031,
+          "55": 0.1550000011920929,
+          "1": 317.0,
+          "7": 1960.1000366210938,
+          "54": 0.1550000011920929,
+          "36": 78.0,
+          "53": 0.20899999886751175,
+          "42": 0.690500020980835,
+          "61": 0.8849999904632568,
+          "29": 1.0640000104904175,
+          "44": 0.3135000169277191,
+          "9": 2733.5999755859375,
+          "16": 0.2992499768733978,
+          "37": 0.414000004529953,
+          "57": 0.10999999940395355,
+          "13": 0.12099999934434891,
+          "38": 5.0,
+          "35": 15.0,
+          "65": 0.9779999852180481,
+          "40": 2.64900004863739,
+          "15": 0.8620000183582306,
+          "4": 0.22500000149011612,
+          "32": 1.3150000274181366,
+          "11": 26.0,
+          "22": 0.050999999046325684,
+          "39": 118.0,
+          "3": 47.0,
+          "31": 0.6000000238418579,
+          "43": 0.2800000011920929
+        },
+        "544": {},
+        "568": {
+          "22": 0.11999999731779099,
+          "6": 0.23999997973442078,
+          "23": 0.1599999964237213,
+          "32": 0.30000001192092896
+        },
+        "576": {},
+        "632": {
+          "15": 1.5000000447034836,
+          "19": 2.0000000298023224,
+          "16": 1.0000000149011612,
+          "17": 0.42000000178813934,
+          "18": 12.0,
+          "41": 1.5000000447034836
+        },
+        "640": {},
+        "648": {
+          "6": 0.00800000037997961,
+          "57": 0.009999999776482582
+        }
+      },
+      "status": [
+        {},
+        {},
+        {}
+      ],
+      "conditional": [
+        {
+          "22": 0.0,
+          "6": 0.3499999940395355,
+          "65": 0.75
+        },
+        {}
+      ],
+      "conversions": []
+    }
+  },
+  "wearing_b": {
+    "available": true,
+    "level": 70,
+    "max_level": 70,
+    "class_mask": 8,
+    "primary": 1,
+    "comparison_distance": 2,
+    "equipment": [
+      {
+        "is_equipment": true,
+        "class_mask": 15,
+        "equip_slot": 7,
+        "modifiers_complete": true,
+        "item_level": 700,
+        "base_rarity": 3,
+        "is_black_mist": false,
+        "modifiers": [
+          {
+            "stat": 65,
+            "stat_name": "DamagePercent",
+            "type": 0,
+            "value": 0.5059999823570251,
+            "source": "generated_modifiers",
+            "display_unit": null
+          },
+          {
+            "stat": 4,
+            "stat_name": "CritChance",
+            "type": 0,
+            "value": 0.09700000286102295,
+            "source": "generated_modifiers",
+            "display_unit": null
+          },
+          {
+            "stat": 26,
+            "stat_name": "DamageLightning",
+            "type": 0,
+            "value": 0.8389999866485596,
+            "source": "generated_modifiers",
+            "display_unit": null
+          },
+          {
+            "stat": 14,
+            "stat_name": "MaxMana",
+            "type": 0,
+            "value": 52.0,
+            "source": "generated_modifiers",
+            "display_unit": null
+          },
+          {
+            "stat": 15,
+            "stat_name": "GoldFind",
+            "type": 0,
+            "value": 0.20999999344348907,
+            "source": "generated_modifiers",
+            "display_unit": null
+          }
+        ],
+        "upgrade_level": 0,
+        "rarity": 3,
+        "socket_count": 0,
+        "socketed_gems": [],
+        "name_key": "LegendaryRing2",
+        "internal_name": "LegendaryRing2",
+        "item_uid": "ring-b",
+        "instance_id": "ring-b",
+        "selection_id": "ring-b",
+        "kind": "equipment",
+        "container": "equipped",
+        "slot_index": 6,
+        "count": 1,
+        "movable": true,
+        "locked": false,
+        "matches": false,
+        "review": false,
+        "equipped_slot": 6
+      },
+      {
+        "is_equipment": true,
+        "class_mask": 15,
+        "equip_slot": 7,
+        "modifiers_complete": true,
+        "item_level": 769,
+        "base_rarity": 3,
+        "is_black_mist": false,
+        "modifiers": [
+          {
+            "stat": 65,
+            "stat_name": "DamagePercent",
+            "type": 0,
+            "value": 0.4959999918937683,
+            "source": "generated_modifiers",
+            "display_unit": null
+          },
+          {
+            "stat": 4,
+            "stat_name": "CritChance",
+            "type": 0,
+            "value": 0.0989999994635582,
+            "source": "generated_modifiers",
+            "display_unit": null
+          },
+          {
+            "stat": 6,
+            "stat_name": "AttackSpeed",
+            "type": 0,
+            "value": 0.20900000631809235,
+            "source": "generated_modifiers",
+            "display_unit": null
+          },
+          {
+            "stat": 40,
+            "stat_name": "VulnerableDamage",
+            "type": 0,
+            "value": 1.125,
+            "source": "generated_modifiers",
+            "display_unit": null
+          },
+          {
+            "stat": 15,
+            "stat_name": "GoldFind",
+            "type": 0,
+            "value": 0.24300000071525574,
+            "source": "generated_modifiers",
+            "display_unit": null
+          }
+        ],
+        "upgrade_level": 0,
+        "rarity": 3,
+        "socket_count": 1,
+        "socketed_gems": [],
+        "name_key": "LegendaryRing5",
+        "internal_name": "LegendaryRing5",
+        "item_uid": "ring-other",
+        "instance_id": "ring-other",
+        "selection_id": "ring-other",
+        "kind": "equipment",
+        "container": "equipped",
+        "slot_index": 7,
+        "count": 1,
+        "movable": true,
+        "locked": false,
+        "matches": false,
+        "review": false,
+        "equipped_slot": 7
+      }
+    ],
+    "comparison_model": {
+      "base": {
+        "7": 1204,
+        "3": 0,
+        "14": 100,
+        "1": 10.0,
+        "10": 3.0,
+        "4": 0.05000000074505806,
+        "5": 1.5,
+        "6": 0.0,
+        "22": 0.05000000074505806,
+        "11": 0.0,
+        "12": 0.0,
+        "13": 0.0
+      },
+      "caches": {
+        "536": {
+          "21": 1.1100000143051147,
+          "20": 279.0,
+          "23": 2.1019999384880066,
+          "5": 0.9020000100135803,
+          "30": 2.9480000138282776,
+          "6": 0.43400000035762787,
+          "12": 90.0,
+          "8": 4189.200012207031,
+          "55": 0.1550000011920929,
+          "1": 317.0,
+          "7": 1960.1000366210938,
+          "54": 0.1550000011920929,
+          "36": 78.0,
+          "53": 0.20899999886751175,
+          "42": 0.690500020980835,
+          "61": 0.8849999904632568,
+          "29": 1.0640000104904175,
+          "44": 0.3135000169277191,
+          "9": 2119.5999755859375,
+          "16": 0.2992499768733978,
+          "37": 0.414000004529953,
+          "57": 0.10999999940395355,
+          "13": 0.12099999934434891,
+          "38": 5.0,
+          "35": 15.0,
+          "65": 1.0019999742507935,
+          "40": 1.125,
+          "15": 0.7690000087022781,
+          "4": 0.32200000435113907,
+          "32": 1.3150000274181366,
+          "11": 26.0,
+          "22": 0.050999999046325684,
+          "39": 118.0,
+          "3": 47.0,
+          "31": 0.6000000238418579,
+          "43": 0.2800000011920929,
+          "26": 0.8389999866485596,
+          "14": 52.0
+        },
+        "544": {},
+        "568": {
+          "22": 0.11999999731779099,
+          "6": 0.23999997973442078,
+          "23": 0.1599999964237213,
+          "32": 0.30000001192092896
+        },
+        "576": {},
+        "632": {
+          "15": 1.5000000447034836,
+          "19": 2.0000000298023224,
+          "16": 1.0000000149011612,
+          "17": 0.42000000178813934,
+          "18": 12.0,
+          "41": 1.5000000447034836
+        },
+        "640": {},
+        "648": {
+          "6": 0.00800000037997961,
+          "57": 0.009999999776482582
+        }
+      },
+      "status": [
+        {},
+        {},
+        {}
+      ],
+      "conditional": [
+        {
+          "22": 0.0,
+          "6": 0.0,
+          "65": 0.75
+        },
+        {}
+      ],
+      "conversions": []
+    }
+  },
+  "ring_a": {
+    "is_equipment": true,
+    "class_mask": 15,
+    "equip_slot": 7,
+    "modifiers_complete": true,
+    "item_level": 832,
+    "base_rarity": 3,
+    "is_black_mist": false,
+    "modifiers": [
+      {
+        "stat": 6,
+        "stat_name": "AttackSpeed",
+        "type": 0,
+        "value": 0.18799999356269836,
+        "source": "generated_modifiers",
+        "display_unit": null
+      },
+      {
+        "stat": 65,
+        "stat_name": "DamagePercent",
+        "type": 0,
+        "value": 0.4819999933242798,
+        "source": "generated_modifiers",
+        "display_unit": null
+      },
+      {
+        "stat": 9,
+        "stat_name": "MagicResist",
+        "type": 0,
+        "value": 614.0,
+        "source": "generated_modifiers",
+        "display_unit": null
+      },
+      {
+        "stat": 40,
+        "stat_name": "VulnerableDamage",
+        "type": 0,
+        "value": 1.5240000486373901,
+        "source": "generated_modifiers",
+        "display_unit": null
+      },
+      {
+        "stat": 15,
+        "stat_name": "GoldFind",
+        "type": 0,
+        "value": 0.30300000309944153,
+        "source": "generated_modifiers",
+        "display_unit": null
+      }
+    ],
+    "upgrade_level": 0,
+    "rarity": 3,
+    "socket_count": 0,
+    "socketed_gems": [],
+    "name_key": "LegendaryRing7",
+    "internal_name": "LegendaryRing7",
+    "item_uid": "ring-a",
+    "instance_id": "ring-a",
+    "selection_id": "ring-a",
+    "kind": "equipment",
+    "container": "inventory",
+    "slot_index": 0,
+    "count": 1,
+    "movable": true,
+    "locked": false,
+    "matches": false,
+    "review": false
+  },
+  "ring_b": {
+    "is_equipment": true,
+    "class_mask": 15,
+    "equip_slot": 7,
+    "modifiers_complete": true,
+    "item_level": 700,
+    "base_rarity": 3,
+    "is_black_mist": false,
+    "modifiers": [
+      {
+        "stat": 65,
+        "stat_name": "DamagePercent",
+        "type": 0,
+        "value": 0.5059999823570251,
+        "source": "generated_modifiers",
+        "display_unit": null
+      },
+      {
+        "stat": 4,
+        "stat_name": "CritChance",
+        "type": 0,
+        "value": 0.09700000286102295,
+        "source": "generated_modifiers",
+        "display_unit": null
+      },
+      {
+        "stat": 26,
+        "stat_name": "DamageLightning",
+        "type": 0,
+        "value": 0.8389999866485596,
+        "source": "generated_modifiers",
+        "display_unit": null
+      },
+      {
+        "stat": 14,
+        "stat_name": "MaxMana",
+        "type": 0,
+        "value": 52.0,
+        "source": "generated_modifiers",
+        "display_unit": null
+      },
+      {
+        "stat": 15,
+        "stat_name": "GoldFind",
+        "type": 0,
+        "value": 0.20999999344348907,
+        "source": "generated_modifiers",
+        "display_unit": null
+      }
+    ],
+    "upgrade_level": 0,
+    "rarity": 3,
+    "socket_count": 0,
+    "socketed_gems": [],
+    "name_key": "LegendaryRing2",
+    "internal_name": "LegendaryRing2",
+    "item_uid": "ring-b",
+    "instance_id": "ring-b",
+    "selection_id": "ring-b",
+    "kind": "equipment",
+    "container": "inventory",
+    "slot_index": 0,
+    "count": 1,
+    "movable": true,
+    "locked": false,
+    "matches": false,
+    "review": false
+  }
+}

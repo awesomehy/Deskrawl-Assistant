@@ -1060,7 +1060,22 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4967
+      "source_path_id": 4967,
+      "comparison_effects": [
+        {
+          "id": "DivineHelm2_DamageReduction",
+          "class": "EquipmentEffect_StatModifier",
+          "condition": -1,
+          "required_status": false,
+          "modifiers": [
+            {
+              "stat": 64,
+              "type": 0,
+              "value": 0.25
+            }
+          ]
+        }
+      ]
     },
     "DivineMace1": {
       "name": "祖母之锤",
@@ -1085,7 +1100,27 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5058
+      "source_path_id": 5058,
+      "comparison_effects": [
+        {
+          "id": "DivineMace1_Crit",
+          "class": "EquipmentEffect_StatModifier",
+          "condition": -1,
+          "required_status": false,
+          "modifiers": [
+            {
+              "stat": 4,
+              "type": 0,
+              "value": 0.05000000074505806
+            },
+            {
+              "stat": 5,
+              "type": 0,
+              "value": 1.2000000476837158
+            }
+          ]
+        }
+      ]
     },
     "DivineRing1": {
       "name": "古贤遗骨",
@@ -4510,7 +4545,22 @@
       ],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59991
+      "source_path_id": 59991,
+      "comparison_effects": [
+        {
+          "id": "LegendaryBelt1",
+          "class": "EquipmentEffect_StatModifier",
+          "condition": -1,
+          "required_status": false,
+          "modifiers": [
+            {
+              "stat": 38,
+              "type": 0,
+              "value": 4.0
+            }
+          ]
+        }
+      ]
     },
     "LegendaryBelt2": {
       "name": "无尽法力腰带",
@@ -4610,7 +4660,22 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4915
+      "source_path_id": 4915,
+      "comparison_effects": [
+        {
+          "id": "LegendaryBoots2",
+          "class": "EquipmentEffect_StatModifier",
+          "condition": -1,
+          "required_status": true,
+          "modifiers": [
+            {
+              "stat": 6,
+              "type": 0,
+              "value": 0.30000001192092896
+            }
+          ]
+        }
+      ]
     },
     "LegendaryBoots3": {
       "name": "愈行之靴",
@@ -4736,7 +4801,35 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4929
+      "source_path_id": 4929,
+      "comparison_effects": [
+        {
+          "id": "LegendaryChestArmor2_ThornIncrease",
+          "class": "EquipmentEffect_StatModifier",
+          "condition": -1,
+          "required_status": false,
+          "modifiers": [
+            {
+              "stat": 48,
+              "type": 0,
+              "value": 5.0
+            }
+          ]
+        },
+        {
+          "id": "LegendaryChestArmor2_HpLoss",
+          "class": "EquipmentEffect_StatModifier",
+          "condition": -1,
+          "required_status": false,
+          "modifiers": [
+            {
+              "stat": 42,
+              "type": 0,
+              "value": -0.15000000596046448
+            }
+          ]
+        }
+      ]
     },
     "LegendaryChestArmor3": {
       "name": "符文守护法衣",
@@ -4843,7 +4936,16 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4932
+      "source_path_id": 4932,
+      "comparison_effects": [
+        {
+          "id": "LegendaryChestArmor6",
+          "class": "EquipmentEffect_StatConversion",
+          "source": 22,
+          "target": 51,
+          "fraction": 0.5
+        }
+      ]
     },
     "LegendaryGloves1": {
       "name": "怒火护手",
@@ -4994,7 +5096,22 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4953
+      "source_path_id": 4953,
+      "comparison_effects": [
+        {
+          "id": "LegendaryGloves6",
+          "class": "EquipmentEffect_StatModifier",
+          "condition": -1,
+          "required_status": false,
+          "modifiers": [
+            {
+              "stat": 62,
+              "type": 0,
+              "value": 0.800000011920929
+            }
+          ]
+        }
+      ]
     },
     "LegendaryHelm1": {
       "name": "堕落王冠",
@@ -5122,7 +5239,27 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4972
+      "source_path_id": 4972,
+      "comparison_effects": [
+        {
+          "id": "LegendaryHelm5",
+          "class": "EquipmentEffect_StatModifier",
+          "condition": -1,
+          "required_status": true,
+          "modifiers": [
+            {
+              "stat": 28,
+              "type": 0,
+              "value": 1.0
+            },
+            {
+              "stat": 27,
+              "type": 0,
+              "value": 1.0
+            }
+          ]
+        }
+      ]
     },
     "LegendaryMace1": {
       "name": "地狱风暴之锤",
@@ -5264,7 +5401,22 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4992
+      "source_path_id": 4992,
+      "comparison_effects": [
+        {
+          "id": "LegendaryNeck5",
+          "class": "EquipmentEffect_StatModifier",
+          "condition": 1,
+          "required_status": false,
+          "modifiers": [
+            {
+              "stat": 65,
+              "type": 0,
+              "value": 0.75
+            }
+          ]
+        }
+      ]
     },
     "LegendaryPants1": {
       "name": "奥术之刃护胫",
@@ -5516,7 +5668,22 @@
       ],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60009
+      "source_path_id": 60009,
+      "comparison_effects": [
+        {
+          "id": "LegendaryRing7",
+          "class": "EquipmentEffect_StatModifier",
+          "condition": 4,
+          "required_status": false,
+          "modifiers": [
+            {
+              "stat": 6,
+              "type": 0,
+              "value": 0.3499999940395355
+            }
+          ]
+        }
+      ]
     },
     "LegendaryRune_HunterBasicAttack1": {
       "name": "毒箭符文 (宏伟)",
@@ -7949,7 +8116,16 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5041
+      "source_path_id": 5041,
+      "comparison_effects": [
+        {
+          "id": "LegendaryShoulder1",
+          "class": "EquipmentEffect_StatConversion",
+          "source": 8,
+          "target": 39,
+          "fraction": 0.10000000149011612
+        }
+      ]
     },
     "LegendaryShoulder2": {
       "name": "元素爆发护肩",
@@ -18555,5 +18731,7 @@
       "source_file": "sharedassets0.assets",
       "source_path_id": 60104
     }
-  }
+  },
+  "comparison_effects_schema": 1,
+  "comparison_game_assembly_sha256": "f8221364be8101c60d76be3e031f2cd5be376a7fb6b9b73a7cfb45e2a52a9fab"
 }

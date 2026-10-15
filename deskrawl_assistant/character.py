@@ -2,7 +2,8 @@
 
 EquipmentUI.gdw/gdx, Player.bjz and gj.dqn are verified against the shipped
 compatibility baseline. A preview uses a fixed single-boss comparison model
-and replaces only upgraded affixes and socketed gems. It never equips
+and replaces upgraded affixes, socketed gems and verified numeric equipment
+effects. It never equips
 anything and does not predict new legendary effects, skill levels or combat DPS.
 """
 from copy import deepcopy
@@ -10,6 +11,7 @@ import math
 from .native_memory import MemoryReadError
 from .stat_display import _single, is_percent_stat, upgraded_value
 from .equipment_requirements import equip_eligibility
+from .equipment_effects import apply_equipment_effect_changes
 
 EQUIPPED_SLOTS = ('Weapon', 'Helm', 'Chest', 'Pants', 'Boots', 'Belt',
                   'Ring1', 'Ring2', 'Necklace', 'Shoulder', 'Gloves', 'Back')
@@ -26,7 +28,7 @@ PANEL_GROUPS = (
 # AttackSpeed and WeaponSpeed have no upper bound in that table.
 STAT_CAPS = {4: .85, 13: .8, 22: .85, 37: .85, 49: .9,
              51: .9, 52: .9, 53: .9, 54: .9, 55: .9, 60: 1, 64: .9}
-PREVIEW_NOTE = '固定单体 Boss 场景：角色满血、一个 Boss、无临时增益；近战 2 米、远程 7 米。沿用攻击力面板公式估算，仅替换词条和已有宝石；传奇特效、技能触发变化不预测，不自动转移宝石。'
+PREVIEW_NOTE = '固定单体 Boss 场景：角色满血、一个 Boss、无临时增益；近战 2 米、远程 7 米。沿用攻击力面板公式估算，比较词条、已有宝石与已适配的固定／条件属性特效；复杂触发和技能变化不预测，不自动转移宝石。'
 
 
 def boss_distance(class_mask):
@@ -175,6 +177,9 @@ def preview(row, character, item_ui):
                 layer = model['caches'].setdefault(off, {})
                 for stat in set(removed[kind]) | set(added[kind]):
                     layer[stat] = layer.get(stat, 0) - removed[kind].get(stat, 0) + added[kind].get(stat, 0)
+            replacement = [item for item in character['equipment'] if item['equipped_slot'] != target] + [row]
+            apply_equipment_effect_changes(model, character['equipment'], replacement,
+                                           character.get('comparison_distance', boss_distance(character['class_mask'])))
             stats = final_stats(model)
             after = panel_attack(stats, character['primary'])
             changes = [{'stat': n, 'before': current[n], 'after': stats[n],
@@ -186,5 +191,5 @@ def preview(row, character, item_ui):
                 'attributes': changes})
         best = max(comparisons, key=lambda c: c['delta'])
         return {**eligibility, 'available': True, 'estimated': True, **best, 'comparisons': comparisons, 'note': PREVIEW_NOTE}
-    except (ValueError, MemoryReadError, KeyError, TypeError, OverflowError) as exc:
+    except (ValueError, MemoryReadError, OSError, KeyError, TypeError, OverflowError) as exc:
         return {'available': False, 'reason': str(exc)}

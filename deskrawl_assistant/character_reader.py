@@ -4,6 +4,7 @@ import math
 import struct
 from .character import final_stats, panel_attack, boss_distance, PREVIEW_NOTE
 from .character_positions import Positions
+from .equipment_effects import effects_supported
 from .native_reader import decode_obscured_float
 from .native_memory import MemoryReadError, SnapshotChangedError
 from .recommendation_reader import _Copy, decode_obscured_int, decode_obscured_long
@@ -170,7 +171,8 @@ def _snapshot(reader):
     distance = boss_distance(class_mask)
     fixed_conditional, fixed_conversions = _conditional(copy, player, manager, status_obj, 1, 1, [], distance)
     comparison_model = {'base': base, 'caches': caches, 'status': ({}, {}, {}),
-                        'conditional': fixed_conditional, 'conversions': fixed_conversions}
+                        'conditional': fixed_conditional, 'conversions': fixed_conversions,
+                        'equipment_effects_verified': effects_supported(getattr(reader, 'profile', {}))}
     comparison_stats = final_stats(comparison_model)
     copy.finish()
     if reader.memory.read(stamp['object'] + 24, 24) != stamp['header'] or any(

@@ -84,7 +84,8 @@ class _Read:
     def klass(self, klass, name):
         expected = [{'name': f['name'], 'offset': f['rawRegistrationOffset'], 'token': int(f['token'], 16)}
             for f in self.profile['types'][name]['fields']]
-        if not klass or self.reader.class_name(klass) != name or self.reader.fields(klass) != expected:
+        actual_name = self.profile['types'][name].get('name', name)
+        if not klass or self.reader.class_name(klass) != actual_name or self.reader.fields(klass) != expected:
             raise MemoryReadError(f'{name} 字段布局与后台指令版本不一致')
         return klass
 

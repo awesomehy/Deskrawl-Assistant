@@ -170,15 +170,15 @@ def extract(game):
     for node in life:node.update(positions[node['id']])
     # Sprites referenced by the shipped UI; resources are bundled, not read from
     # another player's installation at runtime.
-    ui_ids={'skill-book':(5363,'Spell_book'),'skill-banner':(5293,'name_bar3'),
-            'separator':(5568,'Bar_separator'),'talent-background':(5453,'Tile_background_1'),
-            'life-background':(5362,'Tile_background_2'),'life-summary':(5456,'big_background'),
-            'round-frame':(5538,'icon_frame_round'),'square-frame':(5411,'Button_square_Fr'),
-            'small-round-frame':(5519,'lil_roundframe'),
-            'talent-rail-frame':(5899,'Options_slider_vert'),
-            'talent-rail-track':(5553,'Options_slider_vert_line'),
-            'talent-rail-fluid':(5751,'G_Textures_01 Sprite'),
-            'talent-milestone':(5580,'lil_roundframe_ready')}
+    ui_ids={'skill-book':(5364,'Spell_book'),'skill-banner':(5294,'name_bar3'),
+            'separator':(5569,'Bar_separator'),'talent-background':(5454,'Tile_background_1'),
+            'life-background':(5363,'Tile_background_2'),'life-summary':(5457,'big_background'),
+            'round-frame':(5539,'icon_frame_round'),'square-frame':(5412,'Button_square_Fr'),
+            'small-round-frame':(5520,'lil_roundframe'),
+            'talent-rail-frame':(5901,'Options_slider_vert'),
+            'talent-rail-track':(5554,'Options_slider_vert_line'),
+            'talent-rail-fluid':(5752,'G_Textures_01 Sprite'),
+            'talent-milestone':(5581,'lil_roundframe_ready')}
     ui_assets={}
     for name,(pid,expected) in ui_ids.items():
         sprite=shared.objects[pid]

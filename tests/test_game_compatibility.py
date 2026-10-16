@@ -6,13 +6,15 @@ import struct
 import tempfile
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from capstone import Cs, CS_ARCH_X86, CS_MODE_64
 from deskrawl_assistant.game_compatibility import (CompatibilityError, bindings,
-    check_assets, field_shape, inspect_changes, match_profiles, native_rva)
+    check_assets, field_shape, inspect_changes, logical_aliases, match_profiles, native_rva)
+from deskrawl_assistant.game_actions import _Read
 from deskrawl_assistant.il2cpp_metadata import MetadataInspector, PE
 from deskrawl_assistant.native_reader import NativeReader
+from deskrawl_assistant.native_memory import MemoryReadError
 from deskrawl_assistant.native_signatures import Signatures
 
 
@@ -85,6 +87,31 @@ class ProfileTests(unittest.TestCase):
             with self.assertRaisesRegex(CompatibilityError,'代码特征不一致'):
                 inspect_changes(self.i,{'enums':{},'native_methods':{'fn':'old'}},self.original)
 
+    def test_future_rename_keeps_reviewed_registry_and_difficulty_bindings(self):
+        self.original['runtime-type-hints.json']['types']=[
+            {'name':'gm','logicalName':'gj','namespace':'','fields':[field()],'methods':[]},
+            {'name':'fb','logicalName':'ey','namespace':'','fields':[field('difficulty',0)],'methods':[]}]
+        self.i.defs=[{'name':'zz','namespace':''},{'name':'xy','namespace':''}]
+        self.i.fields=lambda n:self.original['runtime-type-hints.json']['types'][n]['fields']
+        adapted,_=match_profiles(self.i,self.original)
+        self.assertEqual({'zz':'gj','xy':'ey'},logical_aliases(adapted))
+        with patch('deskrawl_assistant.game_compatibility.enum_contract',return_value={}), \
+             patch('deskrawl_assistant.game_compatibility.bindings',return_value={}), \
+             patch('deskrawl_assistant.game_compatibility.native_contract',return_value=({},{})) as native:
+            inspect_changes(self.i,{'enums':{},'native_methods':{}},self.original)
+        self.assertEqual({'zz':'gj','xy':'ey'},native.call_args.args[1])
+
+    def test_action_class_uses_reviewed_actual_name_and_still_verifies_every_field(self):
+        reader=Mock();reader.class_name.return_value='fb'
+        reader.fields.return_value=[{'name':'level','offset':0,'token':0x4000001}]
+        profile={'types':{'ey':{'name':'fb','fields':[field('level',0)]}}}
+        copy=_Read(reader,profile)
+        self.assertEqual(123,copy.klass(123,'ey'))
+        reader.class_name.return_value='ey'
+        with self.assertRaises(MemoryReadError):copy.klass(123,'ey')
+        reader.class_name.return_value='fb';reader.fields.return_value=[]
+        with self.assertRaises(MemoryReadError):copy.klass(123,'ey')
+
     def test_bindings_follow_field_names_at_verified_offsets(self):
         p={'types':[{'name':'SaveSystem','fields':[field('zzz')]},
             {'name':'GeneratedItemData','fields':[field('abc',73)]}]}
@@ -127,6 +154,20 @@ class AssetAndSessionTests(unittest.TestCase):
 
 
 class NativeCodeTests(unittest.TestCase):
+    def test_layout_prefers_reviewed_difficulty_over_reused_obfuscated_name(self):
+        from capstone.x86 import X86_OP_MEM, X86_REG_RIP
+        def row(mnemonic,disp,size):
+            return SimpleNamespace(address=100,size=4,mnemonic=mnemonic,operands=[
+                SimpleNamespace(type=X86_OP_MEM,size=size,
+                    mem=SimpleNamespace(base=X86_REG_RIP,disp=disp))])
+        s=object.__new__(Signatures);s.exports={'il2cpp_gc_wbarrier_set_field':1}
+        s.instructions=lambda _: [row('cmp',96,4),row('lea',152,8)]
+        s.pe=SimpleNamespace(base=0,contains=lambda *args:True)
+        s.aliases={'gm':'gj','fb':'ey'};s.defs={'ey':0,'fb':1}
+        s.singleton_rva=Mock(return_value=10);s.type_info_rva=Mock(return_value=20)
+        self.assertEqual(20,s.native_layout()['difficulty_rva'])
+        s.type_info_rva.assert_called_once_with('fb')
+
     def test_obfuscated_static_state_rename_keeps_native_type_signature(self):
         def signature(name,aliases):
             s=object.__new__(Signatures);s.aliases={'gj':'gj',**aliases};s.defs={name:0};s.shape_cache={}

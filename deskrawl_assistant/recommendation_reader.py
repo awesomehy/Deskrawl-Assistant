@@ -104,7 +104,7 @@ def compose_stats(base, caches, status=None, conversions=()):
         result[key] = value
         return value
 
-    for key in range(66):
+    for key in range(67):
         stat(key)
     return result
 
@@ -344,10 +344,10 @@ def _effects(copy, obj, level, stats, depth=0, seen=None):
 def _skills(copy, controller, player, stats, warnings):
     book = copy.singleton(BOOK_RVA, 'PlayerAbilityBook')
     levels = copy.dictionary(copy.ptr(book + 40), 'int', 'object')
-    bonuses = copy.dictionary(copy.ptr(player + 1208), 'int', 'object')
-    global_levels = copy.integer(player + 1216)
-    cooldown_tags = copy.dictionary(copy.ptr(player + 904), 'float')
-    cooldown_abilities = copy.dictionary(copy.ptr(player + 1040), 'float', 'object')
+    bonuses = copy.dictionary(copy.ptr(player + 1256), 'int', 'object')
+    global_levels = copy.integer(player + 1264)
+    cooldown_tags = copy.dictionary(copy.ptr(player + 952), 'float')
+    cooldown_abilities = copy.dictionary(copy.ptr(player + 1088), 'float', 'object')
     global_cooldown = max(0, copy.number(controller + 64))
     frequency = max(0.001, (stats[21] if stats[21] > 0 else 1.0) * (1 + max(0, stats[6])))
     slots = []
@@ -618,18 +618,18 @@ def _snapshot(reader):
         base[stat] = decode_obscured_float(copy.read(player + offset, 20))
     caches = {off: copy.dictionary(copy.ptr(player + off)) for off in (536, 544, 568, 576, 632, 640, 648)}
     status_obj = copy.verify(copy.ptr(player + 304), 'StatusEffectController')
-    status = tuple(copy.dictionary(copy.ptr(status_obj + off), 'double') for off in (56, 64, 72))
+    status = tuple(copy.dictionary(copy.ptr(status_obj + off), 'double') for off in (64, 72, 80))
     warnings, conversions = [], []
-    for off in (792, 808):
+    for off in (792, 848):
         for raw in copy.list(copy.ptr(player + off), 24, 'ValueTuple`4'):
             source, target, coefficient, condition = struct.unpack('<iidQ', raw)
-            if source not in range(66) or target not in range(66) or not math.isfinite(coefficient):
+            if source not in range(67) or target not in range(67) or not math.isfinite(coefficient):
                 raise MemoryReadError('属性转换参数无效。')
             if not condition:
                 conversions.append((source, target, coefficient))
             else:
                 warnings.append('带状态条件的属性转换未计入参考属性。')
-    conditional = any(copy.integer(copy.ptr(player + off) + 24) > 0 for off in (816, 856, 880))
+    conditional = any(copy.integer(copy.ptr(player + off) + 24) > 0 for off in (856, 904, 928))
     if conditional:
         warnings.append('当前配装含额外条件属性，参考属性尚未计入该条件部分。')
     conditional = conditional or any('属性转换' in message for message in warnings)

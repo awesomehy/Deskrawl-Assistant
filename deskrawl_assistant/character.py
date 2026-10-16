@@ -23,7 +23,7 @@ PANEL_GROUPS = (
      (43, .15), (45, .25), (46, .25), (63, .25), (40, .25)),
     ((33, .5), (34, .25), (61, .25)),
 )
-# Deskrawl 1.0.2b bg.wx / bg.wz: the native caller applies upper bounds
+# Deskrawl 1.0.3 bh.xb / bh.xd: the native caller applies upper bounds
 # after composing each stat, including before using it as a conversion source.
 # AttackSpeed and WeaponSpeed have no upper bound in that table.
 STAT_CAPS = {4: .85, 13: .8, 22: .85, 37: .85, 49: .9,
@@ -92,7 +92,7 @@ use capped source values; unexpected cycles are refused, never turned to zero.
         visiting.remove(key)
         return value
 
-    for key in range(66):
+    for key in range(67):
         stat(key)
     return result
 
@@ -123,7 +123,7 @@ def item_bonuses(row, item_ui):
     result = ({}, {})
     for index, mod in enumerate(mods):
         stat, kind = mod.get('stat'), mod.get('type')
-        if type(stat) is not int or stat not in range(66) or type(kind) is not int or kind not in (0, 1):
+        if type(stat) is not int or stat not in range(67) or type(kind) is not int or kind not in (0, 1):
             raise ValueError('该装备存在尚未支持的词条计算方式。')
         value = upgraded_value(number(mod.get('value')), index, len(mods), upgrade, rarity)
         result[kind][stat] = result[kind].get(stat, 0) + value
@@ -142,7 +142,7 @@ def item_bonuses(row, item_ui):
             raise ValueError('镶嵌宝石效果尚未适配。')
         for mod in groups[category]['values']:
             stat, kind = mod.get('stat'), mod.get('modifier')
-            if type(stat) is not int or stat not in range(66) or type(kind) is not int or kind not in (0, 1):
+            if type(stat) is not int or stat not in range(67) or type(kind) is not int or kind not in (0, 1):
                 raise ValueError('镶嵌宝石效果尚未适配。')
             result[kind][stat] = result[kind].get(stat, 0) + number(mod.get('value'))
     return result
@@ -184,7 +184,7 @@ def preview(row, character, item_ui):
             after = panel_attack(stats, character['primary'])
             changes = [{'stat': n, 'before': current[n], 'after': stats[n],
                         'before_text': attribute_text(n, current[n]), 'after_text': attribute_text(n, stats[n])}
-                       for n in range(66) if abs(stats[n] - current[n]) > 1e-5]
+                       for n in range(67) if abs(stats[n] - current[n]) > 1e-5]
             comparisons.append({'target': target, 'target_label': SLOT_LABELS[target],
                 'replaced_uid': old.get('item_uid') if old else None, 'before': before, 'after': after,
                 'delta': after - before, 'percent': (after - before) / before * 100 if before else None,

@@ -21,15 +21,15 @@ from pathlib import Path
 import struct
 
 
-METADATA_HASH = "f5cf7ba1bbd13cb099ea231ac89ed772f10c9f28d329f5dab9bc805a3809b802"
-GAME_VERSION = "1.0.2b"
-STEAM_BUILD = 25895065
+METADATA_HASH = "93f914c1e0119b82c98ca0647542c3afe0fade976d456f2212b03d699e6813de"
+GAME_VERSION = "1.0.3"
+STEAM_BUILD = 25973417
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from deskrawl_assistant.il2cpp_metadata import PE, MetadataInspector
 
 SELECTED = {
-    "Inventory", "InventorySlot", "Storage", "GeneratedItemData", "ItemData", "gj",
+    "Inventory", "InventorySlot", "Storage", "GeneratedItemData", "ItemData", "gm",
     "StatModifier", "LeveledStatModifier", "SaveSystem", "SaveData", "SavedSlot",
     "SavedRegistryEntry", "SavedStatModifier", "SavedStash", "SaveContainer",
     "ObscuredFloat", "ObscuredInt", "ObscuredLong", "ObscuredString",
@@ -51,7 +51,7 @@ class Inspector(MetadataInspector):
             if hits:
                 references.append({"type": ".".join(x for x in (d["namespace"], d["name"]) if x), "fields": hits})
             if d["name"] in SELECTED or hits:
-                selected.append({"name": d["name"], "namespace": d["namespace"], "typeDefinitionIndex": index,
+                selected.append({"name": d["name"], "logicalName": "gj" if d["name"] == "gm" and not d['namespace'] else d['name'], "namespace": d["namespace"], "typeDefinitionIndex": index,
                                  "isValueType": d["isValueType"], "byvalTypeIndex": d["byvalTypeIndex"],
                                  "fields": fields, "methods": self.methods(index)})
         by_name = {row["name"]: row for row in selected}
@@ -78,8 +78,8 @@ class Inspector(MetadataInspector):
                 "storage": {"class": "Storage", "namespace": "",
                             "singletonStaticField": field_name("Storage", "Storage", static=True),
                             "slotsInstanceField": field_name("Storage", "InventorySlot[]"), "slotsType": "InventorySlot[]"},
-                "registry": {"class": "gj", "namespace": "", "dictionaryStaticField": field_name(
-                    "gj", "System.Collections.Generic.Dictionary`2<System.String, GeneratedItemData>", static=True),
+                "registry": {"class": "gm", "namespace": "", "dictionaryStaticField": field_name(
+                    "gm", "System.Collections.Generic.Dictionary`2<System.String, GeneratedItemData>", static=True),
                              "dictionaryType": "System.Collections.Generic.Dictionary`2<System.String, GeneratedItemData>",
                              "candidateKeySlotField": "ItemUid", "keyAssociationValidatedAtRuntime": False},
                 "modifiers": {"class": "GeneratedItemData", "field": "Modifiers", "type": "StatModifier[]",

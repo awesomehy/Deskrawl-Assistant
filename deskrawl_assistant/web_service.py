@@ -384,8 +384,9 @@ class AssistantService(ManagedServiceMixin):
         for key, item in self.ui['equipment'].items():
             entry = self.catalog.equipment[key]
             desc = localized.get(key+'.Desc', {})
+            effect_description = self.loot_item_ui['items'].get(key, {}).get('description')
             equipment.append({'key':key, 'name':entry.label,'en':entry.en,'legendary':key.startswith('Legendary'),
-                'description':re.sub(r'<[^>]+>', '', desc.get('Chinese (Simplified)') or desc.get('English') or ''),
+                'description':re.sub(r'<[^>]+>', '', effect_description or desc.get('Chinese (Simplified)') or desc.get('English') or ''),
                 **{k:item[k] for k in ('slot','slot_value','class_mask','icon')},
                 'slot_label':SLOT_LABELS.get(item['slot'], item['slot'])})
         return {'equipment':equipment,'stats':[{'key':k,'name':e.label,'en':e.en} for k,e in self.catalog.stats.items()],
@@ -562,6 +563,7 @@ class AssistantService(ManagedServiceMixin):
             self.revision += 1
 
     def _equipment_facts(self, row):
+        effects = self.loot_item_ui['items'].get(row.get('name_key') or row.get('internal_name'), {})
         rarity = row.get('rarity', row.get('base_rarity'))
         tags = [label for key,label in (('is_ancient','远古'),('is_black_mist','黑雾')) if row.get(key) is True]
         if rarity == 4: tags.append('神圣')
@@ -575,6 +577,7 @@ class AssistantService(ManagedServiceMixin):
                 'rarity':self.loot_item_ui['items'].get(key,{}).get('rarity'),
                 'effects':groups[category] if len(groups)==3 else None})
         return {'rarity':rarity,'rarity_label':{0:'普通',1:'优秀',2:'稀有',3:'传说',4:'神圣',5:'符文套装'}.get(rarity,'未知'),
+            'effect_groups':deepcopy(effects.get('effect_groups', [])),
             'is_ancient':row.get('is_ancient'),'is_black_mist':row.get('is_black_mist'),
             'is_divine':rarity==4,'tags':tags,'sockets':row.get('socket_count'),
             'gems':gems,'gems_known':'socketed_gems' in row,'occupied_sockets':len(gems)}
@@ -589,7 +592,7 @@ class AssistantService(ManagedServiceMixin):
         payload['attack_speed'] = round(attack_speed(stats),3)
         payload['attributes'] = [{'stat':n,'key':'Stats.'+self.adapter.stat_names[n],
             'name':self.catalog.stats['Stats.'+self.adapter.stat_names[n]].label,
-            'value':stats[n],'display_value':attribute_text(n, stats[n])} for n in range(66)
+            'value':stats[n],'display_value':attribute_text(n, stats[n])} for n in range(67)
             if 'Stats.'+self.adapter.stat_names[n] in self.catalog.stats]
         payload['equipment'] = []
         evidence = RuntimeReadEvidence(enum_values_verified=True,native_affixes_verified=True,

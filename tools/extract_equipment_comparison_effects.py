@@ -20,7 +20,7 @@ def parse_effect(kind, name, data):
         for _ in range(cursor.count()):
             stat, modifier = cursor.take('ii')
             value = cursor.obscured()
-            if stat not in range(66) or modifier not in (0, 1) or not math.isfinite(value):
+            if stat not in range(67) or modifier not in (0, 1) or not math.isfinite(value):
                 raise ValueError('Unsupported equipment modifier: ' + name)
             modifiers.append({'stat':stat, 'type':modifier, 'value':value})
         required_status = cursor.take('iq')[1] != 0
@@ -33,7 +33,7 @@ def parse_effect(kind, name, data):
     if kind == 'EquipmentEffect_StatConversion':
         source, target, fraction = cursor.take('iif')
         cursor.done()
-        if source not in range(66) or target not in range(66) or not math.isfinite(fraction):
+        if source not in range(67) or target not in range(67) or not math.isfinite(fraction):
             raise ValueError('Unsupported equipment conversion: ' + name)
         return {'id':name, 'class':kind, 'source':source, 'target':target, 'fraction':fraction}
     return None

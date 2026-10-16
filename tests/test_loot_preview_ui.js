@@ -51,6 +51,20 @@ test('navigation exposes six pages and preserves managed activation',()=>{
   }
 });
 
+test('equipment effects are visible on inventory and worn equipment previews',()=>{
+  const p=page();
+  p.context.gear={name:'炼血者之履',name_key:'LegendaryBoots4',is_equipment:true,kind:'equipment',
+    slot_label:'靴子',class_mask:15,rarity:3,rarity_label:'传说',level:70,
+    groups:{base:[],primary:[],secondary:[],unknown:[]},reasons:[],
+    effect_groups:[{title:'物品效果',values:[],texts:['<color=orange>击杀敌人时有 10% 几率掉落生命药水。</color>']}]};
+  for(const container of ['inventory','equipped']){
+    p.context.gear.container=container;
+    const html=p.run('equipmentPreviewHtml(gear)');
+    assert.match(html,/击杀敌人时有 10% 几率掉落生命药水。/);
+    assert.doesNotMatch(html,/<color=/);
+  }
+});
+
 test('retired reports cannot be opened and register no sampling or calibration timers',()=>{
   const p=page();p.run("switchTab('managed');switchTab('recommendations');switchTab('experience');");
   assert.equal(p.run('activeTab'),'managed');

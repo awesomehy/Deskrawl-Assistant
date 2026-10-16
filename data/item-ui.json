@@ -48,7 +48,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5085
+      "source_path_id": 5132
     },
     "HunterSetRune1_2": {
       "name": "设阱者的传承 II",
@@ -97,7 +97,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5086
+      "source_path_id": 5133
     },
     "HunterSetRune1_3": {
       "name": "设阱者的传承 III",
@@ -151,7 +151,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5087
+      "source_path_id": 5134
     },
     "HunterSetRune1_4": {
       "name": "设阱者的传承 IV",
@@ -205,7 +205,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5088
+      "source_path_id": 5135
     },
     "HunterSetRune1_5": {
       "name": "设阱者的传承 V",
@@ -259,7 +259,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5089
+      "source_path_id": 5136
     },
     "HunterSetRune1_6": {
       "name": "设阱者的传承 VI",
@@ -313,7 +313,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5090
+      "source_path_id": 5137
     },
     "HunterSetRune2_1": {
       "name": "神射手的决心 I",
@@ -362,7 +362,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5091
+      "source_path_id": 5138
     },
     "HunterSetRune2_2": {
       "name": "神射手的决心 II",
@@ -416,7 +416,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5092
+      "source_path_id": 5139
     },
     "HunterSetRune2_3": {
       "name": "神射手的决心 III",
@@ -470,7 +470,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5093
+      "source_path_id": 5140
     },
     "HunterSetRune2_4": {
       "name": "神射手的决心 IV",
@@ -524,7 +524,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5094
+      "source_path_id": 5141
     },
     "HunterSetRune2_5": {
       "name": "神射手的决心 V",
@@ -578,7 +578,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5095
+      "source_path_id": 5142
     },
     "HunterSetRune2_6": {
       "name": "神射手的决心 VI",
@@ -632,7 +632,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5096
+      "source_path_id": 5143
     },
     "HunterSetRune3_1": {
       "name": "毒牙 I",
@@ -681,7 +681,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5097
+      "source_path_id": 5144
     },
     "HunterSetRune3_2": {
       "name": "毒牙 II",
@@ -730,7 +730,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5098
+      "source_path_id": 5145
     },
     "HunterSetRune3_3": {
       "name": "毒牙 III",
@@ -784,7 +784,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5099
+      "source_path_id": 5146
     },
     "HunterSetRune3_4": {
       "name": "毒牙 IV",
@@ -838,7 +838,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5100
+      "source_path_id": 5147
     },
     "HunterSetRune3_5": {
       "name": "毒牙 V",
@@ -892,7 +892,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5101
+      "source_path_id": 5148
     },
     "HunterSetRune3_6": {
       "name": "毒牙 VI",
@@ -946,7 +946,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5102
+      "source_path_id": 5149
     },
     "LegendaryRune_HunterBasicAttack1": {
       "name": "毒箭符文 (宏伟)",
@@ -983,7 +983,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5103
+      "source_path_id": 5150
     },
     "LegendaryRune_HunterBasicAttack2": {
       "name": "奥术炸弹符文 (宏伟)",
@@ -1020,7 +1020,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5104
+      "source_path_id": 5151
     },
     "LegendaryRune_HunterBasicAttack3": {
       "name": "飞刀连击符文 (宏伟)",
@@ -1057,7 +1057,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5105
+      "source_path_id": 5152
     },
     "LegendaryRune_HunterBasicAttack4": {
       "name": "二连矢符文 (宏伟)",
@@ -1094,7 +1094,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5106
+      "source_path_id": 5153
     },
     "LegendaryRune_HunterHeavyAttack1": {
       "name": "稳固射击符文 (宏伟)",
@@ -1131,7 +1131,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5107
+      "source_path_id": 5154
     },
     "LegendaryRune_HunterHeavyAttack2": {
       "name": "多重射击符文 (宏伟)",
@@ -1168,7 +1168,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5108
+      "source_path_id": 5155
     },
     "LegendaryRune_HunterHeavyAttack3": {
       "name": "急速射击符文 (宏伟)",
@@ -1205,7 +1205,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5109
+      "source_path_id": 5156
     },
     "LegendaryRune_HunterHeavyAttack4": {
       "name": "剧毒弹符文 (宏伟)",
@@ -1242,7 +1242,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5110
+      "source_path_id": 5157
     },
     "LegendaryRune_HunterSpecial1": {
       "name": "毒陷阱符文 (宏伟)",
@@ -1279,7 +1279,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5111
+      "source_path_id": 5158
     },
     "LegendaryRune_HunterSpecial2": {
       "name": "冲击波符文 (宏伟)",
@@ -1316,7 +1316,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5112
+      "source_path_id": 5159
     },
     "LegendaryRune_HunterSpecial3": {
       "name": "奥术陷阱符文 (宏伟)",
@@ -1353,7 +1353,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5113
+      "source_path_id": 5160
     },
     "LegendaryRune_HunterSpecial4": {
       "name": "奥术箭雨符文 (宏伟)",
@@ -1390,7 +1390,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5114
+      "source_path_id": 5161
     },
     "LegendaryRune_HunterSpecial5": {
       "name": "幻影形态符文 (宏伟)",
@@ -1427,7 +1427,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5115
+      "source_path_id": 5162
     },
     "LegendaryRune_HunterSpecial6": {
       "name": "照明弹符文 (宏伟)",
@@ -1464,7 +1464,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5116
+      "source_path_id": 5163
     },
     "LegendaryRune_MonkBasicAttack1": {
       "name": "三重击符文 (宏伟)",
@@ -1501,7 +1501,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5117
+      "source_path_id": 5164
     },
     "LegendaryRune_MonkBasicAttack2": {
       "name": "怒拳符文 (宏伟)",
@@ -1538,7 +1538,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5118
+      "source_path_id": 5165
     },
     "LegendaryRune_MonkBasicAttack3": {
       "name": "震地击符文 (宏伟)",
@@ -1575,7 +1575,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5119
+      "source_path_id": 5166
     },
     "LegendaryRune_MonkBasicAttack4": {
       "name": "气弹符文 (宏伟)",
@@ -1612,7 +1612,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5120
+      "source_path_id": 5167
     },
     "LegendaryRune_MonkHeavyAttack1": {
       "name": "圣裁之击符文 (宏伟)",
@@ -1649,7 +1649,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5121
+      "source_path_id": 5168
     },
     "LegendaryRune_MonkHeavyAttack2": {
       "name": "穿刺突进符文 (宏伟)",
@@ -1686,7 +1686,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5122
+      "source_path_id": 5169
     },
     "LegendaryRune_MonkHeavyAttack3": {
       "name": "旋风棍式符文 (宏伟)",
@@ -1723,7 +1723,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5123
+      "source_path_id": 5170
     },
     "LegendaryRune_MonkHeavyAttack4": {
       "name": "双金掌符文 (宏伟)",
@@ -1760,7 +1760,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5124
+      "source_path_id": 5171
     },
     "LegendaryRune_MonkSpecial1": {
       "name": "神圣法球符文 (宏伟)",
@@ -1797,7 +1797,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5125
+      "source_path_id": 5172
     },
     "LegendaryRune_MonkSpecial2": {
       "name": "灵气涌流符文 (宏伟)",
@@ -1834,7 +1834,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5126
+      "source_path_id": 5173
     },
     "LegendaryRune_MonkSpecial3": {
       "name": "冲锋符文 (宏伟)",
@@ -1871,7 +1871,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5127
+      "source_path_id": 5174
     },
     "LegendaryRune_MonkSpecial4": {
       "name": "灵体分身符文 (宏伟)",
@@ -1908,7 +1908,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5128
+      "source_path_id": 5175
     },
     "LegendaryRune_MonkSpecial5": {
       "name": "踏风步符文 (宏伟)",
@@ -1945,7 +1945,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5129
+      "source_path_id": 5176
     },
     "LegendaryRune_MonkSpecial6": {
       "name": "神圣雷霆符文 (宏伟)",
@@ -1982,7 +1982,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5130
+      "source_path_id": 5177
     },
     "LegendaryRune_SorcererBasicAttack1": {
       "name": "火球符文 (宏伟)",
@@ -2019,7 +2019,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5131
+      "source_path_id": 5178
     },
     "LegendaryRune_SorcererBasicAttack2": {
       "name": "冰碎片符文 (宏伟)",
@@ -2056,7 +2056,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5132
+      "source_path_id": 5179
     },
     "LegendaryRune_SorcererBasicAttack3": {
       "name": "电击符文 (宏伟)",
@@ -2093,7 +2093,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5133
+      "source_path_id": 5180
     },
     "LegendaryRune_SorcererBasicAttack4": {
       "name": "烈焰雷电符文 (宏伟)",
@@ -2130,7 +2130,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5134
+      "source_path_id": 5181
     },
     "LegendaryRune_SorcererSpecial1": {
       "name": "冰霜新星符文 (宏伟)",
@@ -2167,7 +2167,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5135
+      "source_path_id": 5182
     },
     "LegendaryRune_SorcererSpecial2": {
       "name": "火元素符文 (宏伟)",
@@ -2204,7 +2204,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5136
+      "source_path_id": 5183
     },
     "LegendaryRune_SorcererSpecial3": {
       "name": "寒冰屏障符文 (宏伟)",
@@ -2241,7 +2241,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5137
+      "source_path_id": 5184
     },
     "LegendaryRune_SorcererSpecial4": {
       "name": "火陨石符文 (宏伟)",
@@ -2278,7 +2278,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5138
+      "source_path_id": 5185
     },
     "LegendaryRune_SorcererSpecial5": {
       "name": "烈焰光环符文 (宏伟)",
@@ -2315,7 +2315,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5139
+      "source_path_id": 5186
     },
     "LegendaryRune_SorcererSpecial6": {
       "name": "雷云符文 (宏伟)",
@@ -2352,7 +2352,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5140
+      "source_path_id": 5187
     },
     "LegendaryRune_SorcererStrongAttack1": {
       "name": "烈焰吐息符文 (宏伟)",
@@ -2389,7 +2389,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5141
+      "source_path_id": 5188
     },
     "LegendaryRune_SorcererStrongAttack2": {
       "name": "冰陨石符文 (宏伟)",
@@ -2426,7 +2426,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5142
+      "source_path_id": 5189
     },
     "LegendaryRune_SorcererStrongAttack3": {
       "name": "闪电风暴符文 (宏伟)",
@@ -2463,7 +2463,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5143
+      "source_path_id": 5190
     },
     "LegendaryRune_SorcererStrongAttack4": {
       "name": "冰霜光束符文 (宏伟)",
@@ -2500,7 +2500,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5144
+      "source_path_id": 5191
     },
     "LegendaryRune_WarriorBasicAttack": {
       "name": "英勇打击符文 (宏伟)",
@@ -2537,7 +2537,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5145
+      "source_path_id": 5192
     },
     "LegendaryRune_WarriorBasicAttack2": {
       "name": "横扫符文 (宏伟)",
@@ -2574,7 +2574,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5146
+      "source_path_id": 5193
     },
     "LegendaryRune_WarriorBasicAttack3": {
       "name": "血刃打击符文 (宏伟)",
@@ -2611,7 +2611,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5147
+      "source_path_id": 5194
     },
     "LegendaryRune_WarriorBasicAttack4": {
       "name": "稳固打击符文 (宏伟)",
@@ -2648,7 +2648,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5148
+      "source_path_id": 5195
     },
     "LegendaryRune_WarriorHeavyAttack1": {
       "name": "烈焰打击符文 (宏伟)",
@@ -2685,7 +2685,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5149
+      "source_path_id": 5196
     },
     "LegendaryRune_WarriorHeavyAttack2": {
       "name": "半月斩符文 (宏伟)",
@@ -2722,7 +2722,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5150
+      "source_path_id": 5197
     },
     "LegendaryRune_WarriorHeavyAttack3": {
       "name": "旋风斩符文 (宏伟)",
@@ -2759,7 +2759,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5151
+      "source_path_id": 5198
     },
     "LegendaryRune_WarriorHeavyAttack4": {
       "name": "裂血连击符文 (宏伟)",
@@ -2796,7 +2796,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5152
+      "source_path_id": 5199
     },
     "LegendaryRune_WarriorRageShield": {
       "name": "狂怒护盾符文 (宏伟)",
@@ -2833,7 +2833,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5153
+      "source_path_id": 5200
     },
     "LegendaryRune_WarriorRageShout": {
       "name": "怒吼符文 (宏伟)",
@@ -2870,7 +2870,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5154
+      "source_path_id": 5201
     },
     "LegendaryRune_WarriorSpecial3": {
       "name": "夺命钩爪符文 (宏伟)",
@@ -2907,7 +2907,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5155
+      "source_path_id": 5202
     },
     "LegendaryRune_WarriorSpecial4": {
       "name": "裂地击符文 (宏伟)",
@@ -2944,7 +2944,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5156
+      "source_path_id": 5203
     },
     "LegendaryRune_WarriorSpecial5": {
       "name": "铁棘符文 (宏伟)",
@@ -2981,7 +2981,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5157
+      "source_path_id": 5204
     },
     "LegendaryRune_WarriorSpecial6": {
       "name": "熔铸之力符文 (宏伟)",
@@ -3018,7 +3018,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5158
+      "source_path_id": 5205
     },
     "MonkSetRune1_1": {
       "name": "百手符文 (I)",
@@ -3067,7 +3067,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5159
+      "source_path_id": 5206
     },
     "MonkSetRune1_2": {
       "name": "百手符文 (II)",
@@ -3132,7 +3132,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5160
+      "source_path_id": 5207
     },
     "MonkSetRune1_3": {
       "name": "百手符文 (III)",
@@ -3186,7 +3186,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5161
+      "source_path_id": 5208
     },
     "MonkSetRune1_4": {
       "name": "百手符文 (IV)",
@@ -3240,7 +3240,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5162
+      "source_path_id": 5209
     },
     "MonkSetRune1_5": {
       "name": "百手符文 (V)",
@@ -3294,7 +3294,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5163
+      "source_path_id": 5210
     },
     "MonkSetRune1_6": {
       "name": "百手符文 (VI)",
@@ -3348,7 +3348,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5164
+      "source_path_id": 5211
     },
     "MonkSetRune2_1": {
       "name": "九天轮符文 (I)",
@@ -3397,7 +3397,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5165
+      "source_path_id": 5212
     },
     "MonkSetRune2_2": {
       "name": "九天轮符文 (II)",
@@ -3462,7 +3462,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5166
+      "source_path_id": 5213
     },
     "MonkSetRune2_3": {
       "name": "九天轮符文 (III)",
@@ -3516,7 +3516,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5167
+      "source_path_id": 5214
     },
     "MonkSetRune2_4": {
       "name": "九天轮符文 (IV)",
@@ -3570,7 +3570,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5168
+      "source_path_id": 5215
     },
     "MonkSetRune2_5": {
       "name": "九天轮符文 (V)",
@@ -3624,7 +3624,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5169
+      "source_path_id": 5216
     },
     "MonkSetRune2_6": {
       "name": "九天轮符文 (VI)",
@@ -3678,7 +3678,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5170
+      "source_path_id": 5217
     },
     "MonkSetRune3_1": {
       "name": "蛇信符文 (I)",
@@ -3727,7 +3727,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5171
+      "source_path_id": 5218
     },
     "MonkSetRune3_2": {
       "name": "蛇信符文 (II)",
@@ -3792,7 +3792,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5172
+      "source_path_id": 5219
     },
     "MonkSetRune3_3": {
       "name": "蛇信符文 (III)",
@@ -3846,7 +3846,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5173
+      "source_path_id": 5220
     },
     "MonkSetRune3_4": {
       "name": "蛇信符文 (IV)",
@@ -3900,7 +3900,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5174
+      "source_path_id": 5221
     },
     "MonkSetRune3_5": {
       "name": "蛇信符文 (V)",
@@ -3954,7 +3954,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5175
+      "source_path_id": 5222
     },
     "MonkSetRune3_6": {
       "name": "蛇信符文 (VI)",
@@ -4008,7 +4008,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5176
+      "source_path_id": 5223
     },
     "RareRune_HunterBasicAttack1": {
       "name": "毒箭符文",
@@ -4045,7 +4045,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5177
+      "source_path_id": 5224
     },
     "RareRune_HunterBasicAttack2": {
       "name": "奥术炸弹符文",
@@ -4082,7 +4082,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5178
+      "source_path_id": 5225
     },
     "RareRune_HunterBasicAttack3": {
       "name": "飞刀连击符文",
@@ -4119,7 +4119,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5179
+      "source_path_id": 5226
     },
     "RareRune_HunterBasicAttack4": {
       "name": "二连矢符文",
@@ -4156,7 +4156,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5180
+      "source_path_id": 5227
     },
     "RareRune_HunterHeavyAttack1": {
       "name": "稳固射击符文",
@@ -4193,7 +4193,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5181
+      "source_path_id": 5228
     },
     "RareRune_HunterHeavyAttack2": {
       "name": "多重射击符文",
@@ -4230,7 +4230,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5182
+      "source_path_id": 5229
     },
     "RareRune_HunterHeavyAttack3": {
       "name": "急速射击符文",
@@ -4267,7 +4267,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5183
+      "source_path_id": 5230
     },
     "RareRune_HunterHeavyAttack4": {
       "name": "剧毒弹符文",
@@ -4304,7 +4304,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5184
+      "source_path_id": 5231
     },
     "RareRune_HunterSpecial1": {
       "name": "毒陷阱符文",
@@ -4341,7 +4341,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5185
+      "source_path_id": 5232
     },
     "RareRune_HunterSpecial2": {
       "name": "冲击波符文",
@@ -4378,7 +4378,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5186
+      "source_path_id": 5233
     },
     "RareRune_HunterSpecial3": {
       "name": "奥术陷阱符文",
@@ -4415,7 +4415,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5187
+      "source_path_id": 5234
     },
     "RareRune_HunterSpecial4": {
       "name": "奥术箭雨符文",
@@ -4452,7 +4452,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5188
+      "source_path_id": 5235
     },
     "RareRune_HunterSpecial5": {
       "name": "幻影形态符文",
@@ -4489,7 +4489,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5189
+      "source_path_id": 5236
     },
     "RareRune_HunterSpecial6": {
       "name": "照明弹符文",
@@ -4526,7 +4526,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5190
+      "source_path_id": 5237
     },
     "RareRune_MonkBasicAttack1": {
       "name": "三重击符文",
@@ -4563,7 +4563,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5191
+      "source_path_id": 5238
     },
     "RareRune_MonkBasicAttack2": {
       "name": "怒拳符文",
@@ -4600,7 +4600,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5192
+      "source_path_id": 5239
     },
     "RareRune_MonkBasicAttack3": {
       "name": "震地击符文",
@@ -4637,7 +4637,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5193
+      "source_path_id": 5240
     },
     "RareRune_MonkBasicAttack4": {
       "name": "气弹符文",
@@ -4674,7 +4674,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5194
+      "source_path_id": 5241
     },
     "RareRune_MonkHeavyAttack1": {
       "name": "圣裁之击符文",
@@ -4711,7 +4711,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5195
+      "source_path_id": 5242
     },
     "RareRune_MonkHeavyAttack2": {
       "name": "穿刺突进符文",
@@ -4748,7 +4748,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5196
+      "source_path_id": 5243
     },
     "RareRune_MonkHeavyAttack3": {
       "name": "旋风棍式符文",
@@ -4785,7 +4785,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5197
+      "source_path_id": 5244
     },
     "RareRune_MonkHeavyAttack4": {
       "name": "双金掌符文",
@@ -4822,7 +4822,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5198
+      "source_path_id": 5245
     },
     "RareRune_MonkSpecial1": {
       "name": "神圣法球符文",
@@ -4859,7 +4859,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5199
+      "source_path_id": 5246
     },
     "RareRune_MonkSpecial2": {
       "name": "灵气涌流符文",
@@ -4896,7 +4896,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5200
+      "source_path_id": 5247
     },
     "RareRune_MonkSpecial3": {
       "name": "冲锋符文",
@@ -4933,7 +4933,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5201
+      "source_path_id": 5248
     },
     "RareRune_MonkSpecial4": {
       "name": "灵体分身符文",
@@ -4970,7 +4970,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5202
+      "source_path_id": 5249
     },
     "RareRune_MonkSpecial5": {
       "name": "踏风步符文",
@@ -5007,7 +5007,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5203
+      "source_path_id": 5250
     },
     "RareRune_MonkSpecial6": {
       "name": "神圣雷霆符文",
@@ -5044,7 +5044,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5204
+      "source_path_id": 5251
     },
     "RareRune_SorcererBasicAttack1": {
       "name": "火球符文",
@@ -5081,7 +5081,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5205
+      "source_path_id": 5252
     },
     "RareRune_SorcererBasicAttack2": {
       "name": "冰碎片符文",
@@ -5118,7 +5118,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5206
+      "source_path_id": 5253
     },
     "RareRune_SorcererBasicAttack3": {
       "name": "电击符文",
@@ -5155,7 +5155,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5207
+      "source_path_id": 5254
     },
     "RareRune_SorcererBasicAttack4": {
       "name": "烈焰雷电符文",
@@ -5192,7 +5192,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5208
+      "source_path_id": 5255
     },
     "RareRune_SorcererSpecial1": {
       "name": "冰霜新星符文",
@@ -5229,7 +5229,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5209
+      "source_path_id": 5256
     },
     "RareRune_SorcererSpecial2": {
       "name": "火元素符文",
@@ -5266,7 +5266,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5210
+      "source_path_id": 5257
     },
     "RareRune_SorcererSpecial3": {
       "name": "寒冰屏障符文",
@@ -5303,7 +5303,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5211
+      "source_path_id": 5258
     },
     "RareRune_SorcererSpecial4": {
       "name": "火陨石符文",
@@ -5340,7 +5340,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5212
+      "source_path_id": 5259
     },
     "RareRune_SorcererSpecial5": {
       "name": "烈焰光环符文",
@@ -5377,7 +5377,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5213
+      "source_path_id": 5260
     },
     "RareRune_SorcererSpecial6": {
       "name": "雷云符文",
@@ -5414,7 +5414,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5214
+      "source_path_id": 5261
     },
     "RareRune_SorcererStrongAttack1": {
       "name": "烈焰吐息符文",
@@ -5451,7 +5451,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5215
+      "source_path_id": 5262
     },
     "RareRune_SorcererStrongAttack2": {
       "name": "冰陨石符文",
@@ -5488,7 +5488,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5216
+      "source_path_id": 5263
     },
     "RareRune_SorcererStrongAttack3": {
       "name": "闪电风暴符文",
@@ -5525,7 +5525,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5217
+      "source_path_id": 5264
     },
     "RareRune_SorcererStrongAttack4": {
       "name": "冰霜光束符文",
@@ -5562,7 +5562,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5218
+      "source_path_id": 5265
     },
     "RareRune_WarriorBasicAttack": {
       "name": "英勇打击符文",
@@ -5599,7 +5599,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5219
+      "source_path_id": 5266
     },
     "RareRune_WarriorBasicAttack2": {
       "name": "横扫符文",
@@ -5636,7 +5636,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5220
+      "source_path_id": 5267
     },
     "RareRune_WarriorBasicAttack3": {
       "name": "血刃打击符文",
@@ -5673,7 +5673,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5221
+      "source_path_id": 5268
     },
     "RareRune_WarriorBasicAttack4": {
       "name": "稳固打击符文",
@@ -5710,7 +5710,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5222
+      "source_path_id": 5269
     },
     "RareRune_WarriorHeavyAttack1": {
       "name": "烈焰打击符文",
@@ -5747,7 +5747,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5223
+      "source_path_id": 5270
     },
     "RareRune_WarriorHeavyAttack2": {
       "name": "半月斩符文",
@@ -5784,7 +5784,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5224
+      "source_path_id": 5271
     },
     "RareRune_WarriorHeavyAttack3": {
       "name": "旋风斩符文",
@@ -5821,7 +5821,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5225
+      "source_path_id": 5272
     },
     "RareRune_WarriorHeavyAttack4": {
       "name": "裂血连击符文",
@@ -5858,7 +5858,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5226
+      "source_path_id": 5273
     },
     "RareRune_WarriorRageShield": {
       "name": "狂怒护盾符文",
@@ -5895,7 +5895,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5227
+      "source_path_id": 5274
     },
     "RareRune_WarriorRageShout": {
       "name": "怒吼符文",
@@ -5932,7 +5932,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5228
+      "source_path_id": 5275
     },
     "RareRune_WarriorSpecial3": {
       "name": "夺命钩爪符文",
@@ -5969,7 +5969,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5229
+      "source_path_id": 5276
     },
     "RareRune_WarriorSpecial4": {
       "name": "裂地击符文",
@@ -6006,7 +6006,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5230
+      "source_path_id": 5277
     },
     "RareRune_WarriorSpecial5": {
       "name": "铁棘符文",
@@ -6043,7 +6043,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5231
+      "source_path_id": 5278
     },
     "RareRune_WarriorSpecial6": {
       "name": "熔铸之力符文",
@@ -6080,7 +6080,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5232
+      "source_path_id": 5279
     },
     "SorcererSetRune1_1": {
       "name": "炼狱盟约符文 (I)",
@@ -6129,7 +6129,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5279
+      "source_path_id": 5326
     },
     "SorcererSetRune1_2": {
       "name": "炼狱盟约符文 (II)",
@@ -6178,7 +6178,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5280
+      "source_path_id": 5327
     },
     "SorcererSetRune1_3": {
       "name": "炼狱盟约符文 (III)",
@@ -6232,7 +6232,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5281
+      "source_path_id": 5328
     },
     "SorcererSetRune1_4": {
       "name": "炼狱盟约符文 (IV)",
@@ -6286,7 +6286,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5282
+      "source_path_id": 5329
     },
     "SorcererSetRune1_5": {
       "name": "炼狱盟约符文 (V)",
@@ -6340,7 +6340,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5283
+      "source_path_id": 5330
     },
     "SorcererSetRune1_6": {
       "name": "炼狱盟约符文 (VI)",
@@ -6394,7 +6394,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5284
+      "source_path_id": 5331
     },
     "SorcererSetRune2_1": {
       "name": "冰封弹幕符文 (I)",
@@ -6443,7 +6443,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5285
+      "source_path_id": 5332
     },
     "SorcererSetRune2_2": {
       "name": "冰封弹幕符文 (II)",
@@ -6492,7 +6492,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5286
+      "source_path_id": 5333
     },
     "SorcererSetRune2_3": {
       "name": "冰封弹幕符文 (III)",
@@ -6546,7 +6546,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5287
+      "source_path_id": 5334
     },
     "SorcererSetRune2_4": {
       "name": "冰封弹幕符文 (IV)",
@@ -6600,7 +6600,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5288
+      "source_path_id": 5335
     },
     "SorcererSetRune2_5": {
       "name": "冰封弹幕符文 (V)",
@@ -6654,7 +6654,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5289
+      "source_path_id": 5336
     },
     "SorcererSetRune2_6": {
       "name": "冰封弹幕符文 (VI)",
@@ -6708,7 +6708,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5290
+      "source_path_id": 5337
     },
     "SorcererSetRune3_1": {
       "name": "唤雷者符文 (I)",
@@ -6757,7 +6757,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5291
+      "source_path_id": 5338
     },
     "SorcererSetRune3_2": {
       "name": "唤雷者符文 (II)",
@@ -6806,7 +6806,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5292
+      "source_path_id": 5339
     },
     "SorcererSetRune3_3": {
       "name": "唤雷者符文 (III)",
@@ -6860,7 +6860,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5293
+      "source_path_id": 5340
     },
     "SorcererSetRune3_4": {
       "name": "唤雷者符文 (IV)",
@@ -6914,7 +6914,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5294
+      "source_path_id": 5341
     },
     "SorcererSetRune3_5": {
       "name": "唤雷者符文 (V)",
@@ -6968,7 +6968,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5295
+      "source_path_id": 5342
     },
     "SorcererSetRune3_6": {
       "name": "唤雷者符文 (VI)",
@@ -7022,7 +7022,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5296
+      "source_path_id": 5343
     },
     "UncommonRune_DamageVsBleeding": {
       "name": "放血",
@@ -7048,7 +7048,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5297
+      "source_path_id": 5344
     },
     "UncommonRune_DamageVsDistant": {
       "name": "远射",
@@ -7074,7 +7074,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5298
+      "source_path_id": 5345
     },
     "UncommonRune_DamageVsElite": {
       "name": "巨人杀手",
@@ -7100,7 +7100,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5299
+      "source_path_id": 5346
     },
     "UncommonRune_DamageVsHealthy": {
       "name": "伏击",
@@ -7126,7 +7126,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5300
+      "source_path_id": 5347
     },
     "UncommonRune_DamageVsInjured": {
       "name": "处决",
@@ -7152,7 +7152,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5301
+      "source_path_id": 5348
     },
     "UncommonRune_DamageVsPoisoned": {
       "name": "疫病",
@@ -7178,7 +7178,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5302
+      "source_path_id": 5349
     },
     "UncommonRune_DamageVsSlowed": {
       "name": "罗网",
@@ -7204,7 +7204,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5303
+      "source_path_id": 5350
     },
     "UncommonRune_DamageVsStunned": {
       "name": "恍惚",
@@ -7230,7 +7230,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5304
+      "source_path_id": 5351
     },
     "UncommonRune_VulnerableDamage": {
       "name": "脆弱",
@@ -7256,7 +7256,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5305
+      "source_path_id": 5352
     },
     "WarriorSetRune1_1": {
       "name": "阿瑟隆之盾符文 (I)",
@@ -7305,7 +7305,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5306
+      "source_path_id": 5353
     },
     "WarriorSetRune1_2": {
       "name": "阿瑟隆之盾符文 (II)",
@@ -7369,7 +7369,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5307
+      "source_path_id": 5354
     },
     "WarriorSetRune1_3": {
       "name": "阿瑟隆之盾符文 (III)",
@@ -7434,7 +7434,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5308
+      "source_path_id": 5355
     },
     "WarriorSetRune1_4": {
       "name": "阿瑟隆之盾符文 (IV)",
@@ -7498,7 +7498,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5309
+      "source_path_id": 5356
     },
     "WarriorSetRune1_5": {
       "name": "阿瑟隆之盾符文 (V)",
@@ -7552,7 +7552,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5310
+      "source_path_id": 5357
     },
     "WarriorSetRune1_6": {
       "name": "阿瑟隆之盾符文 (VI)",
@@ -7606,7 +7606,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5311
+      "source_path_id": 5358
     },
     "WarriorSetRune2_1": {
       "name": "风暴之眼符文 (I)",
@@ -7655,7 +7655,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5312
+      "source_path_id": 5359
     },
     "WarriorSetRune2_2": {
       "name": "风暴之眼符文 (II)",
@@ -7720,7 +7720,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5313
+      "source_path_id": 5360
     },
     "WarriorSetRune2_3": {
       "name": "风暴之眼符文 (III)",
@@ -7774,7 +7774,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5314
+      "source_path_id": 5361
     },
     "WarriorSetRune2_4": {
       "name": "风暴之眼符文 (IV)",
@@ -7828,7 +7828,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5315
+      "source_path_id": 5362
     },
     "WarriorSetRune2_5": {
       "name": "风暴之眼符文 (V)",
@@ -7882,7 +7882,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5316
+      "source_path_id": 5363
     },
     "WarriorSetRune2_6": {
       "name": "风暴之眼符文 (VI)",
@@ -7936,7 +7936,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5317
+      "source_path_id": 5364
     },
     "WarriorSetRune3_1": {
       "name": "山岳之重符文 (I)",
@@ -7979,13 +7979,13 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "你造成的昏迷结束时，敌人陷入[碎骨]状态8秒，受到你的暴击伤害提高250%。"
+            "你施加的[眩晕]结束或被你再次施加时，敌人陷入[碎骨]状态8秒，受到你的暴击伤害提高250%。"
           ]
         }
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5318
+      "source_path_id": 5365
     },
     "WarriorSetRune3_2": {
       "name": "山岳之重符文 (II)",
@@ -8044,13 +8044,13 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "你造成的昏迷结束时，敌人陷入[碎骨]状态8秒，受到你的暴击伤害提高250%。"
+            "你施加的[眩晕]结束或被你再次施加时，敌人陷入[碎骨]状态8秒，受到你的暴击伤害提高250%。"
           ]
         }
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5319
+      "source_path_id": 5366
     },
     "WarriorSetRune3_3": {
       "name": "山岳之重符文 (III)",
@@ -8098,13 +8098,13 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "你造成的昏迷结束时，敌人陷入[碎骨]状态8秒，受到你的暴击伤害提高250%。"
+            "你施加的[眩晕]结束或被你再次施加时，敌人陷入[碎骨]状态8秒，受到你的暴击伤害提高250%。"
           ]
         }
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5320
+      "source_path_id": 5367
     },
     "WarriorSetRune3_4": {
       "name": "山岳之重符文 (IV)",
@@ -8152,13 +8152,13 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "你造成的昏迷结束时，敌人陷入[碎骨]状态8秒，受到你的暴击伤害提高250%。"
+            "你施加的[眩晕]结束或被你再次施加时，敌人陷入[碎骨]状态8秒，受到你的暴击伤害提高250%。"
           ]
         }
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5321
+      "source_path_id": 5368
     },
     "WarriorSetRune3_5": {
       "name": "山岳之重符文 (V)",
@@ -8206,13 +8206,13 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "你造成的昏迷结束时，敌人陷入[碎骨]状态8秒，受到你的暴击伤害提高250%。"
+            "你施加的[眩晕]结束或被你再次施加时，敌人陷入[碎骨]状态8秒，受到你的暴击伤害提高250%。"
           ]
         }
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5322
+      "source_path_id": 5369
     },
     "WarriorSetRune3_6": {
       "name": "山岳之重符文 (VI)",
@@ -8260,13 +8260,13 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "你造成的昏迷结束时，敌人陷入[碎骨]状态8秒，受到你的暴击伤害提高250%。"
+            "你施加的[眩晕]结束或被你再次施加时，敌人陷入[碎骨]状态8秒，受到你的暴击伤害提高250%。"
           ]
         }
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5323
+      "source_path_id": 5370
     },
     "WarriorSetRune4_1": {
       "name": "秋收之月符文 (I)",
@@ -8315,7 +8315,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5324
+      "source_path_id": 5371
     },
     "WarriorSetRune4_2": {
       "name": "秋收之月符文 (II)",
@@ -8380,7 +8380,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5325
+      "source_path_id": 5372
     },
     "WarriorSetRune4_3": {
       "name": "秋收之月符文 (III)",
@@ -8434,7 +8434,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5326
+      "source_path_id": 5373
     },
     "WarriorSetRune4_4": {
       "name": "秋收之月符文 (IV)",
@@ -8488,7 +8488,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5327
+      "source_path_id": 5374
     },
     "WarriorSetRune4_5": {
       "name": "秋收之月符文 (V)",
@@ -8542,7 +8542,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5328
+      "source_path_id": 5375
     },
     "WarriorSetRune4_6": {
       "name": "秋收之月符文 (VI)",
@@ -8596,7 +8596,7 @@
       ],
       "effect_note": "符文属性随等级成长；此处显示1级基础值和每级成长，套装效果需满足件数。",
       "source_file": "resources.assets",
-      "source_path_id": 5329
+      "source_path_id": 5376
     },
     "GemAmethyst1": {
       "name": "粗糙的紫水晶球",
@@ -8648,7 +8648,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60030
+      "source_path_id": 60032
     },
     "GemAmethyst2": {
       "name": "碎裂的紫水晶泪滴",
@@ -8700,7 +8700,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60031
+      "source_path_id": 60033
     },
     "GemAmethyst3": {
       "name": "粗砺的紫水晶方块",
@@ -8752,7 +8752,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60032
+      "source_path_id": 60034
     },
     "GemAmethyst4": {
       "name": "抛光的紫水晶菱形",
@@ -8804,7 +8804,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60033
+      "source_path_id": 60035
     },
     "GemAmethyst5": {
       "name": "无瑕的紫水晶六边形",
@@ -8856,7 +8856,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60034
+      "source_path_id": 60036
     },
     "GemAmethyst6": {
       "name": "璀璨的紫水晶八边形",
@@ -8908,7 +8908,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60035
+      "source_path_id": 60037
     },
     "GemDiamond1": {
       "name": "粗糙的钻石球",
@@ -8960,7 +8960,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60036
+      "source_path_id": 60038
     },
     "GemDiamond2": {
       "name": "碎裂的钻石泪滴",
@@ -9012,7 +9012,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60037
+      "source_path_id": 60039
     },
     "GemDiamond3": {
       "name": "粗砺的钻石方块",
@@ -9064,7 +9064,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60038
+      "source_path_id": 60040
     },
     "GemDiamond4": {
       "name": "抛光的钻石菱形",
@@ -9116,7 +9116,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60039
+      "source_path_id": 60041
     },
     "GemDiamond5": {
       "name": "无瑕的钻石六边形",
@@ -9168,7 +9168,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60040
+      "source_path_id": 60042
     },
     "GemDiamond6": {
       "name": "璀璨的钻石八边形",
@@ -9220,7 +9220,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60041
+      "source_path_id": 60043
     },
     "GemEmerald1": {
       "name": "粗糙的祖母绿球",
@@ -9272,7 +9272,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60042
+      "source_path_id": 60044
     },
     "GemEmerald2": {
       "name": "碎裂的祖母绿泪滴",
@@ -9324,7 +9324,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60043
+      "source_path_id": 60045
     },
     "GemEmerald3": {
       "name": "粗砺的祖母绿方块",
@@ -9376,7 +9376,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60044
+      "source_path_id": 60046
     },
     "GemEmerald4": {
       "name": "抛光的祖母绿菱形",
@@ -9428,7 +9428,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60045
+      "source_path_id": 60047
     },
     "GemEmerald5": {
       "name": "无瑕的祖母绿六边形",
@@ -9480,7 +9480,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60046
+      "source_path_id": 60048
     },
     "GemEmerald6": {
       "name": "璀璨的祖母绿八边形",
@@ -9532,7 +9532,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60047
+      "source_path_id": 60049
     },
     "GemRuby1": {
       "name": "粗糙的红宝石球",
@@ -9584,7 +9584,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60048
+      "source_path_id": 60050
     },
     "GemRuby2": {
       "name": "碎裂的红宝石泪滴",
@@ -9636,7 +9636,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60049
+      "source_path_id": 60051
     },
     "GemRuby3": {
       "name": "粗砺的红宝石方块",
@@ -9688,7 +9688,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60050
+      "source_path_id": 60052
     },
     "GemRuby4": {
       "name": "抛光的红宝石菱形",
@@ -9740,7 +9740,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60051
+      "source_path_id": 60053
     },
     "GemRuby5": {
       "name": "无瑕的红宝石六边形",
@@ -9792,7 +9792,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60052
+      "source_path_id": 60054
     },
     "GemRuby6": {
       "name": "璀璨的红宝石八边形",
@@ -9844,7 +9844,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60053
+      "source_path_id": 60055
     },
     "GemSapphire1": {
       "name": "粗糙的蓝宝石球",
@@ -9896,7 +9896,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60054
+      "source_path_id": 60056
     },
     "GemSapphire2": {
       "name": "碎裂的蓝宝石泪滴",
@@ -9948,7 +9948,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60055
+      "source_path_id": 60057
     },
     "GemSapphire3": {
       "name": "粗砺的蓝宝石方块",
@@ -10000,7 +10000,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60056
+      "source_path_id": 60058
     },
     "GemSapphire4": {
       "name": "抛光的蓝宝石菱形",
@@ -10052,7 +10052,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60057
+      "source_path_id": 60059
     },
     "GemSapphire5": {
       "name": "无瑕的蓝宝石六边形",
@@ -10104,7 +10104,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60058
+      "source_path_id": 60060
     },
     "GemSapphire6": {
       "name": "璀璨的蓝宝石八边形",
@@ -10156,7 +10156,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60059
+      "source_path_id": 60061
     },
     "GemTopaz1": {
       "name": "粗糙的黄玉球",
@@ -10208,7 +10208,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60060
+      "source_path_id": 60062
     },
     "GemTopaz2": {
       "name": "碎裂的黄玉泪滴",
@@ -10260,7 +10260,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60061
+      "source_path_id": 60063
     },
     "GemTopaz3": {
       "name": "粗砺的黄玉方块",
@@ -10312,7 +10312,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60062
+      "source_path_id": 60064
     },
     "GemTopaz4": {
       "name": "抛光的黄玉菱形",
@@ -10364,7 +10364,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60063
+      "source_path_id": 60065
     },
     "GemTopaz5": {
       "name": "无瑕的黄玉六边形",
@@ -10416,7 +10416,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60064
+      "source_path_id": 60066
     },
     "GemTopaz6": {
       "name": "璀璨的黄玉八边形",
@@ -10468,7 +10468,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60065
+      "source_path_id": 60067
     }
   },
   "collectibles": {
@@ -10541,6 +10541,12 @@
     "LegendaryBelt3": {
       "key": "LegendaryBelt3",
       "name": "战饮腰带",
+      "kind": "equipment",
+      "item_type": 3
+    },
+    "LegendaryBelt4": {
+      "key": "LegendaryBelt4",
+      "name": "铁棘战带",
       "kind": "equipment",
       "item_type": 3
     },
@@ -10625,6 +10631,18 @@
     "LegendaryBoots2": {
       "key": "LegendaryBoots2",
       "name": "落叶行者靴",
+      "kind": "equipment",
+      "item_type": 3
+    },
+    "LegendaryBoots4": {
+      "key": "LegendaryBoots4",
+      "name": "炼血者之履",
+      "kind": "equipment",
+      "item_type": 3
+    },
+    "LegendaryBoots5": {
+      "key": "LegendaryBoots5",
+      "name": "霜卫之履",
       "kind": "equipment",
       "item_type": 3
     },
@@ -10856,6 +10874,18 @@
       "kind": "equipment",
       "item_type": 3
     },
+    "LegendaryGloves7": {
+      "key": "LegendaryGloves7",
+      "name": "三拍护手",
+      "kind": "equipment",
+      "item_type": 3
+    },
+    "LegendaryGloves8": {
+      "key": "LegendaryGloves8",
+      "name": "行者护手",
+      "kind": "equipment",
+      "item_type": 3
+    },
     "RareGloves1": {
       "key": "RareGloves1",
       "name": "死颅护手",
@@ -10937,6 +10967,12 @@
     "DivineHelm2": {
       "key": "DivineHelm2",
       "name": "不朽者的面容",
+      "kind": "equipment",
+      "item_type": 3
+    },
+    "DivineHelm3": {
+      "key": "DivineHelm3",
+      "name": "铁面暴君之盔",
       "kind": "equipment",
       "item_type": 3
     },
@@ -11090,6 +11126,18 @@
       "kind": "equipment",
       "item_type": 3
     },
+    "LegendaryNeck6": {
+      "key": "LegendaryNeck6",
+      "name": "狼之饥渴",
+      "kind": "equipment",
+      "item_type": 3
+    },
+    "LegendaryNeck7": {
+      "key": "LegendaryNeck7",
+      "name": "碎骨吊坠",
+      "kind": "equipment",
+      "item_type": 3
+    },
     "RareNeck1": {
       "key": "RareNeck1",
       "name": "紫晶黄金护符",
@@ -11171,6 +11219,12 @@
     "LegendaryPants3": {
       "key": "LegendaryPants3",
       "name": "魔能护腿",
+      "kind": "equipment",
+      "item_type": 3
+    },
+    "LegendaryPants4": {
+      "key": "LegendaryPants4",
+      "name": "磐石护腿",
       "kind": "equipment",
       "item_type": 3
     },
@@ -11276,6 +11330,12 @@
       "kind": "equipment",
       "item_type": 3
     },
+    "DivineRing2": {
+      "key": "DivineRing2",
+      "name": "薛定谔之戒",
+      "kind": "equipment",
+      "item_type": 3
+    },
     "LegendaryRing1": {
       "key": "LegendaryRing1",
       "name": "巨龙血牙印戒",
@@ -11303,6 +11363,12 @@
     "LegendaryRing6": {
       "key": "LegendaryRing6",
       "name": "奥术精准之戒",
+      "kind": "equipment",
+      "item_type": 3
+    },
+    "LegendaryRing8": {
+      "key": "LegendaryRing8",
+      "name": "寒裂之戒",
       "kind": "equipment",
       "item_type": 3
     },
@@ -11387,6 +11453,18 @@
     "LegendaryShoulder2": {
       "key": "LegendaryShoulder2",
       "name": "元素爆发护肩",
+      "kind": "equipment",
+      "item_type": 3
+    },
+    "LegendaryShoulder4": {
+      "key": "LegendaryShoulder4",
+      "name": "霜毒肩甲",
+      "kind": "equipment",
+      "item_type": 3
+    },
+    "LegendaryShoulder5": {
+      "key": "LegendaryShoulder5",
+      "name": "缚灵肩甲",
       "kind": "equipment",
       "item_type": 3
     },
@@ -11507,6 +11585,12 @@
     "LegendaryBow2": {
       "key": "LegendaryBow2",
       "name": "黑鸦反曲弓",
+      "kind": "equipment",
+      "item_type": 3
+    },
+    "LegendaryBow3": {
+      "key": "LegendaryBow3",
+      "name": "神射手的豪赌",
       "kind": "equipment",
       "item_type": 3
     },
@@ -13346,5 +13430,5 @@
     "UncommonRune2"
   ],
   "source": "Shipped GemData and RuneData assets; verified stat units and protected float checksum.",
-  "resources_sha256": "928115ebc379447741e0e0b3c207da8158593d60164ae53d0f1f5d5cb0d3089e"
+  "resources_sha256": "aac3f4d0e4502ec8e58b7a592cdb83ef641cddb7b24ed8e244e913212ddcb9c1"
 }

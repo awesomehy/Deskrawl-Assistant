@@ -9,7 +9,7 @@ import time
 from unittest.mock import patch
 
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
-from deskrawl_assistant.game_compatibility import ASSET_FILES, detect_game_build, resolve
+from deskrawl_assistant.game_compatibility import ASSET_FILES, detect_game_build, resolve, profiles, logical_aliases
 from deskrawl_assistant.il2cpp_metadata import MetadataInspector
 from deskrawl_assistant.native_signatures import Signatures
 
@@ -31,7 +31,9 @@ def main():
         if not target.exists():os.link(source/'Deskrawl_Data'/name,target)
     i=MetadataInspector(source/'Deskrawl_Data/il2cpp_data/Metadata/global-metadata.dat',source/'GameAssembly.dll')
     meta=bytearray(i.meta)
-    for old,new in (('gj','zz'),('ey','xy')):
+    reviewed=profiles();bindings=logical_aliases(reviewed)
+    actual=lambda logical:next((n for n,k in bindings.items() if k==logical),logical)
+    for old,new in ((actual('gj'),'zz'),(actual('ey'),'xy')):
         assert not any(d['name']==new and not d['namespace'] for d in i.defs)
         index=next(n for n,d in enumerate(i.defs) if not d['namespace'] and d['name']==old)
         string_index=struct.unpack_from('<i',meta,i.type_offset+index*76)[0]
@@ -46,7 +48,7 @@ def main():
     assert len(old_dirty)==3 and meta[position:position+4]==old_dirty.encode()+b'\0'
     meta[position:position+3]=b'zzz'
     metadata.write_bytes(meta)
-    s=Signatures(i);old_rva=s.singleton_rva('GameManager')
+    s=Signatures(i,bindings);old_rva=s.singleton_rva('GameManager')
     idx=s.defs['GameManager'];getter=next(m for m in i.methods(idx) if m['isStatic'] and m['returnType']=='GameManager' and not m['parameters'])
     module=s.modules['Assembly-CSharp.dll']
     pointer=i.pe.unpack('<Q',module['methods']+((int(getter['token'],16)&0xffffff)-1)*8)[0]

@@ -75,7 +75,7 @@ class PreviewDetailsTests(unittest.TestCase):
     def test_complete_shipped_catalogue_has_local_icons_and_effects_or_explicit_note(self):
         assets=json.loads((RESOURCE_ROOT/'data/loot-item-ui.json').read_text(encoding='utf-8'))
         items=assets['items']
-        self.assertEqual(len(items),574)
+        self.assertEqual(len(items),588)
         self.assertEqual(sum(r['kind']=='gem' for r in items.values()),36)
         self.assertEqual(sum(r['kind']=='rune' for r in items.values()),199)
         for key,row in items.items():
@@ -99,6 +99,22 @@ class PreviewDetailsTests(unittest.TestCase):
         self.assertIn('取自血月狼人的厚实毛皮。', texts)
         image = RESOURCE_ROOT/'deskrawl_assistant/web'/row['icon'].lstrip('/')
         self.assertTrue(image.is_file())
+
+    def test_dynamic_equipment_descriptions_are_exported_with_resolved_parameters(self):
+        items = _labels()['items']
+        expected = {'LegendaryBoots4':('10%','1 秒','立即饮用'),
+                    'DivineHelm1':('30%',), 'DivineHelm3':('20%','40%'),
+                    'DivineRing2':('健康和受伤',), 'LegendaryNeck4':('30%','烈焰雷电'),
+                    'LegendaryShoulder3':('10%','击杀效果')}
+        for key,phrases in expected.items():
+            with self.subTest(key=key):
+                row = items[key]
+                self.assertTrue(row['description'])
+                self.assertFalse(row['effect_note'])
+                self.assertIn(row['description'], [t for g in row['effect_groups'] for t in g['texts']])
+                self.assertNotIn('{', row['description'])
+                for phrase in phrases:
+                    self.assertIn(phrase, row['description'])
 
     def test_rune_quality_uses_base_asset_even_if_protocol_says_common(self):
         for rarity,label in ((1,'优秀符文'),(2,'稀有符文'),(3,'宏伟符文'),(5,'符文套装')):

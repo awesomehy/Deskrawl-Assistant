@@ -12,6 +12,7 @@ import sys
 import UnityPy
 from UnityPy.classes import PPtr
 from extract_item_ui import Cursor, payload
+from equipment_effect_text import render_equipment_effect
 
 BASE = Path(__file__).resolve().parents[1]
 
@@ -80,15 +81,21 @@ def main():
                 file_id, path_id = cursor.take('iq')
                 effect = PPtr(m_FileID=file_id, m_PathID=path_id, assetsfile=obj.assets_file).deref() if path_id else None
                 if not effect: raise ValueError('Missing inherited effect: '+key)
-                effect_key = payload(effect)[0]
+                effect_key, effect_data = payload(effect)
                 effect_ids.append(effect_key)
                 effect_text = text(effect_key+'.Desc') or text(effect_key.replace('_Effect','Effect')+'.Desc')
+                if not effect_text:
+                    script_file, script_id = struct.unpack_from('<iq', effect.get_raw_data(), 16)
+                    effect_class = classes.get(script_id) if script_file == 1 else None
+                    effect_text = render_equipment_effect(effect_class, effect_data, text)
                 # Some passive implementation assets have no individual text;
                 # their equipment description is the game's user-facing text.
                 if effect_text:
                     groups.append({'title':'物品效果', 'values':[], 'texts':[effect_text]})
         if description and not any(description in g.get('texts', []) for g in groups):
             groups.insert(0, {'title':'装备效果' if kind=='equipment' else '物品说明', 'values':[], 'texts':[description]})
+        if kind == 'equipment' and not description:
+            description = '\n'.join(t for g in groups for t in g.get('texts', []))
         note = other.get(key, {}).get('effect_note','')
         if not groups:
             if label_key != key and item_type == 2:

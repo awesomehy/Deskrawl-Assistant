@@ -90,6 +90,20 @@ class CharacterMathTests(unittest.TestCase):
         self.assertEqual(3,stats[6]);self.assertEqual(2.5,stats[21])
         self.assertEqual(int(110.5*2*10*(1+.2*1.5)),panel_attack(stats,1))
 
+    def test_final_damage_reduction_is_preserved_in_layers_and_swap_preview(self):
+        c=character();c['model']['caches'][536][66]=.2
+        c['model']['status']=({66:.1},{66:.5},{66:2})
+        self.assertAlmostEqual(.9,final_stats(c['model'])[66])
+        result=preview(item(mods=[(66,.2)]),c,{'items':{}})
+        self.assertTrue(result['available'])
+        change=next(a for a in result['attributes'] if a['stat']==66)
+        self.assertAlmostEqual(.9,change['before'])
+        self.assertAlmostEqual(1.5,change['after'])
+        self.assertEqual(0,result['delta'])
+        # The newly verified enum member does not admit arbitrary unknown IDs.
+        rejected=preview(item(mods=[(67,.2)]),c,{'items':{}})
+        self.assertFalse(rejected['available'])
+
     def test_two_ring_targets_have_distinct_deltas_and_select_best(self):
         c=character(equipment=[item(7,[(1,50)],equipped_slot=6,item_uid='r1'),item(7,[(1,10)],equipped_slot=7,item_uid='r2')])
         c['model']['caches'][536][1]=60

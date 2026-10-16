@@ -23,7 +23,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.3.3'
+NAME = 'Deskrawl装备助手-v1.3.4'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -43,8 +43,10 @@ def main():
     normalized = {n.replace('\\','/'):n for n in names}
     icons = {n for n in normalized if n.startswith('deskrawl_assistant/web/icons/')}
     loot_items = json.loads(archive.extract(normalized['data/loot-item-ui.json']))['items']
-    assert len(icons) == len(loot_items) == 574
+    assert len(icons) == len(loot_items) == 588
     assert loot_items['WerewolfMat']['name'] == '狼人毛皮'
+    assert '10%' in loot_items['LegendaryBoots4']['description']
+    assert all(loot_items[key]['description'] for key in ('DivineHelm1', 'DivineHelm3', 'DivineRing2', 'LegendaryNeck4', 'LegendaryShoulder3'))
     assert all('deskrawl_assistant/web'+i['icon'] in icons for i in loot_items.values())
     item_ui = json.loads(archive.extract(normalized['data/item-ui.json']))
     assert len(item_ui['items']) == 235
@@ -106,7 +108,7 @@ def main():
                 result = {'schema': 1, 'client_id': payload['client_id'], 'token': 'a' * 64}
             elif self.path == '/v1/report':
                 assert self.headers.get('Authorization') == 'Bearer ' + 'a' * 64
-                assert payload['version'] == '1.3.3'
+                assert payload['version'] == '1.3.4'
                 result = {'accepted': True, 'report_id': payload['report_id'],
                           'sequence': payload['sequence'], 'accepted_at': datetime.now(timezone.utc).isoformat()}
             else:
@@ -174,7 +176,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.3.3'
+                assert request('/api/state')['app_version'] == '1.3.4'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -287,11 +289,11 @@ def main():
         check_reporting_disabled()
         report['checks'].append('停用的报告接口返回410，不创建经验或推荐数据库')
         catalog = request('/api/catalog')
-        assert len(catalog['equipment']) == 209
-        assert sum(i['legendary'] for i in catalog['equipment']) == 52
+        assert len(catalog['equipment']) == 223
+        assert sum(i['legendary'] for i in catalog['equipment']) == 64
         for item in catalog['equipment']:
             assert request(item['icon']).startswith(b'\x89PNG')
-        report['checks'].append('页面脚本、样式、209 张装备图标与 52 件传说装备词典正常读取')
+        report['checks'].append('页面脚本、样式、223 张装备图标与 64 件传说装备词典正常读取')
         for item in item_ui['items'].values():
             assert request(item['icon']).startswith(b'\x89PNG')
         report['checks'].append('36 张宝石、199 张符文图标及效果说明全部内置并可读取')

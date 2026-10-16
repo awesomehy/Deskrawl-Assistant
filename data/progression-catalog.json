@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "build": "Deskrawl 1.0.2b / Steam 25895065",
+  "build": "Deskrawl 1.0.3 / Steam 25973417",
   "sha256": {
-    "GameAssembly.dll": "f8221364be8101c60d76be3e031f2cd5be376a7fb6b9b73a7cfb45e2a52a9fab",
+    "GameAssembly.dll": "f23ae23f8714fa5a49b9ab4b8ae767c33f7e50afad47284d81121354d1677a46",
     "UnityPlayer.dll": "9feedb4527a30fae4762bff45d204f8e85b90851b2c8ae8d24f436f7d474667b",
-    "Deskrawl_Data/il2cpp_data/Metadata/global-metadata.dat": "f5cf7ba1bbd13cb099ea231ac89ed772f10c9f28d329f5dab9bc805a3809b802"
+    "Deskrawl_Data/il2cpp_data/Metadata/global-metadata.dat": "93f914c1e0119b82c98ca0647542c3afe0fade976d456f2212b03d699e6813de"
   },
   "soul_maximum": 2000,
   "shop": [
@@ -2729,7 +2729,7 @@
         {
           "id": "SorcererTalent26",
           "name": "风暴导体",
-          "description": "[电击] 有 {chance} 几率同时施放 [闪电风暴]。",
+          "description": "[电击] 和 [烈焰雷电] 每次命中都有 {chance} 几率同时施放 [闪电风暴]。",
           "max_points": 1,
           "point_requirement": 60,
           "prerequisite": null,
@@ -3221,7 +3221,7 @@
         {
           "id": "MonkTalent12",
           "name": "连环劲",
-          "description": "每施放 {casts} 次普通攻击，该次攻击的直接伤害提高 {value}。",
+          "description": "每施放 {casts} 次[普通攻击]，该次攻击的直接伤害提高 {value}。",
           "max_points": 1,
           "point_requirement": 10,
           "prerequisite": null,
@@ -3236,7 +3236,7 @@
         {
           "id": "MonkTalent47",
           "name": "破绽连击",
-          "description": "每施放 {casts} 次普通攻击，使命中的敌人陷入[易伤]。",
+          "description": "你施放的技能命中敌人时施加[破绽]。达到 {stacks} 层时转为[易伤]。",
           "max_points": 1,
           "point_requirement": 10,
           "prerequisite": null,
@@ -3296,7 +3296,7 @@
         {
           "id": "MonkTalent17",
           "name": "雷鸣",
-          "description": "圣裁之击的冲击波有 {chance} 几率使命中的敌人眩晕",
+          "description": "圣裁之击的冲击波有 {chance} 几率使命中的敌人陷入[眩晕]。",
           "max_points": 5,
           "point_requirement": 15,
           "prerequisite": null,
@@ -3310,8 +3310,8 @@
         },
         {
           "id": "MonkTalent26",
-          "name": "强化神圣法球：速度",
-          "description": "神圣法球 +{value} 旋转速度",
+          "name": "基本功",
+          "description": "对[普通攻击]技能 +{value} 伤害",
           "max_points": 10,
           "point_requirement": 15,
           "prerequisite": null,
@@ -3355,8 +3355,8 @@
         },
         {
           "id": "MonkTalent20",
-          "name": "强化三重击：暴击伤害",
-          "description": "对三重击 +{value} 暴击伤害",
+          "name": "精准打击",
+          "description": "[普通攻击]暴击伤害 +{value}。",
           "max_points": 8,
           "point_requirement": 20,
           "prerequisite": null,
@@ -3372,7 +3372,7 @@
           "id": "MonkTalent29",
           "name": "沉重之手",
           "description": "对[强力攻击]技能 +{value} 暴击伤害",
-          "max_points": 5,
+          "max_points": 8,
           "point_requirement": 20,
           "prerequisite": null,
           "exclusive_group": "",
@@ -3400,8 +3400,8 @@
         },
         {
           "id": "MonkTalent33",
-          "name": "基本功",
-          "description": "对[普通攻击]技能 +{value} 伤害",
+          "name": "强化神圣法球：速度",
+          "description": "神圣法球 +{value} 旋转速度",
           "max_points": 10,
           "point_requirement": 20,
           "prerequisite": null,
@@ -3416,7 +3416,7 @@
         {
           "id": "MonkTalent28",
           "name": "贯劲",
-          "description": "每施放 {casts} 次普通攻击积攒一次贯劲，次数可累积。每次强力攻击消耗一次，使该次伤害独立提高 {value}。",
+          "description": "每施放 {casts} 次[特殊]技能积攒一次贯劲，次数可累积。每次[强力攻击]消耗一次，使该次伤害独立提高 {value}。",
           "max_points": 1,
           "point_requirement": 30,
           "prerequisite": null,
@@ -3430,8 +3430,8 @@
         },
         {
           "id": "MonkTalent39",
-          "name": "气脉相同",
-          "description": "施放与上一次不同的[气术]技能时，恢复 {value} 最大法力。首次施放不回蓝。",
+          "name": "余震",
+          "description": "每施放 {casts} 次[普通攻击]，有 {chance} 几率使该次命中的每个敌人陷入[恍惚]。",
           "max_points": 1,
           "point_requirement": 30,
           "prerequisite": null,
@@ -3446,7 +3446,7 @@
         {
           "id": "MonkTalent45",
           "name": "护体真气",
-          "description": "每实际消耗 1 点法力，恢复 {value} 点生命。",
+          "description": "每 {interval} 秒补充护盾至最大法力的 {shield}。",
           "max_points": 1,
           "point_requirement": 30,
           "prerequisite": null,
@@ -3490,8 +3490,8 @@
         },
         {
           "id": "MonkTalent13",
-          "name": "余震",
-          "description": "震地击的第三次打击有 {chance} 几率施加[恍惚]状态",
+          "name": "气脉相同",
+          "description": "施放与上一次不同的[气术]技能时，恢复 {value} 最大法力。首次施放不回蓝。",
           "max_points": 8,
           "point_requirement": 40,
           "prerequisite": null,
@@ -3656,7 +3656,7 @@
         {
           "id": "MonkTalent46",
           "name": "倾气",
-          "description": "施放强力攻击后，消耗全部剩余法力。每额外消耗 1 点法力，该次攻击的直接伤害提高 {damagePerMana}。",
+          "description": "施放[强力攻击]后，消耗全部剩余法力。每额外消耗 1 点法力，该次攻击的直接伤害提高 {damagePerMana}。",
           "max_points": 1,
           "point_requirement": 60,
           "prerequisite": null,
@@ -3769,7 +3769,8 @@
           "description": "在身前掀起两道龙卷风，向敌人游走，对进入其中的敌人造成{damage}武器伤害。",
           "tags": [
             1,
-            7
+            7,
+            12
           ],
           "level_requirement": 35,
           "demo_locked": false,

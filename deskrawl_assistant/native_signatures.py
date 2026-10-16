@@ -21,7 +21,8 @@ class Signatures:
         from capstone import Cs,CS_ARCH_X86,CS_MODE_64
         self.i=inspector;self.pe=inspector.pe
         self.dis=Cs(CS_ARCH_X86,CS_MODE_64);self.dis.detail=True
-        self.aliases={'gj':'gj',**(aliases or {})}
+        self.aliases=dict(aliases or {})
+        if 'gj' not in self.aliases.values():self.aliases['gj']='gj'
         self.defs={('.'.join(filter(None,(d['namespace'],d['name'])))):n for n,d in enumerate(inspector.defs)}
         self.shape_cache={};self.method_ids={};self.pointer_ids=defaultdict(list);self.method_pointers={}
         self.exports=self.pe.exports();self.ends=self.pe.unwind_functions()
@@ -247,7 +248,10 @@ class Signatures:
                          ('EquipmentManager','equipment_manager_rva'),('RuneManager','rune_manager_rva'),
                          ('PlayerTalentBook','talent_book_rva'),('GameAreaManager','game_area_manager_rva')):
             result[key]=self.singleton_rva(name)
-        difficulty=next((name for name in self.defs if self.aliases.get(name,name)=='ey'),None)
+        # A reused obfuscated name may now belong to an unrelated class.
+        # Prefer the reviewed logical binding before an unchanged-name fallback.
+        difficulty=next((name for name in self.defs if name!='ey' and self.aliases.get(name)=='ey'),None)
+        if difficulty is None:difficulty='ey' if 'ey' in self.defs else None
         if difficulty is None:raise ValueError('Difficulty state type is missing')
         result['difficulty_rva']=self.type_info_rva(difficulty)
         return result

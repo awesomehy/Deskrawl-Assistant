@@ -69,7 +69,7 @@ class ProgressionRuntime:
 
     def _copy(self):
         value = _GrowthCopy(self.reader)
-        value.types.update({name: dict(row, name=name) for name, row in self.actions.profile['types'].items()})
+        value.types.update({name: dict(row, name=row.get('name', name)) for name, row in self.actions.profile['types'].items()})
         return value
 
     def _singleton(self, copy, name):

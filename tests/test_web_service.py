@@ -70,14 +70,26 @@ class WebServiceTests(unittest.TestCase):
         self.assertFalse(self.service.busy)
         self.assertFalse(self.service.error,self.service.error)
 
-    def test_catalog_has_all_52_legendary_icons_and_real_class_masks(self):
+    def test_catalog_has_all_64_legendary_icons_and_real_class_masks(self):
         catalog=self.service.catalog_payload()
         legendaries=[i for i in catalog['equipment'] if i['legendary']]
-        self.assertEqual(len(legendaries),52)
+        self.assertEqual(len(legendaries),64)
         for i in legendaries:
             self.assertTrue((BASE/'deskrawl_assistant/web'/i['icon'].lstrip('/')).is_file())
         values={c['key']:c['value'] for c in catalog['classes']}
         self.assertEqual(values,{'Barbarian':1,'Mage':2,'Hunter':4,'Monk':8})
+
+    def test_dynamic_effect_is_available_in_rules_and_inventory(self):
+        key = 'LegendaryBoots4'
+        entry = next(r for r in self.service.catalog_payload()['equipment'] if r['key'] == key)
+        self.assertIn('10%', entry['description'])
+        self.assertIn('1 秒', entry['description'])
+        gear = item(1)
+        gear.update(name_key=key, internal_name=key, equip_slot=5)
+        self.client.items = [gear]
+        self.service._publish(self.client.snapshot())
+        row = self.service.state()['items'][0]
+        self.assertIn(entry['description'], [t for g in row['effect_groups'] for t in g['texts']])
 
     def publish_physical_items(self):
         gear = item(1,locked=True)

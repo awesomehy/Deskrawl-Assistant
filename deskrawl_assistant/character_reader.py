@@ -75,30 +75,30 @@ def _conditional(copy, player, manager, status_obj, hp, maximum, warnings, fixed
         return area
 
     def add(stat, kind, value):
-        if stat not in range(66) or kind not in (0, 1) or not math.isfinite(value):
+        if stat not in range(67) or kind not in (0, 1) or not math.isfinite(value):
             raise MemoryReadError('条件属性参数无效。')
         layers[kind][stat] = layers[kind].get(stat, 0) + value
 
-    for off in (792, 808):
+    for off in (792, 848):
         for raw in copy.list(copy.ptr(player + off), 24, 'ValueTuple`4'):
             source, target, coef, status = struct.unpack('<iidQ', raw)
-            if source not in range(66) or target not in range(66) or not math.isfinite(coef):
+            if source not in range(67) or target not in range(67) or not math.isfinite(coef):
                 raise MemoryReadError('角色转换参数无效。')
             if not status or status in active:
                 conversions.append((source, target, coef))
-    for raw in copy.list(copy.ptr(player + 816), 24, 'ValueTuple`3'):
+    for raw in copy.list(copy.ptr(player + 856), 24, 'ValueTuple`3'):
         status, stat, coef = struct.unpack('<Qi4xd', raw)
         add(stat, 0, coef * stacks.get(status, 0))
-    for raw in copy.list(copy.ptr(player + 880), 24, 'ValueTuple`4'):
+    for raw in copy.list(copy.ptr(player + 928), 24, 'ValueTuple`4'):
         status, stat, kind, coef = struct.unpack('<Qiid', raw)
         add(stat, kind, coef * stacks.get(status, 0))
-    for raw in copy.list(copy.ptr(player + 856), 32, 'ValueTuple`6'):
+    for raw in copy.list(copy.ptr(player + 904), 32, 'ValueTuple`6'):
         cond, radius, stat, kind, value, ability = struct.unpack('<ifiidQ', raw)
         if ability and fixed_distance is None:
             warnings.append('施放指定技能时的条件属性未计入，相关属性为参考值。')
         elif not ability and condition(cond, radius):
             add(stat, kind, value)
-    for raw in copy.list(copy.ptr(player + 864), 32, 'ValueTuple`5'):
+    for raw in copy.list(copy.ptr(player + 912), 32, 'ValueTuple`5'):
         cond, status, stat, kind, value = struct.unpack('<i4xQiid', raw)
         if (not status or status in active) and condition(cond, 6):
             add(stat, kind, value)
@@ -142,7 +142,7 @@ def _snapshot(reader):
         base[stat] = decode_obscured_float(copy.read(player + offset, 20))
     caches = {off: copy.dictionary(copy.ptr(player + off)) for off in (536, 544, 568, 576, 632, 640, 648)}
     status_obj = copy.verify(copy.ptr(player + 304), 'StatusEffectController')
-    status = tuple(copy.dictionary(copy.ptr(status_obj + off), 'double') for off in (56, 64, 72))
+    status = tuple(copy.dictionary(copy.ptr(status_obj + off), 'double') for off in (64, 72, 80))
     warnings = []
     conditional, conversions = _conditional(copy, player, manager, status_obj, hp, hp_max, warnings)
     equipment_manager = copy.singleton(0x3A19650, 'EquipmentManager')

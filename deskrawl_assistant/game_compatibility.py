@@ -44,6 +44,12 @@ def profiles():
 def type_rows(items):return items['types'] if isinstance(items,dict) else items
 
 
+def logical_aliases(items):
+    """Canonical identities reviewed into the shipped metadata profiles."""
+    return {t['name']:t['logicalName'] for source in items.values() for t in type_rows(source)
+            if t.get('logicalName') and t['name']!=t['logicalName'] and not t.get('namespace')}
+
+
 def field_shape(fields,canonical=lambda x:x):
     return [(f['rawRegistrationOffset'],canonical(f['resolvedType']),f['typeKind'],
         f['isStatic'],f['isLiteral'],f['isInitOnly']) for f in fields]
@@ -159,7 +165,8 @@ def inspect_changes(inspector,baseline,originals,progress=lambda text:None):
     adapted,aliases=match_profiles(inspector,originals)
     actual=enum_contract(inspector,baseline['enums'])
     if actual!=baseline['enums']:raise CompatibilityError('词条、物品或部位枚举改变')
-    bodies,layout=native_contract(inspector,aliases,progress)
+    signature_aliases=logical_aliases(adapted)
+    bodies,layout=native_contract(inspector,signature_aliases,progress)
     if bodies!=baseline['native_methods']:
         changed=len(set(bodies)^set(baseline['native_methods']))+sum(bodies[k]!=baseline['native_methods'][k] for k in set(bodies)&set(baseline['native_methods']))
         raise CompatibilityError('游戏操作逻辑或编译结构改变',str(changed)+' 项代码特征不一致')

@@ -53,8 +53,8 @@ class ConditionsTests(unittest.TestCase):
     def copy(self, tuples=(), status_tuples=(), stacks=()):
         c=Mock();c.types={'bk':{'name':'bk'}}
         c.ptr.side_effect=lambda at:9000 if at==1064 else at
-        lists={2032:[struct.pack('<Q',x) for x in stacks],856+100:[struct.pack('<ifiidQ',*x) for x in tuples],
-            864+100:[struct.pack('<i4xQiid',*x) for x in status_tuples],1192:[struct.pack('<Q',3000),struct.pack('<Q',4000),struct.pack('<Q',5000)]}
+        lists={2032:[struct.pack('<Q',x) for x in stacks],904+100:[struct.pack('<ifiidQ',*x) for x in tuples],
+            912+100:[struct.pack('<i4xQiid',*x) for x in status_tuples],1192:[struct.pack('<Q',3000),struct.pack('<Q',4000),struct.pack('<Q',5000)]}
         c.list.side_effect=lambda at,*args,**kw:lists.get(at,[])
         c.verify.side_effect=lambda obj,*args:obj
         c.boolean.side_effect=lambda at:at==9080
@@ -101,12 +101,24 @@ class ConditionsTests(unittest.TestCase):
         c=self.copy([(1,0,65,0,5,5000)],[(1,5000,6,0,2)])
         normal_list=c.list.side_effect
         extra={892:[struct.pack('<iidQ',1,3,.5,0),struct.pack('<iidQ',1,3,5,5000)],
-            916:[struct.pack('<Qi4xd',5000,3,2)],980:[struct.pack('<Qiid',5000,6,0,3)]}
+            956:[struct.pack('<Qi4xd',5000,3,2)],1028:[struct.pack('<Qiid',5000,6,0,3)]}
         c.list.side_effect=lambda at,*args,**kw:extra.get(at,normal_list(at,*args,**kw))
         layers,conversions=_conditional(c,100,1000,2000,100,100,[],7)
         self.assertEqual([(1,3,.5)],conversions)
         self.assertEqual(0,layers[0].get(3,0));self.assertEqual(0,layers[0].get(6,0))
         self.assertNotIn(65,layers[0])
+
+    def test_new_player_conversion_layout_does_not_read_reused_old_field(self):
+        c=self.copy([(1,0,66,0,.2,0)])
+        normal_list=c.list.side_effect
+        extra={948:[struct.pack('<iidQ',1,66,.1,0)],
+            908:[b'new non-conversion field']}
+        c.list.side_effect=lambda at,*args,**kw:extra.get(at,normal_list(at,*args,**kw))
+        layers,conversions=_conditional(c,100,1000,2000,100,100,[],7)
+        self.assertEqual([(1,66,.1)],conversions)
+        self.assertEqual({66:.2},layers[0])
+        addresses=[call.args[0] for call in c.list.call_args_list]
+        self.assertNotIn(908,addresses)
 
     def test_fixed_boss_rejects_unknown_conditions_and_invalid_radius(self):
         for kind,radius in ((999,6),(2,float('nan')),(2,-1)):

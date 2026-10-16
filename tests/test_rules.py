@@ -39,8 +39,9 @@ class RuleSafetyTests(unittest.TestCase):
                         ItemObservation.from_dict(item_data or self.item_data()), self.catalog)
 
     def test_localization_keys_and_aliases_are_exact(self):
-        self.assertEqual(209, len(self.catalog.equipment))
-        self.assertEqual(68, len(self.catalog.stats))
+        self.assertEqual(223, len(self.catalog.equipment))
+        self.assertEqual(69, len(self.catalog.stats))
+        self.assertEqual('Stats.FinalDamageReduction', self.catalog.resolve_stat('固定伤害减免'))
         self.assertEqual("LegendaryRing1", self.catalog.resolve_equipment("巨龙血牙印戒"))
         self.assertEqual("Stats.CritChance", self.catalog.resolve_stat("Critical Hit Chance"))
         self.assertIsNone(self.catalog.resolve_equipment("巨龙血牙"))

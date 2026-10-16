@@ -22,14 +22,14 @@ def verify(game):
     image = next(row for row in metadata.images() if row['name']=='Assembly-CSharp.dll')
     classes = {metadata.defs[index]['name']:index for index in range(image['start'],image['start']+image['count'])}
     for name, expected in profile['types'].items():
-        index = classes[name]
+        index = classes[expected.get('name', name)]
         assert expected['typeDefinitionIndex'] == index, name
         actual = metadata.fields(index)
         field_signature = lambda rows:[(f['name'],f['rawRegistrationOffset'],f['token']) for f in rows]
         assert field_signature(actual) == field_signature(expected['fields']), name
     for key, expected in profile['methods'].items():
         name, method = key.rsplit('.',1)
-        actual = next(m for m in metadata.methods(classes[name]) if m['token']==expected['token'])
+        actual = next(m for m in metadata.methods(classes[expected.get('declaring_type', name)]) if m['token']==expected['token'])
         for field in ('name','isStatic','returnType','parameters'): assert actual[field] == expected[field], (key, field)
         rid = int(actual['token'],16) & 0xffffff
         pointer = metadata.pe.unpack('<Q',module['methods']+(rid-1)*8)[0]

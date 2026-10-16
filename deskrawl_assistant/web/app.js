@@ -269,6 +269,7 @@ function equipmentPreviewHtml(item,moveButton=''){
   return `<div class="detail-title">${item.icon?`<img src="${esc(item.icon)}" alt="">`:''}<div><h3 class="quality-item-name ${itemNameClass(item)}">${esc(item.name)}</h3><small>${esc(item.slot_label)} · ${esc(classesLabel(item.class_mask))}</small></div></div>
     <div class="detail-meta"><span>${worn?'已穿戴 · ':''}${esc(item.rarity_label)} · Lv.${esc(item.level)}</span><span>强化 ${item.upgrade==null?'未确认':'+'+esc(item.upgrade)} · ${esc(item.sockets??'未确认')} 孔</span></div>${equipmentTags(item)}
     ${worn?'':renderComparison(item)}
+    ${renderEffects(item)}
     ${['base','primary','secondary','unknown'].map(g=>{const values=item.groups[g]||[];return values.length?`<div class="detail-group"><h4>${{base:'基础属性 · 不参与筛选',primary:'主词条',secondary:'副词条',unknown:'待核验词条'}[g]}</h4><div class="type-list">${values.map(v=>`<div class="affix-row ${v.matched?'matched':''}" data-affix-key="${esc(v.key)}" title="${esc(v.value_note||(v.matched?'命中规则：'+v.matched_rules.join('、'):''))}"><span class="affix-name">${esc(v.name)}</span><strong class="affix-value">${esc(v.display_value??'未读取')}</strong>${v.matched?'<small class="affix-hit" aria-label="命中规则">✓</small>':''}</div>`).join('')}</div></div>`:'';}).join('')}
     <p class="detail-hint">${worn?'当前穿戴装备的属性预览。':'绿色为命中已启用规则的词条；整件装备是否达标见下方结果。'}数值包含已确认的装备强化。</p>
     ${renderGems(item)}

@@ -122,7 +122,7 @@ def compile_mailbox(base, assembly, profile, image, original_peek, thread_id, ca
             raise ValueError('后台指令签名不一致')
         if spec['isStatic'] != (call.instance == 0):
             raise ValueError('后台指令实例与静态签名不一致')
-        class_name = call.method.rsplit('.', 1)[0]
+        class_name = spec.get('declaring_type', call.method.rsplit('.', 1)[0])
         name = addresses.setdefault(class_name, append(class_name.encode('ascii') + b'\0'))
         values = []
         for arg in call.arguments:

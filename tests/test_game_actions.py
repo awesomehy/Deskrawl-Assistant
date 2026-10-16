@@ -450,7 +450,7 @@ class LocalMainThreadMailboxTests(unittest.TestCase):
         self.klasses, self.method_lists = {}, {}
         self.nested = False
         for key, method in self.profile['methods'].items():
-            name = key.rsplit('.', 1)[0]
+            name = method.get('declaring_type', key.rsplit('.', 1)[0])
             if name not in self.klasses:
                 buf = C.create_string_buffer(32); self.keep.append(buf)
                 self.klasses[name] = C.addressof(buf)

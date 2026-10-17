@@ -107,6 +107,7 @@ class MythicEntryTests(unittest.TestCase):
             stack.enter_context(patch('deskrawl_assistant.recommendation_reader._catalog',return_value={'maps':maps}))
             stack.enter_context(patch('deskrawl_assistant.game_loot_ledger.read_loot_ledger',return_value={}))
             stack.enter_context(patch('deskrawl_assistant.game_panel_log.read_panel_log',return_value={}))
+            stack.enter_context(patch('deskrawl_assistant.statistics_reader.read_gold_ledger',return_value={}))
             result=game.control_snapshot({'available':True,'run':None,'profile':progress})
         self.assertTrue(result['available'],result['reason'])
         floors=result['maps_by_difficulty']['Mythic']
@@ -157,6 +158,7 @@ class MythicControlReadTests(unittest.TestCase):
                 'maps':[{'map_id':'MythicDungeon','map_type':1,'requirements':[]}]}))
             stack.enter_context(patch('deskrawl_assistant.game_loot_ledger.read_loot_ledger',return_value={}))
             stack.enter_context(patch('deskrawl_assistant.game_panel_log.read_panel_log',return_value={}))
+            stack.enter_context(patch('deskrawl_assistant.statistics_reader.read_gold_ledger',return_value={}))
             return fixture.game.control_snapshot(fixture.recommendation)
 
     def test_arrival_uses_verified_read_schema_and_returns_floor_and_running_run(self):

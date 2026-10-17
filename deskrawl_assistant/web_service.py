@@ -52,7 +52,7 @@ def item_kind(row):
 
 
 class AssistantService(ManagedServiceMixin):
-    def __init__(self, client=None, config=None):
+    def __init__(self, client=None, config=None, *, game_lifecycle=None):
         self.catalog = load_catalog(BASE / 'data/game-catalog.json')
         tables = json.loads((BASE / 'data/game-catalog.json').read_text(encoding='utf-8'))['tables']
         self.item_names = {key:entry for table in ('Equipments','Items') for key,entry in tables[table]['entries'].items()}
@@ -62,7 +62,21 @@ class AssistantService(ManagedServiceMixin):
         self.pools = json.loads((BASE / 'data/affix-groups-static.json').read_text(encoding='utf-8'))
         self.adapter = RuntimeAdapter(self.catalog, BASE / 'data/affix-groups-static.json')
         self.client = client or RuntimeClient()
+        self.market = None
+        self.market_catalog = None
+        self.market_catalog_failed = False
+        self.market_currency = None
         self.config = Path(config) if config else rules_file()
+        self.market_data_dir = self.config.parent if config else runtime_dir()
+        self.market_config = self.config.with_name('steam-market.json')
+        self.market_currency_id = 0
+        from .market_currency import valid_currency_id
+        try:
+            saved = json.loads(self.market_config.read_text(encoding='utf-8-sig'))
+            if isinstance(saved, dict) and valid_currency_id(saved.get('currency_id')):
+                self.market_currency_id = saved['currency_id']
+        except (OSError, ValueError, TypeError):
+            pass
         self.journal = ActivityJournal((self.config.parent if config else runtime_dir()) / 'activity.sqlite3')
         self.experience = None
         self.recommendations = None
@@ -77,7 +91,7 @@ class AssistantService(ManagedServiceMixin):
         self.client.item_events = self._record_item_commit
         self.operation_kind = None
         from .game_lifecycle import GameLifecycle
-        self.game_lifecycle = GameLifecycle()
+        self.game_lifecycle = game_lifecycle or GameLifecycle()
         self.game_transition = False
         self.automation_config = self.config.with_name('automation.json')
         self.automation_settings = deepcopy(DEFAULT_SETTINGS)
@@ -134,6 +148,68 @@ class AssistantService(ManagedServiceMixin):
 
     def community_status(self):
         return self.community.status()
+
+    def market_settings(self):
+        from .market_currency import currency_options
+        with self.guard:
+            return {'currency_id':self.market_currency_id, 'currencies':currency_options()}
+
+    def set_market_currency(self, currency_id):
+        from .market_currency import valid_currency_id
+        if not valid_currency_id(currency_id):
+            raise ValidationError('不支持的市场显示币种。')
+        with self.guard:
+            if self.closed.is_set(): raise ValidationError('助手已退出。')
+            # Save independently of rule/managed drafts. Publish the selection
+            # only after the atomic write succeeds, so a failed save cannot
+            # relabel quotes in a different currency than the UI indicates.
+            self.market_config.parent.mkdir(parents=True, exist_ok=True)
+            temporary = self.market_config.with_name(self.market_config.name + '.tmp')
+            temporary.write_text(json.dumps({'schema_version':1, 'currency_id':currency_id}), encoding='utf-8')
+            temporary.replace(self.market_config)
+            self.market_currency_id = currency_id
+            return self.market_settings()
+
+    def _market_catalog(self):
+        with self.guard:
+            if self.market_catalog is None and not self.market_catalog_failed:
+                from .steam_market import MarketCatalog
+                try:
+                    self.market_catalog = MarketCatalog.load(BASE / 'data/steam-market-catalog.json')
+                except (OSError, ValueError, TypeError):
+                    # A missing display dictionary must never fail inventory
+                    # reads or managed mode; unknown items stay unverified.
+                    self.market_catalog_failed = True
+            return self.market_catalog
+
+    def market_quotes(self, selection_ids):
+        if (not isinstance(selection_ids, list) or len(selection_ids) > 128
+                or any(not isinstance(value, str) or not 0 < len(value) <= 500 for value in selection_ids)):
+            raise ValidationError('市场查询物品无效。')
+        wanted = set(selection_ids)
+        with self.guard:
+            if self.closed.is_set(): raise ValidationError('助手已退出。')
+            if not self.client.connected or not self.snapshot:
+                return {'items': [], 'currency_id':self.market_currency_id}
+            selected = [(row.get('transfer_key') or row.get('instance_id'), deepcopy(row))
+                for row in all_rows(self.snapshot)
+                if (row.get('transfer_key') or row.get('instance_id')) in wanted]
+            if self.market is None:
+                from .steam_market import SteamMarketPrices
+                catalog = self._market_catalog()
+                if catalog is None:
+                    return {'items': [], 'currency_id':self.market_currency_id}
+                self.market = SteamMarketPrices(catalog,
+                    cache_path=self.market_data_dir / 'steam-market-prices.json')
+            market = self.market
+            currency_id = self.market_currency_id
+            if currency_id and self.market_currency is None:
+                from .market_currency import MarketCurrency
+                self.market_currency = MarketCurrency(cache_path=self.market_data_dir / 'steam-market-rates.json')
+            currency = self.market_currency
+        return {'currency_id':currency_id, 'items': [{'selection_id':key, 'quote':
+            currency.for_quote(market.for_item(row), currency_id) if currency_id else market.for_item(row)}
+            for key,row in selected]}
 
     def _describe_item(self, key):
         entry = self.item_names.get(key, {})
@@ -379,6 +455,7 @@ class AssistantService(ManagedServiceMixin):
             context={'automatic':automatic,'error':str(error),'quantity_requested':True})
 
     def catalog_payload(self):
+        from .synthesis import rune_quality
         localized = json.loads((BASE / 'data/game-catalog.json').read_text(encoding='utf-8'))['tables']['Equipments']['entries']
         equipment = []
         for key, item in self.ui['equipment'].items():
@@ -389,13 +466,21 @@ class AssistantService(ManagedServiceMixin):
                 'description':re.sub(r'<[^>]+>', '', effect_description or desc.get('Chinese (Simplified)') or desc.get('English') or ''),
                 **{k:item[k] for k in ('slot','slot_value','class_mask','icon')},
                 'slot_label':SLOT_LABELS.get(item['slot'], item['slot'])})
+        collectibles = []
+        for key, item in self.item_ui['collectibles'].items():
+            entry = dict(item)
+            if entry.get('kind') == 'rune':
+                details = self.loot_item_ui['items'].get(key, {})
+                entry.update(icon=details.get('icon'), rarity=details.get('rarity'),
+                    quality=rune_quality(dict(details, internal_name=key)))
+            collectibles.append(entry)
         return {'equipment':equipment,'stats':[{'key':k,'name':e.label,'en':e.en} for k,e in self.catalog.stats.items()],
             'classes':[{'key':k,'name':v,'value':self.ui['enums']['HeroClass'][k]} for k,v in CLASS_LABELS.items()],
             'slots':[{'key':k,'name':v} for k,v in SLOT_LABELS.items()],
             'pools':{p['slot']:{g:[key for key in p[g] if key not in headline_stats(p['slot'])]
                 for g in ('primary','secondary')} for p in self.pools['slotPools']},
             'headline_stats':{p['slot']:sorted(headline_stats(p['slot'])) for p in self.pools['slotPools']},
-            'collectibles':list(self.item_ui['collectibles'].values())}
+            'collectibles':collectibles}
 
     def _persist(self, rules):
         if self.managed.running or self.operation_kind=='managed':
@@ -640,8 +725,10 @@ class AssistantService(ManagedServiceMixin):
             result['character'] = self._character_payload(character)
             result['compatibility'] = dict(getattr(self.client,'compatibility',{'phase':'idle','message':'连接时自动检测游戏兼容性'}))
             result['managed'] = {'running':self.managed.running,'phase':self.managed.phase,'status':self.managed.status}
-        result['game'] = self.game_lifecycle.state() if hasattr(self,'game_lifecycle') else {}
+        result['game'] = (self.game_lifecycle.state(known_running_pid=result['pid'] if result['connected'] else None)
+                          if hasattr(self,'game_lifecycle') else {})
         if not snap: return result
+        market_catalog = self._market_catalog()
         adapted = self.adapter.adapt_snapshot(snap)
         observations = {(i.container,i.index):i for i in adapted.items}
         planner = LockPlanner(self.catalog)
@@ -688,6 +775,7 @@ class AssistantService(ManagedServiceMixin):
                 movable = False
             result['items'].append({'item_uid':row.get('item_uid'),'instance_id':row.get('instance_id'), 'name_key':key,
                 'selection_id':selection_id,'movable':movable,'is_equipment':row.get('is_equipment') is True,
+                'market_eligible':bool(market_catalog and market_catalog.resolve(row)[0]),
                 'kind':kind,'kind_label':kind_label,'count':row.get('count',1),
                 'max_stack':row.get('max_stack'),
                 'internal_name':row.get('internal_name'),'effect_groups':meta.get('effect_groups',[]),'effect_note':meta.get('effect_note',''),
@@ -935,7 +1023,11 @@ class AssistantService(ManagedServiceMixin):
             self.journal.append('settings','monitor_changed','开启自动锁定监控' if enabled else '关闭自动锁定监控')
 
     def game_actions_blocked(self):
-        return getattr(self,'game_transition',False) or (hasattr(self,'game_lifecycle') and self.game_lifecycle.state()['status']=='closing')
+        if getattr(self,'game_transition',False): return True
+        if not hasattr(self,'game_lifecycle'): return False
+        client = getattr(self,'client',None)
+        live_pid = getattr(client,'pid',None) if client is not None and client.connected else None
+        return self.game_lifecycle.state(known_running_pid=live_pid)['status']=='closing'
 
     def game_action(self, action, payload):
         if action not in ('start','close'): raise ValidationError('游戏操作无效。')
@@ -945,6 +1037,9 @@ class AssistantService(ManagedServiceMixin):
         with self.guard:
             if self.closed.is_set() or self.updating: raise ValidationError('助手正在退出或更新。')
             if self.game_transition: raise ValidationError('游戏操作正在进行，请稍候。')
+            client = getattr(self, 'client', None)
+            if action == 'start' and client is not None and client.connected:
+                raise ValidationError('游戏已运行，无需重复启动。')
             if action=='close':
                 current = self.game_lifecycle.state(fresh=True)
                 if not current['can_close'] or payload['target'] != current['target']:
@@ -997,6 +1092,8 @@ class AssistantService(ManagedServiceMixin):
             for kind,group in SHARED_STORAGE_GROUPS:
                 managed_settings['cleanup'][kind+'_pages']=list(settings[group]['pages'])
             validate_shared_pages(settings,managed_settings['cleanup'])
+            self._validate_managed_storage_pages(managed_settings['cleanup'],
+                groups=(('rune', '符文'), ('gem', '宝石')))
             write_settings_files({self.automation_config:settings,self.managed_config:managed_settings})
             self.automation_settings=settings
             self.automation_config_load_failed=False
@@ -1151,21 +1248,33 @@ class AssistantService(ManagedServiceMixin):
             self.monitor_wake.clear()
             if self.closed.is_set(): break
             with self.guard:
+                if self.closed.is_set(): break
                 if self.busy or self.updating or getattr(self,'game_transition',False) or not self.client.connected: continue
-                if hasattr(self,'game_lifecycle') and self.game_lifecycle.state()['status']=='closing': continue
+                if (hasattr(self,'game_lifecycle')
+                        and self.game_lifecycle.state(known_running_pid=self.client.pid)['status']=='closing'): continue
                 self.busy = True
                 self.operation_kind = 'managed' if self.managed.running else 'monitor' if self.monitoring or self.automation_running else 'observe'
                 self.worker = threading.Thread(target=self._work,args=(self.operation_kind,{}),daemon=True)
                 self.worker.start()
 
     def close(self):
-        self.stop()
-        self.closed.set()
-        self.monitor_wake.set()
+        # start() checks closed and registers its worker under this same guard.
+        # Publish shutdown before releasing it, so no HTTP operation can pass
+        # that check and create a worker after shutdown captured self.worker.
+        with self.guard:
+            self.stop()
+            self.closed.set()
+            self.monitor_wake.set()
+        # The observer owns worker creation. Join it before reading self.worker,
+        # so shutdown cannot miss a worker starting at the last monitor wake.
+        monitor = getattr(self, 'monitor_thread', None)
+        if monitor is not None and monitor is not threading.current_thread(): monitor.join()
         worker = self.worker
-        if worker and worker is not threading.current_thread(): worker.join(10)
+        if worker and worker is not threading.current_thread(): worker.join()
         if self.recommendation_thread and self.recommendation_thread is not threading.current_thread():
-            self.recommendation_thread.join(10)
-        if self.loot_capture_thread is not threading.current_thread(): self.loot_capture_thread.join(10)
+            self.recommendation_thread.join()
+        if self.loot_capture_thread is not threading.current_thread(): self.loot_capture_thread.join()
         if getattr(self, 'community', None) is not None: self.community.close()
+        if getattr(self, 'market', None) is not None: self.market.close()
+        if getattr(self, 'market_currency', None) is not None: self.market_currency.close()
         self.client.close()

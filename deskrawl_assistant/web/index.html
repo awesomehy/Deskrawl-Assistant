@@ -7,10 +7,13 @@
   <link rel="icon" href="/mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/community-stats.css">
+  <link rel="stylesheet" href="/synthesis-ui.css">
+  <link rel="stylesheet" href="/steam-market.css">
   <script src="/inventory-tools.js" defer></script>
   <script src="/automation-tools.js" defer></script>
   <script src="/managed-growth.js" defer></script>
   <script src="/managed-mode.js" defer></script>
+  <script src="/steam-market.js" defer></script>
   <script src="/app.js" defer></script>
   <script src="/rule-tools.js" defer></script>
 </head>
@@ -77,7 +80,7 @@
         <div class="operations"><div class="scope-picker"><label for="action-scope">批量范围</label><select id="action-scope" title="全部解锁、按规则锁定的作用范围；锁定所选装备以勾选为准。"><option value="all">背包 + 仓库</option><option value="inventory">仅背包</option><option value="storage">仅仓库</option></select></div><button id="unlock-all" class="button danger">一键全部解锁</button><button id="lock-selected" class="button">锁定所选装备 <span id="selected-count">0</span></button><button id="lock-rules" class="button primary">一键按规则锁定</button><div class="monitor-control"><div><strong>持续监控</strong><small>新增装备按规则自动锁定</small></div><button id="monitor-switch" class="switch" role="switch" aria-checked="false" aria-label="持续监控背包和仓库"><span></span></button></div></div>
         <div class="transfer-operations"><span id="transfer-selection">勾选物品后移动</span><button id="move-storage" class="button">移入仓库 <span id="move-storage-count">0</span></button><button id="move-inventory" class="button">取回背包 <span id="move-inventory-count">0</span></button><small id="transfer-hint">同种同等级宝石优先堆叠，保留数量与锁定状态。</small></div>
         <div class="operation-notice"><span id="operation-message">连接游戏后自动读取装备。</span><div class="progress-wrap" hidden id="progress-wrap"><progress id="operation-progress" max="1" value="0"></progress><small id="progress-label"></small></div><button id="stop" class="text-button" hidden>停止操作</button></div>
-        <div class="inventory-filters"><label class="search"><span>⌕</span><input id="item-search" placeholder="搜索物品…" aria-label="搜索背包和仓库物品"></label><select id="kind-filter" aria-label="物品类型"><option value="">全部物品</option><option value="equipment">装备</option><option value="material">材料 / 其他</option><option value="gem">宝石</option><option value="chest">宝箱</option><option value="rune">符文</option></select><button id="inventory-reset" class="text-button">清除筛选 / 排序</button><span id="visible-count"></span></div>
+        <div class="inventory-filters"><label class="search"><span>⌕</span><input id="item-search" placeholder="搜索物品…" aria-label="搜索背包和仓库物品"></label><select id="kind-filter" aria-label="物品类型"><option value="">全部物品</option><option value="equipment">装备</option><option value="material">材料 / 其他</option><option value="gem">宝石</option><option value="chest">宝箱</option><option value="rune">符文</option></select><label class="inventory-tradable-filter" title="仅显示已确认可在 Steam 社区市场交易的物品"><input id="inventory-tradable" type="checkbox">可交易</label><label class="market-currency-control" for="market-currency">市场币种<select id="market-currency" disabled><option value="0">自动（Steam 返回币种）</option></select></label><small id="market-currency-error" class="market-currency-error" role="status" aria-live="polite" hidden></small><button id="inventory-reset" class="text-button">清除筛选 / 排序</button><span id="visible-count"></span></div>
         <details class="inventory-advanced"><summary>更多装备条件 <small>职业、部位、标签与等级范围</small></summary><div class="inventory-filter-grid">
           <label>职业<select id="inventory-class"><option value="">全部职业</option><option value="current">当前职业可穿戴</option><option value="1">战士</option><option value="2">法师</option><option value="4">猎人</option><option value="8">武僧</option></select></label>
           <label>部位<select id="inventory-slot"><option value="">全部部位</option></select></label>
@@ -216,27 +219,48 @@
               </div>
           </details>
           </div>
+          <details class="panel managed-card managed-fold" data-managed-fold="synthesis">
+            <summary class="managed-fold-heading"><div class="managed-fold-title"><span class="eyebrow">05 · 回城整理时执行</span><h2>自动合成</h2><p data-managed-fold-summary="synthesis"></p></div><span class="managed-fold-status" data-managed-fold-status="synthesis">未启用</span><span class="managed-fold-caret" aria-hidden="true">⌄</span><span class="managed-fold-hint" aria-hidden="true"></span></summary>
+            <div class="managed-fold-content">
+              <p class="managed-card-note">扫描背包与已解锁仓库，从低品质向高品质合成；达到上限的产物不再作为材料。仅在主城整理时执行，不会为合成中断刷图回城。</p>
+              <div class="synthesis-settings">
+                <section class="synthesis-kind"><div class="synthesis-kind-heading"><h3>宝石</h3><label class="managed-toggle"><input id="managed-synthesis-gems" type="checkbox">启用宝石合成</label></div>
+                  <label class="synthesis-quality-field" for="managed-synthesis-gems-max">最高产出品质<select id="managed-synthesis-gems-max"><option value="1">粗糙</option><option value="2">碎裂</option><option value="3">粗砺</option><option value="4">抛光</option><option value="5">无瑕</option><option value="6">璀璨</option></select></label>
+                  <p>10 个同种、同品质宝石 → 1 个高一级宝石，需要金币。金币不足时跳过，继续其他托管流程；不自动解锁材料。</p><p id="managed-synthesis-gems-note" class="synthesis-limit-note"></p>
+                </section>
+                <section class="synthesis-kind"><div class="synthesis-kind-heading"><h3>符文</h3><label class="managed-toggle"><input id="managed-synthesis-runes" type="checkbox">启用符文合成</label></div>
+                  <label class="synthesis-quality-field" for="managed-synthesis-runes-max">最高产出品质<select id="managed-synthesis-runes-max"><option value="uncommon">优秀</option><option value="rare">稀有</option><option value="grand">宏伟</option><option value="set">符文套装</option></select></label>
+                  <p>每次消耗 9 枚同品质符文，产出 1 枚随机符文。稀有 → 宏伟、宏伟 → 套装为概率合成，失败也会消耗材料。已有等级、经验的符文可被消耗，合成产物重新从 1 级开始。</p><p id="managed-synthesis-runes-note" class="synthesis-limit-note"></p>
+                </section>
+              </div>
+              <div class="synthesis-exclusions"><div class="synthesis-exclusions-heading"><h3>跳过合成的符文</h3><small id="managed-synthesis-rune-count">已跳过 0 种</small></div><p>勾选后，该种符文在背包与仓库中的所有等级、数量都不参与合成。已锁定和已装备的符文也不会消耗；剩余符文统一入库。</p>
+                <label class="synthesis-search-label" for="managed-synthesis-rune-search">搜索符文<input id="managed-synthesis-rune-search" type="search" placeholder="搜索符文名称、品质或 ID…" autocomplete="off"></label>
+                <div id="managed-synthesis-rune-options" class="synthesis-rune-options" role="group" aria-label="跳过合成的符文"></div>
+              </div>
+            </div>
+          </details>
           <details class="panel managed-card managed-cleanup-card managed-fold" data-managed-fold="cleanup">
-            <summary class="managed-fold-heading"><div class="managed-fold-title"><span class="eyebrow">05 · 先保留，后处置</span><h2>回城整理</h2><p data-managed-fold-summary="cleanup"></p></div><span class="managed-fold-status" data-managed-fold-status="cleanup">待读取</span><span class="managed-fold-caret" aria-hidden="true">⌄</span><span class="managed-fold-hint" aria-hidden="true"></span></summary>
+            <summary class="managed-fold-heading"><div class="managed-fold-title"><span class="eyebrow">06 · 先保留，后处置</span><h2>回城整理</h2><p data-managed-fold-summary="cleanup"></p></div><span class="managed-fold-status" data-managed-fold-status="cleanup">待读取</span><span class="managed-fold-caret" aria-hidden="true">⌄</span><span class="managed-fold-hint" aria-hidden="true"></span></summary>
             <div class="managed-fold-content">
             <p class="managed-footnote">新用户默认：装备 1／2／3 页，符文 4 页，宝石、金条与传说缰绳 5 页。金条与缰绳可独立选择存放页，已保存的自定义分区继续沿用。只使用已解锁的所选页；没有可用目标页时保留物品并暂停，可修改分区后继续。</p>
             <div class="managed-policy-presets"><span>未命中装备快捷设置</span><button class="button ghost" type="button" data-managed-preset="sell_low">普通 / 优秀出售，其余分解</button><button class="button ghost" type="button" data-managed-preset="sell">全部出售</button><button class="button ghost" type="button" data-managed-preset="salvage">全部分解</button><button class="button ghost" type="button" data-managed-preset="store">全部入库</button></div>
+            <p class="managed-footnote">每类必须入库的物品至少选择 1 页已解锁且有开放格位的仓库，未解锁页可额外预留。已满的仓库页仍可配置；必须入库的物品无处存放时留在背包，暂停托管，腾出容量后可继续。</p>
             <div class="managed-cleanup-table-wrap"><table class="managed-cleanup-table"><thead><tr><th>物品范围</th><th>处理方式</th><th>仓库满时</th><th>存放仓库页签</th></tr></thead><tbody>
-              <tr class="managed-protected-row"><td><strong>神圣 / 黑雾传说</strong><small>固定保护，不可修改</small></td><td colspan="2"><span class="badge match">锁定 → 仓库</span></td><td rowspan="7" class="managed-equipment-storage"><strong>装备共用存放页</strong><div id="managed-equipment-pages" class="managed-page-choices"></div><small>保护装备和选择入库的装备存放在这些页；只清理所选页中未锁定且不符合规则的装备。</small></td></tr>
-              <tr class="managed-protected-row"><td><strong>符合筛选规则的装备</strong><small>使用已启用的筛选组合</small></td><td colspan="2"><span class="badge match">锁定 → 仓库</span></td></tr>
+              <tr class="managed-protected-row"><td><strong>神圣 / 黑雾传说</strong><small>固定保护，不可修改</small></td><td><span class="badge match">锁定 → 仓库</span></td><td><small>满时留在背包</small></td><td rowspan="7" class="managed-equipment-storage"><strong>装备共用存放页</strong><div id="managed-equipment-pages" class="managed-page-choices"></div><small>保护装备和选择入库的装备存放在这些页；只清理所选页中未锁定且不符合规则的装备。</small></td></tr>
+              <tr class="managed-protected-row"><td><strong>符合筛选规则的装备</strong><small>使用已启用的筛选组合</small></td><td><span class="badge match">锁定 → 仓库</span></td><td><small>满时留在背包</small></td></tr>
               <tr class="quality-ancient"><td><strong>远古传说 · 未命中</strong></td><td><select id="managed-equipment-ancient-action" data-managed-policy aria-label="远古传说未命中处理方式"><option value="store">放入仓库</option><option value="sell">出售</option><option value="salvage">分解</option></select></td><td><select id="managed-equipment-ancient-fallback" data-managed-policy aria-label="远古传说仓库满时处理方式"><option value="sell">出售</option><option value="salvage">分解</option></select></td></tr>
               <tr class="quality-legendary"><td><strong>普通传说 · 未命中</strong></td><td><select id="managed-equipment-legendary-action" data-managed-policy aria-label="普通传说未命中处理方式"><option value="store">放入仓库</option><option value="sell">出售</option><option value="salvage">分解</option></select></td><td><select id="managed-equipment-legendary-fallback" data-managed-policy aria-label="普通传说仓库满时处理方式"><option value="sell">出售</option><option value="salvage">分解</option></select></td></tr>
               <tr class="quality-rare"><td><strong>稀有 · 未命中</strong></td><td><select id="managed-equipment-rare-action" data-managed-policy aria-label="稀有未命中处理方式"><option value="store">放入仓库</option><option value="sell">出售</option><option value="salvage">分解</option></select></td><td><select id="managed-equipment-rare-fallback" data-managed-policy aria-label="稀有仓库满时处理方式"><option value="sell">出售</option><option value="salvage">分解</option></select></td></tr>
               <tr class="quality-uncommon"><td><strong>优秀 · 未命中</strong></td><td><select id="managed-equipment-uncommon-action" data-managed-policy aria-label="优秀未命中处理方式"><option value="store">放入仓库</option><option value="sell">出售</option><option value="salvage">分解</option></select></td><td><select id="managed-equipment-uncommon-fallback" data-managed-policy aria-label="优秀仓库满时处理方式"><option value="sell">出售</option><option value="salvage">分解</option></select></td></tr>
               <tr class="quality-normal"><td><strong>普通 · 未命中</strong></td><td><select id="managed-equipment-normal-action" data-managed-policy aria-label="普通未命中处理方式"><option value="store">放入仓库</option><option value="sell">出售</option><option value="salvage">分解</option></select></td><td><select id="managed-equipment-normal-fallback" data-managed-policy aria-label="普通仓库满时处理方式"><option value="sell">出售</option><option value="salvage">分解</option></select></td></tr>
-              <tr class="managed-protected-row"><td><strong>套装 / 宏伟符文</strong><small>固定保护，不可修改</small></td><td><span class="badge match">必须入库</span></td><td><small>满时暂停</small></td><td rowspan="2"><strong>符文共用存放页</strong><div id="managed-rune-pages" class="managed-page-choices"></div><small>与背包自动整理同步，任一处保存即可。</small></td></tr>
-              <tr><td><strong>普通符文</strong><small>不含套装与宏伟符文</small></td><td><select id="managed-rune-action" aria-label="普通符文处理方式"><option value="store">放入仓库</option><option value="sell">出售</option></select></td><td><small>满时暂停</small></td></tr>
-              <tr><td><strong>宝石</strong><small>优先同种同等级堆叠</small></td><td><select id="managed-gem-action" aria-label="宝石处理方式"><option value="store">放入仓库</option><option value="sell">出售</option></select></td><td><small>满时暂停</small></td><td><div id="managed-gem-pages" class="managed-page-choices"></div><small>与背包自动整理同步，任一处保存即可。</small></td></tr>
-              <tr class="quality-legendary"><td><strong>金条</strong><small>仅金条，不含金币或黄金药水</small></td><td><select id="managed-gold_bar-action" aria-label="金条处理方式"><option value="store">放入仓库</option><option value="keep">留在背包</option></select></td><td><small>满时暂停，保留物品</small></td><td><div id="managed-gold_bar-pages" class="managed-page-choices"></div></td></tr>
-              <tr class="quality-legendary"><td><strong>传说缰绳</strong><small>只收纳传说品质，其他品质留在背包</small></td><td><select id="managed-legendary_rein-action" aria-label="传说缰绳处理方式"><option value="store">放入仓库</option><option value="keep">留在背包</option></select></td><td><small>满时暂停，保留物品</small></td><td><div id="managed-legendary_rein-pages" class="managed-page-choices"></div></td></tr>
+              <tr class="managed-protected-row"><td><strong>套装 / 宏伟符文</strong><small>固定保护，不可修改</small></td><td><span class="badge match">必须入库</span></td><td><small>满时留在背包</small></td><td rowspan="2"><strong>符文共用存放页</strong><div id="managed-rune-pages" class="managed-page-choices"></div><small>与背包自动整理同步，任一处保存即可。</small></td></tr>
+              <tr class="managed-protected-row"><td><strong>优秀 / 稀有符文</strong><small>固定入库，不可修改</small></td><td><span class="badge match">必须入库</span></td><td><small>满时留在背包</small></td></tr>
+              <tr class="managed-protected-row"><td><strong>宝石</strong><small>优先同种同等级堆叠</small></td><td><span class="badge match">必须入库</span></td><td><small>满时留在背包</small></td><td><div id="managed-gem-pages" class="managed-page-choices"></div><small>与背包自动整理同步，任一处保存即可。</small></td></tr>
+              <tr class="quality-legendary"><td><strong>金条</strong><small>仅金条，不含金币或黄金药水</small></td><td><span class="badge match">必须入库</span></td><td><small>满时留在背包</small></td><td><div id="managed-gold_bar-pages" class="managed-page-choices"></div></td></tr>
+              <tr class="quality-legendary"><td><strong>传说缰绳</strong><small>只收纳传说品质，其他品质留在背包</small></td><td><span class="badge match">必须入库</span></td><td><small>满时留在背包</small></td><td><div id="managed-legendary_rein-pages" class="managed-page-choices"></div></td></tr>
             </tbody></table></div>
             <p class="managed-footnote">品质设置只对不符合规则的装备生效，包含没有启用规则的装备。仓库满时，按待清理装备自己的品质选择出售 / 分解，包含所选页里的原有垃圾装备；其他页不清理。已锁定和待核验装备保留；保护装备无处存放时暂停等待。不符合规则的强化 / 已镶嵌装备也按所选策略处理，不自动返还强化材料和宝石。</p>
-            <div class="managed-loop-note"><span class="step">↻</span><div><strong>先批量收取，宝箱最后开启</strong><p>背包有空位时连续收取马车和地面物品，收完或背包满后统一筛选、锁定和整理，再收下一批。装备、符文、宝石及选择入库的金条与传说缰绳处理完后再开宝箱；开箱奖励重新经过收取与保护流程。主城地面与马车未清空或仍在卸货时，禁止入图与切换难度。神圣、黑雾装备及套装、宏伟符文必须收纳；指定页满时暂停，不改为出售。</p></div></div>
+            <div class="managed-loop-note"><span class="step">↻</span><div><strong>先批量收取，宝箱最后开启</strong><p>背包有空位时连续收取马车和地面物品，收完或背包满后统一筛选、锁定和整理，再收下一批。装备、符文、宝石、金条与传说缰绳处理完后再开宝箱；开箱奖励重新经过收取与保护流程。主城地面与马车未清空或仍在卸货时，禁止入图与切换难度。神圣、黑雾装备及所有符文、宝石、金条与传说缰绳必须收纳；指定页满时留在背包并暂停，腾出容量后继续。</p></div></div>
             </div>
           </details>
         </div>
@@ -244,9 +268,11 @@
           <section class="panel managed-loot">
             <div class="managed-card-heading"><div><span class="eyebrow">本次托管</span><h2>累计掉落</h2></div><span id="managed-loot-total" class="badge locked">0 件</span></div>
             <p id="managed-stats-note" class="managed-card-note">启动时已有物品不计入掉落；出售与分解在确认完成后累计。</p>
+            <div class="managed-stat-section"><h3>累计金币掉落 <small id="managed-gold-total" aria-live="polite">0</small></h3></div>
             <div class="managed-stat-section"><h3>装备 <small>按品质从高到低</small></h3><table class="managed-stats-table"><thead><tr><th>品质</th><th>掉落</th><th>已出售 / 分解</th></tr></thead><tbody id="managed-equipment-stats"></tbody></table></div>
             <div class="managed-stat-section"><h3>符文 <small id="managed-rune-total">0 个</small></h3><div id="managed-rune-stats" class="managed-item-stats"></div></div>
             <div class="managed-stat-section"><h3>宝石 <small id="managed-gem-total">0 个</small></h3><div id="managed-gem-stats" class="managed-item-stats"></div></div>
+            <div class="managed-stat-section"><h3>其他 <small id="managed-other-total">0 个</small></h3><div id="managed-other-stats" class="managed-item-stats"></div></div>
             <div class="managed-stats-footer"><button id="managed-reset-stats" class="text-button" type="button">清空本次统计</button><small>停止后可清空，不删除日志</small></div>
           </section>
           <section class="panel managed-history"><div class="managed-card-heading"><div><span class="eyebrow">执行记录</span><h2>当前流程</h2></div><small id="managed-history-count">0 条</small></div><ol id="managed-history-list" class="managed-history-list"><li class="managed-history-empty">尚未启动托管</li></ol></section>
@@ -256,7 +282,7 @@
     <section id="loot-preview-page" role="tabpanel" hidden>
       <div class="page-heading"><div><h1>本趟掉落预览</h1><p>进入在线关卡后自动更新，每 2 秒查看当前计划。</p></div><div class="heading-actions"><span id="loot-preview-updated" class="note"></span><button id="loot-preview-refresh" class="button ghost" type="button">重新读取</button></div></div>
       <section class="panel loot-capture-panel" aria-label="高价值掉落监控">
-        <div class="loot-capture-heading"><div><h2>高价值掉落监控</h2><p>发现黑雾传说、神圣装备、宏伟符文或符文套装，自动保存本局原始掉落计划与实际观测记录。</p></div><label class="loot-capture-toggle"><input id="loot-capture-enabled" type="checkbox">开启监控</label></div>
+        <div class="loot-capture-heading"><div><h2>高价值掉落监控</h2><p>监控黑雾传说、神圣装备、宏伟符文、符文套装，以及金条、传说缰绳、开光石等全部可交易物品，自动保存本局原始掉落计划与实际观测记录。</p></div><label class="loot-capture-toggle"><input id="loot-capture-enabled" type="checkbox">开启监控</label></div>
         <p id="loot-capture-status" role="status">监控未开启。</p><p id="loot-capture-summary" class="note">留档 0 份记录</p><p class="loot-capture-path">本机留档：<span id="loot-capture-directory">等待读取</span></p>
         <p class="note">开启后在所有页签持续运行；首次物品清单作为基线。数量按留档目录中的 JSON 文件实时统计。留档可核对是否在计划中，不计入累计掉落，重启后需重新开启。</p>
       </section>

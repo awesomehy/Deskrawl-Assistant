@@ -72,6 +72,10 @@ class GameBusyError(SnapshotChangedError):
     """A known temporary game gate blocked an action before any mutation."""
 
 
+class DeathRecoveryBusyError(GameBusyError):
+    """A confirmed dead player is waiting for DeathUI before any submission."""
+
+
 def game_pids():
     snapshot = K.CreateToolhelp32Snapshot(2, 0)
     if snapshot == C.c_void_p(-1).value:
@@ -85,6 +89,9 @@ def game_pids():
             if row.szExeFile.casefold() == "deskrawl.exe":
                 found.append(row.th32ProcessID)
             success = K.Process32NextW(snapshot, C.byref(row))
+        error = C.get_last_error()
+        if error != 18:  # ERROR_NO_MORE_FILES is the only successful termination.
+            raise C.WinError(error)
         return found
     finally:
         K.CloseHandle(snapshot)

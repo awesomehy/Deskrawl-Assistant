@@ -44,6 +44,9 @@ class StorageDefaultsTests(unittest.TestCase):
 
     def test_saved_local_partitions_survive_restart_and_permission_changes_without_file_rewrite(self):
         client = service_fakes.FakeManagedClient()
+        # Save while page 2 is open; later permission loss must not rewrite
+        # the existing selection or the reserved page 7.
+        client.storage_indices += [50]
         service = self.service(client)
         auto = deepcopy(AUTO)
         auto['pressure']['pages'] = [5]
@@ -66,15 +69,18 @@ class StorageDefaultsTests(unittest.TestCase):
         self.assertEqual(restored.managed_config.read_bytes(), saved_managed)
         self.assertEqual(restored.managed.settings['cleanup']['rune_pages'], [2, 7])
 
-    def test_default_rune_and_gem_automation_wait_then_use_newly_unlocked_pages(self):
+    def test_offline_saved_defaults_wait_then_use_newly_unlocked_pages(self):
         client = automation_fakes.AutomationClient([
             automation_fakes.gem(0),
             dict(automation_fakes.gem(1, 'Rune3'), item_class='RuneData', item_type=7)])
         client.storage_indices = list(range(50))
+        client.connected = False
         service = self.service(client)
         auto = deepcopy(AUTO)
         auto['gems']['enabled'] = auto['runes']['enabled'] = True
         service.save_automation(auto)
+        client.connected = True
+        service._publish(client.snapshot())
         service.set_automation_running(True)
         service._automation_once()
         self.assertEqual(client.events, [])
@@ -89,7 +95,7 @@ class StorageDefaultsTests(unittest.TestCase):
     def test_default_equipment_automation_only_uses_open_slots_even_with_reserved_pages(self):
         gear = automation_fakes.item(0)
         client = automation_fakes.AutomationClient([gear], capacity=4)
-        client.storage_indices = [100, 101, 200, 201]
+        client.storage_indices = [100, 101, 150, 200, 201]
         service = self.service(client)
         auto = deepcopy(AUTO)
         auto['pressure'].update(enabled=True, threshold=3, target_free=4)
@@ -126,9 +132,15 @@ class StorageDefaultsTests(unittest.TestCase):
     def test_valid_reserved_pages_can_be_saved_but_malformed_selection_cannot(self):
         auto = deepcopy(AUTO)
         managed = deepcopy(MANAGED)
-        # Page permissions belong to runtime targeting, not persisted selection.
+        # Offline drafts preserve reserved choices. Connected mandatory
+        # storage requires at least one open selected page per category.
         self.assertEqual(validate_auto(auto, {}, available_pages={1})['runes']['pages'], [4])
-        self.assertEqual(validate_managed(managed, available_pages={1})['cleanup']['gem_pages'], [5])
+        self.assertEqual(validate_managed(managed)['cleanup']['gem_pages'], [5])
+        with self.assertRaises(ValidationError):
+            validate_managed(managed, available_pages={1})
+        for kind in ('rune', 'gem', 'gold_bar', 'legendary_rein'):
+            managed['cleanup'][kind+'_pages'].insert(0, 1)
+        self.assertEqual(validate_managed(managed, available_pages={1})['cleanup']['gem_pages'], [1, 5])
         for invalid in ([0], [True], [2, 2], ['4']):
             with self.subTest(invalid=invalid):
                 auto['runes']['pages'] = invalid

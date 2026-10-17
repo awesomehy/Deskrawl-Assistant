@@ -1,5 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
+const fs=require('node:fs'),vm=require('node:vm');
 const {select}=require('../deskrawl_assistant/web/inventory-tools.js');
 const gear=(id,extra={})=>({selection_id:id,name:id,kind:'equipment',is_equipment:true,container:'storage',
   slot_index:1,slot:'Chest',class_mask:15,rarity:3,level:800,upgrade:5,sockets:2,locked:false,
@@ -82,4 +83,39 @@ test('upgrade sorts in both directions, and clearing one filter retains another'
 test('materials with placeholder zeros have no meaningful upgrade or socket rank',()=>{
   const items=[gear('armor',{upgrade:1,sockets:1}),{selection_id:'gem',name:'gem',container:'inventory',slot_index:0,kind:'gem',upgrade:0,sockets:0}];
   for(const sort of ['upgrade-asc','upgrade-desc','sockets-asc','sockets-desc'])assert.deepEqual(ids(items,{sort}),['armor','gem']);
+});
+
+test('tradable filtering requires strict local eligibility and includes marketable materials',()=>{
+  const items=[gear('armor',{market_eligible:true}),gear('bound',{market_eligible:false}),
+    gear('unknown'),gear('truthy',{market_eligible:'true'}),
+    {selection_id:'gold',name:'金条',kind:'material',container:'inventory',slot_index:0,market_eligible:true}];
+  assert.deepEqual(ids(items,{tradable:true}),['gold','armor']);
+  assert.deepEqual(ids(items,{tradable:true,kind:'material',search:'金'}),['gold']);
+  assert.deepEqual(ids(items,{tradable:true,class:'4'}),['armor']);
+  assert.equal(ids(items,{tradable:false}).length,5,'clearing the filter restores ineligible and unknown items');
+});
+
+test('real inventory controls apply tradable filtering and reset leaves market currency intact',()=>{
+  const source=fs.readFileSync('deskrawl_assistant/web/app.js','utf8'),html=fs.readFileSync('deskrawl_assistant/web/index.html','utf8');
+  const list=source.match(/const inventoryFilterIds=\[[^\n]+/)[0];
+  const visible=source.match(/function visibleItems\(\)\{[\s\S]*?\n\}/)[0];
+  const listeners=source.match(/^inventoryFilterIds\.forEach\(id=>.*$/m)[0];
+  const reset=source.match(/^\$\('inventory-reset'\)\.addEventListener.*$/m)[0];
+  assert.match(html,/id="inventory-tradable" type="checkbox"/);
+  const elements=new Map(),element=id=>{
+    if(!elements.has(id))elements.set(id,{value:'',checked:false,type:'select-one',events:{},addEventListener(type,handler){this.events[type]=handler;}});
+    return elements.get(id);
+  };
+  let renders=0,closed=0;
+  const context={$:element,InventoryTools:{select},state:{items:[gear('trade',{market_eligible:true}),gear('bound',{market_eligible:false})]},
+    gearMap:new Map(),columnFilters:{containers:null,locks:null,rules:null},renderInventory(){renders++;},closeColumnMenu(){closed++;}};
+  vm.createContext(context);vm.runInContext(list,context);
+  for(const id of vm.runInContext('inventoryFilterIds',context)){element(id);if(/tradable|ancient|mist|divine/.test(id))element(id).type='checkbox';}
+  element('inventory-tradable').checked=true;element('market-currency').value='23';
+  vm.runInContext(visible+'\n'+listeners+'\n'+reset,context);
+  assert.deepEqual(Array.from(vm.runInContext('visibleItems()',context),item=>item.selection_id),['trade']);
+  element('inventory-tradable').events.change();assert.equal(renders,1);
+  element('inventory-reset').events.click();
+  assert.equal(element('inventory-tradable').checked,false);assert.equal(element('market-currency').value,'23');assert.equal(closed,1);
+  assert.deepEqual(Array.from(vm.runInContext('visibleItems()',context),item=>item.selection_id),['bound','trade']);
 });

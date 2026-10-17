@@ -38,6 +38,29 @@ const settings=(extra={})=>ui.normalizeSettings({auto_equip:{enabled:false,minim
   cleanup:{equipment_action:'store',equipment_fallback:'sell',equipment_pages:[1],rune_action:'store',rune_pages:[3],gem_action:'store',gem_pages:[3]},...extra});
 const capabilities=value=>Object.fromEntries(['transfer','lock','equip','travel','difficulty','sell','salvage','chests','ground_pickup'].map(key=>[key,value]));
 
+test('mandatory destinations require an unlocked page, allowing full pages and extra reservations',()=>{
+  const packet={can_start:true,warehouse_ready:true,warehouse_pages:[1,3,5].map(index=>({index,capacity:1,free:0})),capabilities:capabilities(true)};
+  for(const [kind,label] of [['equipment','装备'],['rune','符文'],['gem','宝石'],['gold_bar','金条'],['legendary_rein','传说缰绳']]){
+    const cfg=settings();cfg.cleanup[kind+'_pages']=[2];
+    assert.match(ui.validateSettings(cfg,packet),new RegExp(label+'.*已解锁'));
+    assert.equal(ui.controlState(packet,cfg,true).canStart,false);
+    cfg.cleanup[kind+'_pages']=[2,1];
+    assert.equal(ui.validateSettings(cfg,packet),'');
+    assert.equal(ui.controlState(packet,cfg,true).canStart,true);
+    assert.deepEqual(cfg.cleanup[kind+'_pages'],[2,1]);
+  }
+  assert.match(ui.validateSettings(settings(),{...packet,warehouse_pages:[]}),/装备、符文、宝石、金条、传说缰绳/);
+  assert.match(ui.validateSettings(settings(),{...packet,warehouse_pages:packet.warehouse_pages.map(row=>({...row,capacity:0}))}),/已解锁/);
+});
+
+test('unread warehouse permissions explain disabled start without erasing offline selections',()=>{
+  const cfg=settings(),before=JSON.stringify(cfg);
+  const packet={can_start:true,warehouse_ready:false,capabilities:capabilities(true)};
+  const state=ui.controlState(packet,cfg,true);
+  assert.equal(state.canStart,false);assert.match(state.configurationError,/仓库开放格位尚未读取完整/);
+  assert.equal(ui.validateSettings(cfg),'');assert.equal(JSON.stringify(cfg),before);
+});
+
 test('mythic selector shows only unlocked floors without falling back to ordinary maps',()=>{
   const cfg=settings({farming:{enabled:true,repeat_maps:[{dungeon_id:'MythicDungeon::mythic::22',difficulty:'Mythic',runs:3}]}});
   const packet={maps:[{id:'Forest1'}],maps_by_difficulty:{Mythic:[
@@ -59,7 +82,9 @@ test('material partition migration preserves policies and independent page choic
   }
   old.cleanup.gold_bar_action='keep';old.cleanup.gold_bar_pages=[];old.cleanup.legendary_rein_pages=[5];
   const saved=ui.normalizeSettings(JSON.parse(JSON.stringify(old)));
-  assert.deepEqual(saved,old);assert.equal(ui.validateSettings(saved),'');
+  assert.equal(saved.cleanup.gold_bar_action,'store');assert.match(ui.validateSettings(saved),/金条/);
+  assert.deepEqual(saved.cleanup.equipment_policies,old.cleanup.equipment_policies);
+  assert.deepEqual(saved.cleanup.equipment_pages,[2,3]);assert.deepEqual(saved.cleanup.legendary_rein_pages,[5]);
   assert.deepEqual(ui.equipmentPreset(saved,'sell_low').cleanup.gold_bar_pages,[]);
   saved.cleanup.gold_bar_action='store';assert.match(ui.validateSettings(saved),/金条/);
 });
@@ -245,7 +270,7 @@ test('warehouse permissions are 1 based and do not assume continuous pages',()=>
   s.cleanup.rune_action='sell';assert.match(ui.validateSettings(s),/符文/);
   s.cleanup.rune_pages=[3];s.cleanup.gem_pages=[];
   assert.match(ui.validateSettings(s),/宝石/);
-  s.cleanup.gem_action='sell';assert.equal(ui.validateSettings(s),'');
+  s.cleanup.gem_action='sell';assert.match(ui.validateSettings(s),/宝石/);
 });
 
 test('repeat and push map identifiers retain zero and numeric types, double rings retain independent locks',()=>{
@@ -322,6 +347,17 @@ test('statistics always show the quality hierarchy independent of input order or
   assert.deepEqual(rows.map(row=>row.key),['divine','black_mist','ancient','legendary','rare','uncommon','normal']);
   assert.deepEqual(rows.map(row=>row.name),['神圣','黑雾传说','远古传说','普通传说','稀有','优秀','普通']);
   assert.equal(ui.statistics({equipment:{mist:{count:4}}}).equipment[1].count,4);
+});
+
+test('other drops join item totals while actual coin pickups have a separate total',()=>{
+  const values=ui.statistics({equipment:{legendary:{count:1}},runes:[{count:2}],gems:[{count:3}],
+    others:[{name:'金条',count:4},{name:'黄金宝箱',count:1}],gold:{count:12345,available:true}});
+  assert.equal(values.total,11);assert.equal(values.otherCount,5);
+  assert.equal(values.others[0].name,'金条');assert.equal(values.gold,12345);
+  assert.equal(values.goldAvailable,true);
+  const old=ui.statistics({equipment:{rare:{count:2}}});
+  assert.deepEqual(old.others,[]);assert.equal(old.otherCount,0);assert.equal(old.gold,0);
+  assert.equal(old.total,2);
 });
 
 test('disabled automation does not present a runnable empty configuration',()=>{

@@ -5,6 +5,7 @@
     const f=filters, query=String(f.search||'').trim().toLowerCase(), classMask=f.class==='current'?currentClass:Number(f.class||0);
     const view=items.filter(i=>{
       if(f.container&&i.container!==f.container||f.kind&&i.kind!==f.kind)return false;
+      if(f.tradable&&i.market_eligible!==true)return false;
       if(Array.isArray(f.containers)&&!f.containers.includes(i.container))return false;
       if(Array.isArray(f.locks)&&(!i.is_equipment||!f.locks.some(v=>v==='locked'?i.locked===true:i.locked===false)))return false;
       if(Array.isArray(f.rules)&&(!i.is_equipment||!f.rules.some(v=>v==='matches'?i.matches:v==='perfect'?i.primary_perfect:!i.matches&&!i.review)))return false;

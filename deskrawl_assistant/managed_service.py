@@ -5,35 +5,56 @@ import json
 import time
 
 from .managed_mode import (ManagedMode, DEFAULT_SETTINGS, validate_settings, identity,
-    run_record, DIFFICULTIES, FARM_DIFFICULTIES, equip_candidate_allowed, equipment_actions, equipment_policy, storage_material_kind)
+    run_record, DIFFICULTIES, FARM_DIFFICULTIES, equip_candidate_allowed, equipment_actions, equipment_policy, storage_material_kind, item_kind,
+    managed_required_storage, managed_town_rewards_clear)
 from .models import ValidationError
+from .storage_preferences import available_storage_pages, validate_available_storage_pages
 from .rules import evaluate, DEFAULT_MIN_CONFIDENCE
-from .native_memory import SnapshotChangedError, GameBusyError
+from .native_memory import SnapshotChangedError, GameBusyError, DeathRecoveryBusyError
 from .native_dispatcher import NativeActionError, GUARD_FAILED, REJECTED
 from .paths import RESOURCE_ROOT
 from .stargazing import enabled as stargazing_enabled, decide as stargazing_decide, combat_rewards_clear, combat_rewards_known
 from .loot_preview import decorate_equipment
-from .item_protection import disposal_protection, mandatory_storage, town_rewards_clear
+from .item_protection import disposal_protection, mandatory_storage
 from .action_log import record
 from .progression import catalog as growth_catalog, growth_action, next_purchase, NEW_ACTIONS, PURCHASE_BATCH_LIMIT, enabled as growth_enabled
+
+SYNTHESIS_ACTIONS = ('synthesize_gems', 'synthesize_runes')
+
+
+def _synthesis_action_key(action):
+    """Compare recipe and material identities without transient view fields."""
+    inputs = action.get('inputs', [])
+    def material(row):
+        return (identity(row), row.get('container'), row.get('slot_index'),
+                row.get('internal_name') or row.get('name_key'), row.get('count'), row.get('quantity'))
+    return {**{key: deepcopy(action.get(key)) for key in ('kind', 'recipe_id', 'recipe', 'input_keys',
+             'input_uids', 'count', 'max_quality', 'excluded_keys', 'target', 'target_indices', 'reason_code', 'synthesis_group')},
+            'inputs': [material(row) for row in inputs],
+            'item': material(action['item']) if action.get('item') else None}
 
 
 def required_capabilities(settings):
     required = {'transfer'}
+    synthesis_enabled = False
     if settings['auto_equip']['enabled']: required.add('equip')
     if settings['background']['rule_monitoring']: required.add('lock')
     if settings.get('progression', {}).get('talents_enabled'): required.add('talents')
     if settings.get('progression', {}).get('skills_enabled'): required.add('skills')
     if settings.get('life_skills', {}).get('enabled'): required.add('life_skills')
+    for group, capability in (('gems', 'gem_synthesis'), ('runes', 'rune_synthesis')):
+        if settings.get('synthesis', {}).get(group, {}).get('enabled'):
+            required.add(capability)
+            synthesis_enabled = True
     if settings.get('merchant', {}).get('enabled'): required.update(('merchant', 'travel', 'lock', 'chests', 'ground_pickup'))
     if settings['farming']['enabled'] or settings.get('merchant', {}).get('enabled'):
         required.update(('lock','travel','chests','ground_pickup'))
         if (settings['farming']['mode']=='push' or settings['farming']['difficulty']!='current'
                 or any(row['difficulty']!='current' for row in settings['farming'].get('repeat_maps',[]))):
             required.add('difficulty')
-        cleanup = settings['cleanup']
-        required.update(equipment_actions(cleanup))
-        required.update((cleanup['rune_action'],cleanup['gem_action']))
+    if settings['farming']['enabled'] or settings.get('merchant', {}).get('enabled') or synthesis_enabled:
+        required.update(('lock', 'chests', 'ground_pickup'))
+        required.update(equipment_actions(settings['cleanup']))
     return required - {'store'}
 
 
@@ -122,14 +143,17 @@ class ManagedServiceMixin:
         try:
             if self.managed_config.exists():
                 settings = validate_settings(json.loads(self.managed_config.read_text(encoding='utf-8')),
-                                             equipment_keys=self.ui['equipment'],allow_empty_rune_pages=True)
+                                             equipment_keys=self.ui['equipment'],allow_empty_storage_pages=True)
                 self._validate_slot_locks(settings)
                 loaded = True
-                if not settings['cleanup']['rune_pages']:
+                missing_pages = [label for group, label in (('equipment', '装备'), ('rune', '符文'), ('gem', '宝石'),
+                                 ('gold_bar', '金条'), ('legendary_rein', '传说缰绳'))
+                                 if not settings['cleanup'][group+'_pages']]
+                if missing_pages:
                     # Keep every old preference editable; never silently replace
                     # a sale-policy configuration with the default preset.
                     self.managed.settings = settings
-                    self.managed_config_error = '请补选符文存放页，用于强制收纳套装／宏伟符文；其他设置与原文件已保留。'
+                    self.managed_config_error = '请补选'+ '、'.join(missing_pages)+'存放页，用于托管强制收纳；其他设置与原文件已保留。'
                 else:
                     self.managed = ManagedMode(settings)
         except Exception as exc:
@@ -204,6 +228,21 @@ class ManagedServiceMixin:
         capture = getattr(self.client,'managed_snapshot',self.client.snapshot)
         return capture()
 
+    def _managed_synthesis_state(self, scene):
+        """Optional native data never becomes a dependency of normal farming."""
+        config = self.managed.settings.get('synthesis', {})
+        enabled = {group: config.get(group, {}).get('enabled') is True for group in ('gems', 'runes')}
+        if scene.get('in_town') is not True or not any(enabled.values()): return {}
+        reader = getattr(self.client, 'synthesis_snapshot', None)
+        try:
+            if not callable(reader): raise ValidationError('当前连接不支持自动合成读取。')
+            value = reader(**enabled)
+            if not isinstance(value, dict): raise ValidationError('合成状态格式未确认。')
+        except (OSError, RuntimeError, ValueError, KeyError, AttributeError) as exc:
+            value = {group: {'available': False, 'reason': str(exc)} for group in enabled if enabled[group]}
+        return {group: deepcopy(value.get(group, {'available': False, 'reason': '合成状态尚未完整读取。'}))
+                for group in enabled if enabled[group]}
+
     def _managed_observation(self, *, inventory_only=False):
         # Every write is planned from the latest server-side read, not browser rows.
         snap = self._managed_snapshot()
@@ -233,11 +272,14 @@ class ManagedServiceMixin:
             item['issues'] = list(source.get('issues',[]))
             item['item_type'] = source.get('item_type')
             item['item_class'] = source.get('item_class')
+            item['slot_locked'] = source.get('slot_locked')
+            item['identity_verified'] = source.get('identity_verified')
             item['base_rarity'] = source.get('base_rarity')
             item['equip_slot'] = source.get('equip_slot')
             if not item['is_equipment']:
                 item['rarity'] = source.get('rarity',source.get('base_rarity'))
             item['rune_level'] = source.get('rune_level')
+            item['rune_xp'] = source.get('rune_xp')
             item['rules_known'] = not bool(self.config_error)
             obs = observations.get((item['container'],item['slot_index']))
             if item['is_equipment']:
@@ -280,15 +322,34 @@ class ManagedServiceMixin:
                         decorate_equipment(item, rules, self.adapter, self.catalog)
             except (OSError, ValueError, RuntimeError, AttributeError, ValidationError):
                 loot_plan = {'available': False, 'reason': '本局掉落计划暂不可读，等待重新核验。'}
+        # Never promote a cached/display character into write authority. The
+        # lightweight inventory context may not contain an actual character ID.
+        control = value if inventory_only else self.managed_control
+        character_id = control.get('character_id') if control.get('available') is True else None
         return {'complete':payload['complete'], 'session':snap.get('bridge_session'), 'loot_plan':loot_plan,
+                'character_id':character_id,
                 'merchant_uids':list(self.managed_merchant_uids),
                 'items':payload['items'],'counts':payload['counts'],'character':deepcopy(self.character),
                 'progression':deepcopy(self.managed_growth), 'scene':scene,'carriage':carriage,'ground':ground,
                 'automation_settings':deepcopy(self.automation_settings),
                 'loot_ledger':deepcopy(self.managed_control.get('loot_ledger', {})),
                 'system_log':deepcopy(self.managed_control.get('system_log', {})),
+                'gold_ledger':deepcopy(self.managed_control.get('gold_ledger', {})),
+                'synthesis':self._managed_synthesis_state(scene),
                 'storage':{'page_size':snap.get('transfer',{}).get('page_size'),
                            'allowed_indices':snap.get('transfer',{}).get('storage_indices',[])}}
+
+    def _managed_available_storage_pages(self):
+        return available_storage_pages(self.snapshot, self.client.connected)
+
+    def _validate_managed_storage_pages(self, cleanup, groups=None):
+        pages = self._managed_available_storage_pages()
+        if self.client.connected and pages is None:
+            raise ValidationError('回城整理：仓库开放格位尚未读取完整，请刷新物品清单后再保存或启动。')
+        if groups is None:
+            validate_available_storage_pages(cleanup, pages)
+        else:
+            validate_available_storage_pages(cleanup, pages, groups)
 
     def managed_page(self):
         with self.guard:
@@ -314,10 +375,11 @@ class ManagedServiceMixin:
             size = transfer.get('page_size')
             indices = transfer.get('storage_indices',[])
             pages = []
-            warehouse_ready = bool(self.client.connected and (self.snapshot or {}).get('complete') is True
-                and transfer.get('available') is True and type(size) is int and size > 0
-                and isinstance(indices,list) and all(type(n) is int and n>=0 for n in indices)
-                and len(set(indices))==len(indices))
+            available_pages = self._managed_available_storage_pages()
+            warehouse_ready = available_pages is not None
+            if self.client.connected:
+                try: self._validate_managed_storage_pages(engine['settings']['cleanup'])
+                except ValidationError as exc: blocked.append(str(exc))
             if warehouse_ready:
                 occupied = {r.get('slot_index') for r in (self.snapshot or {}).get('containers',{}).get('storage',{}).get('slots',[])}
                 for index in sorted({n//size+1 for n in indices}):
@@ -353,6 +415,7 @@ class ManagedServiceMixin:
             if getattr(self,'game_transition',False): raise ValidationError('游戏正在启动或退出，请稍候。')
             if self.managed.running or self.operation_kind=='managed': raise ValidationError('请先暂停托管再修改设置。')
             settings = validate_settings(raw,equipment_keys=self.ui['equipment'])
+            self._validate_managed_storage_pages(settings['cleanup'])
             if settings['merchant']['enabled']:
                 shop=self.managed_growth.get('merchant',{})
                 if (not self.client.connected or self.managed_growth.get('available') is not True
@@ -511,18 +574,26 @@ class ManagedServiceMixin:
             self.managed_history=[]
         return self.managed_page()
 
+    def _managed_identity_ok(self, observation, *, require_character=False):
+        if self.managed.check_identity(observation, require_character=require_character): return True
+        if self.managed.phase == 'paused':
+            self.managed_can_resume = True
+            self._managed_freeze_clock()
+        return False
+
     def _managed_execute(self, action, observation):
         kind,item = action['kind'],action.get('item')
         def active(): return self.managed.running and not self.cancelled.is_set()
         if not active(): raise ValidationError('托管已取消。')
-        if self.managed.finishing and kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh','allocate_talent','learn_life_skill','set_skill'):
+        if self.managed.finishing and (kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh','allocate_talent','learn_life_skill','set_skill',*SYNTHESIS_ACTIONS)
+                or action.get('reason_code') == 'synthesis_prepare'):
             return {'verified':False,'retryable':True,'reason':'已请求停止，改为回城整理。'}
         # Inventory writes need fresh rule/equip checks. Pickup backends already
         # resolve the drop, verify receiving capacity/identity and confirm the
         # receipt themselves; do not scan campaign/character/rules twice here.
         if kind not in ('collect_ground', 'collect_carriage'):
             observation = self._managed_observation(inventory_only=kind in ('lock','transfer','sell','salvage')
-                and action.get('reason_code')!='equip_prepare')
+                and action.get('reason_code') not in ('equip_prepare', 'synthesis_prepare'))
         if observation.get('complete') is not True: raise SnapshotChangedError('物品正在变化，等待重新规划。')
         scene = observation.get('scene',{})
         if scene.get('scene_changing') is True or scene.get('teleporting') is True:
@@ -531,6 +602,16 @@ class ManagedServiceMixin:
             raise GameBusyError('等待游戏完成在线同步。')
         if kind in ('sell','salvage') and scene.get('in_town') is not True:
             return {'verified':False,'retryable':True,'reason':'当前场景已变化，回城重新整理后再处置。'}
+        if (kind in SYNTHESIS_ACTIONS or action.get('reason_code') == 'synthesis_prepare'):
+            if not self._managed_identity_ok(observation, require_character=True):
+                return {'verified':False,'retryable':True,'reason':self.managed.status}
+            if scene.get('in_town') is not True:
+                return {'verified':False,'retryable':True,'reason':'自动合成只在主城进行，等待回城后重新规划。'}
+            from .synthesis import next_action as synthesis_action
+            planned = synthesis_action(self.managed.settings, observation)
+            if planned is None or _synthesis_action_key(action) != _synthesis_action_key(planned):
+                return {'verified':False,'retryable':True,'reason':'合成材料、品质上限或排除名单已变化，重新规划。'}
+            action = {**action, **planned}
         pending = scene.get('online_pending_requests')
         if kind in ('return_town','enter_dungeon','switch_difficulty') and type(pending) is int and pending > 0:
             raise GameBusyError(f'等待在线请求处理完成后切换场景（待处理请求 {pending}）。')
@@ -561,9 +642,10 @@ class ManagedServiceMixin:
                     or verdict['verdict'] != 'skip'
                     or not (combat_rewards_clear(observation) if stargazing_entry else combat_rewards_known(observation))):
                 return {'verified':False, 'retryable':True, 'reason':'观星状态或实际奖励已变化，重新核验后再切图。'}
-        if kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh') and not stargazing_entry and not town_rewards_clear(observation):
+        if kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh') and not stargazing_entry and not managed_town_rewards_clear(observation):
             return {'verified':False,'retryable':True,'reason':'主城奖励尚未收取或收纳完成，继续整理后再进入地图。'}
-        if self.managed.finishing and kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh','allocate_talent','learn_life_skill','set_skill'):
+        if self.managed.finishing and (kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh','allocate_talent','learn_life_skill','set_skill',*SYNTHESIS_ACTIONS)
+                or action.get('reason_code') == 'synthesis_prepare'):
             return {'verified':False,'retryable':True,'reason':'已请求停止，改为回城整理。'}
         if action.get('reason_code') == 'background_organize':
             if (not self.managed.settings['background']['inventory_automation']
@@ -572,6 +654,7 @@ class ManagedServiceMixin:
         capability = {'enter_dungeon':'travel','return_town':'travel','open_chest':'chests',
                       'switch_difficulty':'difficulty', 'allocate_talent':'talents', 'learn_life_skill':'life_skills',
                       'set_skill':'skills', 'merchant_buy':'merchant', 'merchant_open':'merchant', 'merchant_close':'merchant', 'merchant_refresh':'merchant',
+                      'synthesize_gems':'gem_synthesis', 'synthesize_runes':'rune_synthesis',
                       'collect_ground':'ground_pickup','collect_carriage':'transfer'}.get(kind,kind)
         if not available_capability(self.managed_page()['capabilities'].get(capability)):
             raise ValidationError('当前托管动作能力尚未核验：'+capability)
@@ -624,7 +707,6 @@ class ManagedServiceMixin:
                 elif item.get('kind') == 'material':
                     group = storage_material_kind(item)
                     if (group is None or action.get('storage_group') != group
-                            or self.managed.settings['cleanup'][group+'_action'] != 'store'
                             or not self.managed._safe(item)):
                         return {'verified':False,'retryable':True,'reason':'金条或传说缰绳的身份、品质或收纳设置已变化，重新规划。'}
                     pages = self.managed.settings['cleanup'][group+'_pages']
@@ -638,6 +720,8 @@ class ManagedServiceMixin:
         source = next((r for c in (snap or {}).get('containers',{}).values() for r in c.get('slots',[])
                        if identity(r)==identity(item) and r.get('container')==item.get('container')) ,None) if item else None
         if kind in ('sell','salvage'):
+            if item_kind(item) != 'equipment' and managed_required_storage(item):
+                raise ValidationError('托管必须收纳符文、宝石、金条与传说缰绳，禁止出售或分解。')
             if reason := disposal_protection(item): raise ValidationError(reason)
             if item.get('kind')=='equipment':
                 if not self.managed._disposable(item): raise ValidationError('保留装备不能出售或分解。')
@@ -664,6 +748,19 @@ class ManagedServiceMixin:
             if not equip_candidate_allowed(item,current_score,self.managed.settings['auto_equip'],
                                            observation.get('character')):
                 return {'verified':False,'retryable':True,'reason':'换装比较已变化，重新计算。'}
+        if kind in SYNTHESIS_ACTIONS or action.get('reason_code') == 'synthesis_prepare':
+            # Optional recipe reads and replanning can span a character change
+            # without reconnecting. Check actual control identity once more at
+            # the submission boundary, including UID-less gem withdrawals.
+            try: control = self.client.control_snapshot()
+            except Exception: control = {'available':False}
+            current = {**observation, 'character_id':control.get('character_id')
+                       if control.get('available') is True else None}
+            if not self._managed_identity_ok(current, require_character=True):
+                return {'verified':False,'retryable':True,'reason':self.managed.status}
+            if self.managed.finishing:
+                return {'verified':False,'retryable':True,'reason':'已请求停止，改为回城整理。'}
+            if not active(): raise ValidationError('托管已取消。')
         if kind=='transfer':
             record('managed_transfer_preflight',source_container=item.get('container'),
                    source_slot=item.get('slot_index'),item_uid=item.get('item_uid'),
@@ -692,6 +789,11 @@ class ManagedServiceMixin:
                 self.managed_transition = {'action':action,'deadline':started+45,'hard_deadline':started+120,
                                            'started':started,'session':observation.get('session'),
                                            'requested_scene':self._transition_scene(observation['scene'])}
+                if kind == 'return_town' and self.managed_return_recovery is None:
+                    # A planned action or a busy preflight has not submitted a
+                    # portal. Budget only accepted returns, preserving an older
+                    # budget when a confirmed interrupted portal is retried.
+                    self.managed_return_recovery = {'started':started,'interruptions':0}
                 record('managed_transition_requested',kind=kind,
                        target_map=action.get('dungeon_id'),difficulty=action.get('difficulty'),
                        scene=self.managed_transition['requested_scene'])
@@ -721,9 +823,11 @@ class ManagedServiceMixin:
             if action.get('kind') == 'return_town' and self.managed_return_recovery:
                 started = min(started,self.managed_return_recovery['started'])
             elapsed = now-started
+            death_wait = (code == 'death_recovery_pending' and action.get('kind') == 'return_town'
+                          and self.managed_transition is None and self.managed_return_recovery is None)
             self.managed.pending = None
             self.error = ''
-            if elapsed >= 120:
+            if elapsed >= 120 and not death_wait:
                 self.managed.pause('游戏状态连续 2 分钟未恢复，托管已暂停；统计已保留。'+reason)
                 self.managed_can_resume = True
                 self.managed_retry = None
@@ -812,6 +916,9 @@ class ManagedServiceMixin:
         self.managed_fast_followup = False
         observation = self._managed_observation()
         with self.guard:
+            # The same bridge connection can remain alive across role changes.
+            # Reject them before retry/transition paths update counts or receipts.
+            if not self._managed_identity_ok(observation): return self.managed.status
             retry = self.managed_retry
             if retry:
                 scene = observation['scene']
@@ -823,6 +930,19 @@ class ManagedServiceMixin:
                 if retry['action_kind']=='return_town' and scene.get('in_town') is True:
                     self.managed_retry = None
                     self.managed_return_recovery = None
+                elif (retry['key'][0] == 'death_recovery_pending'
+                        and self.managed_transition is None and self.managed_return_recovery is None
+                        and observation.get('complete') is True and scene.get('available') is True
+                        and scene.get('dead') is False
+                        and all(scene.get(key) is False for key in ('scene_changing','teleporting','online_saving'))
+                        and type(scene.get('online_pending_requests')) is int
+                        and scene['online_pending_requests'] == 0):
+                    # Auto-revive/native repeat may have replaced the dead run.
+                    # Discard the unsubmitted intent and let the planner check
+                    # merchant, finish, map and reward conditions afresh.
+                    self.managed_retry = None
+                    if self.managed.phase == 'returning': self.managed.phase = 'farming'
+                    record('managed_death_recovery_resumed',scene=self._transition_scene(scene))
                 elif time.monotonic() < retry['next_at']:
                     return self.managed.status
             transition = self.managed_transition
@@ -885,11 +1005,8 @@ class ManagedServiceMixin:
             else:
                 action = self.managed.next_action(observation)
                 if self.managed.phase=='paused': self.managed_can_resume=True
-                if action and action['kind']=='return_town':
-                    now = time.monotonic()
-                    if self.managed_return_recovery is None:
-                        self.managed_return_recovery = {'started':now,'interruptions':0}
-                elif ((action is not None or self.managed.phase != 'returning')
+                if ((not action or action['kind'] != 'return_town')
+                        and (action is not None or self.managed.phase != 'returning')
                         and observation.get('complete') is True and observation['scene'].get('available') is True
                         and not any(observation['scene'].get(key) is True
                                     for key in ('scene_changing','teleporting','online_saving'))
@@ -899,12 +1016,35 @@ class ManagedServiceMixin:
                 if (self.managed.running and self.managed_return_recovery
                         and time.monotonic()-self.managed_return_recovery['started'] >= 120):
                     return self._managed_pause_return('连续 2 分钟未确认回到主城。')
+                retry = self.managed_retry
+                if not action and retry and retry['key'][0] == 'death_recovery_pending':
+                    scene = self._transition_scene(observation['scene'])
+                    wait = (observation.get('complete'), scene, self.managed.status)
+                    if retry.get('wait_state') != wait:
+                        retry['wait_state'] = wait
+                        record('managed_death_recovery_wait',complete=observation.get('complete'),
+                               scene=scene,reason=self.managed.status,
+                               control_error=self.managed_control.get('reason'))
         if not action: return self.managed.status
         try:
             result = {'verified':True,'scene_confirmed':True} if transition else self._managed_execute(action,observation)
+        except DeathRecoveryBusyError as exc:
+            return self._managed_defer(action,str(exc),'death_recovery_pending')
         except GameBusyError as exc:
+            if action['kind'] == 'return_town' and self._managed_scene().get('dead') is True:
+                # Scene/sync gates may precede the DeathUI check. The fresh
+                # confirmed death is still a preflight wait, not a submission.
+                return self._managed_defer(action,str(exc),'death_recovery_pending')
             return self._managed_defer(action,str(exc),'game_busy')
         except NativeActionError as exc:
+            if (action['kind'] == 'equip' and exc.state == REJECTED
+                    and getattr(exc, 'mutation_started', None) is False):
+                # Equipment's native qualification checks are read-only. A
+                # rejection there has not swapped anything; after the first
+                # write this exception must keep the normal uncertain fence.
+                return self._managed_defer(action,
+                    '游戏暂未接受换装资格，重新读取装备条件和角色状态后规划。',
+                    'equip_precheck_rejected', native_state=exc.state)
             if (not exc.uncertain and exc.state == REJECTED and action['kind'] == 'enter_dungeon'
                     and action.get('reason_code') == 'stargazing_skip'):
                 with self.guard:
@@ -950,10 +1090,10 @@ class ManagedServiceMixin:
                                          'level':'info' if result.get('verified') else 'error'})
             self.managed_history = self.managed_history[-100:]
             self.journal.append('system','managed_action',message,context={'action':action,'result':result})
-        inventory_action = action['kind'] in ('collect_ground','collect_carriage','lock','transfer','sell','salvage')
+        inventory_action = action['kind'] in ('collect_ground','collect_carriage','lock','transfer','sell','salvage',*SYNTHESIS_ACTIONS)
         use_receipt = (isinstance(receipt,dict) and receipt.get('complete') is True
                        and receipt.get('bridge_session') == observation.get('session'))
         self._publish(receipt if use_receipt else self._managed_snapshot(), refresh_character=not inventory_action)
         self.managed_fast_followup = (result.get('verified') is True and action['kind'] in
-            ('collect_ground','collect_carriage','lock','transfer','sell','salvage','merchant_open','merchant_close','merchant_buy','merchant_refresh'))
+            ('collect_ground','collect_carriage','lock','transfer','sell','salvage','merchant_open','merchant_close','merchant_buy','merchant_refresh',*SYNTHESIS_ACTIONS))
         return message

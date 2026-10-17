@@ -170,6 +170,9 @@ def preview(row, character, item_ui):
         equipped = {i['equipped_slot']: i for i in character['equipment']}
         comparisons = []
         for target in targets:
+            target_eligibility = equip_eligibility(row, character, target_slot=target)
+            if not target_eligibility['can_equip']:
+                continue
             old = equipped.get(target)
             removed = item_bonuses(old, item_ui) if old else ({}, {})
             model = deepcopy(character['comparison_model'])
@@ -189,6 +192,8 @@ def preview(row, character, item_ui):
                 'replaced_uid': old.get('item_uid') if old else None, 'before': before, 'after': after,
                 'delta': after - before, 'percent': (after - before) / before * 100 if before else None,
                 'attributes': changes})
+        if not comparisons:
+            return {**target_eligibility, 'available': False}
         best = max(comparisons, key=lambda c: c['delta'])
         return {**eligibility, 'available': True, 'estimated': True, **best, 'comparisons': comparisons, 'note': PREVIEW_NOTE}
     except (ValueError, MemoryReadError, OSError, KeyError, TypeError, OverflowError) as exc:

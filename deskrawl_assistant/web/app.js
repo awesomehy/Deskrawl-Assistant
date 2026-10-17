@@ -21,7 +21,7 @@ const columnMenus={
   lock:{label:'锁状态',filter:'locks',options:[['locked','已锁定'],['unlocked','未锁定']]},
   power:{label:'换装攻击力',sort:'power'},rules:{label:'规则结果',filter:'rules',options:[['matches','符合规则'],['miss','不符合规则'],['perfect','主词条全中']]}
 };
-const inventoryFilterIds=['inventory-class','inventory-slot','inventory-rarity','inventory-sockets','inventory-upgrade','inventory-level-min','inventory-level-max','inventory-power','inventory-sort','inventory-ancient','inventory-mist','inventory-divine'];
+const inventoryFilterIds=['inventory-class','inventory-slot','inventory-rarity','inventory-sockets','inventory-upgrade','inventory-level-min','inventory-level-max','inventory-power','inventory-sort','inventory-ancient','inventory-mist','inventory-divine','inventory-tradable'];
 
 async function api(path,data,retry=true){
   const response=await fetch('/api/'+path,data===undefined?{headers:{'X-Assistant-Token':token}}:{method:'POST',headers:{'Content-Type':'application/json','X-Assistant-Token':token},body:JSON.stringify(data)});
@@ -64,6 +64,7 @@ function switchTab(tab){
   if(!['rules','inventory','managed','loot-preview','logs','feedback'].includes(tab))return;
   closeColumnMenu();
   activeTab=tab;
+  if(tab!=='inventory')window.SteamMarketUI?.update([],false);
   document.querySelectorAll('.tab').forEach(button=>{let active=button.dataset.tab===tab;button.classList.toggle('active',active);button.setAttribute('aria-selected',active);});
   $('rules-page').hidden=tab!=='rules';$('inventory-page').hidden=tab!=='inventory';$('logs-page').hidden=tab!=='logs';
   $('managed-page').hidden=tab!=='managed';
@@ -180,7 +181,7 @@ function visibleItems(){
     class:$('inventory-class').value,slot:$('inventory-slot').value,rarity:$('inventory-rarity').value,sockets:$('inventory-sockets').value,
     upgrade:$('inventory-upgrade').value,levelMin:$('inventory-level-min').value,levelMax:$('inventory-level-max').value,
     power:$('inventory-power').value,sort:$('inventory-sort').value,
-    ancient:$('inventory-ancient').checked,mist:$('inventory-mist').checked,divine:$('inventory-divine').checked};
+    ancient:$('inventory-ancient').checked,mist:$('inventory-mist').checked,divine:$('inventory-divine').checked,tradable:$('inventory-tradable').checked};
   return InventoryTools.select((state?.items||[]).map(i=>({...i,en:gearMap.get(i.name_key)?.en})),filters,state?.character?.class_mask);
 }
 function equipmentTags(item){return `<span class="equipment-tags">${(item.tags||[]).map(t=>`<span class="equipment-tag ${t==='远古'?'ancient':t==='黑雾'?'mist':'divine'}">${esc(t)}</span>`).join('')}</span>`;}
@@ -238,7 +239,7 @@ function renderInventory(){
     itemSignature=signature;
     $('item-rows').innerHTML=view.map(i=>`<tr data-item="${esc(i.selection_id)}" class="${i.selection_id===detailId?'active':''} ${i.primary_perfect?'primary-perfect-item':''}" tabindex="0">
       <td><input type="checkbox" data-item-select="${esc(i.selection_id)}" aria-label="选择${esc(i.name)}" ${selectedItems.has(i.selection_id)?'checked':''} ${!i.selection_id?'disabled':''}></td>
-      <td><div class="item-name">${i.icon?`<img src="${esc(i.icon)}" alt="">`:''}<div><strong class="quality-item-name ${itemNameClass(i)}">${esc(i.name)}</strong><small>${esc(i.slot_label)} ${equipmentTags(i)}</small></div></div></td>
+      <td><div class="item-name">${i.icon?`<img src="${esc(i.icon)}" alt="">`:''}<div><strong class="quality-item-name ${itemNameClass(i)}">${esc(i.name)}</strong><small>${esc(i.slot_label)} ${equipmentTags(i)}</small>${window.SteamMarketUI?.slot(i)||''}</div></div></td>
       <td>${i.container==='inventory'?'背包':'仓库'} · ${Number(i.slot_index)+1}</td><td>${esc(i.count)}</td><td>${esc(i.level??'—')}</td><td>${i.is_equipment?i.upgrade==null?'未确认':'+'+esc(i.upgrade):'—'}</td><td title="已镶嵌 / 总孔位">${i.is_equipment?i.sockets==null?'未确认':(i.gems_known?i.occupied_sockets+'/':'')+i.sockets+' 孔':'—'}</td>
       <td>${i.is_equipment?`<span class="badge ${i.locked?'locked':'unlocked'}">${i.locked===true?'已锁定':i.locked===false?'未锁定':'未确认'}</span>`:'<span class="note">—</span>'}</td><td>${powerCell(i)}</td><td>${resultBadge(i)}</td></tr>`).join('');
     $('inventory-empty').hidden=view.length>0;
@@ -255,19 +256,22 @@ function renderInventory(){
   const hiddenSelection=[...selectedItems].filter(id=>!view.some(i=>i.selection_id===id)).length;
   $('transfer-selection').textContent=selectedItems.size?`已选 ${selectedItems.size} 组${hiddenSelection?`（筛选外 ${hiddenSelection} 组）`:''}`:'勾选物品后移动';
   updateControls();
+  window.SteamMarketUI?.update(view,activeTab==='inventory');
 }
 function renderDetail(){
   const item=state.items.find(i=>i.selection_id===detailId);
   if(!item){$('item-detail').innerHTML='<div class="empty-state">点击物品查看详情</div>';return;}
   const worn=item.container==='equipped';
   const moveButton=worn?'':`<button class="button detail-move" data-move-item="${esc(item.selection_id)}" data-target="${item.container==='inventory'?'storage':'inventory'}" ${!item.movable||state.busy?'disabled':''}>${item.container==='inventory'?'移入仓库':'取回背包'}</button>`;
-  if(!item.is_equipment){$('item-detail').innerHTML=`<div class="detail-title">${item.icon?`<img src="${esc(item.icon)}" alt="">`:`<div class="item-placeholder">${esc(item.kind_label[0])}</div>`}<div><h3 class="quality-item-name ${itemNameClass(item)}">${esc(item.name)}</h3><small>${esc(item.kind_label)}</small></div></div><div class="detail-meta">数量 ${esc(item.count)} · ${item.container==='inventory'?'背包':'仓库'}第 ${Number(item.slot_index)+1} 格</div>${renderEffects(item)}<p class="detail-hint">${esc(item.effect_note||'')}</p><p class="detail-hint">${item.kind==='gem'?`同种同等级宝石优先堆叠${item.max_stack>1?`，每组最多 ${esc(item.max_stack)} 颗`:''}，剩余数量放入空格。`:'整组移动到目标空格，保留原有数量。'}不参与装备词条筛选。</p>${moveButton}`;return;}
+  if(!item.is_equipment){$('item-detail').innerHTML=`<div class="detail-title">${item.icon?`<img src="${esc(item.icon)}" alt="">`:`<div class="item-placeholder">${esc(item.kind_label[0])}</div>`}<div><h3 class="quality-item-name ${itemNameClass(item)}">${esc(item.name)}</h3><small>${esc(item.kind_label)}</small></div></div><div class="detail-meta">数量 ${esc(item.count)} · ${item.container==='inventory'?'背包':'仓库'}第 ${Number(item.slot_index)+1} 格</div>${window.SteamMarketUI?.slot(item,true)||''}${renderEffects(item)}<p class="detail-hint">${esc(item.effect_note||'')}</p><p class="detail-hint">${item.kind==='gem'?`同种同等级宝石优先堆叠${item.max_stack>1?`，每组最多 ${esc(item.max_stack)} 颗`:''}，剩余数量放入空格。`:'整组移动到目标空格，保留原有数量。'}不参与装备词条筛选。</p>${moveButton}`;window.SteamMarketUI?.paint();return;}
   $('item-detail').innerHTML=equipmentPreviewHtml(item,moveButton);
+  window.SteamMarketUI?.paint();
 }
 function equipmentPreviewHtml(item,moveButton=''){
   const worn=item.container==='equipped';
   return `<div class="detail-title">${item.icon?`<img src="${esc(item.icon)}" alt="">`:''}<div><h3 class="quality-item-name ${itemNameClass(item)}">${esc(item.name)}</h3><small>${esc(item.slot_label)} · ${esc(classesLabel(item.class_mask))}</small></div></div>
     <div class="detail-meta"><span>${worn?'已穿戴 · ':''}${esc(item.rarity_label)} · Lv.${esc(item.level)}</span><span>强化 ${item.upgrade==null?'未确认':'+'+esc(item.upgrade)} · ${esc(item.sockets??'未确认')} 孔</span></div>${equipmentTags(item)}
+    ${window.SteamMarketUI?.slot(item,true)||''}
     ${worn?'':renderComparison(item)}
     ${renderEffects(item)}
     ${['base','primary','secondary','unknown'].map(g=>{const values=item.groups[g]||[];return values.length?`<div class="detail-group"><h4>${{base:'基础属性 · 不参与筛选',primary:'主词条',secondary:'副词条',unknown:'待核验词条'}[g]}</h4><div class="type-list">${values.map(v=>`<div class="affix-row ${v.matched?'matched':''}" data-affix-key="${esc(v.key)}" title="${esc(v.value_note||(v.matched?'命中规则：'+v.matched_rules.join('、'):''))}"><span class="affix-name">${esc(v.name)}</span><strong class="affix-value">${esc(v.display_value??'未读取')}</strong>${v.matched?'<small class="affix-hit" aria-label="命中规则">✓</small>':''}</div>`).join('')}</div></div>`:'';}).join('')}
@@ -442,13 +446,14 @@ function renderState(){
   connection.innerHTML='<i></i>'+ (state.connected?`已连接${state.busy?' · 处理中':''}`:state.busy?'正在连接…':'未连接游戏');
   connection.title=state.pid?`游戏进程 ${state.pid}`:'';
   const game=state.game||{},gameLabels={running:'游戏运行中',stopped:'游戏未运行',starting:'Steam 启动中…',closing:'游戏退出中…',unknown:'游戏状态未确认'};
-  $('game-state').textContent=gameLabels[game.status]||'检测游戏中…';
+  $('game-state').textContent=game.status==='running'&&game.control_unavailable?'游戏运行中 · 控制暂不可用':gameLabels[game.status]||'检测游戏中…';
   $('game-state').dataset.status=game.status||'unknown';
   $('game-state').title=game.error||(game.count>1?'检测到多个游戏进程，请在游戏窗口中退出。':'');
   $('game-start').hidden=game.running===true||game.status==='closing';
   $('game-start').disabled=game.can_start!==true;
   $('game-close').hidden=game.running!==true;
   $('game-close').disabled=game.can_close!==true;
+  $('game-close').title=game.can_close===true?'关闭游戏前需要再次确认':game.error||(game.count>1?'检测到多个游戏进程，请在游戏窗口中退出。':'等待重新核验游戏进程后关闭。');
   $('rule-count').textContent=state.rules.filter(r=>r.enabled).length;
   $('operation-message').textContent=state.message+(state.connected&&!state.complete&&!state.busy?' 本次读取不完整，请稍后刷新。':'');
   document.querySelector('.operation-notice').classList.toggle('error',!!state.error);

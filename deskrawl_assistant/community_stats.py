@@ -234,6 +234,9 @@ class CommunityStats:
     def close(self):
         self.stop_event.set(); self.wake.set()
         if self.worker and self.worker is not threading.current_thread():
-            self.worker.join(8)
+            # statistics_provider may still own a native client read. Keep the
+            # database until that read and the
+            # worker have finished; a timed join does not confirm completion.
+            self.worker.join()
         with self.lock:
             self.db.close()

@@ -63,6 +63,11 @@ def make_handler(service, token):
                     if getattr(self.server,'desktop',None) is None: value['can_install'] = False
                     return self.reply(value)
                 if path=='/api/session': return self.reply({'token':token})
+                if path=='/api/market/settings':
+                    if self.headers.get('X-Assistant-Token') != token:
+                        return self.reply({'error':'请重新打开助手页面。','session_expired':True},403)
+                    if urlsplit(self.path).query: raise ValueError('市场设置不接受查询参数。')
+                    return self.reply(service.market_settings())
                 if path=='/api/community':
                     if self.headers.get('X-Assistant-Token') != token:
                         return self.reply({'error':'请重新打开助手页面。','session_expired':True},403)
@@ -135,6 +140,12 @@ def make_handler(service, token):
                 if getattr(service,'updating',False) is True and path not in ('/api/stop','/api/shutdown'):
                     raise ValueError('正在替换程序，请稍候。')
                 if path=='/api/action': service.start(data.get('kind'),data)
+                elif path=='/api/market/quotes':
+                    if set(data) != {'items'}: raise ValueError('市场查询参数无效。')
+                    return self.reply(service.market_quotes(data['items']))
+                elif path=='/api/market/settings':
+                    if set(data) != {'currency_id'}: raise ValueError('市场设置参数无效。')
+                    return self.reply(service.set_market_currency(data['currency_id']))
                 elif path in ('/api/game/start','/api/game/close'):
                     return self.reply(service.game_action(path.rsplit('/',1)[-1],data))
                 elif path in ('/api/update/check','/api/update/install'):

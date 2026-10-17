@@ -12,7 +12,7 @@ from deskrawl_assistant.native_dispatcher import (
     Argument, Invocation, NativeActionError, compile_mailbox, build_trampoline,
     load_profile, MainThreadDispatcher, MAX_GUARDS, DONE, CANCELLED, GUARD_FAILED, REJECTED, INVALID,
 )
-from deskrawl_assistant.native_memory import MemoryReadError, GameBusyError
+from deskrawl_assistant.native_memory import MemoryReadError, GameBusyError, DeathRecoveryBusyError
 
 
 class ActionBoundaryTests(unittest.TestCase):
@@ -157,12 +157,14 @@ class ActionBoundaryTests(unittest.TestCase):
         actions = GameActions(reader, dispatcher=dispatcher)
         self.assertEqual(actions.verified_kinds,
             {'return_town','enter_map','switch_difficulty','equip','sell','salvage','open_chest','collect_ground',
-             'allocate_talent','merchant_open','merchant_buy','merchant_close','merchant_refresh'})
+             'allocate_talent','merchant_open','merchant_buy','merchant_close','merchant_refresh',
+             'synthesize_gems','synthesize_runes'})
         state = actions.capabilities()
         self.assertFalse(state['native_verified'])
         self.assertFalse(state['test_mode'])
         self.assertIn('尚未实机验收', state['reason'])
-        for key in ('travel','difficulty','equip','sell','salvage','chests','ground_pickup','merchant','talents'):
+        for key in ('travel','difficulty','equip','sell','salvage','chests','ground_pickup','merchant','talents',
+                    'gem_synthesis','rune_synthesis'):
             self.assertTrue(state[key]['available'])
             self.assertTrue(state[key]['native_verified'])
             self.assertFalse(state[key]['test_enabled'])
@@ -190,6 +192,26 @@ class ActionBoundaryTests(unittest.TestCase):
         dispatcher.install.assert_not_called()
         dispatcher.invoke.assert_not_called()
 
+    def test_released_synthesis_dispatches_without_test_mode_and_keeps_receipt_guards(self):
+        reader, dispatcher, synthesis = Mock(), Mock(), Mock()
+        actions = GameActions(reader, dispatcher=dispatcher)
+        validate = Mock(return_value=True)
+        with patch.object(actions, 'synthesis_runtime', return_value=synthesis):
+            for kind in ('synthesize_gems', 'synthesize_runes'):
+                synthesis.execute.return_value = {'verified': True}
+                result = actions.execute(kind, {'recipe_id': 'recipe'}, validate=validate)
+                self.assertTrue(result['verified'])
+                self.assertTrue(result['native_verified'])
+                synthesis.execute.assert_called_with(kind, {'recipe_id': 'recipe'},
+                    cancel_event=None, validate=validate)
+            self.assertEqual(synthesis.execute.call_count, 2)
+            validate.return_value = False
+            with self.assertRaisesRegex(NativeActionError, '托管操作已停止'):
+                actions.execute('synthesize_gems', {}, validate=validate)
+            self.assertEqual(synthesis.execute.call_count, 2)
+        dispatcher.install.assert_not_called()
+        dispatcher.invoke.assert_not_called()
+
     def test_fully_verified_release_still_blocks_changed_game_build(self):
         reader, dispatcher = Mock(), Mock()
         dispatcher.installed = False
@@ -198,9 +220,10 @@ class ActionBoundaryTests(unittest.TestCase):
         state = actions.capabilities()
         self.assertFalse(state['native_verified'])
         self.assertFalse(state['compatible'])
-        for key in ('travel','difficulty','equip','sell','salvage','chests','ground_pickup'):
+        for key in ('travel','difficulty','equip','sell','salvage','chests','ground_pickup',
+                    'gem_synthesis','rune_synthesis'):
             self.assertFalse(state[key]['available'])
-        for kind in ('sell','switch_difficulty'):
+        for kind in ('sell','switch_difficulty','synthesize_gems','synthesize_runes'):
             with self.assertRaisesRegex(NativeActionError, '构建指纹不同'):
                 actions.execute(kind, {})
         dispatcher.install.assert_not_called()
@@ -353,18 +376,18 @@ class ActionBoundaryTests(unittest.TestCase):
                 self.assertTrue(result['transition_requested']);self.assertFalse(result['effect_confirmed'])
 
     def test_death_return_waits_for_loading_or_already_submitted_death_ui(self):
-        for loading,submitted in ((True,False),(False,True)):
-            with self.subTest(loading=loading,submitted=submitted):
+        for loading,missing,submitted in ((True,False,False),(False,True,False),(False,False,True)):
+            with self.subTest(loading=loading,missing=missing,submitted=submitted):
                 reader,dispatcher,read=Mock(),Mock(),Mock()
                 reader.module={'base':1000};reader.class_name.return_value='Player'
                 read.verify.return_value=5;read.singleton.return_value=8;read.klass.return_value=100
                 game=GameActions(reader,dispatcher=dispatcher)
                 pointer=1000+game.profile['singletons']['DeathUI']
                 token=game.profile['uninitialized_type_tokens']['DeathUI']
-                read.ptr.side_effect=lambda address:token if address==pointer and loading else 4
+                read.ptr.side_effect=lambda address:token if address==pointer and loading else 0 if address==100+184 and missing else 4
                 read.boolean.side_effect=lambda address:True if address==4+296 else submitted
                 with patch.object(game,'_require_travel_ready'),patch.object(game,'_completion_state',return_value={}):
-                    with self.assertRaises(GameBusyError):game._return_town_call(read,1,2)
+                    with self.assertRaises(DeathRecoveryBusyError):game._return_town_call(read,1,2)
                 dispatcher.invoke.assert_not_called()
 
     def test_rejected_return_town_never_claims_a_requested_transition(self):

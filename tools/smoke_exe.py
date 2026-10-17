@@ -23,7 +23,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.3.4'
+NAME = 'Deskrawl装备助手-v1.3.5'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -71,15 +71,19 @@ def main():
     assert 'deskrawl_assistant.statistics_reader' in bundled_modules.toc
     for module in ('combat_rewards', 'game_lifecycle', 'mythic'):
         assert 'deskrawl_assistant.' + module in bundled_modules.toc
+    for module in ('synthesis', 'synthesis_runtime', 'steam_market', 'market_currency'):
+        assert 'deskrawl_assistant.' + module in bundled_modules.toc
     assert not any(n.startswith('deskrawl_assistant.remote_') for n in bundled_modules.toc)
+    assert not any(n.startswith(('deskrawl_assistant.account_', 'deskrawl_assistant.sandbox_accounts')) for n in bundled_modules.toc)
     managed_page = archive.extract(normalized['deskrawl_assistant/web/index.html']).decode('utf-8')
-    assert managed_page.count('data-managed-fold="') == 9
+    assert managed_page.count('data-managed-fold="') == 10
     assert 'deskrawl_assistant/update_replace.ps1' in normalized
     assert 'data/compatibility-baseline.json' in normalized
     actions_profile = json.loads(archive.extract(normalized['data/game-actions-profile.json']))
     assert set(actions_profile['verified_kinds']) == {
         'return_town','enter_map','switch_difficulty','equip','sell','salvage','open_chest','collect_ground',
-        'allocate_talent','merchant_open','merchant_buy','merchant_close','merchant_refresh'}
+        'allocate_talent','merchant_open','merchant_buy','merchant_close','merchant_refresh',
+        'synthesize_gems','synthesize_runes'}
     growth = json.loads(archive.extract(normalized['data/progression-catalog.json']))
     assert set(actions_profile['enabled_kinds']) == {'learn_life_skill', 'set_skill'}
     assert set(growth['heroes']) == {'1','2','4','8'}
@@ -108,7 +112,7 @@ def main():
                 result = {'schema': 1, 'client_id': payload['client_id'], 'token': 'a' * 64}
             elif self.path == '/v1/report':
                 assert self.headers.get('Authorization') == 'Bearer ' + 'a' * 64
-                assert payload['version'] == '1.3.4'
+                assert payload['version'] == '1.3.5'
                 result = {'accepted': True, 'report_id': payload['report_id'],
                           'sequence': payload['sequence'], 'accepted_at': datetime.now(timezone.utc).isoformat()}
             else:
@@ -176,7 +180,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.3.4'
+                assert request('/api/state')['app_version'] == '1.3.5'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -283,6 +287,19 @@ def main():
         assert 'id="loot-preview-page"' in page
         preview = request('/api/loot-preview')
         assert preview['phase'] == 'waiting' and preview['run'] is None and not preview['waves']
+        synth = request('/api/managed')['settings']['synthesis']
+        assert synth['gems']['enabled'] is False and synth['runes']['enabled'] is False
+        assert request('/api/market/settings')['currency_id'] == 0
+        assert request('/api/market/settings', {'currency_id':23})['currency_id'] == 23
+        assert request('/api/market/quotes', {'items':[]}) == {'items':[], 'currency_id':23}
+        for unpublished in ('/api/accounts', '/api/remote'):
+            try:
+                request(unpublished)
+            except urllib.error.HTTPError as exc:
+                assert exc.code == 404
+            else:
+                raise AssertionError('Unpublished feature endpoint is exposed: '+unpublished)
+        report['checks'].append('自动合成默认关闭；市场币种保存及断连报价接口正常，多开和远控接口不存在')
         report['checks'].append('掉落预览界面、独立类型配置及只读接口内置，断连时无旧计划')
         assert b'InventoryTools' in request('/inventory-tools.js')
         report['checks'].append('角色装备独立弹窗、七个表头菜单及固定 Boss 场景说明已随 exe 内置')
@@ -434,6 +451,7 @@ def main():
         assert restored_managed['settings'] == saved_managed and not restored_managed['running']
         assert request('/api/community')['enabled'] is True
         assert request('/api/community')['url'] == receipt_url
+        assert request('/api/market/settings')['currency_id'] == 23
         report['checks'].append('战斗天赋、生活技能路径、技能组合及自定义93%/17%商人比例与购买件数，保存后重启完整保留')
         report['checks'].append('自定义托管分区、未解锁页选择与自动整理偏好重启后保留，默认方案不覆盖本地配置')
         check_reporting_disabled()

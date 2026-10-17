@@ -8,7 +8,7 @@ from unittest.mock import patch
 from unittest.mock import Mock
 from types import SimpleNamespace
 
-from deskrawl_assistant.loot_capture import LootCaptureMonitor, plan_hash, planned_hits
+from deskrawl_assistant.loot_capture import LootCaptureMonitor, plan_hash, planned_hits, high_value_reason, _market_catalog
 from deskrawl_assistant.loot_plan_reader import read_loot_plan
 from tests.test_loot_plan_reader import Fixture
 
@@ -64,6 +64,209 @@ class LootCaptureTests(unittest.TestCase):
 
     def test_unknown_divine_template_is_still_captured_from_plan_slot(self):
         self.assertEqual(planned_hits(bundle('NewServerBelt','Divine')['raw_plan'])[0]['category'],'神圣装备')
+
+    def test_all_marketable_material_plans_trigger_capture_without_network(self):
+        materials = {key for key, entry in _market_catalog().items.items() if entry['kind'] == 'material'}
+        self.assertTrue({'GoldBar', 'UpgradeCommodity1', 'Rein_BeachCrabBoss'} <= materials)
+        with patch('urllib.request.OpenerDirector.open', side_effect=AssertionError('No HTTP in capture')):
+            for key in materials:
+                with self.subTest(key=key):
+                    data = bundle(key, 'Common')
+                    hits = planned_hits(data['raw_plan'])
+                    self.assertEqual(len(hits), 1)
+                    self.assertEqual(hits[0]['item_key'], key)
+                    expected = '金条' if key == 'GoldBar' else '开光石' if key == 'UpgradeCommodity1' else '传说缰绳'
+                    self.assertEqual(hits[0]['category'], expected)
+                    self.monitor.feed(data)
+        self.assertEqual(self.monitor.status()['saved_runs'], 1)
+
+    def test_non_marketable_items_and_ordinary_legendary_variants_are_excluded(self):
+        for key in ('MovementPotion1', 'GemRuby1', 'TreasureChest1', 'CommonBelt3', 'UnknownMaterial'):
+            with self.subTest(key=key):
+                self.assertEqual(high_value_reason({'internal_name':key, 'is_equipment':False}), '')
+        self.assertEqual(high_value_reason({'internal_name':'LegendaryBelt1', 'is_equipment':True,
+            'rarity':3, 'is_black_mist':False}), '')
+
+    def test_market_definition_not_a_fixed_material_allowlist(self):
+        entry = {'kind':'material', 'rarity':3, 'normal':{'definition_id':9999}}
+        with patch('deskrawl_assistant.loot_capture._market_catalog', return_value=SimpleNamespace(items={'FutureMarketMaterial':entry})):
+            self.assertEqual(high_value_reason({'internal_name':'FutureMarketMaterial'}), '可交易物品')
+
+    def test_uidless_material_observation_and_ground_carriage_transfer(self):
+        data = bundle('GoldBar')
+        self.monitor.feed(data)
+        row = observed(uid='', key='GoldBar', is_equipment=False, rarity=3,
+            capture_source='ground', observation_id='stable-loot-drop', count=2)
+        data['observations'] = [row]
+        self.monitor.feed(data)
+        hit = self.saved()['observed_high_value'][0]
+        self.assertEqual(hit['category'], '金条')
+        self.assertEqual(hit['item_uid'], '')
+        self.assertEqual(hit['observation_id'], 'stable-loot-drop')
+        self.assertEqual(hit['quantity'], 2)
+        self.assertEqual(hit['identity_kind'], 'loot_drop')
+        self.assertEqual(hit['same_template_waves'], [1])
+        self.assertEqual(hit['plan_membership'], 'unconfirmed')
+        self.assertEqual(hit['exact_plan_items'], [])
+        row['capture_source'] = 'carriage'
+        self.monitor.feed(data)
+        row['capture_source'] = 'inventory'
+        row['transfer_key'] = 'different-inventory-slot'
+        self.monitor.feed(data)
+        self.assertEqual(len(self.saved()['observed_high_value']), 1)
+
+    def test_uidless_rein_and_stone_absent_from_plan_save_actual_evidence(self):
+        data = bundle()
+        self.monitor.feed(data)
+        data['observations'] = [observed(uid='', key=key, is_equipment=False, rarity=3,
+            capture_source='carriage', observation_id='drop-'+key, count=1)
+            for key in ('UpgradeCommodity1', 'Rein_BeachCrabBoss')]
+        self.monitor.feed(data)
+        saved = self.saved()
+        self.assertEqual(saved['planned_high_value'], [])
+        self.assertEqual([row['category'] for row in saved['observed_high_value']], ['开光石', '传说缰绳'])
+        self.assertTrue(all(row['plan_membership'] == 'unconfirmed' for row in saved['observed_high_value']))
+
+    def test_uidless_initial_items_and_inventory_sorting_are_not_new_drops(self):
+        data = bundle()
+        row = observed(uid='', key='GoldBar', is_equipment=False,
+            capture_source='ground', observation_id='existing', count=1)
+        data['observations'] = [row]
+        self.monitor.feed(data)
+        row['capture_source'] = 'carriage'
+        self.monitor.feed(data)
+        row['capture_source'] = 'inventory'
+        row['observation_id'] = 'not-a-drop-id'
+        row['transfer_key'] = 'new-slot'
+        row['count'] = 2
+        self.monitor.feed(data)
+        self.assertFalse(self.files())
+
+    def test_uidless_observation_id_does_not_match_empty_or_equal_plan_drop_id(self):
+        data = bundle('GoldBar', uid='drop-identity')
+        self.monitor.feed(data)
+        data['observations'] = [observed(uid='', key='GoldBar', is_equipment=False,
+            capture_source='ground', observation_id='drop-identity')]
+        self.monitor.feed(data)
+        self.assertEqual(self.saved()['observed_high_value'][0]['plan_membership'], 'unconfirmed')
+        data['raw_plan']['waves'][0]['loot']['items'][0]['dropId'] = ''
+        data['observations'][0]['observation_id'] = 'second'
+        self.monitor.feed(data)
+        self.assertTrue(all(not hit['exact_plan_items'] for hit in self.saved()['observed_high_value']))
+
+    def test_uid_and_drop_observation_have_separate_identity_namespaces(self):
+        data = bundle()
+        self.monitor.feed(data)
+        data['observations'] = [observed(uid='same-id'), observed(uid='', key='GoldBar',
+            is_equipment=False, capture_source='ground', observation_id='same-id')]
+        self.monitor.feed(data)
+        self.assertEqual(len(self.saved()['observed_high_value']), 2)
+
+    def test_uidless_evidence_restores_and_does_not_duplicate_after_reenable(self):
+        data = bundle('GoldBar')
+        self.monitor.feed(data)
+        row = observed(uid='', key='GoldBar', is_equipment=False,
+            capture_source='ground', observation_id='stable')
+        data['observations'] = [row]
+        self.monitor.feed(data)
+        original = self.saved()
+        self.monitor.set_enabled(False)
+        self.monitor.set_enabled(True)
+        data['observations'] = [dict(row, capture_source='carriage')]
+        self.monitor.feed(data)
+        self.monitor.feed(data)
+        self.assertEqual(self.saved()['observed_high_value'], original['observed_high_value'])
+
+    def test_recycled_uidless_drop_object_is_a_new_event_after_complete_absence(self):
+        data = bundle()
+        self.monitor.feed(data)
+        row = observed(uid='', key='GoldBar', is_equipment=False,
+            capture_source='ground', observation_id='recycled-native-object', count=1)
+        data['observations'] = [row]
+        self.monitor.feed(data)
+        first = self.saved()['observed_high_value'][0]
+        data['observations'] = []
+        self.monitor.feed(data)
+        data['raw_plan']['runId'] = 'second-run'
+        data['observation_run'] = plan_hash(data['raw_plan'])
+        data['observations'] = [row]
+        self.monitor.feed(data)
+        self.assertEqual(len(self.files()), 2)
+        hits = [hit for path in self.files() for hit in json.loads(path.read_text(encoding='utf-8'))['observed_high_value']]
+        self.assertEqual({hit['observation_generation'] for hit in hits}, {0, 1})
+        self.assertEqual(len({hit['observation_event_id'] for hit in hits}), 2)
+        self.assertTrue(all(hit['observation_id'] == first['observation_id'] for hit in hits))
+
+    def test_uidless_cross_run_carriage_item_and_incomplete_reads_do_not_duplicate(self):
+        data = bundle()
+        self.monitor.feed(data)
+        row = observed(uid='', key='GoldBar', is_equipment=False,
+            capture_source='ground', observation_id='continuing-object')
+        data['observations'] = [row]
+        self.monitor.feed(data)
+        data['observations_complete'] = False
+        data['observations'] = []
+        self.monitor.feed(data)
+        data['raw_plan']['runId'] = 'second-run'
+        data['observation_run'] = plan_hash(data['raw_plan'])
+        data['observations_complete'] = True
+        data['observations'] = [dict(row, capture_source='carriage')]
+        self.monitor.feed(data)
+        self.assertEqual(len(self.saved()['observed_high_value']), 1)
+        self.assertEqual(self.saved()['observed_high_value'][0]['first_source'], 'ground')
+
+    def test_uidless_new_lifetime_after_reenable_does_not_collide_with_saved_event(self):
+        data = bundle('GoldBar')
+        self.monitor.feed(data)
+        row = observed(uid='', key='GoldBar', is_equipment=False,
+            capture_source='ground', observation_id='recycled-native-object')
+        data['observations'] = [row]
+        self.monitor.feed(data)
+        self.monitor.set_enabled(False)
+        self.monitor.set_enabled(True)
+        data['observations'] = []
+        self.monitor.feed(data)
+        data['observations'] = [row]
+        self.monitor.feed(data)
+        hits = self.saved()['observed_high_value']
+        self.assertEqual(len(hits), 2)
+        self.assertNotEqual(hits[0]['observation_event_id'], hits[1]['observation_event_id'])
+
+    def test_uidless_unattributed_lifetimes_never_reuse_an_old_file(self):
+        data = bundle()
+        data['raw_plan'] = None
+        data['preview'] = {'available':False}
+        data['observation_run'] = None
+        self.monitor.feed(data)
+        row = observed(uid='', key='GoldBar', is_equipment=False,
+            capture_source='ground', observation_id='recycled-native-object')
+        data['observations'] = [row]
+        self.monitor.feed(data)
+        self.monitor.set_enabled(False)
+        self.monitor.set_enabled(True)
+        data['observations'] = []
+        self.monitor.feed(data)
+        data['observations'] = [row]
+        self.monitor.feed(data)
+        self.assertEqual(len(self.files()), 2)
+        self.assertTrue(all(json.loads(path.read_text(encoding='utf-8'))['association'] == 'unattributed' for path in self.files()))
+
+    def test_legacy_uid_evidence_restores_without_new_identity_fields(self):
+        data = bundle('LegendaryBelt1', 'Divine')
+        self.monitor.feed(data)
+        data['observations'] = [observed()]
+        self.monitor.feed(data)
+        legacy = self.saved()
+        for name in ('observation_id', 'observation_event_id', 'observation_generation', 'identity_kind', 'quantity'):
+            legacy['observed_high_value'][0].pop(name, None)
+        self.files()[0].write_text(json.dumps(legacy, ensure_ascii=False), encoding='utf-8')
+        self.monitor.set_enabled(False)
+        self.monitor.set_enabled(True)
+        data['observations'] = []
+        self.monitor.feed(data)
+        data['observations'] = [observed(capture_source='storage')]
+        self.monitor.feed(data)
+        self.assertEqual(self.saved()['observed_high_value'], legacy['observed_high_value'])
 
     def test_same_run_is_saved_once_and_preserves_raw_identifiers(self):
         data = bundle('LegendaryBelt1','Divine')

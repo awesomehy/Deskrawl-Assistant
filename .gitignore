@@ -35,6 +35,8 @@ data/*
 !data/game-actions-profile.json
 !data/loot-plan-types.json
 !data/loot-item-ui.json
+!data/synthesis-catalog.json
+!data/steam-market-catalog.json
 
 # The Microsoft bootstrapper is fetched separately before packaging.
 packaging/*.exe
@@ -57,6 +59,7 @@ tools/*
 !tools/probe_transfer_state.py
 !tools/verify_container_transfer.py
 !tools/verify_carriage_transfer.py
+!tools/extract_steam_market_catalog.py
 
 docs/*
 !docs/版本记录.md
@@ -76,6 +79,7 @@ docs/*
 !docs/托管模式开发说明.md
 !docs/神秘商人接口分析.md
 !docs/screenshots/
+!docs/steam-market.md
 
 !docs/经验收益说明.md
 !data/experience-types.json
@@ -110,3 +114,5 @@ docs/*
 !docs/1.3.4验收说明.md
 
 !docs/游戏1.0.3兼容性验证.md
+
+!docs/1.3.5验收说明.md

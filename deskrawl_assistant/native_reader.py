@@ -362,6 +362,33 @@ class NativeReader:
         self.item_cache[item] = out
         return out
 
+    def _black_mist_state(self, header):
+        """Optional reveal evidence; unreadable reveal state fails closed only.
+
+        `revealed` records the presence of the native reveal-state object. The
+        original equip gate specifically requires its `Finalized` flag.
+        A malformed/changed reveal must not hide the item from safe storage.
+        """
+        result = {"black_mist_revealed": None, "black_mist_finalized": None}
+        if not header[105]:
+            return result
+        reveal = struct.unpack_from('<Q', header, 112)[0]
+        if not reveal:
+            return {"black_mist_revealed": False, "black_mist_finalized": False}
+        try:
+            raw = self.memory.read(reveal, 32)
+            klass = struct.unpack_from('<Q', raw)[0]
+            fields = {row['name']: row['offset'] for row in self.fields(klass)}
+            if (self.class_name(klass) != 'BlackMistRevealState'
+                    or fields != {'Slots': 16, 'Finalized': 24} or raw[24] not in (0, 1)):
+                return result
+            if self.memory.read(reveal, 32) != raw:
+                return result
+            self.snapshot_stamps.append((reveal, raw))
+            return {"black_mist_revealed": True, "black_mist_finalized": bool(raw[24])}
+        except (MemoryReadError, UnicodeError, ValueError, struct.error):
+            return result
+
     def generated(self, obj):
         p = self.memory
         header = p.read(obj, 128)
@@ -395,8 +422,10 @@ class NativeReader:
             "rarity": struct.unpack_from("<i", header, 20)[0], "modifiers": modifiers, "modifiers_complete": True,
             "upgrade_level": struct.unpack_from("<i", header, 32)[0], "socket_count": struct.unpack_from("<i", header, 56)[0],
             "socketed_gems": gem_ids,
+            "rune_level": struct.unpack_from("<i", header, 40)[0],
+            "rune_xp": struct.unpack_from("<q", header, 48)[0],
             "locked": bool(header[73]), "is_ancient": bool(header[72]), "is_black_mist": bool(header[105]),
-            "bound": bool(header[120])}
+            "bound": bool(header[120]), **self._black_mist_state(header)}
 
     def container(self, name, registry, max_items):
         p = self.memory

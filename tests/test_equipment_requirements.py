@@ -46,6 +46,7 @@ class EquipmentRequirementTests(unittest.TestCase):
         row.update(equip_slot=11,base_rarity=4)
         self.assertEqual(required_level(row,200),1)
         row['is_black_mist'] = True
+        row['black_mist_finalized'] = True
         self.assertEqual(required_level(row,200),200)
         self.assertFalse(equip_eligibility(row,hero(199))['can_equip'])
         self.assertTrue(equip_eligibility(row,hero(200))['can_equip'])
@@ -61,7 +62,7 @@ class EquipmentRequirementTests(unittest.TestCase):
         self.assertEqual(required_level(row,200),1)
 
     def test_black_mist_always_requires_configured_maximum_level(self):
-        row = candidate(item_level=1,is_black_mist=True)
+        row = candidate(item_level=1,is_black_mist=True,black_mist_finalized=True)
         self.assertEqual(required_level(row,80),80)
         self.assertFalse(equip_eligibility(row,hero(79,max_level=80))['can_equip'])
         self.assertTrue(equip_eligibility(row,hero(80,max_level=80))['can_equip'])

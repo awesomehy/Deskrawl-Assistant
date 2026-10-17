@@ -31,6 +31,7 @@ class SharedStorageTests(unittest.TestCase):
     def service(self):
         service = AssistantService(AutomationClient([]), self.directory/'rules.json')
         self.addCleanup(service.close)
+        service._publish(service.client.snapshot())
         return service
 
     def assert_pages(self, service, rune, gem_pages):
@@ -156,7 +157,7 @@ class SharedStorageTests(unittest.TestCase):
         service.save_automation(auto)
         managed = deepcopy(service.managed.settings)
         managed['cleanup'].update(gem_action='sell', gem_pages=[])
-        with self.assertRaisesRegex(ValidationError, '宝石共用'): service.save_managed(managed)
+        with self.assertRaisesRegex(ValidationError, '请勾选用于存放物品的仓库页'): service.save_managed(managed)
         self.assert_pages(service, [4], [5])
 
     def test_organizer_actually_moves_to_new_managed_pages_without_using_other_pages(self):

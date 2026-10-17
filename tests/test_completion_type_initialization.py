@@ -385,7 +385,8 @@ class CompletionTypeInitializationTests(unittest.TestCase):
                     'available': True, 'complete': True, 'items': []}), \
                 patch('deskrawl_assistant.recommendation_reader._catalog', return_value={'maps': []}), \
                 patch('deskrawl_assistant.game_loot_ledger.read_loot_ledger', return_value={'available': True}), \
-                patch('deskrawl_assistant.game_panel_log.read_panel_log', return_value={'available': True}):
+                patch('deskrawl_assistant.game_panel_log.read_panel_log', return_value={'available': True}), \
+                patch('deskrawl_assistant.statistics_reader.read_gold_ledger', return_value={'available': False}):
             result = fixture.game.control_snapshot(recommendation)
         self.assertTrue(result['available'], result['reason'])
         self.assertEqual(result['scene'], 'combat')

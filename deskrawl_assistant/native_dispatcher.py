@@ -36,9 +36,11 @@ REQUIRE_TRUE, SKIP_NULL_FIRST, REQUIRE_FALSE = 1, 2, 4
 
 
 class NativeActionError(MemoryReadError):
-    def __init__(self, message, *, uncertain=False, state=None):
+    def __init__(self, message, *, uncertain=False, state=None, last_call=None, failed_method=None, mutation_started=None):
         super().__init__(message)
         self.uncertain, self.state = uncertain, state
+        self.last_call, self.failed_method = last_call, failed_method
+        self.mutation_started = mutation_started
 
 
 @dataclass(frozen=True)
@@ -75,6 +77,20 @@ class Invocation:
     require_true: bool = False
     skip_null_first: bool = False
     require_false: bool = False
+    # Host-side safety metadata only; None means the side effects are unknown.
+    mutates: bool | None = None
+
+
+def failure_details(calls, state, last_call):
+    """Describe the executed prefix without changing legacy uncertainty policy."""
+    if state in (CANCELLED, GUARD_FAILED):
+        return {'last_call': None, 'failed_method': None, 'mutation_started': False}
+    if type(last_call) is not int or not 0 <= last_call < len(calls):
+        return {'last_call': last_call, 'failed_method': None, 'mutation_started': None}
+    prefix = calls[:last_call + 1]
+    mutated = True if any(call.mutates is True for call in prefix) else (
+        False if all(call.mutates is False for call in prefix) else None)
+    return {'last_call': last_call, 'failed_method': calls[last_call].method, 'mutation_started': mutated}
 
 
 def load_profile():
@@ -459,8 +475,10 @@ class MainThreadDispatcher:
                     messages = {CANCELLED:'托管操作已停止，指令未执行', GUARD_FAILED:'物品或角色状态改变，指令未执行',
                         EXCEPTION:'游戏原生操作返回异常，已停止后续动作', REJECTED:'游戏原生操作拒绝本次请求',
                         INVALID:'游戏方法签名或主线程环境校验失败，已停止动作'}
+                    last_call = struct.unpack_from('<I', current, 60)[0]
                     raise NativeActionError(messages.get(state, '后台指令状态异常'), state=state,
-                        uncertain=state == EXCEPTION or (state in (INVALID, REJECTED) and struct.unpack_from('<I', current, 60)[0] > 0))
+                        uncertain=state == EXCEPTION or (state in (INVALID, REJECTED) and last_call > 0),
+                        **failure_details(calls, state, last_call))
                 if cancel_event is not None and cancel_event.is_set():
                     self._write(self.mailbox+4, struct.pack('<I', 1))
                 if not self.reader.memory.is_running():

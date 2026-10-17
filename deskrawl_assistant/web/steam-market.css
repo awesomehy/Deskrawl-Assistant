@@ -1,0 +1,9 @@
+.steam-market-quote{color:var(--muted,#93a5ba);font-size:11px;line-height:1.6;white-space:normal;max-width:360px}
+.steam-market-card{padding:12px;border:1px solid var(--line,#303b48);border-radius:8px;margin:14px 0;background:rgba(224,184,111,.04)}
+.steam-market-card h4{margin:0 0 8px;color:var(--gold,#e5bf78);font-size:12px}
+.steam-market-card h4 a{float:right;font-weight:400;font-size:11px}
+.steam-market-card p{line-height:1.8;margin:0 0 6px;font-size:12px}
+.steam-market-card small{color:var(--muted,#93a5ba);font-size:11px;line-height:1.6}
+.inventory-tradable-filter,.market-currency-control{display:flex;align-items:center;gap:7px;white-space:nowrap;font-size:11px;color:var(--muted,#93a5ba)}
+.market-currency-control select{font-size:11px;max-width:190px}
+.market-currency-error{font-size:10px;color:var(--red,#ec9191);line-height:1.5}

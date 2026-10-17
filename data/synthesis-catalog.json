@@ -1,0 +1,307 @@
+{
+  "game_version": "1.0.3",
+  "build": 25973417,
+  "source": "sharedassets0.assets GemUpgradeRecipeBook (60396), RecipeData 60397..60426; runtime fields must agree before execution",
+  "gems": [
+    {
+      "recipe_id": "GemUpgradeAmethyst2",
+      "input_key": "GemAmethyst1",
+      "output_key": "GemAmethyst2",
+      "input_quality": 1,
+      "output_quality": 2,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 300
+    },
+    {
+      "recipe_id": "GemUpgradeAmethyst3",
+      "input_key": "GemAmethyst2",
+      "output_key": "GemAmethyst3",
+      "input_quality": 2,
+      "output_quality": 3,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 1300
+    },
+    {
+      "recipe_id": "GemUpgradeAmethyst4",
+      "input_key": "GemAmethyst3",
+      "output_key": "GemAmethyst4",
+      "input_quality": 3,
+      "output_quality": 4,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 5500
+    },
+    {
+      "recipe_id": "GemUpgradeAmethyst5",
+      "input_key": "GemAmethyst4",
+      "output_key": "GemAmethyst5",
+      "input_quality": 4,
+      "output_quality": 5,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 23000
+    },
+    {
+      "recipe_id": "GemUpgradeAmethyst6",
+      "input_key": "GemAmethyst5",
+      "output_key": "GemAmethyst6",
+      "input_quality": 5,
+      "output_quality": 6,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 100000
+    },
+    {
+      "recipe_id": "GemUpgradeDiamond2",
+      "input_key": "GemDiamond1",
+      "output_key": "GemDiamond2",
+      "input_quality": 1,
+      "output_quality": 2,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 300
+    },
+    {
+      "recipe_id": "GemUpgradeDiamond3",
+      "input_key": "GemDiamond2",
+      "output_key": "GemDiamond3",
+      "input_quality": 2,
+      "output_quality": 3,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 1300
+    },
+    {
+      "recipe_id": "GemUpgradeDiamond4",
+      "input_key": "GemDiamond3",
+      "output_key": "GemDiamond4",
+      "input_quality": 3,
+      "output_quality": 4,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 5500
+    },
+    {
+      "recipe_id": "GemUpgradeDiamond5",
+      "input_key": "GemDiamond4",
+      "output_key": "GemDiamond5",
+      "input_quality": 4,
+      "output_quality": 5,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 23000
+    },
+    {
+      "recipe_id": "GemUpgradeDiamond6",
+      "input_key": "GemDiamond5",
+      "output_key": "GemDiamond6",
+      "input_quality": 5,
+      "output_quality": 6,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 100000
+    },
+    {
+      "recipe_id": "GemUpgradeEmerald2",
+      "input_key": "GemEmerald1",
+      "output_key": "GemEmerald2",
+      "input_quality": 1,
+      "output_quality": 2,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 300
+    },
+    {
+      "recipe_id": "GemUpgradeEmerald3",
+      "input_key": "GemEmerald2",
+      "output_key": "GemEmerald3",
+      "input_quality": 2,
+      "output_quality": 3,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 1300
+    },
+    {
+      "recipe_id": "GemUpgradeEmerald4",
+      "input_key": "GemEmerald3",
+      "output_key": "GemEmerald4",
+      "input_quality": 3,
+      "output_quality": 4,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 5500
+    },
+    {
+      "recipe_id": "GemUpgradeEmerald5",
+      "input_key": "GemEmerald4",
+      "output_key": "GemEmerald5",
+      "input_quality": 4,
+      "output_quality": 5,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 23000
+    },
+    {
+      "recipe_id": "GemUpgradeEmerald6",
+      "input_key": "GemEmerald5",
+      "output_key": "GemEmerald6",
+      "input_quality": 5,
+      "output_quality": 6,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 100000
+    },
+    {
+      "recipe_id": "GemUpgradeRuby2",
+      "input_key": "GemRuby1",
+      "output_key": "GemRuby2",
+      "input_quality": 1,
+      "output_quality": 2,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 300
+    },
+    {
+      "recipe_id": "GemUpgradeRuby3",
+      "input_key": "GemRuby2",
+      "output_key": "GemRuby3",
+      "input_quality": 2,
+      "output_quality": 3,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 1300
+    },
+    {
+      "recipe_id": "GemUpgradeRuby4",
+      "input_key": "GemRuby3",
+      "output_key": "GemRuby4",
+      "input_quality": 3,
+      "output_quality": 4,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 5500
+    },
+    {
+      "recipe_id": "GemUpgradeRuby5",
+      "input_key": "GemRuby4",
+      "output_key": "GemRuby5",
+      "input_quality": 4,
+      "output_quality": 5,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 23000
+    },
+    {
+      "recipe_id": "GemUpgradeRuby6",
+      "input_key": "GemRuby5",
+      "output_key": "GemRuby6",
+      "input_quality": 5,
+      "output_quality": 6,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 100000
+    },
+    {
+      "recipe_id": "GemUpgradeSapphire2",
+      "input_key": "GemSapphire1",
+      "output_key": "GemSapphire2",
+      "input_quality": 1,
+      "output_quality": 2,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 300
+    },
+    {
+      "recipe_id": "GemUpgradeSapphire3",
+      "input_key": "GemSapphire2",
+      "output_key": "GemSapphire3",
+      "input_quality": 2,
+      "output_quality": 3,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 1300
+    },
+    {
+      "recipe_id": "GemUpgradeSapphire4",
+      "input_key": "GemSapphire3",
+      "output_key": "GemSapphire4",
+      "input_quality": 3,
+      "output_quality": 4,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 5500
+    },
+    {
+      "recipe_id": "GemUpgradeSapphire5",
+      "input_key": "GemSapphire4",
+      "output_key": "GemSapphire5",
+      "input_quality": 4,
+      "output_quality": 5,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 23000
+    },
+    {
+      "recipe_id": "GemUpgradeSapphire6",
+      "input_key": "GemSapphire5",
+      "output_key": "GemSapphire6",
+      "input_quality": 5,
+      "output_quality": 6,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 100000
+    },
+    {
+      "recipe_id": "GemUpgradeTopaz2",
+      "input_key": "GemTopaz1",
+      "output_key": "GemTopaz2",
+      "input_quality": 1,
+      "output_quality": 2,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 300
+    },
+    {
+      "recipe_id": "GemUpgradeTopaz3",
+      "input_key": "GemTopaz2",
+      "output_key": "GemTopaz3",
+      "input_quality": 2,
+      "output_quality": 3,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 1300
+    },
+    {
+      "recipe_id": "GemUpgradeTopaz4",
+      "input_key": "GemTopaz3",
+      "output_key": "GemTopaz4",
+      "input_quality": 3,
+      "output_quality": 4,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 5500
+    },
+    {
+      "recipe_id": "GemUpgradeTopaz5",
+      "input_key": "GemTopaz4",
+      "output_key": "GemTopaz5",
+      "input_quality": 4,
+      "output_quality": 5,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 23000
+    },
+    {
+      "recipe_id": "GemUpgradeTopaz6",
+      "input_key": "GemTopaz5",
+      "output_key": "GemTopaz6",
+      "input_quality": 5,
+      "output_quality": 6,
+      "input_count": 10,
+      "output_count": 1,
+      "gold_cost": 100000
+    }
+  ]
+}

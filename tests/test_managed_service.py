@@ -359,11 +359,27 @@ class ManagedServiceTests(unittest.TestCase):
         settings = deepcopy(DEFAULT_SETTINGS)
         settings['auto_equip']['enabled'] = auto_equip
         settings['farming'].update(enabled=farming,dungeon_id='offline-map' if farming else None)
+        # The synthetic player has pages 1 and 5 unlocked, but not default page 4.
+        settings['cleanup']['rune_pages'] = [1]
         return settings
 
     def ready(self, *, farming=False, auto_equip=True):
         self.service.save_managed(self.settings(farming=farming,auto_equip=auto_equip))
         self.service.set_managed_running(True)
+
+    def test_native_gold_and_other_drops_reach_page_stats_without_counting_potions(self):
+        raw = self.client.control_snapshot()
+        raw['gold_ledger'] = {'available': True, 'id': 'native-player-stats', 'total': 5000}
+        with patch.object(self.client, 'control_snapshot', side_effect=lambda: deepcopy(raw)):
+            self.service.managed.metrics.observe(self.service._managed_observation())
+            self.client.items.extend([potion(1), potion(2, key='GoldBar', count=2)])
+            raw['gold_ledger']['total'] += 321
+            self.service.managed.metrics.observe(self.service._managed_observation())
+        values = self.service.managed_page()['stats']
+        self.assertEqual(values['gold']['count'], 321)
+        self.assertEqual([(r['name_key'], r['count']) for r in values['others']], [('GoldBar', 2)])
+        self.assertEqual(self.client.items[1]['count'], 14)
+        self.assertEqual(self.client.actions, [])
 
     def returning_world(self):
         self.client.items=[];self.client.in_town=False;self.client.current_map='offline-map'
@@ -946,16 +962,20 @@ class ManagedServiceTests(unittest.TestCase):
         observation = self.service._managed_observation()
         self.assertEqual(self.service.managed._targets(observation,[5]),list(range(200,250)))
 
-    def test_start_retains_reserved_unopened_page_and_pauses_before_storage(self):
+    def test_locked_only_destinations_reject_save_and_block_old_config_start(self):
         settings = self.settings(farming=True)
         settings['cleanup']['equipment_pages'] = [2]
-        self.service.save_managed(settings)
-        self.service.set_managed_running(True)
-        self.assertTrue(self.service.managed.running)
+        with self.assertRaisesRegex(ValidationError, '装备.*已解锁'):
+            self.service.save_managed(settings)
+        # Loaded legacy selections stay visible so the player can correct them.
+        self.service.managed.settings = settings
+        page = self.service.managed_page()
+        self.assertFalse(page['can_start'])
+        self.assertIn('装备', '；'.join(page['blocked_reasons']))
+        with self.assertRaisesRegex(ValidationError, '装备.*已解锁'):
+            self.service.set_managed_running(True)
+        self.assertFalse(self.service.managed.running)
         self.assertEqual(self.service.managed.settings['cleanup']['equipment_pages'],[2])
-        self.assertIsNone(self.service.managed.next_action(self.service._managed_observation()))
-        self.assertEqual(self.service.managed.phase,'paused')
-        self.assertIn('尚未解锁',self.service.managed.status)
         self.assertEqual(self.client.actions,[])
 
     def test_verified_repeat_without_sale_does_not_require_unverified_difficulty_switch(self):
@@ -1454,7 +1474,11 @@ class ManagedServiceTests(unittest.TestCase):
         self.client.storage_indices=[0]
         self.client.items=[equipment(0,locked=True),equipment(0,container='storage',locked=True)]
         self.service._publish(self.client.snapshot())
-        self.ready(farming=True,auto_equip=False)
+        settings = self.settings(farming=True)
+        for kind in ('equipment', 'rune', 'gem', 'gold_bar', 'legendary_rein'):
+            settings['cleanup'][kind + '_pages'] = [1]
+        self.service.save_managed(settings)
+        self.service.set_managed_running(True)
         self.service.managed.metrics.totals[('equipment','ancient')]={'count':3,'sold':1,'salvaged':0,'stored':2}
         self.service.managed.metrics.rows[('equipment','ancient')]=equipment(is_ancient=True)
         self.service._work('managed',{})
@@ -1566,7 +1590,7 @@ class ManagedServiceTests(unittest.TestCase):
         with patch.object(self.service, 'monitor_wake') as wake, patch.object(self.service, 'closed') as closed, \
                 patch('deskrawl_assistant.web_service.threading.Thread') as thread:
             wake.wait.return_value = True
-            closed.is_set.side_effect = [False, False, False, True]
+            closed.is_set.side_effect = [False] * 6 + [True]
             self.service._monitor_loop()
             wake.wait.assert_any_call(2)
             self.assertEqual(wake.clear.call_count, 2)

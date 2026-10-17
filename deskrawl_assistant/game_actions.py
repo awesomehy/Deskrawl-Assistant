@@ -12,7 +12,7 @@ import hashlib
 import struct
 import time
 
-from .native_memory import MemoryReadError, SnapshotChangedError, GameBusyError
+from .native_memory import MemoryReadError, SnapshotChangedError, GameBusyError, DeathRecoveryBusyError
 from .native_dispatcher import Argument, Invocation, MainThreadDispatcher, NativeActionError, load_profile
 from .action_log import record
 from .item_protection import divine_equipment, disposal_protection, mandatory_storage
@@ -21,11 +21,13 @@ from .mythic import MYTHIC, MAP_ID as MYTHIC_MAP, floor_id, floor_number, WORLD_
 
 
 from .progression import NEW_ACTIONS
+from .synthesis import KINDS as SYNTHESIS_ACTIONS
 
-KINDS = ('return_town', 'enter_map', 'switch_difficulty', 'equip', 'sell', 'salvage', 'open_chest', 'collect_ground') + NEW_ACTIONS
+KINDS = ('return_town', 'enter_map', 'switch_difficulty', 'equip', 'sell', 'salvage', 'open_chest', 'collect_ground') + NEW_ACTIONS + SYNTHESIS_ACTIONS
 CAPABILITIES = {'travel': ('return_town', 'enter_map'), 'equip': ('equip',), 'sell': ('sell',),
     'difficulty': ('switch_difficulty',), 'salvage': ('salvage',), 'chests': ('open_chest',), 'ground_pickup': ('collect_ground',), 'talents': ('allocate_talent',),
-    'life_skills': ('learn_life_skill',), 'skills': ('set_skill',), 'merchant': ('merchant_open', 'merchant_buy', 'merchant_close', 'merchant_refresh')}
+    'life_skills': ('learn_life_skill',), 'skills': ('set_skill',), 'merchant': ('merchant_open', 'merchant_buy', 'merchant_close', 'merchant_refresh'),
+    'gem_synthesis': ('synthesize_gems',), 'rune_synthesis': ('synthesize_runes',)}
 
 
 def normalise_run(run, completed, dead=False):
@@ -135,6 +137,7 @@ class GameActions:
         self._last_character = None
         self._panel_log_cache = {}
         self._progression = None
+        self._synthesis = None
 
     def capabilities(self):
         """Read-only check; local test opt-in never claims completed validation."""
@@ -177,6 +180,15 @@ class GameActions:
     def progression_snapshot(self, *, merchant=False):
         return self.progression_runtime().snapshot(merchant=merchant)
 
+    def synthesis_runtime(self):
+        if self._synthesis is None:
+            from .synthesis_runtime import SynthesisRuntime
+            self._synthesis = SynthesisRuntime(self)
+        return self._synthesis
+
+    def synthesis_snapshot(self, *, gems=True, runes=True):
+        return self.synthesis_runtime().snapshot(gems=gems, runes=runes)
+
     def mark_verified(self, kinds):
         """Called only by a supervised in-game validation, not a web endpoint."""
         if any(kind not in KINDS for kind in kinds):
@@ -215,7 +227,7 @@ class GameActions:
             raise GameBusyError(f"等待在线同步完成后切换场景（待处理请求 {state['online_pending_requests']}）。")
         return state
 
-    def _equip_level(self, read, manager, selected, item):
+    def _equip_level(self, read, manager, selected, item, target_slot=None):
         """Re-read the same Player/config fields as ddt before any game call."""
         from .recommendation_reader import _Copy, decode_obscured_int
         copy = _Copy(self.reader)
@@ -226,9 +238,15 @@ class GameActions:
         character = {'available': True,
                      'level': decode_obscured_int(copy.read(player + 32, 16)),
                      'max_level': copy.integer(config + 264)}
+        if target_slot in (6, 7):
+            equipment = read.singleton('EquipmentManager')
+            equipped = copy.dictionary(copy.ptr(equipment + 40), 'pointer')
+            character['equipment'] = [
+                {'equipped_slot': slot, 'internal_name': self.reader.asset_name(equipped[slot])}
+                for slot in (6, 7) if equipped.get(slot)]
         current = {**selected, 'base_rarity': copy.integer(item + 36),
                    'equip_slot': copy.integer(item + 144)}
-        eligibility = equip_eligibility(current, character)
+        eligibility = equip_eligibility(current, character, target_slot=target_slot)
         copy.finish()
         read.guards.extend(copy.guards)
         if not eligibility['can_equip']:
@@ -413,15 +431,15 @@ class GameActions:
             # original handler, which stops the timer and marks its request.
             type_info = read.ptr(self.reader.module['base'] + self.profile['singletons']['DeathUI'])
             if not type_info or type_info == self.profile['uninitialized_type_tokens']['DeathUI']:
-                raise GameBusyError('等待死亡界面载入后返回主城。')
+                raise DeathRecoveryBusyError('等待死亡界面载入后返回主城。')
             klass = read.klass(type_info, 'DeathUI')
             static = read.ptr(klass + 184)
             death_ui = read.ptr(static) if static else 0
             if not death_ui:
-                raise GameBusyError('等待死亡界面实例载入后返回主城。')
+                raise DeathRecoveryBusyError('等待死亡界面实例载入后返回主城。')
             read.verify(death_ui, 'DeathUI')
             if read.boolean(death_ui + 73):
-                raise GameBusyError('死亡后的复活或回城正在处理，等待游戏完成。')
+                raise DeathRecoveryBusyError('死亡后的复活或回城正在处理，等待游戏完成。')
             return Invocation('DeathUI.return_to_town', death_ui)
         # frj is a shortcut toggle and may cancel an active channel. Keep the
         # accepted Boolean paths for living characters and completion returns.
@@ -510,6 +528,8 @@ class GameActions:
                 system_log = read_panel_log(self.reader, self.profile, manager, cache=self._panel_log_cache)
             except (MemoryReadError, OSError, ValueError, KeyError, UnicodeError, struct.error) as exc:
                 system_log = {'available':False, 'complete':False, 'reason':str(exc)}
+            from .statistics_reader import read_gold_ledger
+            gold_ledger = read_gold_ledger(self.reader, progress['character_id'])
             active = read.ptr(manager+112)
             map_id = self.reader.asset_name(active) if active else None
             scene_difficulty = difficulty
@@ -535,6 +555,7 @@ class GameActions:
                 'completion_visible':completion,
                 'loot_ledger':loot_ledger,
                 'system_log':system_log,
+                'gold_ledger':gold_ledger,
                 'map_id':map_id, 'difficulty':scene_difficulty, 'world_difficulty':difficulty,'mythic_entry_difficulty':entry_difficulty, 'run':run,
                 'maps':maps_by_difficulty[scene_difficulty], 'maps_by_difficulty':maps_by_difficulty,'difficulties':difficulties,
                 'ground':[{k:v for k,v in row.items() if not k.startswith('_')} for row in ground],
@@ -707,6 +728,10 @@ class GameActions:
         if not self.capabilities()['compatible']:
             raise NativeActionError(self.capabilities()['reason'])
         payload = payload or {}
+        if kind in SYNTHESIS_ACTIONS:
+            result = self.synthesis_runtime().execute(kind, payload, cancel_event=cancel_event, validate=validate)
+            result['native_verified'] = kind in self.verified_kinds
+            return result
         if kind in NEW_ACTIONS:
             result = self.progression_runtime().execute(kind, payload, cancel_event=cancel_event, validate=validate)
             result['native_verified'] = kind in self.verified_kinds
@@ -825,7 +850,7 @@ class GameActions:
                 target = payload.get('equip_slot', payload.get('target_slot'))
                 if type(target) is not int or not 0 <= target < 12:
                     raise NativeActionError('换装目标槽位无效')
-                self._equip_level(read, manager, selected, item)
+                self._equip_level(read, manager, selected, item, target_slot=target)
                 equipment = read.singleton('EquipmentManager')
                 root = read.singleton('Inventory')
                 from .recommendation_reader import _Copy
@@ -839,15 +864,15 @@ class GameActions:
                 read.guards.extend(copy.guards)
                 copy.finish()
                 calls = [
-                    Invocation('EquipmentManager.ddq', arguments=(Argument.reference(item), Argument.integer(target)), require_true=True),
-                    Invocation('EquipmentManager.ddt', arguments=(Argument.reference(item), Argument.reference(uid)), require_true=True),
-                    Invocation('EquipmentManager.ddu', arguments=(Argument.reference(item),), require_true=True),
-                    Invocation('EquipmentManager.ddv', arguments=(Argument.reference(uid),), require_false=True),
-                    Invocation('EquipmentManager.ddw', equipment, (Argument.reference(item), Argument.reference(uid), Argument.integer(target)), require_false=True),
-                    Invocation('EquipmentManager.deh', equipment, (Argument.integer(target),)),
-                    Invocation('EquipmentManager.ded', equipment, (Argument.reference(item), Argument.integer(target), Argument.reference(uid))),
-                    Invocation('Inventory.fcj', root, (Argument.integer(index),)),
-                    Invocation('Inventory.fcc', root, (Argument.previous(6), Argument.integer(1), Argument.previous(5)), require_true=True, skip_null_first=True),
+                    Invocation('EquipmentManager.ddq', arguments=(Argument.reference(item), Argument.integer(target)), require_true=True, mutates=False),
+                    Invocation('EquipmentManager.ddt', arguments=(Argument.reference(item), Argument.reference(uid)), require_true=True, mutates=False),
+                    Invocation('EquipmentManager.ddu', arguments=(Argument.reference(item),), require_true=True, mutates=False),
+                    Invocation('EquipmentManager.ddv', arguments=(Argument.reference(uid),), require_false=True, mutates=False),
+                    Invocation('EquipmentManager.ddw', equipment, (Argument.reference(item), Argument.reference(uid), Argument.integer(target)), require_false=True, mutates=False),
+                    Invocation('EquipmentManager.deh', equipment, (Argument.integer(target),), mutates=False),
+                    Invocation('EquipmentManager.ded', equipment, (Argument.reference(item), Argument.integer(target), Argument.reference(uid)), mutates=True),
+                    Invocation('Inventory.fcj', root, (Argument.integer(index),), mutates=True),
+                    Invocation('Inventory.fcc', root, (Argument.previous(6), Argument.integer(1), Argument.previous(5)), require_true=True, skip_null_first=True, mutates=True),
                 ]
         read.finish()
         methods = [call.method for call in calls]

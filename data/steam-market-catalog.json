@@ -1,0 +1,2756 @@
+{
+  "schema_version": 1,
+  "appid": 4623570,
+  "resources_sha256": "aac3f4d0e4502ec8e58b7a592cdb83ef641cddb7b24ed8e244e913212ddcb9c1",
+  "source": "Shipped ItemData SteamItemDefId/BlackMistSteamItemDefId and English localization; names remain candidates until exact Steam market description validation.",
+  "items": {
+    "DivineBack1": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 4923,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1002,
+        "market_hash_name": " Wings of the Light"
+      }
+    },
+    "DivineBack2": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 59991,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1000,
+        "market_hash_name": "Wings of the Cinderlord"
+      }
+    },
+    "DivineBow1": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5103,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1004,
+        "market_hash_name": "Violet Skybow"
+      }
+    },
+    "DivineHelm1": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5004,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1005,
+        "market_hash_name": "Glorious Gladiator Helmet"
+      }
+    },
+    "DivineHelm2": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5005,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1001,
+        "market_hash_name": "Visage of the Undying"
+      }
+    },
+    "DivineHelm3": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5006,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1008,
+        "market_hash_name": "Iron Tyrant’s Helm"
+      }
+    },
+    "DivineMace1": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5104,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1006,
+        "market_hash_name": "The Grandmother"
+      }
+    },
+    "DivineRing1": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5065,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1003,
+        "market_hash_name": "Remnant of the Elder Sage"
+      }
+    },
+    "DivineRing2": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5066,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1009,
+        "market_hash_name": "Schrodinger's Ring"
+      }
+    },
+    "DivineSword1": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5105,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1007,
+        "market_hash_name": "Soulrender"
+      }
+    },
+    "GoldBar": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 59972,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 5000,
+        "market_hash_name": "Gold Bar"
+      }
+    },
+    "HunterSetRune1_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5132,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4000,
+        "market_hash_name": "Trapper’s Legacy I"
+      }
+    },
+    "HunterSetRune1_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5133,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4001,
+        "market_hash_name": "Trapper’s Legacy II"
+      }
+    },
+    "HunterSetRune1_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5134,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4002,
+        "market_hash_name": "Trapper’s Legacy III"
+      }
+    },
+    "HunterSetRune1_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5135,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4003,
+        "market_hash_name": "Trapper’s Legacy IV"
+      }
+    },
+    "HunterSetRune1_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5136,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4004,
+        "market_hash_name": "Trapper’s Legacy V"
+      }
+    },
+    "HunterSetRune1_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5137,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4005,
+        "market_hash_name": "Trapper’s Legacy VI"
+      }
+    },
+    "HunterSetRune2_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5138,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4006,
+        "market_hash_name": "Deadeye’s Resolve I"
+      }
+    },
+    "HunterSetRune2_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5139,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4007,
+        "market_hash_name": "Deadeye’s Resolve II"
+      }
+    },
+    "HunterSetRune2_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5140,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4008,
+        "market_hash_name": "Deadeye’s Resolve III"
+      }
+    },
+    "HunterSetRune2_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5141,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4009,
+        "market_hash_name": "Deadeye’s Resolve IV"
+      }
+    },
+    "HunterSetRune2_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5142,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4010,
+        "market_hash_name": "Deadeye’s Resolve V"
+      }
+    },
+    "HunterSetRune2_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5143,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4011,
+        "market_hash_name": "Deadeye’s Resolve VI"
+      }
+    },
+    "HunterSetRune3_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5144,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4012,
+        "market_hash_name": "Venomfang I"
+      }
+    },
+    "HunterSetRune3_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5145,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4013,
+        "market_hash_name": "Venomfang II"
+      }
+    },
+    "HunterSetRune3_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5146,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4014,
+        "market_hash_name": "Venomfang III"
+      }
+    },
+    "HunterSetRune3_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5147,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4015,
+        "market_hash_name": "Venomfang IV"
+      }
+    },
+    "HunterSetRune3_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5148,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4016,
+        "market_hash_name": "Venomfang V"
+      }
+    },
+    "HunterSetRune3_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5149,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4017,
+        "market_hash_name": "Venomfang VI"
+      }
+    },
+    "LegendaryAxe1": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5106,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3000,
+        "market_hash_name": "Northern Giant's Great Axe (Black Mist)"
+      }
+    },
+    "LegendaryBelt1": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 59993,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3003,
+        "market_hash_name": "Bottomless Potion Belt (Black Mist)"
+      }
+    },
+    "LegendaryBelt2": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 59994,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3032,
+        "market_hash_name": "Endless Mana Belt (Black Mist)"
+      }
+    },
+    "LegendaryBelt3": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4934,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3045,
+        "market_hash_name": "Battle Draught Belt (Black Mist)"
+      }
+    },
+    "LegendaryBelt4": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4935,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3058,
+        "market_hash_name": "Ironthorn Warbelt (Black Mist)"
+      }
+    },
+    "LegendaryBoots1": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4948,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3004,
+        "market_hash_name": "Boots of the Windcaller (Black Mist)"
+      }
+    },
+    "LegendaryBoots2": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4949,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3024,
+        "market_hash_name": "Treads of the Falling Leaf (Black Mist)"
+      }
+    },
+    "LegendaryBoots3": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 59995,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3043,
+        "market_hash_name": "Boots of the Mending Stride (Black Mist)"
+      }
+    },
+    "LegendaryBoots4": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4950,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3048,
+        "market_hash_name": "Blooddistiller’s Stride (Black Mist)"
+      }
+    },
+    "LegendaryBoots5": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4951,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3053,
+        "market_hash_name": "Rimeguard Treads (Black Mist)"
+      }
+    },
+    "LegendaryBow1": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5107,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3038,
+        "market_hash_name": "Raincaller Bow (Black Mist)"
+      }
+    },
+    "LegendaryBow2": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5108,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3047,
+        "market_hash_name": "Blackcrow Recurve (Black Mist)"
+      }
+    },
+    "LegendaryBow3": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5109,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3054,
+        "market_hash_name": "Deadeye's Gambit (Black Mist)"
+      }
+    },
+    "LegendaryChestArmor1": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4964,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3005,
+        "market_hash_name": "Bulwark of Wrath (Black Mist)"
+      }
+    },
+    "LegendaryChestArmor2": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4965,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3006,
+        "market_hash_name": "Thornheart Cuirass (Black Mist)"
+      }
+    },
+    "LegendaryChestArmor3": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4966,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3007,
+        "market_hash_name": "Runeward Vestment (Black Mist)"
+      }
+    },
+    "LegendaryChestArmor4": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4967,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3025,
+        "market_hash_name": "Vessel of the Endless Stream (Black Mist)"
+      }
+    },
+    "LegendaryChestArmor5": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 59996,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3033,
+        "market_hash_name": "Unyielding Cuirass (Black Mist)"
+      }
+    },
+    "LegendaryChestArmor6": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4968,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3036,
+        "market_hash_name": "Evasive Cuirass (Black Mist)"
+      }
+    },
+    "LegendaryGloves1": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4985,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3008,
+        "market_hash_name": "Ragefire Gauntlets (Black Mist)"
+      }
+    },
+    "LegendaryGloves2": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 59997,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3009,
+        "market_hash_name": "Unstoppable Gauntlets (Black Mist)"
+      }
+    },
+    "LegendaryGloves3": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4986,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3029,
+        "market_hash_name": "Stormcaller Gauntlets (Black Mist)"
+      }
+    },
+    "LegendaryGloves4": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4987,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3034,
+        "market_hash_name": "Deflecting Handwraps (Black Mist)"
+      }
+    },
+    "LegendaryGloves5": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4988,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3039,
+        "market_hash_name": "Deadeye Grips (Black Mist)"
+      }
+    },
+    "LegendaryGloves6": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4989,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3042,
+        "market_hash_name": "Festering Gauntlets (Black Mist)"
+      }
+    },
+    "LegendaryGloves7": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4990,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3051,
+        "market_hash_name": "Gauntlets of the Third Beat (Black Mist)"
+      }
+    },
+    "LegendaryGloves8": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 4991,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3055,
+        "market_hash_name": "Wayfarer's Grips (Black Mist)"
+      }
+    },
+    "LegendaryHelm1": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5007,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3010,
+        "market_hash_name": "Crown of the Fallen King (Black Mist)"
+      }
+    },
+    "LegendaryHelm2": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5008,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3011,
+        "market_hash_name": "Kabuto of the Crimson Tempest (Black Mist)"
+      }
+    },
+    "LegendaryHelm3": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5009,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3026,
+        "market_hash_name": "Crown of the Wandering Gale (Black Mist)"
+      }
+    },
+    "LegendaryHelm4": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5010,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3001,
+        "market_hash_name": "Circlet of Focus (Black Mist)"
+      }
+    },
+    "LegendaryHelm5": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5011,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3035,
+        "market_hash_name": "Phantom Mask (Black Mist)"
+      }
+    },
+    "LegendaryMace1": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5110,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3012,
+        "market_hash_name": "Hellstorm Mace (Black Mist)"
+      }
+    },
+    "LegendaryNeck1": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 59998,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3013,
+        "market_hash_name": "Pendant of the Surging Mind (Black Mist)"
+      }
+    },
+    "LegendaryNeck2": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5028,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3014,
+        "market_hash_name": "Bellow of the Open Wound (Black Mist)"
+      }
+    },
+    "LegendaryNeck3": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5029,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3015,
+        "market_hash_name": "Fire Lord's Necklace (Black Mist)"
+      }
+    },
+    "LegendaryNeck4": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5030,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3002,
+        "market_hash_name": "Stormguard Necklace (Black Mist)"
+      }
+    },
+    "LegendaryNeck5": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5031,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3046,
+        "market_hash_name": "Pendant of Vigor (Black Mist)"
+      }
+    },
+    "LegendaryNeck6": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5032,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3057,
+        "market_hash_name": "Wolf's Hunger (Black Mist)"
+      }
+    },
+    "LegendaryNeck7": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5033,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3059,
+        "market_hash_name": "Bonebreaker Pendant (Black Mist)"
+      }
+    },
+    "LegendaryPants1": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5046,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3016,
+        "market_hash_name": "Greaves of the Arcane Edge (Black Mist)"
+      }
+    },
+    "LegendaryPants2": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 59999,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3017,
+        "market_hash_name": "Greaves of the Stalwart Tonic (Black Mist)"
+      }
+    },
+    "LegendaryPants3": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5047,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3044,
+        "market_hash_name": "Manaflow Greaves (Black Mist)"
+      }
+    },
+    "LegendaryPants4": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5048,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3049,
+        "market_hash_name": "Stoneguard Greaves (Black Mist)"
+      }
+    },
+    "LegendaryRing1": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5067,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3018,
+        "market_hash_name": "Bloodfang Signet of the Wyrm (Black Mist)"
+      }
+    },
+    "LegendaryRing2": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5068,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3019,
+        "market_hash_name": "Ring of Revelation (Black Mist)"
+      }
+    },
+    "LegendaryRing3": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5069,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3027,
+        "market_hash_name": "Ring of the Third Eye (Black Mist)"
+      }
+    },
+    "LegendaryRing4": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5070,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3030,
+        "market_hash_name": "Ring of the Fourth Flame (Black Mist)"
+      }
+    },
+    "LegendaryRing5": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60010,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3031,
+        "market_hash_name": "Charged Ring (Black Mist)"
+      }
+    },
+    "LegendaryRing6": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5071,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3037,
+        "market_hash_name": "Ring of Arcane Precision (Black Mist)"
+      }
+    },
+    "LegendaryRing7": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60011,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3040,
+        "market_hash_name": "Ring of Dragonslayer (Black Mist)"
+      }
+    },
+    "LegendaryRing8": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5072,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3052,
+        "market_hash_name": "Cryofracture Ring (Black Mist)"
+      }
+    },
+    "LegendaryRune_HunterBasicAttack1": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5150,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4078,
+        "market_hash_name": "Poison Shot Rune (Grand)"
+      }
+    },
+    "LegendaryRune_HunterBasicAttack2": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5151,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4079,
+        "market_hash_name": "Arcane Bomb Rune (Grand)"
+      }
+    },
+    "LegendaryRune_HunterBasicAttack3": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5152,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4080,
+        "market_hash_name": "Knife Barrage Rune (Grand)"
+      }
+    },
+    "LegendaryRune_HunterBasicAttack4": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5153,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4110,
+        "market_hash_name": "Twin Arrows Rune (Grand)"
+      }
+    },
+    "LegendaryRune_HunterHeavyAttack1": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5154,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4081,
+        "market_hash_name": "Steady Shot Rune (Grand)"
+      }
+    },
+    "LegendaryRune_HunterHeavyAttack2": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5155,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4082,
+        "market_hash_name": "Multishot Rune (Grand)"
+      }
+    },
+    "LegendaryRune_HunterHeavyAttack3": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5156,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4083,
+        "market_hash_name": "Rapid Fire Rune (Grand)"
+      }
+    },
+    "LegendaryRune_HunterHeavyAttack4": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5157,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4111,
+        "market_hash_name": "Venom Bolt Rune (Grand)"
+      }
+    },
+    "LegendaryRune_HunterSpecial1": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5158,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4084,
+        "market_hash_name": "Poison Trap Rune (Grand)"
+      }
+    },
+    "LegendaryRune_HunterSpecial2": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5159,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4085,
+        "market_hash_name": "Shockwave Rune (Grand)"
+      }
+    },
+    "LegendaryRune_HunterSpecial3": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5160,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4112,
+        "market_hash_name": "Arcane Trap Rune (Grand)"
+      }
+    },
+    "LegendaryRune_HunterSpecial4": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5161,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4113,
+        "market_hash_name": "Arcane Arrowstorm Rune (Grand)"
+      }
+    },
+    "LegendaryRune_HunterSpecial5": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5162,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4114,
+        "market_hash_name": "Phantom Form Rune (Grand)"
+      }
+    },
+    "LegendaryRune_HunterSpecial6": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5163,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4115,
+        "market_hash_name": "Flare Rune (Grand)"
+      }
+    },
+    "LegendaryRune_MonkBasicAttack1": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5164,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4086,
+        "market_hash_name": "Threefold Strike Rune (Grand)"
+      }
+    },
+    "LegendaryRune_MonkBasicAttack2": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5165,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4087,
+        "market_hash_name": "Furious Fist Rune (Grand)"
+      }
+    },
+    "LegendaryRune_MonkBasicAttack3": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5166,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4088,
+        "market_hash_name": "Seismic Strike Rune (Grand)"
+      }
+    },
+    "LegendaryRune_MonkBasicAttack4": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5167,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4116,
+        "market_hash_name": "Chi Bolt Rune (Grand)"
+      }
+    },
+    "LegendaryRune_MonkHeavyAttack1": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5168,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4089,
+        "market_hash_name": "Sacred Judgment Rune (Grand)"
+      }
+    },
+    "LegendaryRune_MonkHeavyAttack2": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5169,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4090,
+        "market_hash_name": "Piercing Lunge Rune (Grand)"
+      }
+    },
+    "LegendaryRune_MonkHeavyAttack3": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5170,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4091,
+        "market_hash_name": "Whirlwind Staff Rune (Grand)"
+      }
+    },
+    "LegendaryRune_MonkHeavyAttack4": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5171,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4117,
+        "market_hash_name": "Golden Palms Rune (Grand)"
+      }
+    },
+    "LegendaryRune_MonkSpecial1": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5172,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4092,
+        "market_hash_name": "Sacred Orbs Rune (Grand)"
+      }
+    },
+    "LegendaryRune_MonkSpecial2": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5173,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4093,
+        "market_hash_name": "Spirit Stream Rune (Grand)"
+      }
+    },
+    "LegendaryRune_MonkSpecial3": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5174,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4118,
+        "market_hash_name": "Charge Rune (Grand)"
+      }
+    },
+    "LegendaryRune_MonkSpecial4": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5175,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4119,
+        "market_hash_name": "Spirit Twin Rune (Grand)"
+      }
+    },
+    "LegendaryRune_MonkSpecial5": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5176,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4120,
+        "market_hash_name": "Wind Steps Rune (Grand)"
+      }
+    },
+    "LegendaryRune_MonkSpecial6": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5177,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4121,
+        "market_hash_name": "Divine Thunder Rune (Grand)"
+      }
+    },
+    "LegendaryRune_SorcererBasicAttack1": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5178,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4094,
+        "market_hash_name": "Fire Ball Rune (Grand)"
+      }
+    },
+    "LegendaryRune_SorcererBasicAttack2": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5179,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4095,
+        "market_hash_name": "Ice Shards Rune (Grand)"
+      }
+    },
+    "LegendaryRune_SorcererBasicAttack3": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5180,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4096,
+        "market_hash_name": "Electrocute Rune (Grand)"
+      }
+    },
+    "LegendaryRune_SorcererBasicAttack4": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5181,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4122,
+        "market_hash_name": "Flame Lightning Rune (Grand)"
+      }
+    },
+    "LegendaryRune_SorcererSpecial1": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5182,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4097,
+        "market_hash_name": "Ice Nova Rune (Grand)"
+      }
+    },
+    "LegendaryRune_SorcererSpecial2": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5183,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4098,
+        "market_hash_name": "Fire Elemental Rune (Grand)"
+      }
+    },
+    "LegendaryRune_SorcererSpecial3": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5184,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4123,
+        "market_hash_name": "Ice Block Rune (Grand)"
+      }
+    },
+    "LegendaryRune_SorcererSpecial4": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5185,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4124,
+        "market_hash_name": "Fire Meteor Rune (Grand)"
+      }
+    },
+    "LegendaryRune_SorcererSpecial5": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5186,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4125,
+        "market_hash_name": "Flame Aura Rune (Grand)"
+      }
+    },
+    "LegendaryRune_SorcererSpecial6": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5187,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4126,
+        "market_hash_name": "Lightning Cloud Rune (Grand)"
+      }
+    },
+    "LegendaryRune_SorcererStrongAttack1": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5188,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4099,
+        "market_hash_name": "Flame Breath Rune (Grand)"
+      }
+    },
+    "LegendaryRune_SorcererStrongAttack2": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5189,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4100,
+        "market_hash_name": "Ice Meteor Rune (Grand)"
+      }
+    },
+    "LegendaryRune_SorcererStrongAttack3": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5190,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4101,
+        "market_hash_name": "Lightning Storm Rune (Grand)"
+      }
+    },
+    "LegendaryRune_SorcererStrongAttack4": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5191,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4127,
+        "market_hash_name": "Frost Beam Rune (Grand)"
+      }
+    },
+    "LegendaryRune_WarriorBasicAttack": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5192,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4102,
+        "market_hash_name": "Valiant Strike Rune (Grand)"
+      }
+    },
+    "LegendaryRune_WarriorBasicAttack2": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5193,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4103,
+        "market_hash_name": "Cleave Rune (Grand)"
+      }
+    },
+    "LegendaryRune_WarriorBasicAttack3": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5194,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4104,
+        "market_hash_name": "Blood Strike Rune (Grand)"
+      }
+    },
+    "LegendaryRune_WarriorBasicAttack4": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5195,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4128,
+        "market_hash_name": "Steady Blow Rune (Grand)"
+      }
+    },
+    "LegendaryRune_WarriorHeavyAttack1": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5196,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4105,
+        "market_hash_name": "Flame Strike Rune (Grand)"
+      }
+    },
+    "LegendaryRune_WarriorHeavyAttack2": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5197,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4106,
+        "market_hash_name": "Half Moon Slash Rune (Grand)"
+      }
+    },
+    "LegendaryRune_WarriorHeavyAttack3": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5198,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4107,
+        "market_hash_name": "Whirlwind Rune (Grand)"
+      }
+    },
+    "LegendaryRune_WarriorHeavyAttack4": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5199,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4129,
+        "market_hash_name": "Rending Onslaught Rune (Grand)"
+      }
+    },
+    "LegendaryRune_WarriorRageShield": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5200,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4108,
+        "market_hash_name": "Rage Shield Rune (Grand)"
+      }
+    },
+    "LegendaryRune_WarriorRageShout": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5201,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4109,
+        "market_hash_name": "Rage Shout Rune (Grand)"
+      }
+    },
+    "LegendaryRune_WarriorSpecial3": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5202,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4130,
+        "market_hash_name": "Deadly Hook Rune (Grand)"
+      }
+    },
+    "LegendaryRune_WarriorSpecial4": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5203,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4131,
+        "market_hash_name": "Earthstrike Rune (Grand)"
+      }
+    },
+    "LegendaryRune_WarriorSpecial5": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5204,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4132,
+        "market_hash_name": "Iron Thorn Rune (Grand)"
+      }
+    },
+    "LegendaryRune_WarriorSpecial6": {
+      "kind": "rune",
+      "rarity": 3,
+      "source_class": "RuneData",
+      "source_path_id": 5205,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4133,
+        "market_hash_name": "Molten Might Rune (Grand)"
+      }
+    },
+    "LegendaryShoulder1": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5085,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3020,
+        "market_hash_name": "Shell Spike Pauldron (Black Mist)"
+      }
+    },
+    "LegendaryShoulder2": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5086,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3021,
+        "market_hash_name": "Elemental Burst Pauldron (Black Mist)"
+      }
+    },
+    "LegendaryShoulder3": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60012,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3041,
+        "market_hash_name": "Reaper's Pauldron (Black Mist)"
+      }
+    },
+    "LegendaryShoulder4": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5087,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3050,
+        "market_hash_name": "Venomfrost Pauldron (Black Mist)"
+      }
+    },
+    "LegendaryShoulder5": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5088,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3056,
+        "market_hash_name": "Spiritbound Pauldron (Black Mist)"
+      }
+    },
+    "LegendaryStaff1": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5111,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3022,
+        "market_hash_name": "Staff of the Frostwyrm (Black Mist)"
+      }
+    },
+    "LegendaryStaff2": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5112,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3028,
+        "market_hash_name": "Amber Skull Staff (Black Mist)"
+      }
+    },
+    "LegendarySword1": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5113,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3023,
+        "market_hash_name": "Serrated Greatsword of Agony (Black Mist)"
+      }
+    },
+    "MonkSetRune1_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5206,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4018,
+        "market_hash_name": "Hundred Hands Rune (I)"
+      }
+    },
+    "MonkSetRune1_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5207,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4019,
+        "market_hash_name": "Hundred Hands Rune (II)"
+      }
+    },
+    "MonkSetRune1_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5208,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4020,
+        "market_hash_name": "Hundred Hands Rune (III)"
+      }
+    },
+    "MonkSetRune1_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5209,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4021,
+        "market_hash_name": "Hundred Hands Rune (IV)"
+      }
+    },
+    "MonkSetRune1_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5210,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4022,
+        "market_hash_name": "Hundred Hands Rune (V)"
+      }
+    },
+    "MonkSetRune1_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5211,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4023,
+        "market_hash_name": "Hundred Hands Rune (VI)"
+      }
+    },
+    "MonkSetRune2_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5212,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4024,
+        "market_hash_name": "Wheel of Nine Heavens Rune (I)"
+      }
+    },
+    "MonkSetRune2_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5213,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4025,
+        "market_hash_name": "Wheel of Nine Heavens Rune (II)"
+      }
+    },
+    "MonkSetRune2_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5214,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4026,
+        "market_hash_name": "Wheel of Nine Heavens Rune (III)"
+      }
+    },
+    "MonkSetRune2_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5215,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4027,
+        "market_hash_name": "Wheel of Nine Heavens Rune (IV)"
+      }
+    },
+    "MonkSetRune2_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5216,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4028,
+        "market_hash_name": "Wheel of Nine Heavens Rune (V)"
+      }
+    },
+    "MonkSetRune2_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5217,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4029,
+        "market_hash_name": "Wheel of Nine Heavens Rune (VI)"
+      }
+    },
+    "MonkSetRune3_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5218,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4030,
+        "market_hash_name": "Serpent's Tongue Rune (I)"
+      }
+    },
+    "MonkSetRune3_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5219,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4031,
+        "market_hash_name": "Serpent's Tongue Rune (II)"
+      }
+    },
+    "MonkSetRune3_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5220,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4032,
+        "market_hash_name": "Serpent's Tongue Rune (III)"
+      }
+    },
+    "MonkSetRune3_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5221,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4033,
+        "market_hash_name": "Serpent's Tongue Rune (IV)"
+      }
+    },
+    "MonkSetRune3_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5222,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4034,
+        "market_hash_name": "Serpent's Tongue Rune (V)"
+      }
+    },
+    "MonkSetRune3_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5223,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4035,
+        "market_hash_name": "Serpent's Tongue Rune (VI)"
+      }
+    },
+    "Rein_BeachCrabBoss": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60107,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2006,
+        "market_hash_name": "Rein of the Tidewrath Crab King"
+      }
+    },
+    "Rein_BeachTurtleBoss": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60112,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2007,
+        "market_hash_name": "Rein of the Ancient Shellwarden"
+      }
+    },
+    "Rein_BigTreant": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60113,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2000,
+        "market_hash_name": "Rein of the Ancient Oak Treant"
+      }
+    },
+    "Rein_BlueMammoth": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60115,
+      "source_file": "sharedassets0.assets",
+      "retired": true,
+      "normal": {
+        "definition_id": 2001,
+        "market_hash_name": "Rein of the Blue Mammoth"
+      }
+    },
+    "Rein_DarkElfMage": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60118,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2008,
+        "market_hash_name": "Rein of the Dark Elf Mage"
+      }
+    },
+    "Rein_DefiledKeepDragon": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60120,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2020,
+        "market_hash_name": "Rein of the Defiled Wyrm"
+      }
+    },
+    "Rein_DefiledKeepReaper": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60122,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2021,
+        "market_hash_name": "Rein of the Bone Reaper"
+      }
+    },
+    "Rein_DesertHarpy": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60126,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2009,
+        "market_hash_name": "Rein of the Sandstorm Harpy Queen"
+      }
+    },
+    "Rein_DesertManticoraBoss": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60129,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2002,
+        "market_hash_name": "Rein of the Dread Sand Manticore"
+      }
+    },
+    "Rein_Dragon": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5131,
+      "source_file": "resources.assets",
+      "retired": true,
+      "normal": {
+        "definition_id": 2003,
+        "market_hash_name": "Rein of the Bloodmoon Werewolf"
+      }
+    },
+    "Rein_FishingWaterDragon": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60131,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2017,
+        "market_hash_name": "Rein of the Flying Fish King"
+      }
+    },
+    "Rein_ForestSpiderKing": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60132,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2010,
+        "market_hash_name": "Rein of the Venom Queen"
+      }
+    },
+    "Rein_Ogre": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60134,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2004,
+        "market_hash_name": "Rein of the Ogre"
+      }
+    },
+    "Rein_Raptor": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60137,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2022,
+        "market_hash_name": "Rein of the Raptor"
+      }
+    },
+    "Rein_RedDesertAirWarlord": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60138,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2005,
+        "market_hash_name": "Rein of the Redrock Lord"
+      }
+    },
+    "Rein_RedDesertSerparmat": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60143,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2011,
+        "market_hash_name": "Rein of the Serparmat the Devourer"
+      }
+    },
+    "Rein_RedForestDragon": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60145,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2013,
+        "market_hash_name": "Rein of the Lord of the Crimson Vale"
+      }
+    },
+    "Rein_RedForestHobgoblin": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60148,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2014,
+        "market_hash_name": "Rein of the Goblin Giant"
+      }
+    },
+    "Rein_SnowHillFrostDragon": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60152,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2018,
+        "market_hash_name": "Rein of the Frost Dragon"
+      }
+    },
+    "Rein_SnowHillIceHound": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60153,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2019,
+        "market_hash_name": "Rein of the Ice Hound"
+      }
+    },
+    "Rein_VolcanoDemonLord": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60162,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2016,
+        "market_hash_name": "Rein of the Lord of the Cinder"
+      }
+    },
+    "Rein_VolcanoDragon": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60163,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2015,
+        "market_hash_name": "Rein of the Emberfang"
+      }
+    },
+    "Rein_Werewolf": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 60167,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2012,
+        "market_hash_name": "Rein of the Bloodmoon Werewolf"
+      }
+    },
+    "SorcererSetRune1_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5326,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4036,
+        "market_hash_name": "Infernal Covenant Rune (I)"
+      }
+    },
+    "SorcererSetRune1_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5327,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4037,
+        "market_hash_name": "Infernal Covenant Rune (II)"
+      }
+    },
+    "SorcererSetRune1_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5328,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4038,
+        "market_hash_name": "Infernal Covenant Rune (III)"
+      }
+    },
+    "SorcererSetRune1_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5329,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4039,
+        "market_hash_name": "Infernal Covenant Rune (IV)"
+      }
+    },
+    "SorcererSetRune1_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5330,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4040,
+        "market_hash_name": "Infernal Covenant Rune (V)"
+      }
+    },
+    "SorcererSetRune1_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5331,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4041,
+        "market_hash_name": "Infernal Covenant Rune (VI)"
+      }
+    },
+    "SorcererSetRune2_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5332,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4042,
+        "market_hash_name": "Frozen Barrage Rune (I)"
+      }
+    },
+    "SorcererSetRune2_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5333,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4043,
+        "market_hash_name": "Frozen Barrage Rune (II)"
+      }
+    },
+    "SorcererSetRune2_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5334,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4044,
+        "market_hash_name": "Frozen Barrage Rune (III)"
+      }
+    },
+    "SorcererSetRune2_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5335,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4045,
+        "market_hash_name": "Frozen Barrage Rune (IV)"
+      }
+    },
+    "SorcererSetRune2_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5336,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4046,
+        "market_hash_name": "Frozen Barrage Rune (V)"
+      }
+    },
+    "SorcererSetRune2_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5337,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4047,
+        "market_hash_name": "Frozen Barrage Rune (VI)"
+      }
+    },
+    "SorcererSetRune3_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5338,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4048,
+        "market_hash_name": "Stormcaller Rune (I)"
+      }
+    },
+    "SorcererSetRune3_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5339,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4049,
+        "market_hash_name": "Stormcaller Rune (II)"
+      }
+    },
+    "SorcererSetRune3_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5340,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4050,
+        "market_hash_name": "Stormcaller Rune (III)"
+      }
+    },
+    "SorcererSetRune3_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5341,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4051,
+        "market_hash_name": "Stormcaller Rune (IV)"
+      }
+    },
+    "SorcererSetRune3_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5342,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4052,
+        "market_hash_name": "Stormcaller Rune (V)"
+      }
+    },
+    "SorcererSetRune3_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5343,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4053,
+        "market_hash_name": "Stormcaller Rune (VI)"
+      }
+    },
+    "UpgradeCommodity1": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 59973,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 5001,
+        "market_hash_name": "Consecration Stone"
+      }
+    },
+    "WarriorSetRune1_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5353,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4054,
+        "market_hash_name": "Rune of Atheron's Shield (I)"
+      }
+    },
+    "WarriorSetRune1_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5354,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4055,
+        "market_hash_name": "Rune of Atheron's Shield (II)"
+      }
+    },
+    "WarriorSetRune1_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5355,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4056,
+        "market_hash_name": "Rune of Atheron's Shield (III)"
+      }
+    },
+    "WarriorSetRune1_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5356,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4057,
+        "market_hash_name": "Rune of Atheron's Shield (IV)"
+      }
+    },
+    "WarriorSetRune1_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5357,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4058,
+        "market_hash_name": "Rune of Atheron's Shield (V)"
+      }
+    },
+    "WarriorSetRune1_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5358,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4059,
+        "market_hash_name": "Rune of Atheron's Shield (VI)"
+      }
+    },
+    "WarriorSetRune2_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5359,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4060,
+        "market_hash_name": "Eye of the Storm Rune (I)"
+      }
+    },
+    "WarriorSetRune2_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5360,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4061,
+        "market_hash_name": "Eye of the Storm Rune (II)"
+      }
+    },
+    "WarriorSetRune2_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5361,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4062,
+        "market_hash_name": "Eye of the Storm Rune (III)"
+      }
+    },
+    "WarriorSetRune2_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5362,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4063,
+        "market_hash_name": "Eye of the Storm Rune (IV)"
+      }
+    },
+    "WarriorSetRune2_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5363,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4064,
+        "market_hash_name": "Eye of the Storm Rune (V)"
+      }
+    },
+    "WarriorSetRune2_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5364,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4065,
+        "market_hash_name": "Eye of the Storm Rune (VI)"
+      }
+    },
+    "WarriorSetRune3_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5365,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4066,
+        "market_hash_name": "Weight of the Mountain Rune (I)"
+      }
+    },
+    "WarriorSetRune3_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5366,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4067,
+        "market_hash_name": "Weight of the Mountain Rune (II)"
+      }
+    },
+    "WarriorSetRune3_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5367,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4068,
+        "market_hash_name": "Weight of the Mountain Rune (III)"
+      }
+    },
+    "WarriorSetRune3_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5368,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4069,
+        "market_hash_name": "Weight of the Mountain Rune (IV)"
+      }
+    },
+    "WarriorSetRune3_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5369,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4070,
+        "market_hash_name": "Weight of the Mountain Rune (V)"
+      }
+    },
+    "WarriorSetRune3_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5370,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4071,
+        "market_hash_name": "Weight of the Mountain Rune (VI)"
+      }
+    },
+    "WarriorSetRune4_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5371,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4072,
+        "market_hash_name": "Harvest Moon Rune (I)"
+      }
+    },
+    "WarriorSetRune4_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5372,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4073,
+        "market_hash_name": "Harvest Moon Rune (II)"
+      }
+    },
+    "WarriorSetRune4_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5373,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4074,
+        "market_hash_name": "Harvest Moon Rune (III)"
+      }
+    },
+    "WarriorSetRune4_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5374,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4075,
+        "market_hash_name": "Harvest Moon Rune (IV)"
+      }
+    },
+    "WarriorSetRune4_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5375,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4076,
+        "market_hash_name": "Harvest Moon Rune (V)"
+      }
+    },
+    "WarriorSetRune4_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5376,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4077,
+        "market_hash_name": "Harvest Moon Rune (VI)"
+      }
+    }
+  }
+}

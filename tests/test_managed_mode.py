@@ -159,7 +159,14 @@ class BatchCleanupTests(unittest.TestCase):
         self.assertEqual(action['kind'], 'collect_ground'); verified(engine, action)
         world = observation([second, carriage_chest, gem], town=True)
         action = engine.next_action(world)
-        self.assertEqual(action['kind'], 'sell')
+        self.assertEqual((action['kind'], action['target']), ('transfer', 'storage'))
+        self.assertEqual(action['item']['internal_name'], 'Gem1')
+        verified(engine, action)
+        gem.update(container='storage', slot_index=0)
+        next_action = engine.next_action(observation([second, carriage_chest, gem], town=True))
+        self.assertEqual(next_action['kind'], 'open_chest')
+        gem_stat = engine.state()['statistics']['gems'][0]
+        self.assertEqual((gem_stat['stored'], gem_stat['sold']), (1, 0))
 
     def test_unfinished_offload_cannot_open_chests_or_finish_collection(self):
         engine = ManagedMode(settings())
@@ -206,7 +213,7 @@ class SettingsTests(unittest.TestCase):
     def test_preferences_roundtrip_and_no_mutable_aliases(self):
         raw = settings(equip=True)
         raw['auto_equip']['slot_locks'] = {'8': 'LegendaryNeck1', '6': 'LegendaryRing1'}
-        validated = validate_settings(raw, equipment_keys={'LegendaryNeck1', 'LegendaryRing1'}, available_pages={1, 2})
+        validated = validate_settings(raw, equipment_keys={'LegendaryNeck1', 'LegendaryRing1'}, available_pages={1, 2, 5})
         raw['cleanup']['equipment_pages'].append(2)
         self.assertEqual(validated['cleanup']['equipment_pages'], [1])
 
@@ -220,9 +227,12 @@ class SettingsTests(unittest.TestCase):
 
     def test_page_numbers_do_not_assume_five_pages(self):
         raw = settings()
-        for name in ('equipment_pages', 'rune_pages', 'gem_pages'): raw['cleanup'][name] = [8]
+        for name in ('equipment_pages', 'rune_pages', 'gem_pages', 'gold_bar_pages', 'legendary_rein_pages'):
+            raw['cleanup'][name] = [8]
         validate_settings(raw, available_pages={8, 10})
-        self.assertEqual(validate_settings(raw, available_pages={1, 2})['cleanup']['rune_pages'],[8])
+        with self.assertRaisesRegex(ValidationError, '已解锁'):
+            validate_settings(raw, available_pages={1, 2})
+        self.assertEqual(validate_settings(raw)['cleanup']['rune_pages'], [8])
 
 
 class EquipTests(unittest.TestCase):
@@ -666,14 +676,19 @@ class CleanupTests(unittest.TestCase):
         engine.resume(world);self.assertEqual(engine.barrier_reads,0)
         self.assertIsNone(engine.next_action(world));self.assertTrue(engine.running)
 
-    def test_stale_after_sale_neither_requeues_nor_recounts_gems(self):
+    def test_stale_after_storage_neither_requeues_nor_recounts_gems(self):
         engine = ManagedMode(settings(gem_action='sell')); empty = observation([], town=True); engine.start(empty)
         gem = loot('newgem', 'gem', 'Gem1', count=3); world = observation([gem], town=True)
-        action = engine.next_action(world); self.assertEqual(action['kind'], 'sell'); verified(engine, action)
+        action = engine.next_action(world)
+        self.assertEqual((action['kind'], action['target']), ('transfer', 'storage')); verified(engine, action)
+        # A delayed source snapshot must neither resubmit a transfer nor count
+        # the same stack again. Completion is accepted only once it is stored.
         self.assertIsNone(engine.next_action(world))
+        stats = engine.state()['statistics']['gems'][0]
+        self.assertEqual((stats['count'], stats['stored'], stats['sold']), (3, 3, 0))
+        gem.update(container='storage', slot_index=0)
+        self.assertEqual(engine.next_action(observation([gem], town=True))['kind'], 'enter_dungeon')
         self.assertEqual(engine.state()['statistics']['gems'][0]['count'], 3)
-        self.assertEqual(engine.state()['statistics']['gems'][0]['sold'], 3)
-        self.assertEqual(engine.next_action(empty)['kind'], 'enter_dungeon')
 
     def test_divine_mist_matches_always_lock_before_storage(self):
         for extra in ({'rarity': 4}, {'is_black_mist': True}, {'matches': True}):
@@ -778,24 +793,34 @@ class CleanupTests(unittest.TestCase):
         engine = ManagedMode(settings(equipment_action='sell', rune_action='sell', gem_action='sell'))
         chest = loot('chest', 'chest', 'TreasureChestGold')
         rune = loot('rune', 'rune', 'HunterRune1', 1, rarity=2)
-        world = observation([chest, rune], town=True); engine.start(world)
-        action = engine.next_action(world); self.assertEqual(action['kind'], 'sell'); verified(engine, action)
-        world = observation([chest], town=True)
+        engine.start(observation([], town=True))
+        world = observation([chest, rune], town=True)
+        action = engine.next_action(world)
+        self.assertEqual((action['kind'], action['target']), ('transfer', 'storage')); verified(engine, action)
+        rune.update(container='storage', slot_index=0)
+        world = observation([chest, rune], town=True)
         action = engine.next_action(world); self.assertEqual(action['kind'], 'open_chest'); verified(engine, action)
-        newgear = equipment('new', 0); world = observation([newgear], town=True)
+        newgear = equipment('new', 0); world = observation([newgear, rune], town=True)
         action = engine.next_action(world); self.assertEqual(action['kind'], 'sell'); verified(engine, action)
-        world = observation([], town=True); drop = loot('carriage-gem', 'gem', 'Gem1'); world['carriage']['items'] = [drop]
+        world = observation([rune], town=True)
+        drop = loot('carriage-gem', 'gem', 'Gem1'); world['carriage']['items'] = [drop]
         action = engine.next_action(world); self.assertEqual(action['kind'], 'collect_carriage'); verified(engine, action)
-        world = observation([drop], town=True)
-        action = engine.next_action(world); self.assertEqual(action['kind'], 'sell'); verified(engine, action)
-        world = observation([], town=True); groundgear = equipment('groundgear'); world['ground']['items'] = [groundgear]
+        world = observation([drop, rune], town=True)
+        action = engine.next_action(world)
+        self.assertEqual((action['kind'], action['target']), ('transfer', 'storage')); verified(engine, action)
+        drop.update(container='storage', slot_index=1)
+        world = observation([rune, drop], town=True)
+        groundgear = equipment('groundgear'); world['ground']['items'] = [groundgear]
         action = engine.next_action(world); self.assertEqual(action['kind'], 'collect_ground'); verified(engine, action)
-        world = observation([groundgear], town=True)
+        world = observation([groundgear, rune, drop], town=True)
         action = engine.next_action(world); self.assertEqual(action['kind'], 'sell'); verified(engine, action)
-        world = observation([], town=True)
+        world = observation([rune, drop], town=True)
         self.assertEqual(engine.next_action(world)['kind'], 'enter_dungeon')
-        self.assertEqual(engine.state()['statistics']['equipment']['legendary']['count'], 2)
-        self.assertEqual(engine.state()['statistics']['equipment']['legendary']['sold'], 2)
+        stats = engine.state()['statistics']
+        self.assertEqual(stats['equipment']['legendary']['count'], 2)
+        self.assertEqual(stats['equipment']['legendary']['sold'], 2)
+        self.assertEqual((stats['runes'][0]['stored'], stats['runes'][0]['sold']), (1, 0))
+        self.assertEqual((stats['gems'][0]['stored'], stats['gems'][0]['sold']), (1, 0))
 
     def test_unknown_ground_scan_never_claims_cleanup_complete(self):
         engine = ManagedMode(settings()); world = observation([], town=True); world['ground']['complete'] = False; engine.start(world)
@@ -803,6 +828,85 @@ class CleanupTests(unittest.TestCase):
 
 
 class MetricsTests(unittest.TestCase):
+    def test_other_drops_exclude_potions_and_coins_without_changing_known_categories(self):
+        metric = ManagedMetrics(); metric.observe(observation())
+        others = [loot('chest', 'chest', 'TreasureChest2', count=2),
+                  loot('bar', 'material', 'GoldBar', count=3),
+                  loot('rein', 'material', 'LegendaryRein', count=1),
+                  loot('ticket', 'material', 'Ticket', count=4)]
+        excluded = [loot(str(n), 'material', name, count=14) for n, name in enumerate(
+            ('MovementPotion1', 'MovementPotion2', 'AttackPotion1', 'HealthPotionDrop', 'GoldDrop'))]
+        world = observation(others + excluded + [equipment('new'), loot('rune', 'rune', 'Rune1'),
+                                                  loot('gem', 'gem', 'Gem1')])
+        for _ in range(3): metric.observe(world)
+        state = metric.state()
+        self.assertEqual({r['name_key']: r['count'] for r in state['others']},
+                         {'TreasureChest2': 2, 'GoldBar': 3, 'LegendaryRein': 1, 'Ticket': 4})
+        self.assertEqual(state['equipment']['legendary']['count'], 1)
+        self.assertEqual((state['runes'][0]['count'], state['gems'][0]['count']), (1, 1))
+
+    def test_other_initial_stacks_transfers_and_storage_credit_are_conserved(self):
+        metric = ManagedMetrics(); old = loot('old', 'material', 'GoldBar', container='storage', count=5)
+        metric.observe(observation([old]))
+        new = loot('new', 'material', 'GoldBar', count=2); new['name'] = '金条'
+        world = observation([old]); world['ground']['items'] = [dict(new, container='ground')]
+        metric.observe(world)
+        metric.observe(observation([old, new])); metric.committed('store-new', new, 'transfer')
+        old['count'] = 7
+        for _ in range(3): metric.observe(observation([old]))
+        state = metric.state()['others'][0]
+        self.assertEqual((state['name'], state['count'], state['stored']), ('金条', 2, 2))
+
+    def test_other_event_dedup_and_uids_never_inflate_native_equipment_counts(self):
+        metric = ManagedMetrics(); metric.observe(observation(drop_events=[], loot_ledger=self.ledger()))
+        chest = loot('chest', 'chest', 'TreasureChest2', item_uid='unique-chest', rarity=3, container='ground')
+        event = {'event_id': 17, 'item': chest, 'quantity': 1}
+        world = observation(drop_events=[event], loot_ledger=self.ledger())
+        world['ground']['items'] = [chest]
+        for _ in range(3): metric.observe(world)
+        self.assertEqual(metric.state()['others'][0]['count'], 1)
+        self.assertTrue(all(r['count'] == 0 for r in metric.state()['equipment'].values()))
+
+    def test_other_incomplete_scans_and_existing_stock_are_not_new_drops(self):
+        metric = ManagedMetrics(); row = loot('old', 'chest', 'TreasureChest2', count=3)
+        metric.observe(observation([row]))
+        partial = observation(); partial['ground']['complete'] = False
+        metric.observe(partial); metric.observe(observation([row]))
+        self.assertEqual(metric.state()['others'], [])
+
+    def test_native_gold_survives_map_repeats_and_missing_reads_without_sale_income(self):
+        metric = ManagedMetrics()
+        def world(total, **extra):
+            return observation(gold_ledger={'available': True, 'id': 'player-statistics', 'total': total}, **extra)
+        metric.observe(world(10000))
+        for _ in range(3): metric.observe(world(10333))
+        self.assertEqual(metric.state()['gold']['count'], 333)
+        metric.observe(observation(gold_ledger={'available': False, 'reason': '切图中'}))
+        self.assertEqual(metric.state()['gold'], {'count': 333, 'available': False, 'reason': '切图中'})
+        resumed = world(11000, loot_ledger=self.ledger(run='another-map'))
+        resumed['scene']['run']['id'] = 'next-round'
+        metric.observe(resumed)
+        # Selling/spending changes the wallet, but never changes this pickup total.
+        resumed['character']['gold'] = 99999999
+        metric.observe(resumed)
+        self.assertEqual(metric.state()['gold']['count'], 1000)
+        self.assertTrue(metric.state()['gold']['available'])
+
+    def test_gold_character_changes_rollbacks_and_invalid_values_do_not_backfill_history(self):
+        metric = ManagedMetrics(); metric.observe(observation())
+        def observe(source, total):
+            metric.observe(observation(gold_ledger={'available': True, 'id': source, 'total': total}))
+        observe('first', 100000); observe('first', 100100)
+        observe('second', 200000); observe('second', 200050)
+        observe('second', 10); observe('second', 20)
+        self.assertEqual(metric.state()['gold']['count'], 160)
+        for invalid in (-1, True, 1.5, '999', 2**63):
+            observe('second', invalid)
+            self.assertFalse(metric.state()['gold']['available'])
+        observe('second', 30)
+        self.assertEqual(metric.state()['gold']['count'], 170)
+        self.assertEqual(ManagedMetrics().state()['gold']['count'], 0)
+
     def ledger(self, counts=None, receipts=(), policy=None, run='ledger-1'):
         return {'available':True, 'complete':True, 'id':run,
                 'counts':{str(i):(counts or {}).get(i,0) for i in range(6)},

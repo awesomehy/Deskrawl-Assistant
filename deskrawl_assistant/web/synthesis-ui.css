@@ -1,0 +1,30 @@
+.synthesis-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:0 20px 15px}
+.synthesis-kind{min-width:0;border:1px solid var(--line);border-radius:8px;padding:14px;background:#141a21}
+.synthesis-kind-heading,.synthesis-exclusions-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.synthesis-kind h3,.synthesis-exclusions h3{font-size:12px;font-weight:500;color:var(--text)}
+.synthesis-kind p,.synthesis-exclusions>p{font-size:10px;line-height:1.9;color:var(--muted);margin:10px 0 0}
+.synthesis-quality-field{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:15px;font-size:11px;color:var(--muted)}
+.synthesis-quality-field select{min-width:90px;font-size:11px;padding:7px 10px}
+.synthesis-kind .synthesis-limit-note{color:var(--gold);font-size:10px}
+.synthesis-exclusions{padding:15px 20px 20px;border-top:1px solid var(--line)}
+.synthesis-exclusions-heading>small{color:var(--gold);font-size:10px}
+.synthesis-search-label{display:grid;gap:7px;margin-top:13px;font-size:10px;color:var(--muted)}
+.synthesis-search-label input{width:100%;font-size:11px;padding:9px 11px}
+.synthesis-rune-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:345px;overflow:auto;margin-top:12px;overscroll-behavior:contain}
+.synthesis-rune-choice{display:flex;align-items:center;gap:8px;min-width:0;padding:9px 10px;background:#151b23;border:1px solid #313b46;border-radius:6px;cursor:pointer}
+.synthesis-rune-choice.selected{border-color:#8c713c;background:#30281a}
+.synthesis-rune-choice:has(input:disabled){cursor:default;opacity:.65}
+.synthesis-rune-choice:focus-within{outline:2px solid var(--gold);outline-offset:-2px}
+.synthesis-rune-choice input{width:13px;height:13px;flex-shrink:0;margin:0}
+.synthesis-rune-icon{width:30px;height:30px;flex-shrink:0;display:grid;place-items:center;background:#10161c;border:1px solid #3e454b;border-radius:4px;color:var(--muted)}
+.synthesis-rune-icon img{width:27px;height:27px;object-fit:contain}
+.synthesis-rune-label{display:grid;gap:5px;min-width:0}
+.synthesis-rune-label strong{font-size:11px;font-weight:500;line-height:1.5;overflow-wrap:anywhere}
+.synthesis-rune-label small{font-size:9px;color:var(--muted)}
+.synthesis-rune-choice[data-quality=uncommon] strong{color:var(--rarity-uncommon)}
+.synthesis-rune-choice[data-quality=rare] strong{color:var(--rarity-rare)}
+.synthesis-rune-choice[data-quality=grand] strong{color:var(--rarity-legendary)}
+.synthesis-rune-choice[data-quality=set] strong{color:var(--rarity-rune-set)}
+.synthesis-empty{grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);font-size:11px}
+@media(max-width:850px){.synthesis-settings{grid-template-columns:1fr}}
+@media(max-width:480px){.synthesis-settings{padding-left:15px;padding-right:15px}.synthesis-exclusions{padding-left:15px;padding-right:15px}.synthesis-rune-options{grid-template-columns:1fr}.synthesis-kind-heading .managed-toggle{font-size:10px}}

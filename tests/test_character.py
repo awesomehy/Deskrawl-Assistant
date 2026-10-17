@@ -105,9 +105,9 @@ class CharacterMathTests(unittest.TestCase):
         self.assertFalse(rejected['available'])
 
     def test_two_ring_targets_have_distinct_deltas_and_select_best(self):
-        c=character(equipment=[item(7,[(1,50)],equipped_slot=6,item_uid='r1'),item(7,[(1,10)],equipped_slot=7,item_uid='r2')])
+        c=character(equipment=[item(7,[(1,50)],name_key='LegendaryRing1',equipped_slot=6,item_uid='r1'),item(7,[(1,10)],name_key='LegendaryRing2',equipped_slot=7,item_uid='r2')])
         c['model']['caches'][536][1]=60
-        result=preview(item(7,[(1,30)]),c,{'items':{}})
+        result=preview(item(7,[(1,30)],name_key='LegendaryRing3'),c,{'items':{}})
         self.assertEqual([6,7],[i['target'] for i in result['comparisons']])
         self.assertLess(result['comparisons'][0]['delta'],0)
         self.assertGreater(result['comparisons'][1]['delta'],0)

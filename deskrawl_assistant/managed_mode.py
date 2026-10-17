@@ -13,16 +13,19 @@ import math
 from .models import ValidationError
 from .game_panel_log import DisposalLogCursor
 from .item_protection import divine_equipment, mandatory_storage, disposal_protection, is_rune, town_rewards_clear
-from .storage_preferences import DEFAULT_STORAGE_PAGES
+from .storage_preferences import DEFAULT_STORAGE_PAGES, validate_available_storage_pages
 from .mythic import MYTHIC, floor_number
 from .equipment_requirements import equip_eligibility
 from .stargazing import DEFAULT_STARGAZING, validate_stargazing, enabled as stargazing_enabled, decide as stargazing_decide, combat_rewards_clear, combat_rewards_known
 from .combat_rewards import CompletionRewards
+from .synthesis import (DEFAULT_SYNTHESIS, enabled as synthesis_enabled,
+                        validate_settings as validate_synthesis, next_action as synthesis_action, KINDS as SYNTHESIS_ACTIONS)
 from .progression import (DEFAULT_PROGRESSION, DEFAULT_LIFE, DEFAULT_MERCHANT,
                           validate_growth, enabled as growth_enabled, growth_action, next_purchase, PURCHASE_BATCH_LIMIT)
 
 
 DEFAULT_SETTINGS = {
+    'synthesis': deepcopy(DEFAULT_SYNTHESIS),
     'progression': deepcopy(DEFAULT_PROGRESSION), 'life_skills': deepcopy(DEFAULT_LIFE),
     'merchant': deepcopy(DEFAULT_MERCHANT),
     'background': {'rule_monitoring': True, 'inventory_automation': True},
@@ -53,12 +56,14 @@ def run_record(value):
     return value
 
 
-def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_empty_rune_pages=False):
-    """Validate saved choices, including reserved pages; check permissions at runtime."""
+def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_empty_rune_pages=False,
+                      allow_empty_storage_pages=False):
+    """Validate choices and require open destinations when permissions are known."""
     if not isinstance(raw, dict):
         raise ValidationError('托管配置格式无效。')
     raw = deepcopy(raw)
     raw.setdefault('background', deepcopy(DEFAULT_SETTINGS['background']))
+    raw.setdefault('synthesis', deepcopy(DEFAULT_SYNTHESIS))
     for name in ('progression', 'life_skills', 'merchant'):
         raw.setdefault(name, deepcopy(DEFAULT_SETTINGS[name]))
     if set(raw) != set(DEFAULT_SETTINGS): raise ValidationError('托管配置格式无效。')
@@ -78,6 +83,7 @@ def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_e
         if not isinstance(raw[group], dict) or set(raw[group]) != set(defaults):
             raise ValidationError('托管配置字段不完整：' + group)
     e, f, c = result['auto_equip'], result['farming'], result['cleanup']
+    result['synthesis'] = validate_synthesis(result['synthesis'])
     f['stargazing'] = validate_stargazing(f['stargazing'])
     if type(e['enabled']) is not bool or type(f['enabled']) is not bool:
         raise ValidationError('托管开关必须为布尔值。')
@@ -144,17 +150,20 @@ def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_e
         {'action':c['equipment_action'],'fallback':c['equipment_fallback']})) for bucket in DISPOSABLE_BUCKETS}
     if c['rune_action'] not in ('sell', 'store') or c['gem_action'] not in ('sell', 'store'):
         raise ValidationError('符文或宝石处理方式无效。')
+    c['rune_action'] = c['gem_action'] = 'store'
     for kind, label in STORAGE_MATERIALS.items():
         if c[kind+'_action'] not in ('store', 'keep'):
             raise ValidationError(label+'处理方式仅支持放入仓库或留在背包。')
+        c[kind+'_action'] = 'store'
     for name in ('equipment_pages', 'rune_pages', 'gem_pages', *(kind+'_pages' for kind in STORAGE_MATERIALS)):
         pages = c[name]
         if (not isinstance(pages, list) or len(pages) > 256 or any(type(n) is not int or n < 1 for n in pages)
                 or len(set(pages)) != len(pages)):
             raise ValidationError('托管仓库页选择无效：' + name)
-        if not pages and not (name=='rune_pages' and allow_empty_rune_pages) and (
+        if not pages and not allow_empty_storage_pages and not (name=='rune_pages' and allow_empty_rune_pages) and (
                 name in ('equipment_pages','rune_pages') or c[name.replace('_pages', '_action')] == 'store'):
             raise ValidationError('请勾选用于存放物品的仓库页。')
+    validate_available_storage_pages(c, available_pages)
     validate_growth(result)
     return result
 
@@ -184,6 +193,18 @@ def storage_material_kind(row):
     return None
 
 
+def managed_required_storage(row):
+    """Managed retention only; manual actions and high-value monitoring stay separate."""
+    return (mandatory_storage(row) or {'rune': '符文', 'gem': '宝石'}.get(item_kind(row))
+            or STORAGE_MATERIALS.get(storage_material_kind(row), ''))
+
+
+def managed_town_rewards_clear(observation):
+    return town_rewards_clear(observation) and not any(
+        managed_required_storage(row) for row in observation.get('items', [])
+        if row.get('container') == 'inventory')
+
+
 def retained_potion(row):
     """Native consumable potions stay in the bag; they have no equipment UID."""
     name = row.get('internal_name') or row.get('name_key')
@@ -193,11 +214,21 @@ def retained_potion(row):
             and type(row.get('count')) is int and row['count'] > 0)
 
 
+def retained_merchant_item(row):
+    """Explicitly known player supplies may occupy bag slots during shopping."""
+    if retained_potion(row):
+        return True
+    return (item_kind(row) == 'material' and row.get('item_class') == 'ItemData'
+            and row.get('item_type') == 7
+            and (row.get('internal_name') or row.get('name_key')) == 'UpgradeCommodity1'
+            and not row.get('issues') and type(row.get('count')) is int and row['count'] > 0)
+
+
 def equip_candidate_allowed(row, score, settings, character):
     """Use the same slot policy when planning and just before executing a swap."""
     if divine_equipment(row) or not isinstance(score, dict): return False
-    if not equip_eligibility(row, character)['can_equip']: return False
     target, delta = score.get('target'), score.get('delta')
+    if not equip_eligibility(row, character, target_slot=target)['can_equip']: return False
     if (type(target) is not int or target not in range(12)
             or type(delta) not in (int, float) or not math.isfinite(delta)
             or delta < settings['minimum_delta']):
@@ -265,11 +296,21 @@ def _quantity(row):
 
 
 def _metric_key(row):
+    name = row.get('internal_name') or row.get('name_key') or row.get('name') or '未命名物品'
+    # Coins have their own native pickup counter. Consumable potions and flask
+    # refills are deliberately omitted from the cumulative item table.
     kind = item_kind(row)
-    if kind == 'equipment': return kind, equipment_bucket(row)
-    if kind in ('rune', 'gem'):
-        return kind, row.get('internal_name', row.get('name_key', '')), row.get('rarity'), row.get('rune_level', row.get('level'))
-    return None
+    if name in ('GoldDrop', 'HealthPotionDrop') or kind not in ('equipment', 'rune', 'gem') and 'Potion' in name:
+        return None
+    if kind == 'equipment' and equipment_bucket(row) in EQUIPMENT_BUCKETS:
+        return kind, equipment_bucket(row)
+    # Native fungible stacks expose base_rarity; the managed view decorates
+    # the same value as rarity. Receipts and observations must share one key.
+    rarity = row.get('rarity')
+    if rarity is None:
+        rarity = row.get('base_rarity')
+    return (kind if kind in ('rune', 'gem') else 'other', name,
+            rarity, row.get('rune_level', row.get('level')))
 
 
 def _location_key(row):
@@ -319,6 +360,8 @@ class ManagedMetrics:
         self.rows = {}
         self.totals = {}
         self.disposal_ids = set()
+        self.synthesis_ids = set()
+        self.crafted_uids = set()
         self.uid_acquired = set()
         self.uid_outcomes = set()
         self.inference_mode = None
@@ -343,6 +386,29 @@ class ManagedMetrics:
         self.panel_events = 0
         self.panel_unparsed = 0
         self.panel_gold = 0
+        self.gold = 0
+        self.gold_source = None
+        self.gold_previous = None
+        self.gold_available = False
+        self.gold_reason = '等待读取游戏金币掉落统计。'
+
+    def _gold_observe(self, observation):
+        ledger = observation.get('gold_ledger', {})
+        self.gold_available = False
+        if not isinstance(ledger, dict) or ledger.get('available') is not True:
+            self.gold_reason = (ledger.get('reason') if isinstance(ledger, dict) else None) or '等待读取游戏金币掉落统计。'
+            return
+        source, total = ledger.get('id'), ledger.get('total')
+        if (not isinstance(source, str) or not source or type(total) is not int
+                or not 0 <= total <= 2**63-1):
+            self.gold_reason = '游戏金币掉落统计格式未确认。'
+            return
+        # A cumulative pickup counter survives spending, selling and map repeats.
+        # First reads, character changes and save rollbacks establish a baseline.
+        if self.gold_source == source and self.gold_previous is not None:
+            self.gold += max(0, total - self.gold_previous)
+        self.gold_source, self.gold_previous = source, total
+        self.gold_available, self.gold_reason = True, ''
 
     def _panel_observe(self, observation, rows, *, baseline=False):
         if 'system_log' not in observation: return
@@ -413,7 +479,8 @@ class ManagedMetrics:
         newly_bagged = Counter(r.get('rarity') for uid,r in bag.items() if uid not in self.native_bag_uids)
         self.native_bag_uids.update(bag)
         if not baseline: self.native_pickup_credits.update(newly_bagged)
-        self.native_pending = Counter(equipment_bucket(r) for r in rows if r.get('container') in ('ground', 'carriage')
+        self.native_pending = Counter(equipment_bucket(r) for r in rows if item_kind(r) == 'equipment'
+            and r.get('container') in ('ground', 'carriage')
             and r.get('item_uid') in self.uid_acquired and not r.get('issues'))
         if baseline:
             initial = [r for r in rows if item_kind(r) == 'equipment' and r.get('container') in ('ground', 'carriage')]
@@ -520,7 +587,9 @@ class ManagedMetrics:
                 self.seen_events.add(str(event.get('event_id')))
             self._panel_observe(observation, rows, baseline=True)
             self._native_observe(observation, rows, baseline=True)
+            self._gold_observe(observation)
             return
+        self._gold_observe(observation)
         if self._complete(observation):
             # Transport known initial units along source decreases/target gains.
             # Newly dropped stacks stay distinguishable from initial warehouse
@@ -552,6 +621,8 @@ class ManagedMetrics:
                 if event_id is None or str(event_id) in self.seen_events: continue
                 self.seen_events.add(str(event_id))
                 row = event.get('item', event)
+                if row.get('item_uid') in self.crafted_uids:
+                    continue
                 self._record(row, 'count', event.get('quantity', _quantity(row)))
                 if row.get('item_uid'): self.uid_acquired.add(row['item_uid'])
             self.seen_uids.update(unique)
@@ -569,6 +640,35 @@ class ManagedMetrics:
             increase = max(0, n - self.balances[key])
             self._record(examples[key], 'count', increase)
         self.balances = totals
+
+    def synthesized(self, receipt_id, inputs, outputs):
+        """Account only for a confirmed transformation, never rebaseline live loot."""
+        if receipt_id in self.synthesis_ids:
+            return
+        self.synthesis_ids.add(receipt_id)
+        for row in inputs:
+            if row.get('item_uid'):
+                self.seen_uids.add(row['item_uid'])
+                continue
+            key, location, quantity = _metric_key(row), _location_key(row), row['quantity']
+            self.balances[key] = max(0, self.balances[key] - quantity)
+            self.locations[location] = max(0, self.locations[location] - quantity)
+            old = min(quantity, self.initial_locations[location])
+            self.initial_locations[location] -= old
+            self.initial[key] = max(0, self.initial[key] - old)
+        for row in outputs:
+            uid = row.get('item_uid')
+            if uid:
+                self.seen_uids.add(uid)
+                self.crafted_uids.add(uid)
+                continue
+            key, location, quantity = _metric_key(row), _location_key(row), row['quantity']
+            self.balances[key] += quantity
+            self.locations[location] += quantity
+            # Crafted units are known non-loot, even when they merge into an
+            # existing stack containing both initial and freshly looted units.
+            self.initial_locations[location] += quantity
+            self.initial[key] += quantity
 
     def committed(self, operation_id, row, kind, quantity=None):
         if operation_id in self.disposal_ids: return
@@ -602,14 +702,15 @@ class ManagedMetrics:
     def state(self):
         equipment = {bucket: {'name': BUCKET_LABELS[bucket], 'count': 0, 'sold': 0, 'salvaged': 0, 'stored': 0}
                      for bucket in EQUIPMENT_BUCKETS}
-        runes, gems = [], []
+        runes, gems, others = [], [], []
+        groups = {'rune': runes, 'gem': gems, 'other': others}
         for key, totals in sorted(self.totals.items(), key=lambda p: str(p[0])):
             row = self.rows[key]
             if key[0] == 'equipment':
                 if key[1] in equipment: equipment[key[1]].update(totals)
             else:
                 value = {'name_key': key[1], 'name': row.get('name', key[1]), 'rarity': key[2], 'level': key[3], **totals}
-                (runes if key[0] == 'rune' else gems).append(value)
+                groups[key[0]].append(value)
         for (bucket, field), quantity in self.native_estimates.items():
             equipment[bucket]['estimated_' + field] = quantity
         for bucket, totals in equipment.items():
@@ -624,7 +725,8 @@ class ManagedMetrics:
             if self.panel_unparsed: note += f'另有 {self.panel_unparsed} 条处置日志格式未确认，未计入。'
         if self.native_estimates or not self.panel_enabled:
             note += '带 ≈ 的低品质数量按稳定马车策略估算，策略变化区间不估算。'
-        return {'equipment': equipment, 'runes': runes, 'gems': gems, 'note':note,
+        return {'equipment': equipment, 'runes': runes, 'gems': gems, 'others': others, 'note':note,
+                'gold': {'count': self.gold, 'available': self.gold_available, 'reason': self.gold_reason},
                 'game_log':{'enabled':self.panel_enabled, 'available':self.panel_cursor.available,
                     'incomplete':self.panel_cursor.incomplete or bool(self.panel_unparsed),
                     'confirmed_disposals':self.panel_events,'sale_gold':self.panel_gold,
@@ -640,6 +742,7 @@ class ManagedMode:
         self.pending = None
         self.metrics = ManagedMetrics()
         self.session = None
+        self.character_id = None
         self.last_success = None
         self.last_success_difficulty = None
         self.target_dungeon = self.settings['farming']['dungeon_id']
@@ -679,12 +782,14 @@ class ManagedMode:
     def start(self, observation):
         if self.running or self.pending: raise ValidationError('托管已在运行。')
         if observation.get('complete') is not True: raise ValidationError('请先完整读取背包与仓库。')
-        if not self.settings['auto_equip']['enabled'] and not self.settings['farming']['enabled'] and not growth_enabled(self.settings):
+        if (not self.settings['auto_equip']['enabled'] and not self.settings['farming']['enabled']
+                and not growth_enabled(self.settings) and not synthesis_enabled(self.settings)):
             raise ValidationError('请至少开启一项托管功能。')
         self.__init__(self.settings)
         self.merchant_received_uids.update(observation.get('merchant_uids',[]))
         self.running = True
         self.session = observation.get('session', observation.get('bridge_session'))
+        self.character_id = self._control_character_id(observation)
         if self.target_difficulty is None:
             self.target_difficulty = observation.get('scene',{}).get('world_difficulty') or observation.get('scene',{}).get('difficulty')
         if self.settings['farming']['enabled']:
@@ -736,8 +841,16 @@ class ManagedMode:
         session = observation.get('session', observation.get('bridge_session'))
         if self.session is not None and session != self.session:
             raise ValidationError('角色或游戏连接已改变，不能继续上次托管。')
+        character_id = self._control_character_id(observation)
+        if self.character_id is not None and character_id is not None and character_id != self.character_id:
+            raise ValidationError('角色已改变，不能继续上次托管；请重新开始。')
+        if self.character_id is None: self.character_id = character_id
         self.running = True
-        self.pending = None; self.await_effect = None; self.await_count = 0
+        self.pending = None
+        # A confirmed synthesis remains fenced across an identity-related pause.
+        # Re-reading the original character must settle it before another craft.
+        if not self.await_effect or self.await_effect.get('kind') not in SYNTHESIS_ACTIONS:
+            self.await_effect = None; self.await_count = 0
         self.phase = 'cleanup' if (self.settings['farming']['enabled'] or self.finishing) and self._town(observation) else 'farming'
         self.reward_barrier = self.phase == 'cleanup'
         self.barrier_reads = 0
@@ -750,6 +863,28 @@ class ManagedMode:
         self.running = False; self.phase = 'paused'; self.status = reason
         self.pending = None
         return None
+
+    @staticmethod
+    def _control_character_id(observation):
+        # Only ManagedService's live control identity is authoritative. The
+        # presentation `character` may still describe the previous login.
+        value = observation.get('character_id')
+        return value if isinstance(value, str) and value.strip() else None
+
+    def check_identity(self, observation, *, require_character=False):
+        session = observation.get('session', observation.get('bridge_session'))
+        if self.session is not None and session != self.session:
+            self._pause('游戏连接已改变，托管已暂停；请重新开始。')
+            return False
+        character_id = self._control_character_id(observation)
+        if self.character_id is not None and character_id is not None and character_id != self.character_id:
+            self._pause('角色已改变，托管已暂停；请重新开始。')
+            return False
+        if character_id is None and require_character:
+            self.status = '等待当前角色身份重新确认，暂不取料或合成。'
+            return False
+        if self.character_id is None: self.character_id = character_id
+        return True
 
     def state(self):
         return {'settings': deepcopy(self.settings), 'running': self.running, 'finishing': self.finishing, 'phase': self.phase,
@@ -860,6 +995,16 @@ class ManagedMode:
             self.merchant_counts[key] = self.merchant_counts.get(key, 0) + action.get('quantity',1)
             self.merchant_received_uids.update(result.get('received_uids',[]))
             self.cleanup_processing = False
+        elif action['kind'] in SYNTHESIS_ACTIONS:
+            inputs, outputs = result.get('inputs'), result.get('outputs')
+            if (result.get('effect_confirmed') is not True or not isinstance(inputs, list) or not inputs
+                    or not isinstance(outputs, list) or not outputs
+                    or any(not isinstance(item, dict) or type(item.get('quantity')) is not int
+                           or item['quantity'] < 1 or _metric_key(item) is None
+                           for item in inputs + outputs)):
+                return self.stop('合成材料或产物回执未完整确认，已停止重复操作。')
+            self.metrics.synthesized(result.get('receipt_id') or action_id, inputs, outputs)
+            self.await_effect = dict(action, synthesis_receipt=deepcopy(result))
         elif action['kind'] == 'return_town':
             self.phase = 'cleanup'
             self.cleanup_processing = False
@@ -892,7 +1037,18 @@ class ManagedMode:
         action = self.await_effect
         if not action: return True
         kind, old = action['kind'], action.get('item')
-        if old:
+        if kind in SYNTHESIS_ACTIONS:
+            receipt = action['synthesis_receipt']
+            def current(item):
+                if item.get('item_uid'):
+                    return [r for r in all_items if r.get('item_uid') == item['item_uid']]
+                return [r for r in all_items if r.get('container') == item.get('container')
+                        and r.get('slot_index') == item.get('slot_index') and _metric_key(r) == _metric_key(item)]
+            visible = (all(sum(_quantity(r) for r in current(item))
+                           <= _quantity(item) - item['quantity'] for item in receipt['inputs'])
+                       and all(sum(_quantity(r) for r in current(item)) >= item['quantity']
+                               for item in receipt['outputs']))
+        elif old:
             matches = [r for r in all_items if r.get('container') == old.get('container')
                        and identity(r) == identity(old)]
             if kind == 'lock':
@@ -998,9 +1154,7 @@ class ManagedMode:
                                 **({'storage_group': material} if material else {}),
                                 reason='将奖励存入指定仓库页。')
         if item_kind(row) != 'equipment':
-            if material:
-                return self._pause('容量不足：所选'+label+'仓库页已满，物品留在背包；请腾出空格或修改存放分区。')
-            return self._pause('容量不足：所选符文或宝石仓库页没有可用空格或堆叠容量。')
+            return self._pause('容量不足：所选'+label+'仓库页没有可用空格或堆叠容量，物品留在背包；请腾出空格或修改存放分区后继续。')
         cleanup = self.settings['cleanup']
         if not mandatory:
             return self._action(equipment_policy(cleanup,row,fallback=True), row,
@@ -1010,12 +1164,12 @@ class ManagedMode:
             if disposable:
                 return self._action(equipment_policy(cleanup,disposable,fallback=True), disposable,
                     reason_code='equipment_fallback', reason='按品质处理背包垃圾，为保留装备腾出搬运空格。')
-            return self._pause('容量不足：背包没有空格，无法取出仓库垃圾；黑雾、神圣和保留装备保持不动。')
+            return self._pause('容量不足：背包没有空格，无法取出仓库垃圾；黑雾、神圣和保留装备留在背包。')
         junk = next((r for r in all_items if r.get('container') == 'storage' and r.get('slot_index') in targets and self._disposable(r)), None)
         if junk:
             return self._action('transfer', junk, target='inventory', reason_code='warehouse_eviction',
                                 reason='取出所选装备页中的未锁垃圾，随后按配置出售或分解。')
-        return self._pause('容量不足：所选装备仓库页已满，且没有可安全清理的未命中装备。')
+        return self._pause('容量不足：所选装备仓库页已满，且没有可安全清理的未命中装备；保留装备留在背包，请腾出空格后继续。')
 
     def _background_lock(self, all_items):
         if not self.settings['background']['rule_monitoring']: return None
@@ -1125,10 +1279,10 @@ class ManagedMode:
         # Keep player consumables in place. Capacity still comes from ALL
         # occupied slots, not just the equipment eligible for batch screening.
         bag=[r for r in observation['items'] if r.get('container')=='inventory']
-        return (self._bag_free(observation)>0 and all(retained_potion(r) or (
+        return (self._bag_free(observation)>0 and all(retained_merchant_item(r) or (
                 r.get('item_uid') in self.merchant_received_uids and item_kind(r)=='equipment'
                 and self._safe(r) and not self._review(r) and self._quality_known(r)) for r in bag)
-                and town_rewards_clear(observation))
+                and managed_town_rewards_clear(observation))
 
     def _merchant_purchase(self, observation):
         state=observation['progression'];shop=state['merchant']
@@ -1167,7 +1321,7 @@ class ManagedMode:
         # Finish a full batch before refilling. One sale freeing one slot must
         # not immediately lead to another pickup/sale cycle.
         self.cleanup_processing = True
-        if any(mandatory_storage(r) and not self._safe(r) for r in bag):
+        if any(managed_required_storage(r) and not self._safe(r) for r in bag):
             return self._pause('必须收纳的物品读取或搬运状态未确认，保留物品并暂停托管。')
         if self.reward_barrier:
             uncertain = [r for r in bag if self._reward_pending(r)]
@@ -1200,15 +1354,38 @@ class ManagedMode:
         if action: return action
         for row in protected:
             return self._storage_transfer(observation, row, settings['equipment_pages'], all_items, mandatory=True)
+        # Free the crafting workspace only after the complete protection and
+        # auto-equip stages. Storage materials remain available to the planner
+        # until it has exhausted eligible recipes, even if their home is full.
+        if synthesis_enabled(self.settings):
+            for row in bag:
+                if (item_kind(row) == 'equipment' and self._safe(row) and not self._protected(row)
+                        and row.get('matches') is False):
+                    handling = equipment_policy(settings, row)
+                    if row.get('item_uid') in self.merchant_received_uids and handling == 'store':
+                        handling = equipment_policy(settings, row, fallback=True)
+                    if handling == 'store':
+                        return self._storage_transfer(observation, row, settings['equipment_pages'], all_items)
+                    return self._action(handling, row, reason='合成前按托管配置整理已筛选的装备。')
+            if not self.finishing:
+                action = synthesis_action(self.settings, observation)
+                if action:
+                    if not self.check_identity(observation, require_character=True): return None
+                    if state.get('merchant', {}).get('open'):
+                        return self._action('merchant_close', class_mask=state['class_mask'],
+                            reason='关闭商人后再整理和合成材料。')
+                    self.phase = 'synthesizing'
+                    return self._action(action['kind'], action.get('item'),
+                        **{k: v for k, v in action.items() if k not in ('kind', 'item')})
         for row in bag:
-            if item_kind(row) == 'rune' and mandatory_storage(row):
-                return self._storage_transfer(observation, row, settings['rune_pages'], all_items, mandatory=True)
+            if item_kind(row) in ('rune', 'gem'):
+                return self._storage_transfer(observation, row, settings[item_kind(row)+'_pages'], all_items, mandatory=True)
         for row in bag:
             material = storage_material_kind(row)
-            if material and settings[material+'_action'] == 'store':
+            if material:
                 if not self._safe(row):
                     return self._pause(STORAGE_MATERIALS[material]+'身份或搬运状态未确认，物品保留，等待重新读取。')
-                return self._storage_transfer(observation, row, settings[material+'_pages'], all_items)
+                return self._storage_transfer(observation, row, settings[material+'_pages'], all_items, mandatory=True)
         for row in bag:
             kind = item_kind(row)
             if not self._safe(row): continue
@@ -1218,11 +1395,6 @@ class ManagedMode:
                 handling, pages = equipment_policy(settings,row), settings['equipment_pages']
                 if row.get('item_uid') in self.merchant_received_uids and handling=='store':
                     handling=equipment_policy(settings,row,fallback=True)
-            elif kind in ('rune', 'gem'):
-                if row.get('locked') is True: continue
-                handling, pages = settings[kind + '_action'], settings[kind + '_pages']
-                if handling != 'store' and (reason := disposal_protection(row)):
-                    return self._pause(reason)
             else: continue
             if handling == 'store':
                 return self._storage_transfer(observation, row, pages, all_items)
@@ -1380,14 +1552,15 @@ class ManagedMode:
         return True
 
     def next_action(self, observation):
-        if not self.running or self.pending is not None: return None
+        if not self.running: return None
+        if not self.check_identity(observation,
+                require_character=bool(self.await_effect and self.await_effect.get('kind') in SYNTHESIS_ACTIONS)):
+            return None
+        if self.pending is not None: return None
         self.completion_rewards.observe(observation)
         if observation.get('complete') is not True:
             self.status = '等待完整背包与仓库读取。'; return None
         self.merchant_received_uids.update(observation.get('merchant_uids',[]))
-        session = observation.get('session', observation.get('bridge_session'))
-        if self.session is not None and session != self.session:
-            return self._pause('游戏连接或角色已改变，托管已暂停。')
         try:
             all_items = observation_items(observation)
             if not self._effect_visible(observation, all_items): return None
@@ -1479,6 +1652,9 @@ class ManagedMode:
             if self._town(observation) and any(r.get('container')=='inventory'
                     and r.get('item_uid') in self.merchant_received_uids for r in all_items):
                 self.phase='cleanup';return self._cleanup(observation,all_items)
+            if self._town(observation) and synthesis_enabled(self.settings):
+                self.phase = 'cleanup'
+                return self._cleanup(observation, all_items)
             action, self.growth_wait = growth_action(self.settings, observation.get('progression', {}))
             if action: self.phase = 'growing'; return self._action(**action)
             action = self._background_lock(all_items)

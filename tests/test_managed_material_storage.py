@@ -35,8 +35,9 @@ class MaterialStorageTests(unittest.TestCase):
         self.assertIsNone(storage_material_kind(equipment('not-material', internal_name='GoldBar')))
 
     def test_pages_and_disposition_validate_and_roundtrip(self):
-        config = settings(gold_bar_action='keep', gold_bar_pages=[], legendary_rein_pages=[4])
+        config = settings(gold_bar_action='keep', gold_bar_pages=[5], legendary_rein_pages=[4])
         result = validate_settings(config)
+        self.assertEqual(result['cleanup']['gold_bar_action'],'store')
         self.assertEqual(validate_settings(deepcopy(result)), result)
         for changes in ({'gold_bar_action': 'sell'}, {'legendary_rein_action': 'salvage'},
                         {'gold_bar_action': 'store', 'gold_bar_pages': []}, {'legendary_rein_pages': [True]}):
@@ -62,14 +63,20 @@ class MaterialStorageTests(unittest.TestCase):
         self.assertTrue(stored[1]['locked'])
         self.assertEqual(engine.next_action(observation(stored, town=True, capacity=2))['kind'], 'enter_dungeon')
 
-    def test_explicit_keep_never_sells_uses_or_salvages_materials(self):
+    def test_legacy_keep_migrates_to_storage_and_empty_pages_require_selection(self):
         rows = [loot('gold', 'material', 'GoldBar'),
                 loot('rein', 'material', 'Rein_BeachCrabBoss', slot=1, rarity=3)]
-        config = settings(equipment_action='salvage', gold_bar_action='keep', gold_bar_pages=[],
-                          legendary_rein_action='keep', legendary_rein_pages=[])
-        engine = ManagedMode(config); world = observation(rows, town=True)
+        config = settings(equipment_action='salvage', gold_bar_action='keep', gold_bar_pages=[5],
+                          legendary_rein_action='keep', legendary_rein_pages=[5])
+        engine = ManagedMode(config); world = observation(rows, town=True, allowed=range(250))
         engine.start(world)
-        self.assertEqual(engine.next_action(world)['kind'], 'enter_dungeon')
+        action=engine.next_action(world)
+        self.assertEqual((action['kind'],action['target']),('transfer','storage'))
+        config['cleanup']['gold_bar_pages']=[]
+        with self.assertRaises(ValidationError):validate_settings(config)
+        migrated=validate_settings(config,allow_empty_storage_pages=True)
+        self.assertEqual(migrated['cleanup']['gold_bar_pages'],[])
+        self.assertEqual(migrated['cleanup']['gold_bar_action'],'store')
 
     def test_full_or_locked_material_pages_pause_without_disposing_anything(self):
         for group, key in (('gold_bar', 'GoldBar'), ('legendary_rein', 'Rein_BeachCrabBoss')):
@@ -124,13 +131,16 @@ class MaterialServiceTests(unittest.TestCase):
                 self.assertEqual(self.client.items[0]['slot_index'], 200)
                 self.service.managed.stop(); self.service.managed.pending = None
 
-    def test_changing_material_policy_or_target_before_commit_prevents_a_move(self):
+    def test_legacy_keep_cannot_bypass_forced_storage_and_invalid_target_is_rejected(self):
         action, world = self.prepare()
         self.service.managed.settings['cleanup']['gold_bar_action'] = 'keep'
-        result = self.service._managed_execute(action, world)
-        self.assertTrue(result['retryable']); self.assertFalse(result['verified'])
-        self.assertEqual(self.client.actions, [])
-        self.service.managed.settings['cleanup']['gold_bar_action'] = 'store'
+        with patch('deskrawl_assistant.managed_service.record'):
+            result = self.service._managed_execute(action, world)
+        self.assertTrue(result['verified'])
+        self.assertEqual(self.client.items[0]['container'],'storage')
+        self.service.managed.stop(); self.service.managed.pending=None
+        self.client.actions=[]
+        action,world=self.prepare()
         action['target_indices'] = [0]
         with self.assertRaises(ValidationError):self.service._managed_execute(action, world)
         self.assertEqual(self.client.actions, [])

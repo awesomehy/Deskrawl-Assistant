@@ -6,6 +6,7 @@ No game action or upload is performed. Polling can miss transient drops.
 from collections import OrderedDict
 from copy import deepcopy
 from datetime import datetime, timezone
+from functools import lru_cache
 import hashlib
 import json
 from pathlib import Path
@@ -14,6 +15,8 @@ import uuid
 
 from .item_protection import mandatory_storage
 from .loot_plan_reader import describe_item, SLOT_LABELS, _labels
+from .paths import RESOURCE_ROOT
+from .steam_market import MarketCatalog
 
 
 def now():
@@ -24,6 +27,70 @@ def plan_hash(raw):
     return hashlib.sha256(raw['runId'].encode()).hexdigest()
 
 
+@lru_cache(maxsize=1)
+def _market_catalog():
+    # Shipped Steam item definitions, not a quote lookup or network request.
+    return MarketCatalog.load(RESOURCE_ROOT / 'data/steam-market-catalog.json')
+
+
+def high_value_reason(row):
+    reason = mandatory_storage(row)
+    if reason:
+        return reason
+    key = row.get('internal_name') or row.get('name_key')
+    entry = _market_catalog().items.get(key)
+    if not entry:
+        return ''
+    variant = 'black_mist' if row.get('is_black_mist') is True else 'normal'
+    if entry.get('kind') == 'equipment':
+        # A base legendary template's black-mist definition must not turn its
+        # ordinary legendary variant into a marketable planned drop.
+        rarity = row.get('rarity', row.get('base_rarity'))
+        expected = 3 if variant == 'black_mist' else entry.get('rarity')
+        if type(rarity) is not int or rarity != expected:
+            return ''
+    if not entry.get(variant):
+        return ''
+    # Monitoring discovers valuable templates even before instance binding is
+    # known. It is not a claim that this particular item can already be listed.
+    if key == 'GoldBar':
+        return '金条'
+    if key == 'UpgradeCommodity1':
+        return '开光石'
+    if key.startswith('Rein_'):
+        return '传说缰绳'
+    return '可交易物品'
+
+
+def _observation_key(row):
+    uid = row.get('item_uid')
+    if isinstance(uid, str) and uid:
+        return ('uid', uid)
+    # Ground and carriage share the same LootDrop identity. Inventory slot
+    # keys/quantity deltas cannot prove a new drop: sorting, transfers and
+    # synthesis also change them. Never pretend this ID is a PlanItem dropId.
+    source = row.get('capture_source', row.get('source'))
+    identity = row.get('observation_id')
+    if source in ('ground', 'carriage') and isinstance(identity, str) and identity:
+        return ('drop', identity)
+    return None
+
+
+def _saved_observation_key(row):
+    identity = _observation_key(row)
+    if identity is None or identity[0] == 'uid':
+        return identity
+    event = row.get('observation_event_id')
+    return ('drop_event', event) if isinstance(event, str) and event else identity
+
+
+def _item_name(key):
+    labels = _labels()
+    return (labels['names'].get(key, {}).get('Chinese (Simplified)')
+            or labels['items'].get(key, {}).get('name')
+            or labels['collectibles'].get(key, {}).get('name') or key)
+
+
 def planned_hits(raw):
     hits = []
     for wave in raw.get('waves',[]):
@@ -32,7 +99,7 @@ def planned_hits(raw):
                 'rarity':item['rarity'], 'level':item['itemLevel'], 'ancient':item['ancient'],
                 'black_mist':item['blackMist'], 'modifiers':item['modifiers'], 'sockets':item['sockets'],
                 'qty':item['qty'], 'chest_gold':item['chestGold']})
-            reason = mandatory_storage({**pretty, 'internal_name':item['baseItemId'],
+            reason = high_value_reason({**pretty, 'internal_name':item['baseItemId'],
                 'is_black_mist':pretty['kind']=='equipment' and item['blackMist'],
                 'is_equipment':pretty['kind']=='equipment' or pretty['kind']=='unknown' and item['slot'] in SLOT_LABELS})
             if not reason and pretty['kind']=='unknown' and item['slot'] in SLOT_LABELS and item['blackMist']:
@@ -57,6 +124,8 @@ class LootCaptureMonitor:
         self.seen = set()
         self.new_ids = {}
         self.captured_ids = set()
+        self.drop_generations = {}
+        self.active_drop_ids = set()
         self.baseline_ready = False
         self.pending = set()
         self.polls = 0
@@ -85,6 +154,8 @@ class LootCaptureMonitor:
                 self.seen.clear()
                 self.new_ids.clear()
                 self.captured_ids.clear()
+                self.drop_generations.clear()
+                self.active_drop_ids.clear()
                 self.pending.clear()
                 self.baseline_ready = False
             self.enabled = enabled
@@ -119,12 +190,13 @@ class LootCaptureMonitor:
                 or first.get('runId') != entry['first_plan']['runId']):
             raise ValueError('已有掉落留档场次不一致，保留原文件。')
         observed = saved['observed_high_value']
-        if any(not isinstance(row,dict) or not isinstance(row.get('item_uid'),str) for row in observed):
+        if any(not isinstance(row,dict) or not isinstance(row.get('item_uid'),str)
+               or _observation_key(row) is None for row in observed):
             raise ValueError('已有掉落观测无法核验，保留原文件。')
         entry.update(first_read_at=saved['first_read_at'], first_read_wave=saved.get('first_read_wave'),
             first_plan=first, latest_plan=saved.get('latest_raw_plan') or first,
             planned_hits=saved['planned_high_value'], observed_hits=observed,
-            observed_ids={row['item_uid'] for row in observed}, saved=True)
+            observed_ids={_saved_observation_key(row) for row in observed}, saved=True)
         if isinstance(saved.get('saved_at'),str):
             self.last_saved = max(self.last_saved or '',saved['saved_at'])
         return entry
@@ -137,7 +209,7 @@ class LootCaptureMonitor:
             'raw_plan':entry['first_plan'], 'latest_raw_plan':entry['latest_plan'] if entry['first_plan'] != entry['latest_plan'] else None,
             'planned_high_value':entry['planned_hits'], 'observed_high_value':entry['observed_hits'],
             'association':entry['association'],
-            'note':'计划不等于实际结算；实际观测仅在完整清单基线后记录新增UID。无精确dropId匹配时不能证明物品在开局计划中。商人购买单独留档，不关联刷图计划。'}
+            'note':'计划不等于实际结算；实际观测仅在完整清单基线后记录新增UID或地面／马车掉落观测标识。观测标识不是dropId；无精确UID和dropId匹配时不能证明物品在开局计划中。商人购买单独留档，不关联刷图计划。'}
         self.directory.mkdir(parents=True, exist_ok=True)
         target = self.directory/(key+'.json')
         temporary = self.directory/(key+'.'+uuid.uuid4().hex+'.tmp')
@@ -152,6 +224,19 @@ class LootCaptureMonitor:
         self.last_saved = document['saved_at']
         self.pending.discard(key)
 
+    def _observation_identities(self, observations):
+        identities = {identity for row in observations if (identity := _observation_key(row)) is not None}
+        drop_ids = {identity[1] for identity in identities if identity[0] == 'drop'}
+        # Native LootDrop objects can be recycled for later same-kind drops.
+        # Only a complete snapshot confirming absence starts a new lifetime;
+        # moving a still-present drop between ground/carriage does not.
+        for drop_id in drop_ids:
+            if drop_id not in self.active_drop_ids:
+                self.drop_generations[drop_id] = self.drop_generations.get(drop_id, -1) + 1
+        self.active_drop_ids = drop_ids
+        return {identity:identity if identity[0] == 'uid' else
+                (*identity, self.drop_generations[identity[1]]) for identity in identities}
+
     def feed(self, bundle):
         with self.guard:
             if not self.enabled: return
@@ -162,6 +247,8 @@ class LootCaptureMonitor:
                 self.seen.clear()
                 self.new_ids.clear()
                 self.captured_ids.clear()
+                self.drop_generations.clear()
+                self.active_drop_ids.clear()
                 self.baseline_ready = False
                 self.session = session
                 self.character = None
@@ -172,6 +259,8 @@ class LootCaptureMonitor:
                 self.seen.clear()
                 self.new_ids.clear()
                 self.captured_ids.clear()
+                self.drop_generations.clear()
+                self.active_drop_ids.clear()
                 self.baseline_ready = False
                 self.character = character
             self.polls += 1
@@ -196,54 +285,66 @@ class LootCaptureMonitor:
             if bundle.get('observations_complete') is True:
                 observations = bundle.get('observations',[])
                 merchant_uids = set(bundle.get('merchant_uids',[]))
-                ids = {r['item_uid'] for r in observations if isinstance(r.get('item_uid'),str) and r['item_uid']}
+                identities = self._observation_identities(observations)
+                ids = set(identities.values())
                 if not self.baseline_ready:
                     self.seen.update(ids)
                     self.baseline_ready = True
                 else:
                     for row in observations:
-                        uid = row.get('item_uid')
-                        if not uid: continue
-                        if uid not in self.seen:
-                            self.seen.add(uid)
-                            self.new_ids[uid] = {'run':bundle.get('observation_run'),
-                                'source':row.get('capture_source'), 'time':now()}
+                        identity = identities.get(_observation_key(row))
+                        if identity is None: continue
+                        uid = row.get('item_uid') or ''
+                        if identity not in self.seen:
+                            self.seen.add(identity)
+                            self.new_ids[identity] = {'run':bundle.get('observation_run'),
+                                'source':row.get('capture_source'), 'time':now(),
+                                'event':uuid.uuid4().hex if identity[0] == 'drop' else None}
                         # A newly seen ground drop can become classifiable
                         # only later in the bag. Existing baseline items stay
                         # excluded; a transfer cannot create a second event.
-                        if uid not in self.new_ids or uid in self.captured_ids: continue
-                        reason = mandatory_storage(row)
+                        if identity not in self.new_ids or identity in self.captured_ids: continue
+                        reason = high_value_reason(row)
                         if not reason: continue
-                        merchant_purchase = uid in merchant_uids
+                        event = self.new_ids[identity]['event']
+                        record_key = ('drop_event', event) if event else identity
+                        merchant_purchase = bool(uid) and uid in merchant_uids
                         entry_pair = None if merchant_purchase else next(((k,e) for k,e in reversed(self.runs.items())
-                            if e['plan_hash'] and e['plan_hash']==self.new_ids[uid]['run']), None)
+                            if e['plan_hash'] and e['plan_hash']==self.new_ids[identity]['run']), None)
                         if entry_pair is None:
                             # Keep the evidence without attaching it to a
                             # different/reused map's cached plan. A confirmed
                             # merchant receipt overrides a retained run ID.
                             association = 'merchant_purchase' if merchant_purchase else 'unattributed'
-                            key = hashlib.sha256((session+'\0'+association+'\0'+uid).encode()).hexdigest()
+                            token = uid if identity[0] == 'uid' else 'drop_event\0'+event
+                            key = hashlib.sha256((session+'\0'+association+'\0'+token).encode()).hexdigest()
                             entry = {'first_read_at':now(), 'first_read_wave':None, 'first_plan':None,
                                 'latest_plan':None, 'plan_hash':None, 'association':association,
                                 'planned_hits':[], 'observed_hits':[], 'observed_ids':set()}
                             entry = self._restore(key,entry)
                             self.runs[key] = entry
                         else: key, entry = entry_pair
-                        if uid in entry['observed_ids']: continue
-                        entry['observed_ids'].add(uid)
-                        self.captured_ids.add(uid)
+                        if record_key in entry['observed_ids']: continue
+                        entry['observed_ids'].add(record_key)
+                        self.captured_ids.add(identity)
                         plan_items = [(w['wave'],i) for w in (entry['latest_plan'] or {}).get('waves',[])
                             for i in (w.get('loot') or {}).get('items',[])]
-                        exact = [w for w,i in plan_items if i['dropId']==uid and i['baseItemId']==row.get('internal_name')]
+                        exact_items = [(w,i) for w,i in plan_items if uid and i['dropId']==uid and i['baseItemId']==row.get('internal_name')]
+                        exact = [w for w,_ in exact_items]
                         template = [w for w,i in plan_items if i['baseItemId']==row.get('internal_name')]
                         entry['observed_hits'].append({'observed_at':now(), 'item_uid':uid,
+                            'observation_id':row.get('observation_id'),
+                            'observation_event_id':event,
+                            'observation_generation':identity[2] if identity[0] == 'drop' else None,
+                            'identity_kind':'item_uid' if identity[0] == 'uid' else 'loot_drop',
                             'item_key':row.get('internal_name'), 'category':reason, 'source':row.get('capture_source'),
                             'acquisition_source':'merchant' if merchant_purchase else 'unconfirmed',
-                            'name':_labels()['items'].get(row.get('internal_name'),{}).get('name',row.get('internal_name')),
-                            'first_observed_at':self.new_ids[uid]['time'], 'first_source':self.new_ids[uid]['source'],
+                            'name':_item_name(row.get('internal_name')),
+                            'quantity':row.get('count') if type(row.get('count')) is int and row['count'] > 0 else None,
+                            'first_observed_at':self.new_ids[identity]['time'], 'first_source':self.new_ids[identity]['source'],
                             'rarity':row.get('rarity',row.get('base_rarity')), 'black_mist':row.get('is_black_mist') is True,
                             'exact_drop_id_waves':exact, 'same_template_waves':template,
-                            'exact_plan_items':[i for _,i in plan_items if i['dropId']==uid and i['baseItemId']==row.get('internal_name')],
+                            'exact_plan_items':[i for _,i in exact_items],
                             'plan_membership':'exact_id' if exact else 'unconfirmed'})
                         self.pending.add(key)
                     # Fail closed for actual detection rather than silently
@@ -253,6 +354,7 @@ class LootCaptureMonitor:
                         self.seen = ids
                         self.new_ids.clear()
                         self.captured_ids.clear()
+                        self.drop_generations = {drop_id:self.drop_generations[drop_id] for drop_id in self.active_drop_ids}
             # Retry pending writes even if the next poll has no new events.
             for key in list(self.pending): self._save(key,self.runs[key])
             while len(self.runs)>4:

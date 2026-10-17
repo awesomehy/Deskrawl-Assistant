@@ -1,5 +1,6 @@
 """Read the current character's native PlayerStatistics; never call game methods."""
 from datetime import datetime, timezone
+import hashlib
 import math
 from pathlib import Path
 import struct
@@ -86,13 +87,19 @@ def _layout(reader):
             'rva': signatures.singleton_rva('PlayerStatistics'), 'duration': offsets[1], 'counts': offsets[2],
             'rarity': rarity, 'fields': [{'name': f['name'], 'offset': f['rawRegistrationOffset'],
                                         'token': int(f['token'], 16)} for f in fields]}
+        # Reuse this metadata inspection and cache a missing gold signature too.
+        # Coin statistics are optional and must not block other game statistics.
+        try:
+            reader._statistics_layout['gold'] = _gold_pickup_offset(fields, methods, instructions)
+        except MemoryReadError as exc:
+            reader._statistics_layout['gold_reason'] = str(exc)
         return reader._statistics_layout
     except (KeyError, ValueError, StopIteration, OSError, MemoryReadError, struct.error) as exc:
         reader._statistics_layout_error = '游戏累计统计暂不可读：' + str(exc)
         raise MemoryReadError(reader._statistics_layout_error) from exc
 
 
-def _totals(reader, copy, layout):
+def _statistics_object(reader, copy, layout):
     klass = copy.ptr(reader.module['base'] + layout['rva'])
     if (not klass or reader.class_name(klass) != 'PlayerStatistics'
             or reader.fields(klass) != layout['fields']):
@@ -103,6 +110,11 @@ def _totals(reader, copy, layout):
     obj = copy.ptr(static)
     if not obj or copy.ptr(obj) != klass:
         raise MemoryReadError('游戏累计统计当前实例尚未加载。')
+    return obj
+
+
+def _totals(reader, copy, layout):
+    obj = _statistics_object(reader, copy, layout)
     # Native Update adds UnityEngine.Time.deltaTime to this Double: units are seconds.
     duration = struct.unpack('<d', copy.read(obj + layout['duration'], 8, stable=False))[0]
     if not math.isfinite(duration) or not 0 <= duration <= 10**10:
@@ -118,6 +130,54 @@ def _totals(reader, copy, layout):
         raise MemoryReadError('游戏累计掉落统计数值无效。')
     return {'play_seconds': int(duration), 'divine_count': counts[layout['rarity']['Divine']],
             'rune_set_count': counts[layout['rarity']['RuneSet']]}
+
+
+def _gold_pickup_offset(fields, methods, instructions):
+    """Find the Int64 incremented by the native positive Int32 pickup handler.
+
+    In 1.0.3, LootDrop.cxi publishes the picked coin value to the +216 event;
+    PlayerStatistics.fpn adds it at +48. PlayerData's balance-change event is
+    +224 instead, so sales and spending do not enter this counter.
+    """
+    from capstone.x86 import X86_OP_MEM, X86_REG_RCX
+    offsets = {f['rawRegistrationOffset'] for f in fields
+               if not f['isStatic'] and f['resolvedType'] == 'System.Int64'
+               and type(f['rawRegistrationOffset']) is int and 16 <= f['rawRegistrationOffset'] < 4096}
+    increments = []
+    for method in methods:
+        if (method['isStatic'] or method['returnType'] != 'System.Void'
+                or [p['resolvedType'] for p in method['parameters']] != ['System.Int32']):
+            continue
+        for ins in instructions(method):
+            if ins.mnemonic != 'add' or not ins.operands: continue
+            target = ins.operands[0]
+            if (target.type == X86_OP_MEM and target.size == 8 and target.mem.base == X86_REG_RCX
+                    and target.mem.disp in offsets):
+                increments.append(target.mem.disp)
+    if len(increments) != 1:
+        raise MemoryReadError('游戏金币掉落统计逻辑需要维护适配。')
+    return increments[0]
+
+
+def read_gold_ledger(reader, character_id):
+    """Read actual cumulative coin pickups, independently of automation gates."""
+    try:
+        reader.check_game_files()
+        if not isinstance(character_id, str) or not character_id:
+            raise MemoryReadError('金币掉落统计的角色身份尚未确认。')
+        layout = _layout(reader)
+        offset = layout.get('gold')
+        if type(offset) is not int:
+            raise MemoryReadError(layout.get('gold_reason') or '游戏金币掉落统计逻辑需要维护适配。')
+        copy = _Copy(reader)
+        obj = _statistics_object(reader, copy, layout)
+        total = struct.unpack('<q', copy.read(obj + offset, 8))[0]
+        if total < 0: raise MemoryReadError('游戏累计金币掉落数值无效。')
+        copy.finish()
+        source = hashlib.sha256(f'{reader.session_id}:{character_id}:{obj}'.encode()).hexdigest()
+        return {'available': True, 'id': source, 'total': total, 'source': 'PlayerStatistics.coin_pickups'}
+    except (MemoryReadError, OSError, ValueError, KeyError, UnicodeError, struct.error, OverflowError) as exc:
+        return {'available': False, 'reason': str(exc)}
 
 
 def _snapshot(reader, layout):

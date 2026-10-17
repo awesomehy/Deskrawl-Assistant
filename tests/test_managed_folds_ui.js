@@ -18,7 +18,7 @@ test('first view opens enabled functions and leaves unused plans folded without 
     life_skills:{enabled:false,priorities:['first']},merchant:{enabled:false}});
   const before=JSON.stringify(settings),f=fixture();f.controller.apply(settings);f.flush();
   assert.deepEqual(Object.fromEntries(f.elements.map(n=>[n.dataset.managedFold,n.open])),{
-    background:true,equip:true,farming:false,merchant:false,growth:true,cleanup:false,
+    background:true,equip:true,farming:false,merchant:false,growth:true,synthesis:false,cleanup:false,
     talents:true,life:false,skills:false});
   assert.equal(f.writes(),0);assert.equal(JSON.stringify(settings),before);
 });

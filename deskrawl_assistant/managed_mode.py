@@ -750,8 +750,14 @@ class ManagedMode:
         self.push_failed = False
         self.repeat_index = 0
         self.repeat_completed = 0
+        self.repeat_generation = 0
         self.repeat_maps = []
         self.handled_runs = set()
+        self.run_counters = {}
+        self.run_counter_sources = {}
+        self.run_counter_fallbacks = {}
+        self.run_history_sequence = None
+        self.run_entry = None
         self.completion_rewards = CompletionRewards()
         self.stargazing_seen = set()
         self.stargazing_skipped = set()
@@ -805,6 +811,7 @@ class ManagedMode:
                 self.target_dungeon,self.target_difficulty = first['dungeon_id'],first['difficulty']
         if not self.settings['farming']['enabled']:
             self.target_dungeon = observation.get('scene', {}).get('dungeon_id')
+        self._baseline_runs(observation)
         self.metrics.observe(observation)
         self.phase = 'cleanup' if self.settings['farming']['enabled'] and self._town(observation) else 'farming'
         self.reward_barrier = self.phase == 'cleanup'
@@ -845,6 +852,7 @@ class ManagedMode:
         if self.character_id is not None and character_id is not None and character_id != self.character_id:
             raise ValidationError('角色已改变，不能继续上次托管；请重新开始。')
         if self.character_id is None: self.character_id = character_id
+        self._baseline_runs(observation)
         self.running = True
         self.pending = None
         # A confirmed synthesis remains fenced across an identity-related pause.
@@ -952,6 +960,8 @@ class ManagedMode:
         self.finish_empty_reads = 0
         self.sequence += 1
         action = {'action_id': f'{id(self):x}-{self.sequence}', 'kind': kind, **data}
+        if action.get('reason_code') == 'stargazing_skip':
+            action['repeat_generation'] = self.repeat_generation
         if row is not None:
             action['item'] = deepcopy(row)
         self.pending = action
@@ -1010,15 +1020,23 @@ class ManagedMode:
             self.cleanup_processing = False
         elif action['kind'] == 'enter_dungeon':
             self.phase = 'farming'
+            self.expect_run_entry(action)
         if action.get('reason_code') == 'stargazing_skip':
             source = action['source_run_id']
-            self.stargazing_skipped.add(source)
+            # A submitted portal may arrive after this run has already won.
+            # Preserve its completed quota while following the accepted travel.
+            if str(source) not in self.handled_runs:
+                self.stargazing_skipped.add(source)
             self.stargazing_seen.add(source)
             self.stargazing_state['skipped'] = len(self.stargazing_skipped)
             self.stargazing_return = None
             self.stargazing_entry_rejections.pop(source, None)
             index = action['next_repeat_index']
-            if index != self.repeat_index:
+            if (index != self.repeat_index
+                    and action.get('repeat_generation', self.repeat_generation) == self.repeat_generation):
+                # Wins can advance both source and destination quotas while
+                # combat travel is pending. A late portal receipt must not
+                # restore the target chosen before those wins were counted.
                 self.repeat_counts[self.repeat_index] = self.repeat_completed
                 self.repeat_index = index
                 self.repeat_completed = self.repeat_counts.get(index, 0)
@@ -1084,7 +1102,7 @@ class ManagedMode:
             scene = observation.get('scene', {})
             visible = (not self._town(observation) and str(scene.get('dungeon_id')) == str(action['dungeon_id'])
                        and (not action.get('difficulty') or scene.get('difficulty')==action['difficulty'])
-                       and run_record(scene.get('run')).get('status') in ('running', 'settling'))
+                       and run_record(scene.get('run')).get('status') in ('running', 'settling', 'success'))
             if action.get('reason_code') == 'stargazing_skip':
                 new_id = run_record(scene.get('run')).get('id')
                 visible = visible and bool(new_id and new_id != action.get('source_run_id'))
@@ -1460,32 +1478,145 @@ class ManagedMode:
         return self._action('enter_dungeon', dungeon_id=self.target_dungeon,difficulty=self.target_difficulty,
                             reason='奖励整理完成，返回目标关卡。')
 
+    @staticmethod
+    def _run_counter(run):
+        value = run.get('completion_counter')
+        if (isinstance(value, dict) and isinstance(value.get('id'), str) and value['id']
+                and type(value.get('count')) is int and 0 <= value['count'] <= 10000000):
+            return value
+        return None
+
+    def _run_history(self, observation):
+        value = observation.get('run_history')
+        if (isinstance(value, dict) and self.session is not None and self.character_id is not None
+                and value.get('session') == self.session and value.get('character_id') == self.character_id
+                and type(value.get('sequence')) is int and value['sequence'] >= 0
+                and isinstance(value.get('receipts'), list)):
+            return value
+        return None
+
+    def _baseline_runs(self, observation):
+        """Opening/resuming managed mode must not import earlier game rounds."""
+        history = self._run_history(observation)
+        self.run_history_sequence = history['sequence'] if history else None
+        self.run_counters = {}
+        self.run_counter_sources = {}
+        self.run_counter_fallbacks = {}
+        self.run_entry = None
+        scene = observation.get('scene', {})
+        run = scene.get('run') if isinstance(scene.get('run'), dict) else {}
+        counter = self._run_counter(run)
+        if scene.get('available') is not False:
+            if ((run.get('retained_terminal') or counter) and run.get('status') != 'failed'
+                    and (run.get('completion_confirmed') is True or run.get('status') == 'success')):
+                self.handled_runs.add(str(run.get('id')))
+            if counter and not run.get('retained_terminal'):
+                self.run_counters[counter['id']] = counter['count']
+                source = (str(run.get('dungeon_id', run.get('map_id', scene.get('dungeon_id')))),
+                          run.get('difficulty') or scene.get('difficulty'))
+                self.run_counter_sources[source] = counter['id']
+
+    def expect_run_entry(self, action, observation=None):
+        """An accepted map entry resets native totals; native repeat does not."""
+        if self.run_entry and self.run_entry['action_id'] == action['action_id']: return
+        source = run_record((observation or {}).get('scene', {}).get('run')).get('id')
+        self.run_entry = {'action_id': action['action_id'], 'dungeon_id': action['dungeon_id'],
+                          'difficulty': action.get('difficulty'),
+                          'source_run_id': action.get('source_run_id', source), 'consumed': False,
+                          'fallback_wins': set()}
+
+    def _repeat_wins(self, dungeon, difficulty, count):
+        self.last_success, self.last_success_difficulty = dungeon, difficulty
+        total = self.repeat_completed + count
+        quota = self.repeat_maps[self.repeat_index]['runs']
+        if total < quota:
+            self.repeat_completed = total
+            return
+        # All receipts here belong to this map. Excess native repeats must not
+        # be credited to the other configured map when the target changes.
+        self.repeat_generation += 1
+        self.repeat_counts[self.repeat_index] = total % quota if len(self.repeat_maps) == 1 else 0
+        self.repeat_index = (self.repeat_index+1) % len(self.repeat_maps)
+        self.repeat_completed = self.repeat_counts.get(self.repeat_index, 0)
+        target = self.repeat_maps[self.repeat_index]
+        self.target_dungeon, self.target_difficulty = target['dungeon_id'], target['difficulty']
+
     def _runs(self, observation):
-        run = run_record(observation.get('scene', {}).get('run'))
+        scene = observation.get('scene', {})
+        run = run_record(scene.get('run'))
         status = run.get('status')
         if status != 'failed' and run.get('completion_confirmed') is True:
             status = 'success'
         run_id = run.get('id')
-        if run_id in self.stargazing_skipped: return
-        if status not in ('success', 'failed') or run_id is None or str(run_id) in self.handled_runs: return
-        self.handled_runs.add(str(run_id))
-        dungeon = run.get('dungeon_id', observation.get('scene', {}).get('dungeon_id'))
-        difficulty = run.get('difficulty') or observation.get('scene',{}).get('difficulty') or self.target_difficulty
+        dungeon = run.get('dungeon_id', run.get('map_id', scene.get('dungeon_id')))
+        difficulty = run.get('difficulty') or scene.get('difficulty') or self.target_difficulty
         # A run active at startup can belong to another map. Do not count it.
         if str(dungeon)!=str(self.target_dungeon) or difficulty!=self.target_difficulty: return
+        counter = self._run_counter(run)
+        if (self.settings['farming']['mode']=='repeat' and counter and run_id is not None
+                and not run.get('retained_terminal')):
+            previous = self.run_counters.get(counter['id'])
+            entry = self.run_entry
+            new_entry = False
+            if (entry and not entry['consumed'] and str(entry['dungeon_id']) == str(dungeon)
+                    and entry['difficulty'] == difficulty and run_id != entry['source_run_id']):
+                # MapData/WaveManager objects can be reused across a town trip.
+                # The first new-map sample may already include several wins.
+                previous = 0
+                entry['consumed'] = True
+                new_entry = True
+            self.run_counters[counter['id']] = counter['count']
+            self.run_counter_sources[(str(dungeon), difficulty)] = counter['id']
+            # A new/reset counter has no evidence for older unseen rounds.
+            # A confirmed current win is still independently countable.
+            count = (counter['count'] - previous if previous is not None and counter['count'] >= previous
+                     else int(status == 'success' and str(run_id) not in self.handled_runs
+                              and run_id not in self.stargazing_skipped))
+            if new_entry:
+                # A destination win may have been confirmed before its optional
+                # native counter could be read. Keep entry-local fallback wins
+                # separate from totals belonging to the previous map visit.
+                count = max(0, count - len(entry['fallback_wins']))
+                entry['fallback_wins'].clear()
+            fallback = self.run_counter_fallbacks.get(counter['id'], set())
+            if new_entry or previous is None or counter['count'] < previous:
+                fallback.clear()
+            else:
+                # A successful read may temporarily omit optional counter data.
+                # Its RunPlan fallback was already credited; a later native
+                # delta includes that same victory and must only add the rest.
+                for _ in range(min(count, len(fallback))):
+                    fallback.pop()
+                    count -= 1
+            if count > 0: self._repeat_wins(dungeon, difficulty, count)
+            if status == 'success': self.handled_runs.add(str(run_id))
+            # Keep a bounded set of native counter identities, independent of
+            # the game's short-lived RunPlan IDs and completion popups.
+            if len(self.run_counters) > 256:
+                expired = next(iter(self.run_counters))
+                del self.run_counters[expired]
+                self.run_counter_fallbacks.pop(expired, None)
+                self.run_counter_sources = {key:value for key,value in self.run_counter_sources.items() if value != expired}
+            return
+        if run_id in self.stargazing_skipped: return
+        if status not in ('success', 'failed') or run_id is None or str(run_id) in self.handled_runs: return
+        # Death is reversible through native revival in the same RunPlan.
+        # Only successful repeat runs consume their success deduplication key.
+        if self.settings['farming']['mode']=='repeat' and status != 'success': return
+        self.handled_runs.add(str(run_id))
         if status == 'success':
             self.last_success = dungeon
             self.last_success_difficulty = difficulty
         if self.settings['farming']['mode']=='repeat':
-            if status != 'success': return
-            self.repeat_completed += 1
-            if self.repeat_completed>=self.repeat_maps[self.repeat_index]['runs']:
-                self.repeat_completed = 0
-                self.repeat_counts[self.repeat_index] = 0
-                self.repeat_index = (self.repeat_index+1)%len(self.repeat_maps)
-                self.repeat_completed = self.repeat_counts.get(self.repeat_index, 0)
-                target = self.repeat_maps[self.repeat_index]
-                self.target_dungeon,self.target_difficulty = target['dungeon_id'],target['difficulty']
+            entry = self.run_entry
+            if (entry and not entry['consumed'] and str(entry['dungeon_id']) == str(dungeon)
+                    and entry['difficulty'] == difficulty and run_id != entry['source_run_id']):
+                entry['fallback_wins'].add(str(run_id))
+            else:
+                key = self.run_counter_sources.get((str(dungeon), difficulty))
+                if key:
+                    self.run_counter_fallbacks.setdefault(key, set()).add(str(run_id))
+            self._repeat_wins(dungeon, difficulty, 1)
             return
         points = [row if isinstance(row,dict) else {'dungeon_id':row,'difficulty':difficulty}
                   for row in self.settings['farming']['progression']]
@@ -1496,6 +1627,24 @@ class ManagedMode:
             return
         index = min(pos+1,len(points)-1) if status=='success' else max(0,pos-1)
         self.target_dungeon,self.target_difficulty = points[index]['dungeon_id'],points[index]['difficulty']
+
+    def observe_runs(self, observation):
+        """Account verified run evidence independently of inventory/action waits."""
+        if not self.running or not self.settings['farming']['enabled']: return
+        history = self._run_history(observation)
+        if history:
+            cursor = self.run_history_sequence
+            if cursor is not None and history['sequence'] >= cursor:
+                for receipt in history['receipts']:
+                    if (not isinstance(receipt, dict) or type(receipt.get('sequence')) is not int
+                            or not cursor < receipt['sequence'] <= history['sequence']): continue
+                    run = receipt.get('run')
+                    if not isinstance(run, dict): continue
+                    self._runs({'scene': {'run': run}})
+                    if not self.running: break
+            self.run_history_sequence = history['sequence']
+        if self.running and observation.get('scene', {}).get('available') is not False:
+            self._runs(observation)
 
     def _stargazing(self, observation):
         """Called only for a live target run, after return/cleanup safety gates."""
@@ -1556,6 +1705,11 @@ class ManagedMode:
         if not self.check_identity(observation,
                 require_character=bool(self.await_effect and self.await_effect.get('kind') in SYNTHESIS_ACTIONS)):
             return None
+        try:
+            self.observe_runs(observation)
+        except (ValidationError, KeyError, TypeError, ValueError) as exc:
+            return self._pause(str(exc))
+        if not self.running: return None
         if self.pending is not None: return None
         self.completion_rewards.observe(observation)
         if observation.get('complete') is not True:
@@ -1568,11 +1722,6 @@ class ManagedMode:
             scene = observation.get('scene', {})
             if scene.get('scene_changing') is True or scene.get('teleporting') is True:
                 self.status = '等待游戏完成场景切换，不重复请求。'; return None
-            if self.settings['farming']['enabled'] and scene.get('available') is not False:
-                # Count a verified final-wave receipt before merchant/sync waits
-                # can hide the short completion window of built-in repeat.
-                self._runs(observation)
-                if not self.running: return None
             if scene.get('online_saving') is True:
                 self.status = '等待游戏完成在线同步。'; return None
             if (self.settings['farming']['enabled'] and scene.get('available') is True

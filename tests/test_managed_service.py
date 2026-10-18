@@ -381,6 +381,24 @@ class ManagedServiceTests(unittest.TestCase):
         self.assertEqual(self.client.items[1]['count'], 14)
         self.assertEqual(self.client.actions, [])
 
+    def test_other_drop_names_are_localized_including_previously_cached_labels(self):
+        self.client.items = []
+        self.service.managed.metrics.observe(self.service._managed_observation())
+        counts = {'Rein_VolcanoCinderlash':6, 'Rein_VolcanoEmberBat':10, 'Rein_VolcanoMagmaGolem':13}
+        names = {'Rein_VolcanoCinderlash':'焰鞭魔', 'Rein_VolcanoEmberBat':'余烬蝠',
+                 'Rein_VolcanoMagmaGolem':'熔岩魔像'}
+        self.client.items = [potion(index, key=key, count=count)
+                             for index,(key,count) in enumerate(counts.items())]
+        self.service.managed.metrics.observe(self.service._managed_observation())
+        # Reproduce metrics cached before these labels were mapped.
+        for metric_key,row in self.service.managed.metrics.rows.items():
+            row['name'] = metric_key[1]
+        rows = self.service.managed_page()['stats']['others']
+        self.assertEqual({r['name_key']:r['name'] for r in rows}, names)
+        self.assertEqual({r['name_key']:r['count'] for r in rows}, counts)
+        self.assertTrue(all(r['sold']==0 and r['stored']==0 for r in rows))
+        self.assertEqual(self.client.actions, [])
+
     def returning_world(self):
         self.client.items=[];self.client.in_town=False;self.client.current_map='offline-map'
         self.client.run_status='success'
@@ -444,7 +462,7 @@ class ManagedServiceTests(unittest.TestCase):
         self.service._managed_once()
         self.assertEqual([a[0] for a in self.client.actions],['return_town'])
         self.assertEqual(self.service.managed_transition['requested_scene']['run_status'],'failed')
-        self.assertIn('offline-run',self.service.managed.handled_runs)
+        self.assertNotIn('offline-run',self.service.managed.handled_runs)
         self.assertIsNone(self.service.managed.last_success)
         for _ in range(3):self.service._managed_once()
         self.assertEqual(self.client.native_handler.call_count,1)

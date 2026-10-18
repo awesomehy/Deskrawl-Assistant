@@ -141,6 +141,41 @@ class WebServiceTests(unittest.TestCase):
         self.assertTrue(listed[0]['is_divine'])
         self.assertEqual([r['rarity'] for r in listed[1:]],[0,1,2,3,4,5,None,None])
 
+    def test_gold_and_reins_use_full_catalog_names_icons_and_effects_in_both_containers(self):
+        names = {'GoldBar':'金条', 'Rein_VolcanoCinderlash':'焰鞭魔',
+                 'Rein_VolcanoEmberBat':'余烬蝠', 'Rein_VolcanoMagmaGolem':'熔岩魔像'}
+        self.client.items = [dict(container=container, slot_index=index, count=index+1, item_uid='',
+            is_equipment=False, internal_name=key, item_class='ItemData', locked=False,
+            modifiers=[], transfer_key=container+'-'+key, base_rarity=3)
+            for container in ('inventory', 'storage') for index,key in enumerate(names)]
+        self.service._publish(self.client.snapshot())
+        rows = self.service.state()['items']
+        self.assertEqual(len(rows), 8)
+        for row in rows:
+            key = row['internal_name']
+            self.assertEqual(row['name'], names[key])
+            self.assertEqual(row['icon'], '/icons/'+key+'.png')
+            self.assertTrue((BASE/'deskrawl_assistant/web'/row['icon'].lstrip('/')).is_file())
+            self.assertTrue(row['effect_groups'])
+            self.assertFalse(row['review'])
+            self.assertEqual(self.service._describe_item(key), (names[key], 'material'))
+
+    def test_all_shipped_reins_resolve_game_names_icons_and_unlock_effects(self):
+        reins = {key:meta for key,meta in self.service.loot_item_ui['items'].items()
+                 if key.startswith('Rein_')}
+        self.assertGreaterEqual(len(reins), 66)
+        for key,meta in reins.items():
+            with self.subTest(key=key):
+                name,kind = self.service._describe_item(key)
+                self.assertEqual(name, meta['name'])
+                self.assertTrue(any('\u4e00' <= char <= '\u9fff' for char in name))
+                self.assertEqual(kind, 'material')
+                resolved = self.service._item_metadata(key)
+                self.assertEqual(resolved['rarity'],meta['rarity'])
+                self.assertTrue((BASE/'deskrawl_assistant/web'/resolved['icon'].lstrip('/')).is_file())
+                self.assertTrue(any('使用后解锁仆人：' in text
+                                    for group in resolved['effect_groups'] for text in group['texts']))
+
     def test_selected_tokens_are_resolved_server_side_and_preserve_locked_gear(self):
         self.publish_physical_items()
         def move(expected,target,validate):

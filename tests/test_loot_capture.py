@@ -22,7 +22,8 @@ def bundle(key='CommonBelt3', rarity='Common', *, black_mist=False, uid='planned
     raw = {}
     preview = read_loot_plan(f.reader,raw_sink=raw)
     return {'session':'isolated-session','raw_plan':raw,'preview':preview,
-        'observations_complete':True,'observations':[],'observation_run':plan_hash(raw)}
+        'observations_complete':True,'observations':[],'observation_run':plan_hash(raw),
+        'observation_scene':'combat'}
 
 
 def observed(uid='actual-drop',key='LegendaryBelt1',**extra):
@@ -231,6 +232,84 @@ class LootCaptureTests(unittest.TestCase):
         hits = self.saved()['observed_high_value']
         self.assertEqual(len(hits), 2)
         self.assertNotEqual(hits[0]['observation_event_id'], hits[1]['observation_event_id'])
+
+    def test_town_unloading_gap_and_changed_object_do_not_duplicate_or_attach_to_last_run(self):
+        data = bundle('GoldBar')
+        self.monitor.feed(data)
+        row = observed(uid='', key='GoldBar', is_equipment=False, rarity=3,
+            capture_source='ground', observation_id='carried-gold', count=1)
+        data['observations'] = [row]
+        self.monitor.feed(data)
+        original = self.saved()
+        later = bundle()
+        later['raw_plan']['runId'] = 'last-ordinary-run'
+        later['observation_run'] = plan_hash(later['raw_plan'])
+        later['observations'] = [dict(row, capture_source='carriage')]
+        self.monitor.feed(later)
+        later.update(raw_plan=None, preview={'available':False}, observation_scene='town')
+        # A stale terminal run ID must not give town observations provenance.
+        for items in ([], [row], [], [dict(row, observation_id='cloned-unloaded-object')], []):
+            later['observations'] = items
+            self.monitor.feed(later)
+        self.assertEqual(self.saved(), original)
+        # A genuinely new combat drop reusing the old address still counts.
+        new = bundle()
+        new['raw_plan']['runId'] = 'new-combat-run'
+        new['observation_run'] = plan_hash(new['raw_plan'])
+        self.monitor.feed(new)
+        new['observations'] = [row]
+        self.monitor.feed(new)
+        self.assertEqual(len(self.files()), 2)
+        hits = [hit for path in self.files()
+                for hit in json.loads(path.read_text(encoding='utf-8'))['observed_high_value']]
+        self.assertEqual([hit['quantity'] for hit in hits], [1, 1])
+        self.assertEqual({hit['observation_generation'] for hit in hits}, {0, 1})
+
+    def test_new_uidless_noncombat_objects_are_baselined_without_acquisition(self):
+        data = bundle()
+        self.monitor.feed(data)
+        for scene in ('town', 'fishing', None):
+            data.update(raw_plan=None, preview={'available':False}, observation_scene=scene)
+            data['observations'] = [observed(uid='', key='GoldBar', is_equipment=False,
+                capture_source='ground', observation_id='unloaded-'+str(scene))]
+            self.monitor.feed(data)
+            data['observation_scene'] = 'combat'
+            data['observations'][0]['capture_source'] = 'carriage'
+            self.monitor.feed(data)
+        self.assertFalse(self.files())
+
+    def test_new_town_uid_never_uses_retained_last_run_but_merchant_still_captures(self):
+        data = bundle()
+        self.monitor.feed(data)
+        data.update(raw_plan=None, preview={'available':False}, observation_scene='town')
+        data['observations'] = [observed()]
+        self.monitor.feed(data)
+        saved = self.saved()
+        self.assertEqual(saved['association'], 'unattributed')
+        self.assertIsNone(saved['raw_plan'])
+        data['observations'] = [observed(uid='bought-blackmist', rarity=3, is_black_mist=True)]
+        data['merchant_uids'] = ['bought-blackmist']
+        self.monitor.feed(data)
+        self.assertEqual(len(self.files()), 2)
+        purchase = next(json.loads(p.read_text(encoding='utf-8')) for p in self.files()
+                        if json.loads(p.read_text(encoding='utf-8'))['association']=='merchant_purchase')
+        self.assertIsNone(purchase['raw_plan'])
+
+    def test_quality_confirmed_after_town_unloading_keeps_original_combat_event(self):
+        data = bundle()
+        self.monitor.feed(data)
+        row = observed(uid='', key='LegendaryBelt1', rarity=None,
+            capture_source='carriage', observation_id='unknown-quality-drop')
+        data['observations'] = [row]
+        self.monitor.feed(data)
+        first_raw = deepcopy(data['raw_plan'])
+        data.update(raw_plan=None, preview={'available':False}, observation_scene='town',
+                    observation_run='retained-different-run', observations=[])
+        self.monitor.feed(data)
+        data['observations'] = [dict(row, rarity=4, capture_source='ground')]
+        self.monitor.feed(data)
+        self.assertEqual(self.saved()['raw_plan'], first_raw)
+        self.assertEqual(self.saved()['observed_high_value'][0]['first_source'], 'carriage')
 
     def test_uidless_unattributed_lifetimes_never_reuse_an_old_file(self):
         data = bundle()
@@ -520,6 +599,42 @@ class LootCaptureTests(unittest.TestCase):
             result=client.loot_capture_snapshot()
         self.assertEqual(result['raw_plan']['runId'],'private')
         self.assertFalse(result['observations_complete'])
+
+    def test_client_run_binding_requires_stable_combat_and_matching_plan(self):
+        from deskrawl_assistant.runtime_client import RuntimeClient
+        client = RuntimeClient()
+        client._reader = SimpleNamespace(session_id='fixture-session')
+        client.snapshot = Mock(return_value={'complete':True, 'containers':{}})
+        base = {'available':True, 'scene':'combat', 'ground_complete':True, 'ground':[],
+                'carriage':{'complete':True, 'items':[]}, 'run':{'id':'current-run'},
+                'map_id':'current-map', 'difficulty':'Inferno'}
+        preview = {'available':True, 'run':{'id':'current-run', 'map_id':'current-map', 'difficulty':'Inferno'}}
+        cases = [('combat', {}), ('town', {'scene':'town'}), ('fishing', {'scene':'fishing'}),
+                 ('unknown', {'scene':None}), ('retained', {'run':{'id':'current-run', 'retained_terminal':True}}),
+                 ('changing', {'scene_changing':True}), ('teleporting', {'teleporting':True}),
+                 ('new-run', {'run':{'id':'another-run'}}), ('new-map', {'map_id':'another-map'}),
+                 ('new-difficulty', {'difficulty':'Normal'}), ('unavailable', {'available':False})]
+        for label, changes in cases:
+            with self.subTest(label=label):
+                client.control_snapshot = Mock(return_value={**deepcopy(base), **changes})
+                with patch('deskrawl_assistant.loot_plan_reader.read_loot_plan', return_value=preview):
+                    result = client.loot_capture_snapshot()
+                self.assertEqual(result['observation_run'], 'current-run' if label=='combat' else None)
+                if label in ('changing', 'teleporting', 'unavailable'):
+                    self.assertFalse(result['observations_complete'])
+
+    def test_client_unavailable_preview_keeps_actual_combat_run_but_not_town_terminal(self):
+        from deskrawl_assistant.runtime_client import RuntimeClient
+        client = RuntimeClient()
+        client._reader = SimpleNamespace(session_id='fixture-session')
+        client.snapshot = Mock(return_value={'complete':True, 'containers':{}})
+        control = {'available':True, 'scene':'combat', 'ground_complete':True, 'ground':[],
+                   'carriage':{'complete':True, 'items':[]}, 'run':{'id':'current-run'}}
+        client.control_snapshot = Mock(side_effect=lambda:deepcopy(control))
+        with patch('deskrawl_assistant.loot_plan_reader.read_loot_plan', return_value={'available':False}):
+            self.assertEqual(client.loot_capture_snapshot()['observation_run'], 'current-run')
+            control.update(scene='town', run={'id':'current-run', 'retained_terminal':True})
+            self.assertIsNone(client.loot_capture_snapshot()['observation_run'])
 
 
 if __name__=='__main__': unittest.main()

@@ -45,7 +45,7 @@ class MythicProgressTests(unittest.TestCase):
         copy.pointers.update({0x1000+120:0xA000,0x1000+112:0xB000,0x1000+104:0xC000,
             0xC000+88:0xA000,0xA000+16:0xD000,0xA000+24:0xD100,0xA000+48:0xD200,
             0xA000+88:0xF000,0x1000+192:0xF300})
-        copy.integers.update({0xB000+32:1,0xA000+64:22,0xC000+304:22,0xC000+48:2})
+        copy.integers.update({0xB000+32:1,0xA000+64:22,0xC000+304:22,0xC000+48:2,0xC000+152:1})
         copy.flags.update({0xC000+64:False,0xC000+248:True,0xC000+249:True,0xF200+296:True})
         fixture=campaign.CampaignReadTests();result=fixture.read_fixture(copy)
         self.assertTrue(result['available'],result['reason'])

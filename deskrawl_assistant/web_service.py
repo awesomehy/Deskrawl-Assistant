@@ -211,10 +211,17 @@ class AssistantService(ManagedServiceMixin):
             currency.for_quote(market.for_item(row), currency_id) if currency_id else market.for_item(row)}
             for key,row in selected]}
 
+    def _item_metadata(self, key):
+        # The full drop catalog also includes commodities and mount reins
+        # whose localization key differs from their inventory asset name.
+        fallback = self.loot_item_ui['items'].get(key, {})
+        primary = self.item_ui['items'].get(key, {})
+        return {**fallback, **primary, 'icon':primary.get('icon') or fallback.get('icon')}
+
     def _describe_item(self, key):
         entry = self.item_names.get(key, {})
-        name = entry.get('Chinese (Simplified)') or entry.get('English') or key
-        meta = self.item_ui['items'].get(key,{})
+        meta = self._item_metadata(key)
+        name = entry.get('Chinese (Simplified)') or meta.get('name') or entry.get('English') or key
         kind = 'equipment' if key in self.ui['equipment'] else meta.get('kind','material')
         return name, kind
 
@@ -735,9 +742,8 @@ class AssistantService(ManagedServiceMixin):
         for row in all_rows(snap):
             key = row.get('name_key')
             kind, kind_label = item_kind(row)
-            localized = self.item_names.get(row.get('internal_name'),{})
             entry = self.catalog.equipment.get(key)
-            meta = self.ui['equipment'].get(key, {}) if kind=='equipment' else self.item_ui['items'].get(row.get('internal_name'),{})
+            meta = self.ui['equipment'].get(key, {}) if kind=='equipment' else self._item_metadata(row.get('internal_name'))
             rarity = row.get('base_rarity',row.get('rarity'))
             if type(rarity) is not int or rarity not in range(6): rarity = None
             adapted_item = observations.get((row.get('container'),row.get('slot_index')))
@@ -779,7 +785,7 @@ class AssistantService(ManagedServiceMixin):
                 'kind':kind,'kind_label':kind_label,'count':row.get('count',1),
                 'max_stack':row.get('max_stack'),
                 'internal_name':row.get('internal_name'),'effect_groups':meta.get('effect_groups',[]),'effect_note':meta.get('effect_note',''),
-                'name':entry.label if entry else localized.get('Chinese (Simplified)') or localized.get('English') or row.get('internal_name','未识别物品'),
+                'name':entry.label if entry else self._describe_item(row.get('internal_name','未识别物品'))[0],
                 'container':row.get('container'),'slot_index':row.get('slot_index'),
                 'locked':row.get('locked'),'level':row.get('item_level'),'upgrade':row.get('upgrade_level'),
                 **(self._equipment_facts(row) if kind=='equipment' else {'rarity':rarity}),

@@ -552,9 +552,18 @@ def _campaign_run(copy, manager, difficulty):
     for raw in copy.list(copy.ptr(manager+192),element='Enemy',limit=4096):
         enemy = struct.unpack('<Q',raw)[0]
         if enemy and not copy.boolean(copy.verify(enemy,'Enemy')+296): alive += 1
+    # Native final-wave kills increment this before setting +249. Built-in
+    # repeat replaces the RunPlan and clears completion flags, but preserves
+    # this cumulative counter. Map entry/return can reset it, so consumers
+    # rebaseline on a decrease; a changed run GUID is not a counter reset.
+    completions = copy.integer(wave+152)
+    if not 0 <= completions <= 10000000:
+        raise MemoryReadError('游戏累计通关计数无效。')
+    counter_source = f'{copy.reader.session_id}:{wave}:{active_map}:{map_id}:{difficulty}:{world_difficulty}'
     return {'id':hashlib.sha256(raw_id.encode()).hexdigest(),'map_id':map_id,'difficulty':difficulty,'world_difficulty':world_difficulty,
             'wave_index':copy.integer(wave+48),'wave_count':len(waves),'wave_active':copy.boolean(wave+64),
             'enemy_count':alive,'finished':copy.boolean(wave+248),'final_kill_settled':copy.boolean(wave+249),
+            'completion_counter':{'id':hashlib.sha256(counter_source.encode()).hexdigest(),'count':completions},
             'status_source':'verified_WaveManager_state'}
 
 

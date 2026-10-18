@@ -174,7 +174,24 @@ class RuntimeClient:
             ground, carriage = control.get('ground') or [], control.get('carriage') or {}
             complete = (snapshot.get('complete') is True and control.get('available') is True
                         and isinstance(ground,list) and control.get('ground_complete') is True
-                        and carriage.get('complete') is True)
+                        and carriage.get('complete') is True
+                        and control.get('scene_changing') is not True
+                        and control.get('teleporting') is not True)
+            scene = control.get('scene') if control.get('available') is True else None
+            run = control.get('run') or {}
+            observation_run = None
+            if (scene == 'combat' and run.get('retained_terminal') is not True
+                    and control.get('scene_changing') is not True
+                    and control.get('teleporting') is not True):
+                # Terminal runs are retained for completion accounting, not
+                # loot provenance. A plan/control transition also cannot bind
+                # newly observed objects to either run's cached plan.
+                planned_run = preview.get('run') or {}
+                if (preview.get('available') is not True or
+                        (planned_run.get('id') == run.get('id')
+                         and planned_run.get('map_id') == control.get('map_id')
+                         and planned_run.get('difficulty') == control.get('difficulty'))):
+                    observation_run = run.get('id')
             observations = []
             for container in ('inventory','storage'):
                 for row in snapshot.get('containers',{}).get(container,{}).get('slots',[]):
@@ -183,7 +200,7 @@ class RuntimeClient:
                 if isinstance(collection,list): observations.extend(dict(row,capture_source=source) for row in collection)
             return {'session':session, 'preview':preview, 'raw_plan':raw or None,
                 'observations_complete':complete, 'observations':observations,
-                'observation_run':(control.get('run') or {}).get('id'),
+                'observation_run':observation_run, 'observation_scene':scene,
                 'character_key':control.get('character_id')}
 
     def managed_loot_snapshot(self):

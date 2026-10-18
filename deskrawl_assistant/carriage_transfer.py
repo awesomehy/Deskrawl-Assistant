@@ -129,7 +129,9 @@ def read_carriage(reader):
         item=struct.unpack_from('<Q',header,120)[0]
         if not item: continue
         row=reader.base_item(item)
-        uid=reader.string(struct.unpack_from('<Q',header,136)[0])
+        # Match the ground reader: a null UID is the empty string in the
+        # identity hash, so loading/unloading cannot create another drop ID.
+        uid=reader.string(struct.unpack_from('<Q',header,136)[0]) or ''
         count=max(1,struct.unpack_from('<i',header,164 if row['item_type']==1 else 168)[0])
         token=hashlib.sha256(f'{reader.session_id}:{address}:{item}:{uid}:{count}'.encode()).hexdigest()
         observation_id=hashlib.sha256(f'{reader.session_id}:{address}:{item}:{uid}'.encode()).hexdigest()

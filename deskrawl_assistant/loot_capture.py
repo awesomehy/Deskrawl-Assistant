@@ -224,16 +224,22 @@ class LootCaptureMonitor:
         self.last_saved = document['saved_at']
         self.pending.discard(key)
 
-    def _observation_identities(self, observations):
+    def _observation_identities(self, observations, *, combat):
         identities = {identity for row in observations if (identity := _observation_key(row)) is not None}
         drop_ids = {identity[1] for identity in identities if identity[0] == 'drop'}
         # Native LootDrop objects can be recycled for later same-kind drops.
-        # Only a complete snapshot confirming absence starts a new lifetime;
-        # moving a still-present drop between ground/carriage does not.
+        # Only a complete combat snapshot confirming absence starts a new
+        # lifetime. Town unloading can briefly remove a carried object from
+        # both lists; this gap does not prove a new drop.
         for drop_id in drop_ids:
-            if drop_id not in self.active_drop_ids:
+            if combat and drop_id not in self.active_drop_ids:
                 self.drop_generations[drop_id] = self.drop_generations.get(drop_id, -1) + 1
-        self.active_drop_ids = drop_ids
+            else:
+                self.drop_generations.setdefault(drop_id, 0)
+        if combat:
+            self.active_drop_ids = drop_ids
+        else:
+            self.active_drop_ids.update(drop_ids)
         return {identity:identity if identity[0] == 'uid' else
                 (*identity, self.drop_generations[identity[1]]) for identity in identities}
 
@@ -285,7 +291,8 @@ class LootCaptureMonitor:
             if bundle.get('observations_complete') is True:
                 observations = bundle.get('observations',[])
                 merchant_uids = set(bundle.get('merchant_uids',[]))
-                identities = self._observation_identities(observations)
+                combat = bundle.get('observation_scene') == 'combat'
+                identities = self._observation_identities(observations, combat=combat)
                 ids = set(identities.values())
                 if not self.baseline_ready:
                     self.seen.update(ids)
@@ -297,7 +304,13 @@ class LootCaptureMonitor:
                         uid = row.get('item_uid') or ''
                         if identity not in self.seen:
                             self.seen.add(identity)
-                            self.new_ids[identity] = {'run':bundle.get('observation_run'),
+                            if identity[0] == 'drop' and not combat:
+                                # UID-less town drops are offloaded cargo or
+                                # another unknown source, not fresh run loot.
+                                # Still baseline them to prevent later moves
+                                # from manufacturing an acquisition event.
+                                continue
+                            self.new_ids[identity] = {'run':bundle.get('observation_run') if combat else None,
                                 'source':row.get('capture_source'), 'time':now(),
                                 'event':uuid.uuid4().hex if identity[0] == 'drop' else None}
                         # A newly seen ground drop can become classifiable

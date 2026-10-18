@@ -22,6 +22,7 @@ from .mythic import MYTHIC, MAP_ID as MYTHIC_MAP, floor_id, floor_number, WORLD_
 
 from .progression import NEW_ACTIONS
 from .synthesis import KINDS as SYNTHESIS_ACTIONS
+from .run_receipts import RunReceipts
 
 KINDS = ('return_town', 'enter_map', 'switch_difficulty', 'equip', 'sell', 'salvage', 'open_chest', 'collect_ground') + NEW_ACTIONS + SYNTHESIS_ACTIONS
 CAPABILITIES = {'travel': ('return_town', 'enter_map'), 'equip': ('equip',), 'sell': ('sell',),
@@ -135,6 +136,7 @@ class GameActions:
         self._compatible = None
         self._last_terminal_run = None
         self._last_character = None
+        self._run_receipts = RunReceipts()
         self._panel_log_cache = {}
         self._progression = None
         self._synthesis = None
@@ -456,11 +458,50 @@ class GameActions:
         read.finish()
         return value
 
+    def _capture_run_receipts(self, recommendation):
+        """Preserve a guarded win before unrelated loot/UI reads can fail.
+
+        The campaign reader verifies its own plan, completion and character
+        guards. This smaller guard window also brackets the campaign read with
+        the current role slot and live death flag; changing either invalidates
+        the receipt before it enters the buffer.
+        """
+        from .recommendation_reader import read_campaign
+        read = _Read(self.reader, self.profile)
+        manager = read.singleton('GameManager')
+        if read.integer(manager + 168) != 1:
+            raise NativeActionError('请先进入角色，再读取关卡。')
+        save = read.singleton('SaveSystem')
+        read.read(save + 32, 8)
+        combat = read.verify(read.ptr(manager + 64), 'PlayerCombatController')
+        player = read.verify(read.ptr(combat + 32), 'Player')
+        dead = read.boolean(player + 296)
+        campaign = recommendation if recommendation is not None else read_campaign(self.reader)
+        if not campaign.get('available') or not isinstance(campaign.get('profile'), dict):
+            raise NativeActionError(campaign.get('reason') or '关卡进度暂不可读')
+        progress = campaign['profile']
+        completed = set(progress['completed_maps'].get(progress['difficulty'], []))
+        completed.update(progress['mythic_completed'])
+        run = normalise_run(campaign.get('run'), completed, dead)
+        read.finish()
+        # An explicitly supplied snapshot has no guard provenance here. Keep
+        # this legacy input usable by read-only callers, without publishing it
+        # as newly observed native evidence (or exposing an old identity).
+        history = (self._run_receipts.observe(getattr(self.reader, 'session_id', None),
+                                              progress['character_id'], run)
+                   if recommendation is None else None)
+        if progress['character_id'] != self._last_character:
+            self._last_terminal_run = None
+            self._last_character = progress['character_id']
+        return campaign, history
+
     def control_snapshot(self, recommendation=None):
         """Read-only: actual progression plus loaded map objects and ground loot."""
+        run_history = None
         try:
             if not self.capabilities()['compatible']:
                 raise NativeActionError(self.capabilities()['reason'])
+            recommendation, run_history = self._capture_run_receipts(recommendation)
             read, manager, area, scene = self._context(allow_busy=True)
             online = self._online_state(read)
             portal = read.singleton('TownPortalSystem')
@@ -474,10 +515,7 @@ class GameActions:
             travel_state = self._combat_travel_state(read, manager) if scene == 0 else {
                 'player_state': None, 'gathering': False, 'travel_blocked': False, 'travel_wait_reason': ''}
             completion = self._completion_state(read)
-            from .recommendation_reader import read_campaign, _catalog, _Copy
-            recommendation = recommendation or read_campaign(self.reader)
-            if not recommendation.get('available'):
-                raise NativeActionError(recommendation.get('reason') or '关卡进度暂不可读')
+            from .recommendation_reader import _catalog, _Copy
             progress = recommendation['profile']
             difficulty = progress['difficulty']
             current_difficulty,difficulties = self._difficulty_state(read,manager)
@@ -553,6 +591,7 @@ class GameActions:
             return {'available':True, 'compatible':True, 'scene':{0:'combat',1:'town',2:'fishing'}[scene],
                 'scene_changing':scene_changing, 'teleporting':teleporting, 'dead':dead, 'in_battle':in_battle, **travel_state, **online,
                 'completion_visible':completion,
+                'run_history':run_history,
                 'loot_ledger':loot_ledger,
                 'system_log':system_log,
                 'gold_ledger':gold_ledger,
@@ -564,7 +603,8 @@ class GameActions:
                 'captured_at':datetime.now(timezone.utc).isoformat(), 'reason':''}
         except (MemoryReadError, OSError, ValueError, KeyError, UnicodeError, struct.error) as exc:
             return {'available':False, 'compatible':self._compatible is True, 'maps':[], 'ground':[],
-                'ground_complete':False, 'native_verified':False, 'reason':str(exc)}
+                'ground_complete':False, 'native_verified':False, 'reason':str(exc),
+                **({'run_history':run_history} if run_history is not None else {})}
 
     def _selected_inventory(self, payload, read):
         requested = payload.get('item', payload.get('row', payload))

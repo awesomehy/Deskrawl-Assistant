@@ -25,7 +25,7 @@ class DifficultyProgressTests(unittest.TestCase):
 class TownCampaignCopy:
     """Login fixture has no combat stats or ability controller at all."""
     def __init__(self):
-        self.reader = SimpleNamespace(module={'base':0},singleton=lambda name:{'SaveSystem':0x3000,'Inventory':0x5000}[name],
+        self.reader = SimpleNamespace(session_id='campaign-test',module={'base':0},singleton=lambda name:{'SaveSystem':0x3000,'Inventory':0x5000}[name],
             string=lambda address:{0x8000:'Offline',0xD000:'run-1',0xD100:'Forest2',0xD200:'Normal'}[address],
             asset_name=lambda obj:{0xB000:'Forest2',0xE000:'Ticket'}[obj])
         self.pointers = {0x1000+32:0x4000,0x1000+120:0,0x1000+112:0,0x2000+40:0x8000,
@@ -78,7 +78,7 @@ class CampaignReadTests(unittest.TestCase):
         copy.pointers.update({0x1000+120:0xA000,0x1000+112:0xB000,0x1000+104:0xC000,
             0xC000+88:0xA000,0xA000+16:0xD000,0xA000+24:0xD100,0xA000+48:0xD200,
             0xA000+88:0xF000,0x1000+192:0xF300})
-        copy.integers[0xC000+48]=2
+        copy.integers.update({0xC000+48:2,0xC000+152:1})
         copy.flags.update({0xC000+64:False,0xC000+248:True,0xC000+249:False,0xF200+296:True})
         result=self.read_fixture(copy)
         self.assertTrue(result['available'])

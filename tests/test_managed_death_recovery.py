@@ -180,7 +180,8 @@ class ManagedDeathRecoveryTests(unittest.TestCase):
         self.native.assert_not_called()
         self.assertEqual(self.service.managed.repeat_completed, 7)
         self.assertIsNone(self.service.managed.last_success)
-        self.assertIn('dead-run', self.service.managed.handled_runs)
+        # A death can revive into a successful run with this same identity.
+        self.assertNotIn('dead-run', self.service.managed.handled_runs)
         self.assertNotIn('native-repeat-new-run', self.service.managed.handled_runs)
 
     def test_still_dead_can_submit_return_and_budget_starts_at_acceptance(self):

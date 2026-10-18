@@ -335,6 +335,7 @@ class ManagedServiceMixin:
                 'loot_ledger':deepcopy(self.managed_control.get('loot_ledger', {})),
                 'system_log':deepcopy(self.managed_control.get('system_log', {})),
                 'gold_ledger':deepcopy(self.managed_control.get('gold_ledger', {})),
+                'run_history':deepcopy(control.get('run_history', {})),
                 'synthesis':self._managed_synthesis_state(scene),
                 'storage':{'page_size':snap.get('transfer',{}).get('page_size'),
                            'allowed_indices':snap.get('transfer',{}).get('storage_indices',[])}}
@@ -354,6 +355,12 @@ class ManagedServiceMixin:
     def managed_page(self):
         with self.guard:
             engine = self.managed.state()
+            # Refresh labels even for statistics gathered before a mapping
+            # was available; quantities and stored/sold receipts stay intact.
+            for row in engine['statistics']['others']:
+                name, _ = self._describe_item(row['name_key'])
+                if name and name != row['name_key']:
+                    row['name'] = name
             transfer = (self.snapshot or {}).get('transfer',{})
             capabilities = deepcopy(self.managed_capabilities)
             capabilities['transfer'] = transfer.get('available') is True
@@ -785,6 +792,8 @@ class ManagedServiceMixin:
                                rule_pending=item.get('review') is True or bool(item.get('issues')))
             result = self.client.execute_game_action(native_kind,payload,self.cancelled,validate=active)
             if result.get('transition_requested'):
+                if kind == 'enter_dungeon':
+                    self.managed.expect_run_entry(action, observation)
                 started = time.monotonic()
                 self.managed_transition = {'action':action,'deadline':started+45,'hard_deadline':started+120,
                                            'started':started,'session':observation.get('session'),
@@ -919,14 +928,14 @@ class ManagedServiceMixin:
             # The same bridge connection can remain alive across role changes.
             # Reject them before retry/transition paths update counts or receipts.
             if not self._managed_identity_ok(observation): return self.managed.status
+            # Run completion is independent of full inventory and portal waits.
+            # In particular, native repeat can replace the winning plan during
+            # a backoff or an already submitted stargazing transition.
+            self.managed.observe_runs(observation)
+            if not self.managed.running: return self.managed.status
             retry = self.managed_retry
             if retry:
                 scene = observation['scene']
-                # Native repeat can finish and start a new plan during backoff.
-                # Record the short final-wave receipt even when no action is due.
-                if (self.managed.settings['farming']['enabled'] and scene.get('available') is True
-                        and scene.get('scene_changing') is not True and scene.get('teleporting') is not True):
-                    self.managed._runs(observation)
                 if retry['action_kind']=='return_town' and scene.get('in_town') is True:
                     self.managed_retry = None
                     self.managed_return_recovery = None
@@ -952,9 +961,6 @@ class ManagedServiceMixin:
                 if action['kind']=='return_town' and observation.get('session') != transition.get('session'):
                     return self._managed_pause_return('游戏连接或角色已改变，未确认原回城结果。')
                 if action['kind']=='return_town' and self.managed.settings['farming']['enabled']:
-                    if (observation.get('complete') is True and scene.get('available') is True and scene.get('scene_changing') is not True
-                            and scene.get('teleporting') is not True):
-                        self.managed._runs(observation)
                     source = action.get('source_run_id')
                     run = run_record(scene.get('run'))
                     if source and (str(source) in self.managed.handled_runs
@@ -964,7 +970,7 @@ class ManagedServiceMixin:
                 confirmed = observation.get('complete') is True and scene.get('available') is True and (scene.get('in_town') is True if action['kind']=='return_town'
                      else scene.get('in_dungeon') is True and str(scene.get('dungeon_id'))==str(action['dungeon_id'])
                      and (not action.get('difficulty') or scene.get('difficulty')==action['difficulty'])
-                     and run_record(scene.get('run')).get('status') in ('running','settling'))
+                     and run_record(scene.get('run')).get('status') in ('running','settling','success'))
                 if confirmed and action['kind'] == 'enter_dungeon' and action.get('reason_code') == 'stargazing_skip':
                     new_id = run_record(scene.get('run')).get('id')
                     confirmed = bool(new_id and new_id != action.get('source_run_id'))
@@ -1082,6 +1088,11 @@ class ManagedServiceMixin:
             # receipt but never resume the planner or submit another action.
             if self.managed.pending:
                 self.managed.complete(action['action_id'],result=result)
+                if transition and action['kind'] == 'enter_dungeon' and result.get('verified') is True:
+                    # Accepted combat travel can arrive after the destination
+                    # has already completed. Its quota is selected by complete;
+                    # consume this same read now, before native repeat hides it.
+                    self.managed.observe_runs(observation)
             if action['kind']=='merchant_buy' and result.get('verified') is True:
                 self.managed_merchant_uids.update(uid for uid in (result.get('received_uids') or [result.get('received_uid')])
                                                   if isinstance(uid,str) and uid)

@@ -200,6 +200,9 @@ def collect_item(reader,selection_id,validate=lambda:True,on_commit=None):
     fresh=reader.snapshot()
     for index,_,_,amount in targets:
         found=next((r for r in fresh['containers']['inventory']['slots'] if r['slot_index']==index),None)
-        if not found or found.get('internal_name')!=row['internal_name'] or found['count']!=amount or found.get('item_uid')!=uid:
+        # Native inventory uses None for a null UID; the carriage reader uses ''.
+        # Both mean no unique ID, while nonempty IDs must still match exactly.
+        if (not found or found.get('internal_name')!=row['internal_name'] or found['count']!=amount
+                or (found.get('item_uid') or '')!=(uid or '')):
             raise MemoryReadError('马车收取后物品回读不一致，已停止自动整理')
     return result

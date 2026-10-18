@@ -5,8 +5,9 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
-from deskrawl_assistant.carriage_transfer import read_carriage
+from deskrawl_assistant.carriage_transfer import collect_item, read_carriage
 from deskrawl_assistant.game_actions import GameActions
+from deskrawl_assistant.native_memory import MemoryReadError
 from deskrawl_assistant.paths import RESOURCE_ROOT
 
 
@@ -65,6 +66,68 @@ class CarriageDropIdentityTests(unittest.TestCase):
                 self.assertEqual(loaded['item_uid'],uid or '')
                 self.assertEqual(ground['observation_id'],loaded['observation_id'])
                 self.assertEqual(ground['selection_id'],loaded['selection_id'])
+
+
+class CarriageCollectionReadbackTests(unittest.TestCase):
+    def collect(self, drop_uid='', inventory_uid=None, count=1, change=None):
+        amounts = [min(99, count-offset) for offset in range(0, count, 99)]
+        slots = [dict(slot_index=index, internal_name='GemEmerald4', count=amount,
+                      item_uid=inventory_uid) for index,amount in enumerate(amounts)]
+        if change:
+            change(slots)
+        def snapshot(rows):
+            return dict(complete=True, containers={'inventory':{'slots':rows}, 'storage':{'slots':[]}})
+        addresses = [3000+1000*index for index in range(len(amounts))]
+        pointers = {1056:2000, 816:0, **{address:77 for address in addresses}}
+        reader = SimpleNamespace(snapshot=Mock(side_effect=[snapshot([]), snapshot(slots)]),
+            memory=SimpleNamespace(u64=lambda address:pointers[address], read=lambda address,size:b'\0'*size),
+            singleton=lambda name:1000,
+            array=lambda *args,**kwargs:([struct.pack('<Q',address) for address in addresses], b'block'),
+            snapshot_stamps=[], classes={'InventorySlot':77})
+        drop = dict(internal_name='GemEmerald4', item_uid=drop_uid, count=count, max_stack=99,
+                    item_class='GemData', selection_id='pick', observation_id='observe', collectable=True,
+                    slot_index=5, _address=800, _header=b'x'*216)
+        tx = Mock()
+        tx.collect_many.return_value = {'save_requested':True}
+        receipts = []
+        with patch('deskrawl_assistant.carriage_transfer.read_carriage', return_value={'items':[drop], 'guards':[]}), \
+                patch('deskrawl_assistant.carriage_transfer.FrozenCarriageTransaction', return_value=tx):
+            try:
+                result = collect_item(reader, 'pick', on_commit=receipts.append)
+            finally:
+                tx.collect_many.assert_called_once()
+                tx.close.assert_called_once()
+                self.assertEqual(len(receipts), 1)
+        return result
+
+    def test_uidless_readback_accepts_both_null_and_empty_uid(self):
+        for drop_uid in ('', None):
+            for inventory_uid in ('', None):
+                with self.subTest(drop_uid=drop_uid, inventory_uid=inventory_uid):
+                    result = self.collect(drop_uid, inventory_uid)
+                    self.assertEqual(result['moved'], 1)
+                    self.assertEqual(result['movements'][0]['identity'], '')
+
+    def test_uidless_split_stacks_are_verified_and_receipted_once(self):
+        result = self.collect(count=101)
+        self.assertEqual(result['new_slots'], 2)
+        self.assertEqual([move['count'] for move in result['movements']], [99, 2])
+
+    def test_real_uid_still_requires_exact_match(self):
+        self.assertEqual(self.collect('equipment-id', 'equipment-id')['moved'], 1)
+        for drop_uid,inventory_uid in (('equipment-id', 'different-id'), ('equipment-id', None),
+                                       ('equipment-id', ''), ('', 'unexpected-id')):
+            with self.subTest(drop_uid=drop_uid, inventory_uid=inventory_uid):
+                with self.assertRaisesRegex(MemoryReadError, '回读不一致'):
+                    self.collect(drop_uid, inventory_uid)
+
+    def test_name_count_and_destination_still_require_exact_match(self):
+        for key,value in (('internal_name','GemSapphire4'), ('count',2), ('slot_index',1)):
+            with self.subTest(field=key):
+                with self.assertRaisesRegex(MemoryReadError, '回读不一致'):
+                    self.collect(change=lambda slots:slots[0].update({key:value}))
+        with self.assertRaisesRegex(MemoryReadError, '回读不一致'):
+            self.collect(change=lambda slots:slots.clear())
 
 
 if __name__=='__main__': unittest.main()

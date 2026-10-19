@@ -902,6 +902,14 @@ class ManagedServiceMixin:
             record('managed_return_interrupted',scene=self._transition_scene(scene),
                    requested_scene=transition['requested_scene'],interruptions=recovery['interruptions'])
             if recovery['interruptions'] >= 3:
+                if self.managed.stargazing_travel_failed(action, scene):
+                    self.managed_transition = None
+                    self.managed.pending = None
+                    self.managed_retry = None
+                    self.managed_return_recovery = None
+                    record('managed_stargazing_travel_fallback',scene=self._transition_scene(scene),
+                           source_run_id=action.get('source_run_id'))
+                    return self.managed.status
                 return self._managed_pause_return('回城连续 3 次被打断，尚未回到主城。')
             self.managed_transition = None
             self.managed.pending = None

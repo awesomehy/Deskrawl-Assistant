@@ -86,13 +86,11 @@ class RepeatCountRegressionTests(unittest.TestCase):
         engine, world = self.native_repeat()
         world['scene'].update(dead=True)
         world['scene']['run'].update(status='failed')
-        action = engine.next_action(world)
-        self.assertEqual(action['kind'], 'return_town')
+        self.assertIsNone(engine.next_action(world))
+        self.assertIsNone(engine.pending)
         self.assertEqual(engine.repeat_completed, 0)
 
-        # The death recovery gate rejected the portal before any submission.
-        # Auto-revival keeps the run ID and permits this same run to complete.
-        engine.pending = None
+        # Native revival keeps the run ID and permits this same run to complete.
         world['scene'].update(dead=False)
         world['scene']['run'].update(status='running')
         engine.next_action(world)

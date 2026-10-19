@@ -490,7 +490,7 @@ class LifecycleTests(unittest.TestCase):
         town['scene']['difficulty']='Normal'
         action = engine.next_action(town); self.assertEqual((action['dungeon_id'],action['difficulty']),('last','Normal'))
 
-    def test_death_returns_even_without_run_or_merchant_growth_data(self):
+    def test_death_waits_even_without_run_or_merchant_growth_data(self):
         for run in (None,{'id':'dead-run','status':'running'}):
             with self.subTest(run=run):
                 config=settings();config['merchant']['enabled']=True
@@ -499,25 +499,23 @@ class LifecycleTests(unittest.TestCase):
                 world['progression']={'available':False,'reason':'死亡期间成长数据未加载'}
                 engine=ManagedMode(config);engine.start(world)
                 action=engine.next_action(world)
-                self.assertEqual(action['kind'],'return_town');self.assertTrue(engine.running)
-                self.assertIn('死亡',action['reason'])
+                self.assertIsNone(action);self.assertTrue(engine.running)
+                self.assertIn('原生复活',engine.status)
+                self.assertIsNone(engine.pending)
 
-    def test_repeat_death_returns_then_enters_configured_map_once(self):
+    def test_repeat_death_waits_then_native_revive_resumes_without_counting_failure(self):
         engine,world=self._native_repeat(runs=2)
         world['scene'].update(dead=True)
         world['scene']['run']['status']='failed'
-        action=engine.next_action(world);self.assertEqual(action['kind'],'return_town')
-        verified(engine,action)
-        town=observation([],town=True);town['scene'].update(difficulty='Normal',dead=False,run=None)
-        for _ in range(6):
-            action=engine.next_action(town)
-            if action:break
-        self.assertEqual(action['kind'],'enter_dungeon');self.assertEqual(action['dungeon_id'],'a')
+        self.assertIsNone(engine.next_action(world))
         self.assertEqual(engine.repeat_completed,0)
-        verified(engine,action)
-        world['scene'].update(dead=False);world['scene']['run'].update(id='next-run',status='running')
+        self.assertEqual(engine.target_dungeon,'a')
+        world['scene'].update(dead=False);world['scene']['run'].update(status='running')
         self.assertIsNone(engine.next_action(world));self.assertTrue(engine.running)
         self.assertEqual(engine.repeat_completed,0)
+        world['scene']['run']['status']='success'
+        engine.observe_runs(world);engine.observe_runs(world)
+        self.assertEqual(engine.repeat_completed,1)
 
     def test_current_difficulty_is_fixed_at_start_not_changed_by_later_reads(self):
         world = observation(); world['scene']['difficulty']='Nightmare'
@@ -622,6 +620,29 @@ class LifecycleTests(unittest.TestCase):
         world['scene']['run']['status'] = 'success'
         action = after_rewards(engine, world); self.assertEqual(action['kind'], 'return_town'); verified(engine, action)
         self.assertEqual(engine.next_action(town)['dungeon_id'], 'b')
+
+    def test_push_death_waits_without_consuming_the_run_or_lowering_target(self):
+        s = settings(); s['farming'].update(mode='push', dungeon_id='b')
+        engine = ManagedMode(s); world = observation()
+        world['scene'].update(dungeon_id='b', dead=False,
+            run={'id': 'revivable-b', 'dungeon_id': 'b', 'status': 'running'})
+        engine.start(world)
+        engine.last_success = 'a'
+        world['scene'].update(dead=True)
+        world['scene']['run']['status'] = 'failed'
+        for _ in range(3):
+            self.assertIsNone(engine.next_action(world))
+            self.assertEqual(engine.target_dungeon, 'b')
+            self.assertFalse(engine.push_failed)
+            self.assertNotIn('revivable-b', engine.handled_runs)
+        world['scene']['dead'] = False
+        world['scene']['run']['status'] = 'running'
+        self.assertIsNone(engine.next_action(world))
+        world['scene']['run'].update(status='success', completion_confirmed=True)
+        action = after_rewards(engine, world)
+        self.assertEqual(action['kind'], 'return_town')
+        self.assertEqual(engine.target_dungeon, 'c')
+        self.assertIn('revivable-b', engine.handled_runs)
 
     def test_repeat_finished_map_always_returns_and_cleans_before_same_map_entry(self):
         engine = ManagedMode(settings()); world = observation(); engine.start(world)

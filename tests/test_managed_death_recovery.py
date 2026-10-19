@@ -97,12 +97,12 @@ class ManagedDeathRecoveryTests(unittest.TestCase):
     def assert_long_read_wait(self, attribute):
         self.start_dead()
         self.tick(100)
-        self.assertEqual(self.service.managed_retry['key'][0], 'death_recovery_pending')
+        self.assertIsNone(self.service.managed_retry)
         setattr(self, attribute, True)
         for now in (103, 221, 701):
             self.tick(now)
             self.assert_unsubmitted_wait()
-        self.assertEqual(self.preflight.call_count, 1)
+        self.assertEqual(self.preflight.call_count, 0)
 
     def test_typed_busy_is_a_prewrite_game_busy_error(self):
         self.assertTrue(issubclass(native_memory.DeathRecoveryBusyError,
@@ -117,21 +117,22 @@ class ManagedDeathRecoveryTests(unittest.TestCase):
     def test_unsubmitted_death_wait_survives_online_saving(self):
         self.assert_long_read_wait('saving')
 
-    def test_continuous_typed_death_busy_does_not_pause_after_two_minutes(self):
+    def test_native_revive_wait_does_not_pause_or_submit_after_two_minutes(self):
         self.start_dead()
         for now in (100, 103, 108, 121, 221, 701):
             self.tick(now)
             self.assert_unsubmitted_wait()
-        self.assertGreater(self.preflight.call_count, 1)
-        self.assertEqual(self.service.managed_retry['key'][0], 'death_recovery_pending')
+        self.assertEqual(self.preflight.call_count, 0)
+        self.assertIsNone(self.service.managed_retry)
 
-    def test_known_dead_generic_prewrite_busy_also_waits_without_a_false_timeout(self):
+    def test_known_dead_never_attempts_even_a_generic_prewrite(self):
         self.start_dead()
         self.busy_error_type = native_memory.GameBusyError
         for now in (100, 103, 221, 701):
             self.tick(now)
             self.assert_unsubmitted_wait()
-        self.assertEqual(self.service.managed_retry['key'][0], 'death_recovery_pending')
+        self.assertIsNone(self.service.managed_retry)
+        self.preflight.assert_not_called()
 
     def test_living_generic_prewrite_busy_keeps_its_existing_pause_budget(self):
         self.start_dead()
@@ -176,7 +177,7 @@ class ManagedDeathRecoveryTests(unittest.TestCase):
         self.assertEqual(self.service.managed.phase, 'farming')
         self.assertIsNone(self.service.managed_retry)
         self.assertIsNone(self.service.managed.pending)
-        self.assertEqual(self.preflight.call_count, 1)
+        self.assertEqual(self.preflight.call_count, 0)
         self.native.assert_not_called()
         self.assertEqual(self.service.managed.repeat_completed, 7)
         self.assertIsNone(self.service.managed.last_success)
@@ -184,36 +185,25 @@ class ManagedDeathRecoveryTests(unittest.TestCase):
         self.assertNotIn('dead-run', self.service.managed.handled_runs)
         self.assertNotIn('native-repeat-new-run', self.service.managed.handled_runs)
 
-    def test_still_dead_can_submit_return_and_budget_starts_at_acceptance(self):
+    def test_still_dead_never_submits_return_even_when_native_return_is_available(self):
         self.start_dead()
         self.tick(100)
         self.tick(221)
         self.assert_unsubmitted_wait()
         self.death_busy = False
         self.tick(300)
-        self.assertTrue(self.service.managed.running)
-        self.native.assert_called_once()
-        self.assertEqual(self.client.actions[0][0], 'return_town')
-        self.assertEqual(self.service.managed_transition['started'], 300)
-        self.assertEqual(self.service.managed_return_recovery['started'], 300)
-        self.teleporting = True
-        for now in (301, 419):
-            self.tick(now)
-            self.assertTrue(self.service.managed.running)
-            self.assertIsNotNone(self.service.managed_transition)
-            self.native.assert_called_once()
-        self.tick(420)
-        self.assertEqual(self.service.managed.phase, 'paused')
-        self.assertTrue(self.service.managed_can_resume)
-        self.native.assert_called_once()
-        self.assertEqual(self.service.managed.repeat_completed, 7)
+        self.tick(701)
+        self.assert_unsubmitted_wait()
+        self.preflight.assert_not_called()
 
     def test_existing_accepted_return_keeps_the_two_minute_receipt_fence(self):
         self.start_dead()
+        self.dead = False
         self.death_busy = False
         self.tick(100)
         self.native.assert_called_once()
         self.assertIsNotNone(self.service.managed_transition)
+        self.dead = True
         self.teleporting = True
         for now in (101, 160, 219):
             self.tick(now)
@@ -225,22 +215,23 @@ class ManagedDeathRecoveryTests(unittest.TestCase):
         self.assertTrue(self.service.managed_can_resume)
         self.native.assert_called_once()
 
-    def test_death_busy_after_an_accepted_interrupted_return_does_not_erase_its_budget(self):
+    def test_death_after_confirmed_cancelled_return_waits_for_native_revive(self):
         self.start_dead()
+        self.dead = False
         self.death_busy = False
         for now in (100, 101, 109):
             self.tick(now)
         self.native.assert_called_once()
         self.assertIsNone(self.service.managed_transition)
         self.assertEqual(self.service.managed_return_recovery['started'], 100)
+        self.dead = True
         self.death_busy = True
         self.tick(112)
         self.assertTrue(self.service.managed.running)
-        self.assertEqual(self.service.managed_return_recovery['started'], 100)
+        self.assertIsNone(self.service.managed_return_recovery)
         self.tick(221)
-        self.assertFalse(self.service.managed.running)
-        self.assertEqual(self.service.managed.phase, 'paused')
-        self.assertTrue(self.service.managed_can_resume)
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNone(self.service.managed_transition)
         self.native.assert_called_once()
 
     def test_recovered_live_run_preserves_the_need_to_finish(self):
@@ -290,7 +281,7 @@ class ManagedDeathRecoveryTests(unittest.TestCase):
         self.assertTrue(self.service.managed_can_resume)
         self.assertIsNone(self.service.managed_retry)
         self.assertIsNone(self.service.managed_return_recovery)
-        self.assertEqual(self.preflight.call_count, 1)
+        self.assertEqual(self.preflight.call_count, 0)
         self.native.assert_not_called()
         self.assertEqual(self.service.managed.metrics.state(), statistics)
 
@@ -311,7 +302,7 @@ class ManagedDeathRecoveryTests(unittest.TestCase):
         self.assertEqual(self.service.managed.phase, 'paused')
         self.assertIn('游戏连接已改变', self.service.managed.status)
         self.assertTrue(self.service.managed_can_resume)
-        self.assertEqual(self.preflight.call_count, 1)
+        self.assertEqual(self.preflight.call_count, 0)
         self.assertIsNone(self.service.managed_transition)
         self.assertIsNone(self.service.managed_return_recovery)
         self.native.assert_not_called()
@@ -327,7 +318,7 @@ class ManagedDeathRecoveryTests(unittest.TestCase):
         self.assertFalse(self.service.managed_can_resume)
         self.assertIsNone(self.service.managed_retry)
         self.assertIsNone(self.service.managed_return_recovery)
-        self.assertEqual(self.preflight.call_count, 1)
+        self.assertEqual(self.preflight.call_count, 0)
         self.native.assert_not_called()
 
 

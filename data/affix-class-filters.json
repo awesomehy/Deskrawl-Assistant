@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "scope": "Legendary random primary affixes by generation HeroClass. Secondary affixes are not class filtered; divine fixed stats are excluded.",
+  "source": {
+    "game_version": "1.0.3",
+    "gameAssemblySha256": "f23ae23f8714fa5a49b9ab4b8ae767c33f7e50afad47284d81121354d1677a46",
+    "metadataSha256": "93f914c1e0119b82c98ca0647542c3afe0fade976d456f2212b03d699e6813de",
+    "assetsSha256": "6fd77bbdbbc0aa08aa79e37f401e17dd6ed3120d16deb0ead4810e0c524ebc80",
+    "primary_filter": "gk.dqm @ RVA 0x793c80 -> gk.dqn @ RVA 0x793d40",
+    "secondary_sampling": "gk.dqb @ RVA 0x792628..0x792649 (no class filter)"
+  },
+  "classes": {"Barbarian": 1, "Mage": 2, "Hunter": 4, "Monk": 8},
+  "primary_exclusion_masks": {
+    "Stats.Strength": 14,
+    "Stats.Dexterity": 3,
+    "Stats.Intelligence": 13,
+    "Stats.DamagePhysical": 2,
+    "Stats.DamageFire": 12,
+    "Stats.DamageCold": 13,
+    "Stats.DamageLightning": 5,
+    "Stats.DamagePoison": 11,
+    "Stats.DamageArcane": 11,
+    "Stats.DamageVsBleeding": 14,
+    "Stats.DamageVsPoisoned": 11,
+    "Stats.DamageVsDistant": 9,
+    "Stats.DamageOverTime": 8,
+    "Stats.DamageVsBurned": 13
+  }
+}

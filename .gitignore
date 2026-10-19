@@ -25,6 +25,7 @@ data/*
 !data/game-catalog.json
 !data/equipment-ui.json
 !data/affix-groups-static.json
+!data/affix-class-filters.json
 !data/runtime-type-hints.json
 !data/ui-runtime-hints.json
 !data/transfer-extra-types.json
@@ -120,3 +121,5 @@ docs/*
 !docs/1.3.6验收说明.md
 
 !docs/1.3.7验收说明.md
+
+!docs/1.3.8验收说明.md

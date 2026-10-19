@@ -1600,6 +1600,9 @@ class ManagedMode:
             return
         if run_id in self.stargazing_skipped: return
         if status not in ('success', 'failed') or run_id is None or str(run_id) in self.handled_runs: return
+        # Native revival can resume this same run. Death alone must not move
+        # the push target backwards or consume this run's terminal receipt.
+        if status == 'failed' and scene.get('dead') is True: return
         # Death is reversible through native revival in the same RunPlan.
         # Only successful repeat runs consume their success deduplication key.
         if self.settings['farming']['mode']=='repeat' and status != 'success': return
@@ -1700,6 +1703,22 @@ class ManagedMode:
         self.status = '局内切图连续被拒绝，改为回城整理后重进。'
         return True
 
+    def stargazing_travel_failed(self, action, scene):
+        """Keep this run after confirmed cancelled portals, never an unknown write."""
+        if action.get('reason_code') != 'stargazing_skip' or self.finishing:
+            return False
+        self.stargazing_return = None
+        run = run_record(scene.get('run'))
+        if (run.get('id') == action.get('source_run_id')
+                and run.get('status') in ('running', 'settling')
+                and run.get('completion_confirmed') is not True):
+            self.stargazing_seen.add(run['id'])
+            self.stargazing_state.update(verdict='keep', hits=[],
+                reason='观星回城多次被打断，本局继续完成，下局再筛选。')
+        self.phase = 'farming'
+        self.status = '观星跳过未完成，重新读取当前关卡；不再反复回城。'
+        return True
+
     def next_action(self, observation):
         if not self.running: return None
         if not self.check_identity(observation,
@@ -1728,8 +1747,9 @@ class ManagedMode:
                     and scene.get('dead') is True and not self._town(observation)):
                 # Death recovery must not depend on a still-readable wave plan,
                 # merchant data, or growth data while the character is dead.
-                self.phase = 'returning'
-                return self._action('return_town', reason='角色已死亡，返回主城整理后继续刷图。')
+                self.phase = 'farming'
+                self.status = '角色已死亡，等待游戏原生复活后重新判断关卡。'
+                return None
             if growth_enabled(self.settings) and observation.get('progression', {}).get('busy') is True:
                 self.status = '等待游戏完成在线同步，已确认的动作不会重复执行。'; return None
             if self.finishing:

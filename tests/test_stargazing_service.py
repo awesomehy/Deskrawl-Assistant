@@ -179,6 +179,39 @@ class StargazingServiceTests(unittest.TestCase):
         self.assertEqual(self.service.managed.target_dungeon,'offline-map')
         self.assertEqual(self.service.managed.phase,'cleanup')
 
+    def test_three_confirmed_cancelled_stargazing_returns_finish_current_run_without_a_skip(self):
+        self.request_town_for_stargazing()
+        for now in (101,109,112,113,121,124,125,133,140,300):
+            with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=now):
+                self.service._managed_once()
+        self.assertTrue(self.service.managed.running)
+        self.assertEqual(self.service.managed.stargazing_state['verdict'],'keep')
+        self.assertEqual(self.service.managed.stargazing_state['skipped'],0)
+        self.assertEqual(self.service.managed.repeat_completed,0)
+        self.assertEqual([row[0] for row in self.client.actions],['return_town']*3)
+        self.assertIsNone(self.service.managed_transition)
+        self.assertIsNone(self.service.managed_return_recovery)
+        self.assertIsNone(self.service.managed.stargazing_return)
+        self.client.run_status='success'
+        self.service._managed_once()
+        self.service._managed_once()
+        self.assertEqual(self.service.managed.repeat_completed,1)
+        self.assertEqual(self.service.managed.stargazing_state['skipped'],0)
+
+    def test_stargazing_live_portal_still_pauses_without_repeated_dispatch(self):
+        self.request_town_for_stargazing()
+        original=self.client.control_snapshot
+        def teleporting():
+            result=original();result['teleporting']=True;return result
+        self.client.control_snapshot=teleporting
+        for now in (101,130,221):
+            with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=now):
+                self.service._managed_once()
+        self.assertFalse(self.service.managed.running)
+        self.assertEqual(self.service.managed.phase,'paused')
+        self.assertEqual(self.service.managed.stargazing_state['skipped'],0)
+        self.assertEqual([row[0] for row in self.client.actions],['return_town'])
+
     def test_town_arrival_after_new_run_does_not_commit_old_skip(self):
         self.request_town_for_stargazing()
         self.run_id='another-run'

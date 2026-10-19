@@ -18,6 +18,7 @@ from .native_memory import MemoryReadError, SnapshotChangedError
 from .paths import RESOURCE_ROOT
 from .recommendation_reader import _Copy
 from .stat_display import preview_value
+from .mythic import MAP_ID as MYTHIC_MAP, MYTHIC, floor_id
 
 
 MAX_WAVES = 512
@@ -267,6 +268,14 @@ def _snapshot(reader, raw_sink=None):
     run_id, map_id, difficulty = copy.text(plan, 16), copy.text(plan, 24), copy.text(plan, 48)
     if not run_id or not map_id or copy.asset_name(active_map) != map_id:
         raise SnapshotChangedError('本次掉落计划与活动关卡尚未一致。')
+    raw_map_id = map_id
+    world_difficulty = 'Inferno' if difficulty == 'Inferno1' else difficulty
+    mythic_floor = None
+    if copy.integer(active_map + 32) == 1:
+        mythic_floor = copy.integer(plan + 64)
+        if map_id != MYTHIC_MAP or mythic_floor != copy.integer(wave_manager + 304):
+            raise SnapshotChangedError('神话裂隙掉落计划与当前层数尚未一致。')
+        map_id = floor_id(mythic_floor)
     current_wave = copy.integer(wave_manager + 48)
     wave_objects = copy.array(copy.ptr(plan + 88), 8, 'RunWave', limit=MAX_WAVES)
     if not wave_objects or not 0 <= current_wave <= len(wave_objects):
@@ -279,7 +288,7 @@ def _snapshot(reader, raw_sink=None):
     raw_waves = []
     raw_run = None
     if raw_sink is not None:
-        raw_run = {'runId':run_id, 'mapId':map_id, 'difficulty':difficulty,
+        raw_run = {'runId':run_id, 'mapId':raw_map_id, 'difficulty':difficulty,
             'dataVersion':copy.text(plan,32), 'playerLevel':copy.integer(plan+40),
             'mythicTier':copy.integer(plan+64), 'waves':raw_waves}
         for name, offset in (('enemyHealthMultiplier',72), ('enemyDamageMultiplier',80)):
@@ -326,9 +335,10 @@ def _snapshot(reader, raw_sink=None):
         warnings.append('难度名称未在本地词典中确认，已显示原始名称。')
     return {'available': True, 'phase': 'active', 'reason': '',
             'run': {'key': hashlib.sha256((reader.session_id + '\0' + run_id).encode()).hexdigest(),
-                    'id': hashlib.sha256(run_id.encode()).hexdigest(), 'difficulty': 'Inferno' if difficulty == 'Inferno1' else difficulty,
-                    'map_id': map_id, 'map_name': labels['maps'].get(map_id, map_id),
-                    'difficulty_label': DIFFICULTY_LABELS.get(difficulty, difficulty or '未确认难度'),
+                    'id': hashlib.sha256(run_id.encode()).hexdigest(), 'difficulty': MYTHIC if mythic_floor else world_difficulty,
+                    'world_difficulty': world_difficulty, 'mythic_floor': mythic_floor,
+                    'map_id': map_id, 'map_name': f'神话裂隙 · 层级 {mythic_floor}' if mythic_floor else labels['maps'].get(map_id, map_id),
+                    'difficulty_label': '神话裂隙' if mythic_floor else DIFFICULTY_LABELS.get(difficulty, difficulty or '未确认难度'),
                     'current_wave': current_wave, 'total_waves': len(waves)},
             'totals': {'items': count, 'equipment': sum(item['kind'] == 'equipment' for w in waves for item in w['items']),
                        'gold': sum(w['gold'] for w in waves), 'potion_charges': sum(w['potion_charges'] for w in waves)},

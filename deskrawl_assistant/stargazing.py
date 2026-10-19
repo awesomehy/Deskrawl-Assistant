@@ -4,6 +4,7 @@ import hashlib
 import json
 
 from .loot_plan_reader import MAX_ITEMS, MAX_ITEMS_PER_WAVE, MAX_WAVES
+from .mythic import MYTHIC, WORLD_DIFFICULTIES, floor_number
 
 from .models import ValidationError
 
@@ -170,6 +171,12 @@ def decide(plan, observation, settings):
             or str(planned.get('map_id')) != str(scene.get('dungeon_id'))
             or planned.get('difficulty') != scene.get('difficulty')):
         return {**waiting, 'reason': '掉落计划与当前局尚未对应，等待重新核验。'}
+    if scene.get('difficulty') == MYTHIC and (
+            floor_number(scene.get('dungeon_id')) is None
+            or planned.get('mythic_floor') != floor_number(scene['dungeon_id'])
+            or planned.get('world_difficulty') not in WORLD_DIFFICULTIES
+            or planned['world_difficulty'] != scene.get('world_difficulty')):
+        return {**waiting, 'reason': '裂隙层数或世界难度尚未对应，等待重新核验。'}
     try:
         _, waves, flattened = _complete_plan(plan, str(scene.get('dungeon_id')), None)
         fingerprint = _fingerprint(planned, waves)

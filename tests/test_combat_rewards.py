@@ -179,13 +179,16 @@ class CompletionRewardTests(unittest.TestCase):
         self.add_ground(equipment('boss', container='ground'))
         self.assertEqual(self.step(1)['kind'], 'collect_ground')
 
-    def test_death_recovery_does_not_wait_for_unpickable_ground_rewards(self):
+    def test_death_waits_for_native_revival_with_ground_rewards_retained(self):
         self.assertIsNone(self.step(0))
         self.world['scene']['dead'] = True
         self.add_ground(equipment('boss', container='ground'))
-        action = self.step(1)
-        self.assertEqual(action['kind'], 'return_town')
-        self.assertNotIn('protect_completion_rewards', action)
+        self.assertIsNone(self.step(1))
+        self.assertTrue(self.engine.running)
+        self.assertIsNone(self.engine.pending)
+        self.assertIn('复活', self.engine.status)
+        self.world['scene']['dead'] = False
+        self.assertEqual(self.step(2)['kind'], 'collect_ground')
 
     def test_partial_batch_remains_on_native_repeat_and_does_not_force_return(self):
         self.engine.repeat_maps[0]['runs'] = 2

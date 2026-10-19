@@ -11,6 +11,7 @@ from .catalog import load_catalog
 from .models import Rule, ValidationError
 from .rules import LockPlanner, rules_from_dict, evaluate, DEFAULT_MIN_CONFIDENCE, primary_perfect_rules
 from .runtime_adapter import RuntimeAdapter, RuntimeReadEvidence, headline_stats
+from .affix_pools import editor_pools
 from .stat_display import preview_value
 from .runtime_client import RuntimeClient
 from .native_memory import SnapshotChangedError, GameBusyError
@@ -60,6 +61,7 @@ class AssistantService(ManagedServiceMixin):
         self.item_ui = json.loads((BASE / 'data/item-ui.json').read_text(encoding='utf-8'))
         self.loot_item_ui = json.loads((BASE / 'data/loot-item-ui.json').read_text(encoding='utf-8'))
         self.pools = json.loads((BASE / 'data/affix-groups-static.json').read_text(encoding='utf-8'))
+        self.affix_class_filters = json.loads((BASE / 'data/affix-class-filters.json').read_text(encoding='utf-8'))
         self.adapter = RuntimeAdapter(self.catalog, BASE / 'data/affix-groups-static.json')
         self.client = client or RuntimeClient()
         self.market = None
@@ -463,6 +465,7 @@ class AssistantService(ManagedServiceMixin):
 
     def catalog_payload(self):
         from .synthesis import rune_quality
+        pools, class_pools = editor_pools(self.pools['slotPools'], self.affix_class_filters)
         localized = json.loads((BASE / 'data/game-catalog.json').read_text(encoding='utf-8'))['tables']['Equipments']['entries']
         equipment = []
         for key, item in self.ui['equipment'].items():
@@ -484,8 +487,7 @@ class AssistantService(ManagedServiceMixin):
         return {'equipment':equipment,'stats':[{'key':k,'name':e.label,'en':e.en} for k,e in self.catalog.stats.items()],
             'classes':[{'key':k,'name':v,'value':self.ui['enums']['HeroClass'][k]} for k,v in CLASS_LABELS.items()],
             'slots':[{'key':k,'name':v} for k,v in SLOT_LABELS.items()],
-            'pools':{p['slot']:{g:[key for key in p[g] if key not in headline_stats(p['slot'])]
-                for g in ('primary','secondary')} for p in self.pools['slotPools']},
+            'pools':pools, 'class_pools':class_pools,
             'headline_stats':{p['slot']:sorted(headline_stats(p['slot'])) for p in self.pools['slotPools']},
             'collectibles':collectibles}
 

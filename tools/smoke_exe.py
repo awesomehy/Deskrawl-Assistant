@@ -23,7 +23,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.3.7'
+NAME = 'Deskrawl装备助手-v1.3.8'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -67,6 +67,8 @@ def main():
     assert 'deskrawl_assistant/web/inventory-tools.js' in normalized
     bundled_modules = archive.open_embedded_archive(next(n for n in names if n.endswith('.pyz')))
     assert 'deskrawl_assistant.stargazing' in bundled_modules.toc
+    assert 'deskrawl_assistant.affix_pools' in bundled_modules.toc
+    assert 'data/affix-class-filters.json' in normalized
     assert 'deskrawl_assistant.community_stats' in bundled_modules.toc
     assert 'deskrawl_assistant.statistics_reader' in bundled_modules.toc
     for module in ('combat_rewards', 'game_lifecycle', 'mythic'):
@@ -112,7 +114,7 @@ def main():
                 result = {'schema': 1, 'client_id': payload['client_id'], 'token': 'a' * 64}
             elif self.path == '/v1/report':
                 assert self.headers.get('Authorization') == 'Bearer ' + 'a' * 64
-                assert payload['version'] == '1.3.7'
+                assert payload['version'] == '1.3.8'
                 result = {'accepted': True, 'report_id': payload['report_id'],
                           'sequence': payload['sequence'], 'accepted_at': datetime.now(timezone.utc).isoformat()}
             else:
@@ -180,7 +182,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.3.7'
+                assert request('/api/state')['app_version'] == '1.3.8'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -307,6 +309,9 @@ def main():
         report['checks'].append('停用的报告接口返回410，不创建经验或推荐数据库')
         catalog = request('/api/catalog')
         assert len(catalog['equipment']) == 223
+        assert set(catalog['class_pools']) == {'1', '2', '4', '8'}
+        assert [len(catalog['class_pools'][c]['Weapon']['primary']) for c in ('1','2','4','8')] == [17,19,19,15]
+        report['checks'].append('四职业传说随机词条池配置与模块已内置，打包版接口返回对应候选')
         assert sum(i['legendary'] for i in catalog['equipment']) == 64
         for item in catalog['equipment']:
             assert request(item['icon']).startswith(b'\x89PNG')

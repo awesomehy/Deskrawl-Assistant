@@ -4,6 +4,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;
 const desktopMode=new URLSearchParams(location.search).get('desktop')==='1';
 let token = document.querySelector('meta[name="assistant-token"]').content;
 let catalog, state, gearKey, draft, dirty=false, selectedClass=0, detailId=null;
+let affixClass=null;
 let selectedItems=new Set(), itemSignature='', catalogSignature='', polling=false, toastTimer, exiting=false;
 const gearMap=new Map(), statMap=new Map();
 let lastRules='';
@@ -105,20 +106,36 @@ function makeDraft(rule){
 }
 async function chooseGear(key,ruleId){
   if(dirty&&!await confirmAction('切换装备配置？','当前配置还没有保存。切换后将放弃这些改动。','放弃改动并切换',false)){renderEditor();return;}
+  affixClass=preferredAffixClass(gearMap.get(key));
   gearKey=key;const candidates=rulesFor(key);const rule=candidates.find(r=>r.id===ruleId)||candidates[0];
   draft=makeDraft(rule);setDirty(false);renderCatalog();renderEditor();
   const grid=$('equipment-grid'),active=grid.querySelector('.gear-card.active');
   if(active){const area=grid.getBoundingClientRect(),card=active.getBoundingClientRect();if(card.bottom>area.bottom)grid.scrollTop+=card.bottom-area.bottom+10;else if(card.top<area.top)grid.scrollTop+=card.top-area.top-10;}
 }
+function preferredAffixClass(gear){
+  if(selectedClass&&(gear.class_mask&selectedClass))return selectedClass;
+  if(affixClass===0||(affixClass!==null&&(gear.class_mask&affixClass)))return affixClass;
+  const character=state?.character,live=character?.available===true?character.class_mask:null;
+  if(catalog.classes.some(c=>c.value===live)&&(gear.class_mask&live))return live;
+  return catalog.classes.find(c=>gear.class_mask&c.value)?.value??0;
+}
+function currentAffixPool(group){
+  const gear=gearMap.get(gearKey);
+  return (catalog.class_pools?.[affixClass]?.[gear.slot]||catalog.pools[gear.slot])?.[group]||[];
+}
+function affixClassMarkup(){
+  if(!catalog.class_pools)return '';
+  return `<label class="combination-name affix-class-select">词条池职业<select id="affix-class" aria-label="词条池职业"><option value="0" ${affixClass===0?'selected':''}>全部职业 · 合并查看</option>${catalog.classes.map(c=>`<option value="${c.value}" ${affixClass===c.value?'selected':''}>${esc(c.name)}</option>`).join('')}</select></label><p class="note">按装备生成职业显示随机主词条，副词条遵循游戏原生部位池。切换只改变候选项，已选词条保留。</p>`;
+}
 function groupMarkup(group,title){
   const gear=gearMap.get(gearKey),optional=group==='secondary',enabled=!optional||draft.secondaryEnabled;
-  const pool=catalog.pools[gear.slot]?.[group]||[],selected=draft[group];
+  const pool=currentAffixPool(group),broad=catalog.pools[gear.slot]?.[group]||[],selected=draft[group];
   const options=[...pool,...selected.filter(key=>!pool.includes(key))];
   return `<div class="affix-group ${enabled?'':'disabled'}" data-group="${group}"><div class="group-heading"><div class="group-title"><span class="step">${optional?'2':'1'}</span><h3>${title}</h3></div>
     ${optional?`<label class="group-toggle"><input type="checkbox" id="secondary-enabled" ${enabled?'checked':''}>启用副词条筛选</label>`:'<small>先判断这一组</small>'}</div>
     <div class="count-line">选中的词条，至少命中 <input type="number" min="1" max="${Math.max(1,selected.length)}" value="${draft[group+'Count']}" data-count="${group}" aria-label="${title}至少命中数量" ${enabled?'':'disabled'}> 类<span class="selected-total" data-total="${group}">已选 ${selected.length} 类</span></div>
     <input class="affix-search" data-affix-search="${group}" placeholder="搜索${title}…" aria-label="搜索${title}" ${enabled?'':'disabled'}>
-    <div class="affix-options">${options.length?options.map(key=>`<label class="affix-chip ${selected.includes(key)?'checked':''}" data-stat-name="${esc((statMap.get(key)?.name+' '+statMap.get(key)?.en).toLowerCase())}"><input type="checkbox" data-affix="${esc(key)}" data-group="${group}" ${selected.includes(key)?'checked':''} ${enabled?'':'disabled'}>${esc(statMap.get(key)?.name||key)}${!pool.includes(key)?' · 不参与筛选，请取消勾选':''}</label>`).join(''):'<div class="note">此部位的本地随机词条池为空，目前无法配置该组条件。</div>'}</div></div>`;
+    <div class="affix-options">${options.length?options.map(key=>`<label class="affix-chip ${selected.includes(key)?'checked':''}" data-stat-name="${esc((statMap.get(key)?.name+' '+statMap.get(key)?.en).toLowerCase())}"><input type="checkbox" data-affix="${esc(key)}" data-group="${group}" ${selected.includes(key)?'checked':''} ${enabled?'':'disabled'}>${esc(statMap.get(key)?.name||key)}${!broad.includes(key)?' · 不参与筛选，请取消勾选':!pool.includes(key)?' · 其他职业已选':''}</label>`).join(''):'<div class="note">此部位的本地随机词条池为空，目前无法配置该组条件。</div>'}</div></div>`;
 }
 function renderEditor(){
   if(!gearKey||!draft)return;
@@ -131,6 +148,7 @@ function renderEditor(){
     <p class="combination-note">这件装备有 ${existing.length} 个已保存组合，${existing.filter(r=>r.enabled).length} 个启用。满足任意一个启用组合，即符合规则。</p>
     <div class="rule-state"><label><input type="checkbox" id="rule-enabled" ${draft.enabled?'checked':''}>启用当前词条组合</label><span id="draft-status">${dirty?'有未保存的改动':draft.id?'已保存':'尚未配置'}</span></div>
     ${draft.legacy?'<div class="inline-error">这是旧版数值规则；保存将改为当前主、副词条数量规则。</div>':''}
+    ${affixClassMarkup()}
     ${groupMarkup('primary','主词条')}<div class="flow-label">↓ 主词条达标后，再检查副词条</div>${groupMarkup('secondary','副词条')}
     <div id="rule-summary" class="rule-summary"></div><div id="rule-error" class="inline-error" hidden></div>
     <p class="note">每个组合独立判断主、副词条。只需所选池中任意 n 类达标；同类型只算一次，基础属性不参与计数。一键锁定和持续监控都会检查所有启用组合。</p></div>
@@ -502,10 +520,11 @@ $('game-close').addEventListener('click',async()=>{
 });
 $('refresh').addEventListener('click',()=>action('read'));
 $('equipment-search').addEventListener('input',renderCatalog);$('slot-filter').addEventListener('change',renderCatalog);$('configured-filter').addEventListener('change',renderCatalog);
-$('class-filters').addEventListener('click',e=>{const button=e.target.closest('[data-class]');if(!button)return;selectedClass=Number(button.dataset.class);document.querySelectorAll('[data-class]').forEach(b=>b.classList.toggle('selected',b===button));renderCatalog();});
+$('class-filters').addEventListener('click',e=>{const button=e.target.closest('[data-class]');if(!button)return;selectedClass=Number(button.dataset.class);document.querySelectorAll('[data-class]').forEach(b=>b.classList.toggle('selected',b===button));renderCatalog();if(selectedClass&&gearKey&&(gearMap.get(gearKey).class_mask&selectedClass)){affixClass=selectedClass;renderEditor();}});
 $('equipment-grid').addEventListener('click',e=>{const card=e.target.closest('[data-gear]');if(card)chooseGear(card.dataset.gear);});
 $('rule-editor').addEventListener('change',async e=>{
   const input=e.target;
+  if(input.id==='affix-class'){affixClass=Number(input.value);renderEditor();}
   if(input.dataset.affix){const g=input.dataset.group,key=input.dataset.affix;draft[g]=input.checked?[...new Set([...draft[g],key])]:draft[g].filter(s=>s!==key);input.closest('label').classList.toggle('checked',input.checked);markDirty();}
   if(input.id==='rule-enabled'){draft.enabled=input.checked;markDirty();}
   if(input.id==='secondary-enabled'){draft.secondaryEnabled=input.checked;markDirty();renderEditor();$('draft-status').textContent='有未保存的改动';}

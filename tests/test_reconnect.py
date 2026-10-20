@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 from deskrawl_assistant.managed_mode import DEFAULT_SETTINGS, validate_settings
 from deskrawl_assistant.models import ValidationError
 from deskrawl_assistant.reconnect import ReconnectFlow, DEFAULT_RECONNECT
-from deskrawl_assistant.reconnect_runtime import ReconnectRuntime
+from deskrawl_assistant.reconnect_runtime import ReconnectRuntime, _notice_kind
 from deskrawl_assistant.native_dispatcher import NativeActionError, GUARD_FAILED
 from deskrawl_assistant.native_memory import MemoryReadError
 import test_managed_service as service_tests
@@ -30,6 +30,7 @@ class ReconnectFlowTests(unittest.TestCase):
     def flow(self):
         flow = ReconnectFlow()
         flow.active, flow.started = True, 0
+        flow.selection_confirmed = True
         return flow
 
     def test_old_configuration_migrates_disabled_without_replacing_other_preferences(self):
@@ -73,6 +74,28 @@ class ReconnectFlowTests(unittest.TestCase):
         for text in ('出售确认', '删除角色', '在线同步失败'):
             self.assertEqual(self.flow().decide(menu(popup_visible=True, text=text), CONFIG, CHARACTER, 5)['kind'], 'wait')
 
+    def test_server_failure_only_retries_in_an_armed_flow_and_after_start_backoff(self):
+        state = menu(popup_visible=True, retryable_network_error=True, confirm_ready=True)
+        self.assertEqual(ReconnectFlow().decide(state, CONFIG, CHARACTER, 0)['kind'], 'idle')
+        flow = self.flow()
+        flow.submitted('play', 5)
+        self.assertEqual(flow.decide(state, CONFIG, CHARACTER, 10)['kind'], 'wait')
+        self.assertEqual(flow.decide(state, CONFIG, CHARACTER, 35)['kind'], 'confirm_network_error')
+        self.assertEqual(flow.decide(dict(state, confirm_ready=False), CONFIG, CHARACTER, 35)['kind'], 'wait')
+        flow.submitted('confirm_network_error', 35)
+        self.assertEqual(flow.decide(menu(), CONFIG, CHARACTER, 36)['kind'], 'wait')
+        self.assertEqual(flow.decide(menu(), CONFIG, CHARACTER, 40)['kind'], 'select_character')
+        flow.submitted('select_character', 40)
+        self.assertEqual(flow.decide(menu(), CONFIG, CHARACTER, 45)['kind'], 'play')
+
+    def test_notice_allowlist_never_accepts_delegates_or_generic_errors(self):
+        self.assertEqual(_notice_kind('连接已断开。\n(SteamID private)', False), 'disconnect')
+        self.assertEqual(_notice_kind('无法连接服务器。\n(SteamID private)', False), 'server_unavailable')
+        for text in ('无法连接服务器。', '连接已断开。', '删除角色'):
+            self.assertIsNone(_notice_kind(text, True))
+        for text in ('无法连接服务器。是否购买？', '删除角色', '', None):
+            self.assertIsNone(_notice_kind(text, False))
+
     def test_missing_identity_and_offline_identity_pause(self):
         for character in (None, '', '0:0:离线角色'):
             self.assertEqual(self.flow().decide(menu(), CONFIG, character, 5)['kind'], 'pause')
@@ -105,6 +128,8 @@ class ReconnectRuntimeTests(unittest.TestCase):
 
     def test_only_guarded_original_callbacks_are_invoked(self):
         for state, kind, method in [(disconnect(), 'confirm_disconnect', 'PopupPanel.confirm_disconnect'),
+                (menu(popup_visible=True, retryable_network_error=True, confirm_ready=True),
+                 'confirm_network_error', 'PopupPanel.confirm_disconnect'),
                 (menu(selected_slot=-1), 'select_character', 'MainMenuUI.select_character'),
                 (menu(), 'play', 'MainMenuUI.play'), (menu(mode=0), 'online_tab', 'MainMenuUI.online_tab')]:
             with patch.object(self.runtime, '_read', return_value=(state, self.context, self.read)):

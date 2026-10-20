@@ -4,6 +4,13 @@ from .native_memory import MemoryReadError
 from .native_dispatcher import Argument, Invocation, NativeActionError
 
 
+def _notice_kind(text, has_actions):
+    if has_actions or not text:
+        return None
+    return {'连接已断开。': 'disconnect', '无法连接服务器。': 'server_unavailable'}.get(
+        text.splitlines()[0].strip())
+
+
 class ReconnectRuntime:
     def __init__(self, actions):
         self.actions = actions
@@ -56,14 +63,16 @@ class ReconnectRuntime:
         popup = read.singleton('PopupPanel')
         popup_visible = self._active(read, read.ptr(popup + 32))
         text = self._popup_text(read, read.ptr(popup + 40)) if popup_visible else ''
-        # Only the actual observed disconnect notice, with no delegate, may be
-        # acknowledged. Generic errors, purchases and deletion prompts cannot.
-        disconnected = (popup_visible and text.splitlines()[0].strip() == '连接已断开。'
-                        and not read.ptr(popup + 64) and not read.ptr(popup + 72)) if text else False
+        # Only exact observed network notices with no delegate can be dismissed.
+        # The retry notice cannot arm login; the owning flow must have observed
+        # an actual disconnect first. Generic and destructive prompts stay manual.
+        notice = _notice_kind(text, bool(read.ptr(popup + 64) or read.ptr(popup + 72))) if popup_visible else None
+        disconnected = notice == 'disconnect'
         state = {'in_game': game_state == 1, 'popup_visible': popup_visible,
-                 'disconnected': disconnected, 'menu_ready': False}
+                 'disconnected': disconnected, 'retryable_network_error': notice == 'server_unavailable',
+                 'menu_ready': False}
         context = {'popup': popup}
-        if disconnected:
+        if notice:
             state['confirm_ready'] = self._interactable(read, read.ptr(popup + 48))
         if game_state == 0:
             menu = read.singleton('MainMenuUI')
@@ -96,10 +105,13 @@ class ReconnectRuntime:
         # The owning managed flow already observed the disconnect, then each
         # callback is independently re-planned against a fresh native snapshot.
         flow.active, flow.started = True, 0
+        # The owning flow remembers whether it has selected this attempt. Here
+        # recheck the requested callback against native slot and role guards.
+        flow.selection_confirmed = kind != 'select_character'
         planned = flow.decide(state, settings, expected_character, 0)['kind']
         if kind != planned:
             raise NativeActionError('重连界面已变化，等待重新读取。')
-        if kind == 'confirm_disconnect':
+        if kind in {'confirm_disconnect', 'confirm_network_error'}:
             if state.get('confirm_ready') is not True:
                 raise NativeActionError('掉线确认按钮尚不可用。')
             call = Invocation('PopupPanel.confirm_disconnect', context['popup'], mutates=True)

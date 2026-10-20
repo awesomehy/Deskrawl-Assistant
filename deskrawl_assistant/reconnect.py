@@ -21,6 +21,7 @@ class ReconnectFlow:
         self.started = None
         self.next_at = 0
         self.attempts = {}
+        self.selection_confirmed = False
 
     def decide(self, state, settings, expected_character, now):
         if not settings['enabled']:
@@ -36,7 +37,8 @@ class ReconnectFlow:
             return {'kind': 'pause', 'reason': '断线重连等待超过 10 分钟，请检查网络或游戏提示后继续托管。'}
         if state.get('in_game') is True and state.get('popup_visible') is not True:
             return {'kind': 'verify', 'reason': '已进入游戏，正在核对原角色和背包数据。'}
-        if state.get('popup_visible') is True and state.get('disconnected') is not True:
+        if (state.get('popup_visible') is True and state.get('disconnected') is not True
+                and state.get('retryable_network_error') is not True):
             return {'kind': 'wait', 'reason': '重连遇到其他游戏提示，请手动处理；不会自动确认该弹窗。'}
         if now < self.next_at:
             return {'kind': 'wait', 'reason': '等待游戏确认重连操作，不重复点击。'}
@@ -44,6 +46,10 @@ class ReconnectFlow:
             if state.get('confirm_ready') is not True:
                 return {'kind': 'wait', 'reason': '等待掉线确认按钮可用。'}
             return {'kind': 'confirm_disconnect', 'reason': '确认掉线提示，等待在线角色列表。'}
+        if state.get('retryable_network_error') is True:
+            if state.get('confirm_ready') is not True:
+                return {'kind': 'wait', 'reason': '等待连接失败提示的确认按钮可用。'}
+            return {'kind': 'confirm_network_error', 'reason': '服务器暂时无法连接，确认提示后间隔重试。'}
         if not state.get('menu_ready'):
             return {'kind': 'wait', 'reason': '等待游戏返回角色选择界面。'}
         if state.get('mode') != 1:
@@ -60,7 +66,7 @@ class ReconnectFlow:
         # The chosen list position may differ from the native save-slot number.
         if str(entry.get('slot')) != expected_character.split(':', 2)[1]:
             return {'kind': 'pause', 'reason': '重连所选序号与原托管角色不同，已暂停，避免对其他角色执行整理。'}
-        if state.get('selected_slot') != entry['slot']:
+        if state.get('selected_slot') != entry['slot'] or not self.selection_confirmed:
             return {'kind': 'select_character', 'reason': f'选择列表第 {index} 个角色。'}
         if state.get('play_ready') is not True:
             return {'kind': 'wait', 'reason': '等待游戏允许开始在线游戏。'}
@@ -68,6 +74,10 @@ class ReconnectFlow:
 
     def submitted(self, kind, now):
         self.attempts[kind] = self.attempts.get(kind, 0) + 1
+        if kind in ('confirm_disconnect', 'confirm_network_error', 'online_tab'):
+            self.selection_confirmed = False
+        elif kind == 'select_character':
+            self.selection_confirmed = True
         # Start can be accepted without immediately leaving the menu. Give the
         # native cloud request time; retries still require the full fresh UI.
         self.next_at = now + (30 if kind == 'play' else 5)

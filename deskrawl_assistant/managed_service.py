@@ -17,6 +17,7 @@ from .stargazing import enabled as stargazing_enabled, decide as stargazing_deci
 from .loot_preview import decorate_equipment
 from .item_protection import disposal_protection, mandatory_storage
 from .action_log import record
+from .reconnect import ReconnectFlow
 from .progression import catalog as growth_catalog, growth_action, next_purchase, NEW_ACTIONS, PURCHASE_BATCH_LIMIT, enabled as growth_enabled
 
 SYNTHESIS_ACTIONS = ('synthesize_gems', 'synthesize_runes')
@@ -135,6 +136,8 @@ class ManagedServiceMixin:
         self.managed_transition = None
         self.managed_retry = None
         self.managed_return_recovery = None
+        self.managed_reconnect = ReconnectFlow()
+        self._managed_reconnect_read_since = None
         self.managed_elapsed = 0
         self.managed_config_error = ''
         self.managed_config_load_failed = False
@@ -470,6 +473,9 @@ class ManagedServiceMixin:
             observation = self._managed_observation()
             with self.guard:
                 if self.cancelled.is_set(): raise ValidationError('托管启动已取消。')
+                if (self.managed.settings['reconnect']['enabled']
+                        and not (observation.get('character_id') or '').startswith('1:')):
+                    raise ValidationError('启用断线重连前，请先进入在线角色并完整读取角色身份。')
                 refreshed = self.managed_page()
                 if not refreshed['can_start']:
                     raise ValidationError('托管能力发生变化：'+'；'.join(refreshed['blocked_reasons']))
@@ -511,6 +517,8 @@ class ManagedServiceMixin:
                     self.managed_elapsed = 0
                     self.managed_history = []
                 self.managed_started_clock = time.monotonic()
+                self.managed_reconnect = ReconnectFlow()
+                self._managed_reconnect_read_since = None
                 self.managed_can_resume = False
                 self.journal.append('system','managed_started','启动托管模式')
         finally:
@@ -536,11 +544,16 @@ class ManagedServiceMixin:
             if self.operation_kind!='managed': self._managed_freeze_clock()
             if self.operation_kind!='managed': self.managed_retry = None
             if self.operation_kind!='managed': self.managed_return_recovery = None
+            if self.operation_kind!='managed':
+                self.managed_reconnect = ReconnectFlow()
+                self._managed_reconnect_read_since = None
         return self.managed_page()
 
     def finish_managed(self):
         """User stop is graceful; error/disconnect/shutdown use stop_managed."""
         with self.guard:
+            if self.managed_reconnect.active:
+                return self.stop_managed(reason='重连期间已停止托管，不再自动登录游戏。')
             if self.closed.is_set() or self.updating: raise ValidationError('助手正在退出或更新。')
             if self.managed_stop_request is not None: raise ValidationError('正在等待当前动作停止，请稍后再试。')
             if not self.managed.running and self.managed.phase != 'paused': return self.managed_page()
@@ -565,6 +578,8 @@ class ManagedServiceMixin:
             if request['pause']: self.managed.pause(request['reason'] or '托管已暂停。')
             else: self.managed.stop(request['reason'] or '托管已停止。')
         if not self.managed.running:
+            self.managed_reconnect = ReconnectFlow()
+            self._managed_reconnect_read_since = None
             self.managed_transition = None
             self.managed_retry = None
             self.managed_return_recovery = None
@@ -931,6 +946,7 @@ class ManagedServiceMixin:
 
     def _managed_once(self):
         self.managed_fast_followup = False
+        if self._managed_reconnect_once(): return self.managed.status
         observation = self._managed_observation()
         with self.guard:
             # The same bridge connection can remain alive across role changes.
@@ -1116,3 +1132,99 @@ class ManagedServiceMixin:
         self.managed_fast_followup = (result.get('verified') is True and action['kind'] in
             ('collect_ground','collect_carriage','lock','transfer','sell','salvage','merchant_open','merchant_close','merchant_buy','merchant_refresh',*SYNTHESIS_ACTIONS))
         return message
+
+    def _managed_pause_reconnect(self, reason):
+        # Preserve any acknowledged item/craft receipt fence. Login must never
+        # silently turn an uncertain spending operation into a fresh request.
+        self.managed._pause(reason + ' 托管已暂停，累计统计已保留。')
+        self.managed_can_resume = True
+        self._managed_freeze_clock()
+        record('managed_reconnect_paused', reason=reason)
+        return True
+
+    def _managed_reconnect_once(self):
+        """Intercept the menu BEFORE scanning inventory or running travel timers."""
+        config = self.managed.settings['reconnect']
+        reader = getattr(self.client, 'reconnect_snapshot', None)
+        if (not self.managed.running or not config['enabled'] or not callable(reader)
+                or self.cancelled.is_set() or not self.client.connected):
+            return False
+        flow = self.managed_reconnect
+        now = time.monotonic()
+        try:
+            state = reader()
+        except (OSError, RuntimeError, ValueError, KeyError) as exc:
+            with self.guard:
+                if not self.managed.running or self.cancelled.is_set(): return True
+                since = getattr(self, '_managed_reconnect_read_since', None)
+                if since is None:
+                    self._managed_reconnect_read_since = now
+                    record('managed_reconnect_read_wait', error_type=type(exc).__name__)
+                if (flow.active and now - flow.started >= 600
+                        or since is not None and now - since >= 120):
+                    return self._managed_pause_reconnect('重连状态持续不可读，请检查游戏界面。')
+                self.managed.status = '等待重连界面状态稳定，暂不执行物品操作。'
+            return True
+        self._managed_reconnect_read_since = None
+        with self.guard:
+            if not self.managed.running or self.cancelled.is_set(): return True
+            was_active = flow.active
+            decision = flow.decide(state, config, self.managed.character_id, now)
+            kind = decision['kind']
+            if kind == 'idle': return False
+            if self.managed.finishing:
+                self.managed.stop('掉线期间已请求结束托管，不再自动登录游戏。')
+                return True
+            if not was_active:
+                record('managed_reconnect_started', character_index=config['character_index'])
+            self.managed.phase = 'reconnecting'
+            self.managed.status = decision.get('reason', '断线重连中。')
+            if kind == 'pause': return self._managed_pause_reconnect(decision['reason'])
+            if kind == 'wait': return True
+        if kind == 'verify':
+            try:
+                observation = self._managed_observation()
+            except (OSError, RuntimeError, ValueError, KeyError):
+                # No planner call, publication from stale data or native writes
+                # until all authoritative in-game reads have recovered.
+                return True
+            with self.guard:
+                if not self.managed.running or self.cancelled.is_set(): return True
+                if observation.get('complete') is not True or observation.get('scene', {}).get('available') is not True:
+                    return True
+                if not self._managed_identity_ok(observation, require_character=True): return True
+                self.managed_transition = self.managed_retry = self.managed_return_recovery = None
+                self.managed.pending = None
+                if self.managed.await_effect and self.managed.await_effect['kind'] in (
+                        'return_town', 'enter_dungeon', 'merchant_open', 'merchant_close'):
+                    self.managed.await_effect = None
+                self.managed.await_count = 0
+                self.managed.merchant_opened = False
+                self.managed._baseline_runs(observation)
+                self.managed.phase = 'cleanup' if observation['scene'].get('in_town') is True else 'farming'
+                self.managed.reward_barrier = self.managed.phase == 'cleanup'
+                self.managed.barrier_reads = 0
+                self.managed.status = '断线重连成功，原角色数据已确认，继续本次托管。'
+                self.managed_reconnect = ReconnectFlow()
+                self.managed_fast_followup = True
+                record('managed_reconnect_resumed', character_index=config['character_index'])
+            return True
+        def active():
+            return (self.managed.running and not self.managed.finishing and not self.cancelled.is_set()
+                    and not self.closed.is_set() and self.managed_stop_request is None)
+        if not active(): return True
+        try:
+            result = self.client.execute_reconnect_action(kind, config['character_index'], self.managed.character_id,
+                validate=active, cancel_event=self.cancelled)
+        except NativeActionError as exc:
+            with self.guard:
+                if exc.uncertain or exc.mutation_started is True:
+                    return self._managed_pause_reconnect('重连动作结果未确认，已停止重复提交，请检查游戏界面。')
+                flow.next_at = now + 5
+                self.managed.status = '重连界面或按钮状态变化，稍后重新读取。'
+            return True
+        with self.guard:
+            if result.get('submitted') is True:
+                flow.submitted(kind, time.monotonic())
+                record('managed_reconnect_submitted', kind=kind, character_index=config['character_index'])
+        return True

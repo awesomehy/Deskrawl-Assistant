@@ -3,6 +3,7 @@
   const growthTools=typeof module!=='undefined'&&module.exports?require('./managed-growth.js'):root.ManagedGrowthUI.helpers;
   const storageTools=typeof module!=='undefined'&&module.exports?require('./automation-tools.js'):root.AutomationTools;
   const phaseNames={idle:'尚未启动',stopped:'已停止',paused:'已暂停',starting:'准备托管',farming:'刷图中',pushing:'推图中',travel:'进入关卡',returning:'回城中',scanning:'扫描奖励',equipping:'自动换装',cleanup:'整理奖励',collecting:'收取马车 / 地面物品',opening_chests:'开启宝箱',waiting:'等待处理',blocked:'已暂停 · 需要处理',error:'已停止 · 操作异常',growing:'自动成长',shopping:'神秘商人购买',synthesizing:'自动合成'};
+  phaseNames.reconnecting='断线重连中';
   const rarityNames=[['divine','神圣'],['black_mist','黑雾传说'],['ancient','远古传说'],['legendary','普通传说'],['rare','稀有'],['uncommon','优秀'],['normal','普通']];
   const disposalRarities=rarityNames.slice(2),dispositionNames={store:'放入仓库',sell:'出售',salvage:'分解',keep:'留在背包'};
   const storageMaterials=[['gold_bar','金条'],['legendary_rein','传说缰绳']];
@@ -50,7 +51,7 @@
   function normalizeSettings(value={}){
     const eq=value.auto_equip||{},farm=value.farming||{},cleanup=value.cleanup||{},background=value.background||{};
     const mode=oneOf(farm.mode,['repeat','push'],'repeat'),repeatMaps=Array.isArray(farm.repeat_maps)&&farm.repeat_maps.length?clone(farm.repeat_maps):farm.dungeon_id!==null&&farm.dungeon_id!==undefined?[{dungeon_id:farm.dungeon_id,difficulty:farm.difficulty||'current',runs:1}]:[];
-    return {...growthTools.normalize(value),synthesis:normalizeSynthesis(value.synthesis),background:{rule_monitoring:background.rule_monitoring!==false,inventory_automation:background.inventory_automation!==false},auto_equip:{enabled:!!eq.enabled,minimum_delta:safeNumber(eq.minimum_delta,1),slot_locks:{...(eq.slot_locks||{})},disabled_slots:Array.isArray(eq.disabled_slots)?[...eq.disabled_slots]:[]},
+    return {...growthTools.normalize(value),reconnect:{enabled:value.reconnect?.enabled===true,character_index:safeNumber(value.reconnect?.character_index,1)},synthesis:normalizeSynthesis(value.synthesis),background:{rule_monitoring:background.rule_monitoring!==false,inventory_automation:background.inventory_automation!==false},auto_equip:{enabled:!!eq.enabled,minimum_delta:safeNumber(eq.minimum_delta,1),slot_locks:{...(eq.slot_locks||{})},disabled_slots:Array.isArray(eq.disabled_slots)?[...eq.disabled_slots]:[]},
       farming:{enabled:!!farm.enabled,mode,dungeon_id:mode==='repeat'&&repeatMaps.length?repeatMaps[0].dungeon_id:farm.dungeon_id??null,difficulty:mode==='repeat'&&repeatMaps.length?repeatMaps[0].difficulty:oneOf(farm.difficulty,['current','Normal','Nightmare','Inferno','Mythic'],'current'),progression:Array.isArray(farm.progression)?clone(farm.progression):[],repeat_maps:repeatMaps,free_threshold:safeNumber(farm.free_threshold,4),stargazing:normalizeStargazing(farm.stargazing)},
       cleanup:{equipment_action:oneOf(cleanup.equipment_action,['store','sell','salvage'],'store'),equipment_fallback:oneOf(cleanup.equipment_fallback,['sell','salvage'],'sell'),
         equipment_policies:Object.fromEntries(disposalRarities.map(([key])=>{const p=cleanup.equipment_policies?.[key]||{};return [key,{action:oneOf(p.action,['store','sell','salvage'],oneOf(cleanup.equipment_action,['store','sell','salvage'],'store')),fallback:oneOf(p.fallback,['sell','salvage'],oneOf(cleanup.equipment_fallback,['sell','salvage'],'sell'))}];})),equipment_pages:pageIds(cleanup.equipment_pages??storageTools.defaultPages.equipment),
@@ -72,6 +73,8 @@
     return disposalRarities.map(([key,name])=>`${name}：${dispositionNames[policies[key][fallback?'fallback':'action']]}`).join('；');
   }
   function validateSettings(settings,warehouse){
+    const reconnect=settings.reconnect||{enabled:false,character_index:1};
+    if(typeof reconnect.enabled!=='boolean'||!Number.isInteger(reconnect.character_index)||reconnect.character_index<1||reconnect.character_index>100)return '断线重连的角色列表序号须为 1 至 100 的整数。';
     const f=settings.farming,c=settings.cleanup;
     const disabled=settings.auto_equip.disabled_slots;
     if(!Array.isArray(disabled)||disabled.some(n=>!Number.isInteger(n)||n<0||n>=12)||new Set(disabled).size!==disabled.length)return '不参与自动换装的部位无效。';
@@ -225,7 +228,7 @@
   let folds=null;
   let actionError='';
   const farmFields=['managed-farm-mode','managed-difficulty','managed-map','managed-repeat-two','managed-repeat-count','managed-difficulty-two','managed-map-two','managed-repeat-count-two','managed-free-threshold','managed-stargazing'];
-  const fieldIds=['managed-rule-monitoring','managed-inventory-automation','managed-auto-equip','managed-farming',...farmFields,'managed-synthesis-gems','managed-synthesis-gems-max','managed-synthesis-runes','managed-synthesis-runes-max'];
+  const fieldIds=['managed-reconnect','managed-reconnect-index','managed-rule-monitoring','managed-inventory-automation','managed-auto-equip','managed-farming',...farmFields,'managed-synthesis-gems','managed-synthesis-gems-max','managed-synthesis-runes','managed-synthesis-runes-max'];
   const catalog=()=>context?.catalog||{};
   const maps=()=>availableMaps(packet,draft||normalizeSettings());
   const mapId=row=>row.id??row.dungeon_id;
@@ -243,6 +246,7 @@
   function report(error){actionError=error?.message||String(error);renderControls();context?.toast?.(actionError,true);}
   function readForm(){
     const next=normalizeSettings({...draft,...root.ManagedGrowthUI?.read?.()}),f=next.farming,c=next.cleanup;
+    next.reconnect={enabled:$('managed-reconnect').checked,character_index:Number($('managed-reconnect-index').value)};
     next.background.rule_monitoring=$('managed-rule-monitoring').checked;next.background.inventory_automation=$('managed-inventory-automation').checked;
     next.auto_equip.enabled=$('managed-auto-equip').checked;next.auto_equip.slot_locks={};
     root.document.querySelectorAll('[data-managed-slot]').forEach(select=>{if(select.value)next.auto_equip.slot_locks[select.dataset.managedSlot]=select.value;});
@@ -381,6 +385,7 @@
   }
   function writeForm(){
     if(!draft)return;
+    $('managed-reconnect').checked=draft.reconnect.enabled;$('managed-reconnect-index').value=draft.reconnect.character_index;
     $('managed-rule-monitoring').checked=draft.background.rule_monitoring;$('managed-inventory-automation').checked=draft.background.inventory_automation;
     $('managed-auto-equip').checked=draft.auto_equip.enabled;$('managed-farming').checked=draft.farming.enabled;$('managed-farm-mode').value=draft.farming.mode;$('managed-free-threshold').value=draft.farming.free_threshold;
     $('managed-difficulty').value=draft.farming.difficulty;

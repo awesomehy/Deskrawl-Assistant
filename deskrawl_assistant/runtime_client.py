@@ -247,6 +247,14 @@ class RuntimeClient:
     def control_snapshot(self):
         with self._guard: return self._game_actions().control_snapshot()
 
+    def reconnect_snapshot(self):
+        with self._guard: return self._game_actions().reconnect_runtime().snapshot()
+
+    def execute_reconnect_action(self, kind, character_index, expected_character, *, validate, cancel_event=None):
+        with self._guard:
+            return self._game_actions().reconnect_runtime().execute(kind, character_index, expected_character,
+                validate=validate, cancel_event=cancel_event)
+
     def action_context_snapshot(self):
         with self._guard: return self._game_actions().action_context_snapshot()
 

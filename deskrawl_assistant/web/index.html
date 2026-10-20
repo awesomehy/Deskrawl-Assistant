@@ -103,6 +103,7 @@
         <div class="managed-status-main"><span id="managed-status-dot" class="managed-status-dot"></span><div><strong id="managed-phase">尚未启动</strong><p id="managed-message" aria-live="polite">连接游戏后读取托管能力和关卡。</p></div></div>
         <div class="managed-runtime"><span>本次运行</span><strong id="managed-elapsed">00:00:00</strong></div>
         <div class="managed-run-actions"><button id="managed-start" class="button primary" type="button" disabled>启动托管</button><button id="managed-pause" class="button" type="button" hidden>暂停</button><button id="managed-stop" class="button danger" type="button" disabled>回城整理后停止</button></div>
+        <div class="managed-reconnect-settings"><label class="managed-toggle"><input id="managed-reconnect" type="checkbox">断线自动重连</label><label>在线角色列表第 <input id="managed-reconnect-index" type="number" min="1" max="100" step="1" value="1" aria-label="断线重连的角色列表序号"> 项</label><small>从 1 开始计数，需与当前托管角色一致；仅托管运行时重连，保存托管设置后生效。</small></div>
       </section>
       <div id="managed-error" class="inline-error managed-error" role="alert" hidden></div>
       <div id="managed-capabilities" class="managed-capabilities" aria-label="托管功能可用状态"></div>

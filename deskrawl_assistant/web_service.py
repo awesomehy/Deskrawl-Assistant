@@ -938,6 +938,12 @@ class AssistantService(ManagedServiceMixin):
                         self.automation_status = '自动整理运行中：物品正在变化，等待下一轮检查。'
                 record('web_operation_retry', kind=kind, error=str(exc))
                 return
+            if (kind == 'managed' and self.managed.pending is None
+                    and not getattr(exc, 'uncertain', False) and self._managed_reconnect_once()):
+                # A disconnect can arrive between the menu preflight and the
+                # next inventory read. Keep the live process connection; never
+                # route a possibly committed item action into login retries.
+                return
             with self.guard:
                 self.error = str(exc)
                 self.message = '操作已停止：'+str(exc)

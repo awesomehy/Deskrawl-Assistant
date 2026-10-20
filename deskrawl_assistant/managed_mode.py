@@ -22,9 +22,11 @@ from .synthesis import (DEFAULT_SYNTHESIS, enabled as synthesis_enabled,
                         validate_settings as validate_synthesis, next_action as synthesis_action, KINDS as SYNTHESIS_ACTIONS)
 from .progression import (DEFAULT_PROGRESSION, DEFAULT_LIFE, DEFAULT_MERCHANT,
                           validate_growth, enabled as growth_enabled, growth_action, next_purchase, PURCHASE_BATCH_LIMIT)
+from .reconnect import DEFAULT_RECONNECT, validate_settings as validate_reconnect
 
 
 DEFAULT_SETTINGS = {
+    'reconnect': deepcopy(DEFAULT_RECONNECT),
     'synthesis': deepcopy(DEFAULT_SYNTHESIS),
     'progression': deepcopy(DEFAULT_PROGRESSION), 'life_skills': deepcopy(DEFAULT_LIFE),
     'merchant': deepcopy(DEFAULT_MERCHANT),
@@ -62,6 +64,7 @@ def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_e
     if not isinstance(raw, dict):
         raise ValidationError('托管配置格式无效。')
     raw = deepcopy(raw)
+    raw.setdefault('reconnect', deepcopy(DEFAULT_RECONNECT))
     raw.setdefault('background', deepcopy(DEFAULT_SETTINGS['background']))
     raw.setdefault('synthesis', deepcopy(DEFAULT_SYNTHESIS))
     for name in ('progression', 'life_skills', 'merchant'):
@@ -84,6 +87,7 @@ def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_e
             raise ValidationError('托管配置字段不完整：' + group)
     e, f, c = result['auto_equip'], result['farming'], result['cleanup']
     result['synthesis'] = validate_synthesis(result['synthesis'])
+    result['reconnect'] = validate_reconnect(result['reconnect'])
     f['stargazing'] = validate_stargazing(f['stargazing'])
     if type(e['enabled']) is not bool or type(f['enabled']) is not bool:
         raise ValidationError('托管开关必须为布尔值。')

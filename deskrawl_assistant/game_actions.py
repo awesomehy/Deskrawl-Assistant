@@ -140,6 +140,13 @@ class GameActions:
         self._panel_log_cache = {}
         self._progression = None
         self._synthesis = None
+        self._reconnect = None
+
+    def reconnect_runtime(self):
+        if self._reconnect is None:
+            from .reconnect_runtime import ReconnectRuntime
+            self._reconnect = ReconnectRuntime(self)
+        return self._reconnect
 
     def capabilities(self):
         """Read-only check; local test opt-in never claims completed validation."""

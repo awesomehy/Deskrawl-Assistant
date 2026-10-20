@@ -23,7 +23,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.3.8'
+NAME = 'Deskrawl装备助手-v1.3.9'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -68,6 +68,8 @@ def main():
     bundled_modules = archive.open_embedded_archive(next(n for n in names if n.endswith('.pyz')))
     assert 'deskrawl_assistant.stargazing' in bundled_modules.toc
     assert 'deskrawl_assistant.affix_pools' in bundled_modules.toc
+    for module in ('reconnect', 'reconnect_runtime'):
+        assert 'deskrawl_assistant.' + module in bundled_modules.toc
     assert 'data/affix-class-filters.json' in normalized
     assert 'deskrawl_assistant.community_stats' in bundled_modules.toc
     assert 'deskrawl_assistant.statistics_reader' in bundled_modules.toc
@@ -79,6 +81,7 @@ def main():
     assert not any(n.startswith(('deskrawl_assistant.account_', 'deskrawl_assistant.sandbox_accounts')) for n in bundled_modules.toc)
     managed_page = archive.extract(normalized['deskrawl_assistant/web/index.html']).decode('utf-8')
     assert managed_page.count('data-managed-fold="') == 10
+    assert 'id="managed-reconnect"' in managed_page and 'id="managed-reconnect-index"' in managed_page
     assert 'deskrawl_assistant/update_replace.ps1' in normalized
     assert 'data/compatibility-baseline.json' in normalized
     actions_profile = json.loads(archive.extract(normalized['data/game-actions-profile.json']))
@@ -114,7 +117,7 @@ def main():
                 result = {'schema': 1, 'client_id': payload['client_id'], 'token': 'a' * 64}
             elif self.path == '/v1/report':
                 assert self.headers.get('Authorization') == 'Bearer ' + 'a' * 64
-                assert payload['version'] == '1.3.8'
+                assert payload['version'] == '1.3.9'
                 result = {'accepted': True, 'report_id': payload['report_id'],
                           'sequence': payload['sequence'], 'accepted_at': datetime.now(timezone.utc).isoformat()}
             else:
@@ -182,7 +185,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.3.8'
+                assert request('/api/state')['app_version'] == '1.3.9'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -328,6 +331,8 @@ def main():
         assert shared['gem_pages'] == [3,5] and shared['rune_pages'] == [1,4]
         assert not request('/api/state')['automation']['running']
         managed_settings = managed['settings']
+        assert managed_settings['reconnect'] == {'enabled': False, 'character_index': 1}
+        managed_settings['reconnect'] = {'enabled': True, 'character_index': 2}
         managed_settings['farming']['stargazing']['rewards']['gem'] = False
         managed_settings['farming']['stargazing']['rewards']['gold_bar'] = False
         managed_settings['farming']['stargazing']['rewards']['divine_equipment'] = False
@@ -454,6 +459,8 @@ def main():
         assert state['automation']['settings'] == settings and not state['automation']['running']
         restored_managed = request('/api/managed')
         assert restored_managed['settings'] == saved_managed and not restored_managed['running']
+        assert restored_managed['settings']['reconnect'] == {'enabled': True, 'character_index': 2}
+        report['checks'].append('断线重连模块与控件已内置，默认关闭；角色序号与开关保存重启后保留且不自动托管')
         assert request('/api/community')['enabled'] is True
         assert request('/api/community')['url'] == receipt_url
         assert request('/api/market/settings')['currency_id'] == 23

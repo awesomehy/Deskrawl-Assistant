@@ -78,6 +78,19 @@ class TransferTests(unittest.TestCase):
         self.assertEqual(self.p.read(pair[1],48),pair[3])
         self.resume.assert_called_once()
 
+    def test_slow_prewrite_verification_is_retryable_without_writing_and_resumes(self):
+        pair = self.pair()
+        with patch('deskrawl_assistant.container_transfer.time.monotonic', side_effect=[10, 11.01]), \
+                patch.object(self.tx, 'write', wraps=self.tx.write) as write:
+            with self.assertRaisesRegex(GameBusyError, '验证耗时异常，未移动物品'):
+                self.tx.move_many([pair], [])
+        write.assert_not_called()
+        self.assertEqual(self.p.read(pair[0], 48), pair[2])
+        self.assertEqual(self.p.read(pair[1], 48), pair[3])
+        self.assertEqual(self.p.read(self.save + 92, 1), b'\0')
+        self.resume.assert_called_once()
+        self.assertEqual(self.tx.move_many([pair], [])['moved'], 1)
+
     def test_nonempty_target_is_never_overwritten(self):
         src,dst,full,_ = self.pair()
         self.p.put(dst,full)

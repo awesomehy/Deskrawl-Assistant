@@ -333,6 +333,48 @@ class ManagedSynthesisServiceTests(unittest.TestCase):
     def test_blessing_stone_and_potion_can_share_bag_through_merchant_batches(self):
         self.assert_retained_merchant_cycles([self.blessing_stone(), service_fixtures.potion(1)])
 
+    def rein(self, slot=0, *, rarity=1, key='Rein_BeachHermitCrab'):
+        return service_fixtures.equipment(slot, key=key, is_equipment=False,
+            item_class='ItemData', item_type=2, kind='material', item_uid='', instance_id='',
+            identity_verified=False, count=4, base_rarity=rarity, rarity=rarity)
+
+    def test_uncommon_and_rare_reins_survive_complete_merchant_cycles(self):
+        self.assert_retained_merchant_cycles([self.rein(),
+            self.rein(1, rarity=2, key='Rein_BeachNaga'), self.blessing_stone(2)])
+
+    def test_reins_do_not_bypass_quality_identity_or_capacity_checks(self):
+        from deskrawl_assistant.managed_mode import retained_merchant_item
+        row = self.rein()
+        self.assertTrue(retained_merchant_item(row))
+        for changes in ({'rarity': 3, 'base_rarity': 3}, {'rarity': None, 'base_rarity': None},
+                        {'rarity': True}, {'issues': ['未核验']}, {'item_type': 7},
+                        {'item_class': 'RuneData'}, {'is_equipment': True}, {'count': 0}):
+            with self.subTest(changes=changes):
+                self.assertFalse(retained_merchant_item({**row, **changes}))
+        self.merchant_world([row, self.rein(1, rarity=2, key='Rein_BeachNaga')], capacity=2)
+        self.service._work('managed', {})
+        self.assertFalse(self.service.managed.running)
+        self.assertIn('背包没有空格', self.service.managed.status)
+        self.assertEqual(self.client.actions, [])
+
+    def test_legendary_rein_is_stored_before_merchant_purchase(self):
+        row = self.rein(rarity=3, key='Rein_BeachCrabBoss')
+        self.merchant_world([row])
+        self.service._work('managed', {})
+        self.assertEqual([a[0] for a in self.client.actions], ['transfer'])
+        self.assertEqual(self.client.items[0]['container'], 'storage')
+        self.assertIn(self.client.items[0]['slot_index'], range(200, 250))
+
+    def test_unhandled_material_pauses_before_repeated_purchase_attempts(self):
+        row = self.blessing_stone()
+        row.update(internal_name='UnknownCommodity', name_key='UnknownCommodity')
+        self.merchant_world([row])
+        self.service._work('managed', {})
+        self.assertFalse(self.service.managed.running)
+        self.assertEqual(self.service.managed.phase, 'paused')
+        self.assertIn('UnknownCommodity', self.service.managed.status)
+        self.assertEqual(self.client.actions, [])
+
     def test_retained_material_slots_still_prevent_over_capacity_purchases(self):
         self.merchant_world([self.blessing_stone(), service_fixtures.potion(1)], capacity=2)
         for _ in range(3):

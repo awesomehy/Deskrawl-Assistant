@@ -248,7 +248,7 @@ class FrozenSlotTransaction:
                     raise SnapshotChangedError('槽位在准备期间发生变化，未移动物品')
             if any(p.read(a,len(v))!=v for a,v in guards):
                 raise SnapshotChangedError('物品或仓库权限发生变化，请刷新后重试')
-            if time.monotonic()-started>1: raise MemoryReadError('验证耗时异常，未移动物品')
+            if time.monotonic()-started>1: raise GameBusyError('验证耗时异常，未移动物品')
             base = self.reader.module['base']
             if p.i32(base+native_rva(self.reader,'gc_mode_rva',GC_MODE_RVA)) not in (0,1): raise MemoryReadError('GC 写屏障状态未确认')
             bitmap = {}

@@ -16,6 +16,25 @@ from deskrawl_assistant.native_memory import MemoryReadError, GameBusyError, Dea
 
 
 class ActionBoundaryTests(unittest.TestCase):
+    def test_entry_preserves_transient_control_read_failure_before_dispatch(self):
+        from deskrawl_assistant.native_memory import SnapshotChangedError
+        reason = '角色、场景或掉落正在变化，等待下一轮'
+        for transient in (True, False):
+            with self.subTest(transient=transient):
+                game = GameActions(Mock(), dispatcher=Mock(), allow_unverified=True)
+                read = Mock(); read.boolean.return_value = False
+                read.singleton.return_value = 3
+                game.capabilities = Mock(return_value={'compatible': True})
+                game._context = Mock(return_value=(read, 1, 2, 1))
+                game._require_travel_ready = Mock()
+                game._require_empty_town = Mock()
+                error = SnapshotChangedError(reason) if transient else MemoryReadError(reason)
+                game._capture_run_receipts = Mock(side_effect=error)
+                expected = SnapshotChangedError if transient else NativeActionError
+                with self.assertRaises(expected):
+                    game.execute('enter_map', {'map_id': 'b', 'difficulty': 'Normal'})
+                game.dispatcher.invoke.assert_not_called()
+
     def test_stargazing_entry_only_allows_empty_combat_with_matching_source_and_keeps_normal_town_guard(self):
         from deskrawl_assistant.native_memory import SnapshotChangedError
         for case in ('clean','ground','carriage','unknown_carriage','new_run','same_map','ordinary','attacking','gathering'):

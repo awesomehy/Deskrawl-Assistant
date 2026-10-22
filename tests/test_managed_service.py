@@ -14,7 +14,7 @@ from deskrawl_assistant.character import final_stats, panel_attack
 from deskrawl_assistant.managed_mode import DEFAULT_SETTINGS, identity
 from deskrawl_assistant.managed_service import progression_from_catalog, required_capabilities, campaign_route
 from deskrawl_assistant.models import ValidationError
-from deskrawl_assistant.native_memory import SnapshotChangedError
+from deskrawl_assistant.native_memory import GameBusyError, SnapshotChangedError
 from deskrawl_assistant.native_dispatcher import NativeActionError, REJECTED, GUARD_FAILED
 from deskrawl_assistant.web_service import AssistantService
 
@@ -626,6 +626,27 @@ class ManagedServiceTests(unittest.TestCase):
         self.assertIn('转移回读不一致',self.service.error)
         self.assertEqual(self.client.actions,[])
 
+    def test_slow_prewrite_transfer_retries_fresh_after_backoff(self):
+        self.client.items[0]['locked'] = False
+        self.ready(farming=True,auto_equip=False)
+        with patch.object(self.client,'move_items',side_effect=GameBusyError('验证耗时异常，未移动物品')) as move:
+            with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=100):
+                self.service._work('managed',{})
+            with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=101):
+                self.service._work('managed',{})
+        move.assert_called_once()
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNone(self.service.managed.pending)
+        self.assertIsNotNone(self.service.managed_retry)
+        self.assertEqual(self.client.actions,[])
+        self.assertEqual(self.client.items[0]['container'],'inventory')
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=103):
+            self.service._work('managed',{})
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNone(self.service.managed_retry)
+        self.assertEqual([a[0] for a in self.client.actions],['transfer'])
+        self.assertEqual(self.client.items[0]['container'],'storage')
+
     def early_game(self, rarity=0, *, worn_key=None, restricted=True):
         """Exercise real adapter/preview/executor plumbing with synthetic gear."""
         candidate = equipment(key='CommonBelt1', rarity=rarity, equip_slot=6, class_mask=15,
@@ -1156,6 +1177,32 @@ class ManagedServiceTests(unittest.TestCase):
         self.service._managed_once()
         self.assertIsNone(self.service.managed_transition)
         self.assertIsNone(self.service.managed.pending)
+        self.assertEqual(self.service.managed.phase,'farming')
+        self.assertEqual(len(self.client.actions),1)
+
+    def test_entry_snapshot_race_keeps_running_then_enters_with_fresh_state(self):
+        self.client.items = []
+        self.service._publish(self.client.snapshot())
+        self.ready(farming=True,auto_equip=False)
+        with patch.object(self.client,'execute_game_action',side_effect=SnapshotChangedError(
+                '角色、场景或掉落正在变化，等待下一轮')) as execute:
+            self.service._work('managed',{})
+        execute.assert_called_once()
+        self.assertEqual(execute.call_args.args[0],'enter_map')
+        self.assertTrue(self.service.managed.running)
+        self.assertFalse(self.service.error)
+        self.assertIsNone(self.service.managed.pending)
+        self.assertIsNone(self.service.managed_transition)
+        self.assertEqual(self.client.actions,[])
+        self.client.native_handler = lambda kind,payload:{'bridge_verified':True,'transition_requested':True}
+        self.service._work('managed',{})
+        self.assertEqual([a[0] for a in self.client.actions],['enter_map'])
+        self.assertIsNotNone(self.service.managed_transition)
+        self.client.in_town = False
+        self.client.current_map = 'offline-map'
+        self.service._work('managed',{})
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNone(self.service.managed_transition)
         self.assertEqual(self.service.managed.phase,'farming')
         self.assertEqual(len(self.client.actions),1)
 

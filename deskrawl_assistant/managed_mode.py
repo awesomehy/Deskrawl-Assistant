@@ -222,10 +222,19 @@ def retained_merchant_item(row):
     """Explicitly known player supplies may occupy bag slots during shopping."""
     if retained_potion(row):
         return True
-    return (item_kind(row) == 'material' and row.get('item_class') == 'ItemData'
-            and row.get('item_type') == 7
-            and (row.get('internal_name') or row.get('name_key')) == 'UpgradeCommodity1'
-            and not row.get('issues') and type(row.get('count')) is int and row['count'] > 0)
+    if (item_kind(row) != 'material' or row.get('item_class') != 'ItemData'
+            or row.get('issues') or managed_required_storage(row)
+            or type(row.get('count')) is not int or row['count'] <= 0):
+        return False
+    name = row.get('internal_name') or row.get('name_key')
+    if row.get('item_type') == 7 and name == 'UpgradeCommodity1':
+        return True
+    rarity = row.get('rarity')
+    if rarity is None: rarity = row.get('base_rarity')
+    # Ordinary reins are consumables with no equipment UID. Legendary reins
+    # still cross the mandatory storage barrier before shopping resumes.
+    return (row.get('item_type') == 2 and isinstance(name, str) and name.startswith('Rein_')
+            and type(rarity) is int and rarity in (0, 1, 2))
 
 
 def equip_candidate_allowed(row, score, settings, character):
@@ -1297,13 +1306,16 @@ class ManagedMode:
             data['protect_completion_rewards'] = True
         return self._action('return_town', **data)
 
+    def _merchant_batch_blockers(self, observation):
+        return [r for r in observation['items'] if r.get('container') == 'inventory'
+                and not (retained_merchant_item(r) or (
+                r.get('item_uid') in self.merchant_received_uids and item_kind(r)=='equipment'
+                and self._safe(r) and not self._review(r) and self._quality_known(r)))]
+
     def merchant_batch_ready(self, observation):
         # Keep player consumables in place. Capacity still comes from ALL
         # occupied slots, not just the equipment eligible for batch screening.
-        bag=[r for r in observation['items'] if r.get('container')=='inventory']
-        return (self._bag_free(observation)>0 and all(retained_merchant_item(r) or (
-                r.get('item_uid') in self.merchant_received_uids and item_kind(r)=='equipment'
-                and self._safe(r) and not self._review(r) and self._quality_known(r)) for r in bag)
+        return (self._bag_free(observation)>0 and not self._merchant_batch_blockers(observation)
                 and managed_town_rewards_clear(observation))
 
     def _merchant_purchase(self, observation):
@@ -1456,9 +1468,14 @@ class ManagedMode:
             if shop.get('unlock_known') is not True or shop.get('unlocked') is not True:
                 return self._pause('神秘商人尚未解锁或解锁状态未确认，暂不购买。')
             if shop.get('available') is not True: return self._pause(shop.get('reason') or '主城神秘商人尚未确认。')
+            if self._bag_free(observation)==0:return self._pause('背包没有空格，暂不购买。')
+            blockers = self._merchant_batch_blockers(observation)
+            if blockers:
+                names = '、'.join(str(r.get('display_name') or r.get('name') or r.get('internal_name')
+                                    or r.get('name_key') or '未知物品') for r in blockers[:3])
+                return self._pause(f'背包仍有未完成整理或身份待核验的物品（{names}），已保留，暂不购买。')
             if not shop.get('stock') and not shop.get('open'):
                 return self._action('merchant_open', class_mask=state['class_mask'], reason='奖励整理完成，打开神秘商人读取报价。')
-            if self._bag_free(observation)==0:return self._pause('背包没有空格，暂不购买。')
             purchase=self._merchant_purchase(observation)
             if purchase:return purchase
             if self.merchant_opened and shop.get('open'):

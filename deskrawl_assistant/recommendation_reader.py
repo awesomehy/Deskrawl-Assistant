@@ -592,7 +592,8 @@ def read_campaign(reader):
             except SnapshotChangedError:
                 if attempt==2: raise
     except (MemoryReadError,OSError,ValueError,UnicodeError,KeyError,struct.error) as exc:
-        return {'available':False,'profile':None,'run':None,'reason':str(exc),'source':'verified_game_memory'}
+        return {'available':False,'profile':None,'run':None,'reason':str(exc),'source':'verified_game_memory',
+                'retryable':isinstance(exc, SnapshotChangedError)}
 
 
 def _snapshot(reader):

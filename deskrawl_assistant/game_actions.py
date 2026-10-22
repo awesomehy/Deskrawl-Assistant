@@ -485,6 +485,8 @@ class GameActions:
         dead = read.boolean(player + 296)
         campaign = recommendation if recommendation is not None else read_campaign(self.reader)
         if not campaign.get('available') or not isinstance(campaign.get('profile'), dict):
+            if campaign.get('retryable') is True:
+                raise SnapshotChangedError(campaign.get('reason') or '关卡进度正在变化，等待下一轮')
             raise NativeActionError(campaign.get('reason') or '关卡进度暂不可读')
         progress = campaign['profile']
         completed = set(progress['completed_maps'].get(progress['difficulty'], []))
@@ -611,6 +613,7 @@ class GameActions:
         except (MemoryReadError, OSError, ValueError, KeyError, UnicodeError, struct.error) as exc:
             return {'available':False, 'compatible':self._compatible is True, 'maps':[], 'ground':[],
                 'ground_complete':False, 'native_verified':False, 'reason':str(exc),
+                'retryable':isinstance(exc, SnapshotChangedError),
                 **({'run_history':run_history} if run_history is not None else {})}
 
     def _selected_inventory(self, payload, read):
@@ -816,6 +819,10 @@ class GameActions:
                 self._require_empty_town(read,manager,scene)
             state = self.control_snapshot()
             if not state['available']:
+                # This read precedes dispatch: a snapshot race has no action to
+                # confirm and must be replanned, not treated as a native failure.
+                if state.get('retryable') is True:
+                    raise SnapshotChangedError(state['reason'])
                 raise NativeActionError(state['reason'])
             if stargazing_entry:
                 if (scene != 0 or (state.get('run') or {}).get('id') != payload.get('source_run_id')

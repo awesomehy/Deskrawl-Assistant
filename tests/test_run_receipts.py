@@ -165,12 +165,26 @@ class NativeRunReceiptBufferTests(unittest.TestCase):
         result = self.read()
         self.assertFalse(result['available'])
         self.assertIn('正在变化', result['reason'])
+        self.assertIs(result.get('retryable'), True)
         self.assert_one_win(result)
+
+    def test_campaign_snapshot_race_remains_retryable_without_reusing_identity(self):
+        from deskrawl_assistant.native_memory import SnapshotChangedError
+        self.assert_one_win(self.read())
+        with patch('deskrawl_assistant.recommendation_reader._campaign_snapshot',
+                   side_effect=SnapshotChangedError('关卡正在变化')) as read:
+            result = self.game.control_snapshot()
+        self.assertEqual(read.call_count, 3)
+        self.assertFalse(result['available'])
+        self.assertIs(result.get('retryable'), True)
+        self.assertNotIn('run_history', result)
+        self.fixture.dispatcher.invoke.assert_not_called()
 
     def test_campaign_failure_does_not_reuse_a_previous_identity_scope(self):
         self.assert_one_win(self.read())
         result = self.read({'available': False, 'reason': 'campaign unavailable'})
         self.assertFalse(result['available'])
+        self.assertIsNot(result.get('retryable'), True)
         self.assertNotIn('run_history', result)
 
     def test_dead_character_and_unconfirmed_plans_never_create_receipts(self):

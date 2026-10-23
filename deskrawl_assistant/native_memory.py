@@ -25,6 +25,14 @@ K.QueryFullProcessImageNameW.argtypes = (W.HANDLE, W.DWORD, W.LPWSTR, C.POINTER(
 K.QueryFullProcessImageNameW.restype = W.BOOL
 K.CreateToolhelp32Snapshot.argtypes = (W.DWORD, W.DWORD)
 K.CreateToolhelp32Snapshot.restype = W.HANDLE
+K.GetCurrentProcess.argtypes = ()
+K.GetCurrentProcess.restype = W.HANDLE
+
+A = C.WinDLL("advapi32", use_last_error=True)
+A.OpenProcessToken.argtypes = (W.HANDLE, W.DWORD, C.POINTER(W.HANDLE))
+A.OpenProcessToken.restype = W.BOOL
+A.GetTokenInformation.argtypes = (W.HANDLE, C.c_int, C.c_void_p, W.DWORD, C.POINTER(W.DWORD))
+A.GetTokenInformation.restype = W.BOOL
 
 
 class PROCESSENTRY32W(C.Structure):
@@ -72,8 +80,56 @@ class GameBusyError(SnapshotChangedError):
     """A known temporary game gate blocked an action before any mutation."""
 
 
+class OnlineSyncBusyError(GameBusyError):
+    """Travel was not submitted because the game's online sync is still busy."""
+
+
 class DeathRecoveryBusyError(GameBusyError):
     """A confirmed dead player is waiting for DeathUI before any submission."""
+
+
+def _process_elevated(handle):
+    """Best-effort read-only diagnosis; unknown privileges remain unknown."""
+    token = W.HANDLE()
+    if not A.OpenProcessToken(handle, 0x8, C.byref(token)):  # TOKEN_QUERY
+        return None
+    try:
+        elevated, received = W.DWORD(), W.DWORD()
+        if not A.GetTokenInformation(token, 20, C.byref(elevated), C.sizeof(elevated), C.byref(received)):
+            return None
+        if received.value != C.sizeof(elevated):
+            return None
+        return bool(elevated.value)
+    finally:
+        K.CloseHandle(token)
+
+
+def process_access_diagnostics(pid):
+    """Inspect elevation only; never request debug privileges or change access."""
+    result = {'assistant_elevated': None, 'game_elevated': None}
+    try:
+        result['assistant_elevated'] = _process_elevated(K.GetCurrentProcess())
+        handle = K.OpenProcess(0x1000, False, pid)  # QUERY_LIMITED_INFORMATION
+        if handle:
+            try:
+                result['game_elevated'] = _process_elevated(handle)
+            finally:
+                K.CloseHandle(handle)
+    except (OSError, ValueError):
+        pass
+    return result
+
+
+class ProcessAccessDeniedError(MemoryReadError):
+    def __init__(self, pid, diagnostics):
+        self.pid, self.winerror, self.diagnostics = pid, 5, diagnostics
+        if diagnostics.get('game_elevated') is True and diagnostics.get('assistant_elevated') is False:
+            help_text = '检测到游戏以管理员权限运行、助手未提权。请保存并退出助手，再右键以管理员身份运行助手后连接。'
+        else:
+            help_text = ('请确认 Steam、游戏和助手由同一 Windows 账户启动；若游戏以管理员身份运行，助手也需要相同权限。'
+                         '权限一致仍失败时，请检查安全软件的拦截记录。')
+        super().__init__(f'无法以只读方式打开游戏：[WinError 5] 拒绝访问（PID {pid}）。'
+                         f'{help_text} 此错误发生在打开游戏进程时，与游戏文件的只读属性无关。')
 
 
 def game_pids():
@@ -102,7 +158,10 @@ class ProcessMemory:
         # PROCESS_VM_READ | PROCESS_QUERY_INFORMATION | QUERY_LIMITED_INFORMATION.
         self.handle = K.OpenProcess(0x10 | 0x400 | 0x1000, False, pid)
         if not self.handle:
-            raise MemoryReadError(f"无法以只读方式打开游戏：{C.WinError(C.get_last_error())}")
+            error = C.get_last_error()
+            if error == 5:
+                raise ProcessAccessDeniedError(pid, process_access_diagnostics(pid))
+            raise MemoryReadError(f"无法以只读方式打开游戏：{C.WinError(error)}（PID {pid}）")
         self.pid = pid
         try:
             length = W.DWORD(32768)

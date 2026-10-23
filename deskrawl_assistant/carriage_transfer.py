@@ -4,7 +4,7 @@ import json
 import hashlib
 import struct
 import time
-from .native_memory import MemoryReadError
+from .native_memory import MemoryReadError, GameBusyError
 from .container_transfer import FrozenSlotTransaction, NT, slot_fields, GC_MODE_RVA, GC_BITMAP_RVA, GAME_MANAGER_RVA, ensure_items_writable
 from .paths import RESOURCE_ROOT
 from .activity_journal import operation_id
@@ -43,10 +43,10 @@ class FrozenCarriageTransaction(FrozenSlotTransaction):
         started=time.perf_counter()
         try:
             if p.read(drop,len(drop_header))!=drop_header or any(p.read(a,48)!=h for a,h,_ in targets):
-                raise MemoryReadError('准备时物品或槽位发生变化，未收取')
+                raise GameBusyError('准备时物品或槽位发生变化，未收取；等待重新读取。')
             if any(p.read(a,len(b))!=b for a,b in guards):
-                raise MemoryReadError('容器或唯一编号发生变化，未收取')
-            if time.perf_counter()-started>1: raise MemoryReadError('核验耗时异常，未收取')
+                raise GameBusyError('容器或唯一编号发生变化，未收取；等待重新读取。')
+            if time.perf_counter()-started>1: raise GameBusyError('核验耗时异常，未收取；等待重新读取。')
             base=self.reader.module['base']
             if p.i32(base+native_rva(self.reader,'gc_mode_rva',GC_MODE_RVA)) not in (0,1): raise MemoryReadError('GC 屏障状态异常')
             bitmap={}

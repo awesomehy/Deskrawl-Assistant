@@ -10,7 +10,7 @@ from .managed_mode import (ManagedMode, DEFAULT_SETTINGS, validate_settings, ide
 from .models import ValidationError
 from .storage_preferences import available_storage_pages, validate_available_storage_pages
 from .rules import evaluate, DEFAULT_MIN_CONFIDENCE
-from .native_memory import SnapshotChangedError, GameBusyError, DeathRecoveryBusyError
+from .native_memory import SnapshotChangedError, GameBusyError, DeathRecoveryBusyError, OnlineSyncBusyError
 from .native_dispatcher import NativeActionError, GUARD_FAILED, REJECTED
 from .paths import RESOURCE_ROOT
 from .stargazing import enabled as stargazing_enabled, decide as stargazing_decide, combat_rewards_clear, combat_rewards_known
@@ -621,6 +621,8 @@ class ManagedServiceMixin:
         if scene.get('scene_changing') is True or scene.get('teleporting') is True:
             raise GameBusyError('游戏正在切换场景，等待完成。')
         if scene.get('online_saving') is True:
+            if kind in ('return_town','enter_dungeon','switch_difficulty'):
+                raise OnlineSyncBusyError('等待游戏完成在线同步后切换场景。')
             raise GameBusyError('等待游戏完成在线同步。')
         if kind in ('sell','salvage') and scene.get('in_town') is not True:
             return {'verified':False,'retryable':True,'reason':'当前场景已变化，回城重新整理后再处置。'}
@@ -636,7 +638,7 @@ class ManagedServiceMixin:
             action = {**action, **planned}
         pending = scene.get('online_pending_requests')
         if kind in ('return_town','enter_dungeon','switch_difficulty') and type(pending) is int and pending > 0:
-            raise GameBusyError(f'等待在线请求处理完成后切换场景（待处理请求 {pending}）。')
+            raise OnlineSyncBusyError(f'等待在线请求处理完成后切换场景（待处理请求 {pending}）。')
         if kind == 'return_town' and scene.get('dead') is not True:
             # A boss can die or another drop can spawn between planning and this
             # fresh read. Re-plan pickup rather than committing a stale return.
@@ -849,9 +851,14 @@ class ManagedServiceMixin:
             elapsed = now-started
             death_wait = (code == 'death_recovery_pending' and action.get('kind') == 'return_town'
                           and self.managed_transition is None and self.managed_return_recovery is None)
+            # An unsubmitted travel request is safe to keep waiting for. Never
+            # extend the deadline for an accepted or interrupted transition.
+            online_wait = (code == 'online_sync_pending'
+                           and action.get('kind') in ('return_town','enter_dungeon','switch_difficulty')
+                           and self.managed_transition is None and self.managed_return_recovery is None)
             self.managed.pending = None
             self.error = ''
-            if elapsed >= 120 and not death_wait:
+            if elapsed >= 120 and not (death_wait or online_wait):
                 self.managed.pause('游戏状态连续 2 分钟未恢复，托管已暂停；统计已保留。'+reason)
                 self.managed_can_resume = True
                 self.managed_retry = None
@@ -864,6 +871,8 @@ class ManagedServiceMixin:
             self.managed_retry = {'key':key,'started':started,'attempts':attempts,
                 'next_at':now+delay,'action_kind':action.get('kind'),'reason':reason}
             self.managed.status = reason+f' {delay} 秒后重新检查，托管继续运行。'
+            if online_wait and elapsed >= 120:
+                self.managed.status = reason+f' 已等待 {int(elapsed)} 秒，尚未提交切换请求；同步恢复后自动继续。'
             record('managed_action_deferred',kind=action.get('kind'),code=code,
                    native_state=native_state,attempts=attempts,delay_seconds=delay,
                    scene=self._transition_scene(self._managed_scene()),reason=reason)
@@ -963,6 +972,15 @@ class ManagedServiceMixin:
                 if retry['action_kind']=='return_town' and scene.get('in_town') is True:
                     self.managed_retry = None
                     self.managed_return_recovery = None
+                elif (retry['key'][0] == 'online_sync_pending'
+                        and self.managed_transition is None and self.managed_return_recovery is None
+                        and observation.get('complete') is True and scene.get('available') is True
+                        and all(scene.get(key) is False for key in ('scene_changing','teleporting','online_saving'))
+                        and type(scene.get('online_pending_requests')) is int
+                        and scene['online_pending_requests'] == 0):
+                    self.managed_retry = None
+                    record('managed_online_sync_resumed',scene=self._transition_scene(scene),
+                           elapsed_seconds=round(time.monotonic()-retry['started'],2))
                 elif (retry['key'][0] == 'death_recovery_pending'
                         and self.managed_transition is None and self.managed_return_recovery is None
                         and observation.get('complete') is True and scene.get('available') is True
@@ -1060,6 +1078,8 @@ class ManagedServiceMixin:
             result = {'verified':True,'scene_confirmed':True} if transition else self._managed_execute(action,observation)
         except DeathRecoveryBusyError as exc:
             return self._managed_defer(action,str(exc),'death_recovery_pending')
+        except OnlineSyncBusyError as exc:
+            return self._managed_defer(action,str(exc),'online_sync_pending')
         except GameBusyError as exc:
             if action['kind'] == 'return_town' and self._managed_scene().get('dead') is True:
                 # Scene/sync gates may precede the DeathUI check. The fresh

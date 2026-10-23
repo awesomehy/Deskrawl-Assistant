@@ -14,7 +14,7 @@ from deskrawl_assistant.character import final_stats, panel_attack
 from deskrawl_assistant.managed_mode import DEFAULT_SETTINGS, identity
 from deskrawl_assistant.managed_service import progression_from_catalog, required_capabilities, campaign_route
 from deskrawl_assistant.models import ValidationError
-from deskrawl_assistant.native_memory import GameBusyError, SnapshotChangedError
+from deskrawl_assistant.native_memory import GameBusyError, SnapshotChangedError, OnlineSyncBusyError
 from deskrawl_assistant.native_dispatcher import NativeActionError, REJECTED, GUARD_FAILED
 from deskrawl_assistant.web_service import AssistantService
 
@@ -518,6 +518,80 @@ class ManagedServiceTests(unittest.TestCase):
         self.assertTrue(self.service.managed.running);self.assertFalse(self.service.error)
         self.assertEqual(self.client.actions,[])
         self.assertIn('待处理请求 2',self.service.managed.status)
+
+    def test_online_queue_can_recover_after_two_minutes_without_restarting_managed(self):
+        self.returning_world()
+        raw = self.client.control_snapshot(); raw['online_pending_requests'] = 1
+        self.client.native_handler = Mock(return_value={'transition_requested': True})
+        initial_metrics = self.service.managed.metrics.state()
+        with patch.object(self.client,'control_snapshot',side_effect=lambda:deepcopy(raw)):
+            for now in (100, 221, 600):
+                with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=now):
+                    self.service._work('managed',{})
+                self.assertTrue(self.service.managed.running)
+                self.assertIsNone(self.service.managed_transition)
+                self.assertIsNone(self.service.managed_return_recovery)
+                self.assertIsNone(self.service.managed.pending)
+                self.assertEqual(self.client.actions,[])
+            self.assertIn('已等待 500 秒',self.service.managed.status)
+            self.assertEqual(self.service.managed_retry['key'][0],'online_sync_pending')
+            raw['online_pending_requests'] = 0
+            with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=601):
+                self.service._work('managed',{})
+        self.assertEqual(self.client.native_handler.call_count,1)
+        self.assertIsNotNone(self.service.managed_transition)
+        self.assertIsNone(self.service.managed_retry)
+        self.assertEqual(self.service.managed.metrics.state(),initial_metrics)
+
+    def test_sync_recovery_replans_when_native_game_already_returned_to_town(self):
+        self.returning_world()
+        raw = self.client.control_snapshot(); raw['online_pending_requests'] = 1
+        with patch.object(self.client,'control_snapshot',return_value=raw):
+            for now in (100, 221):
+                with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=now):
+                    self.service._work('managed',{})
+        self.client.in_town = True
+        self.client.items = [equipment(locked=False, is_black_mist=True)]
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=222):
+            self.service._work('managed',{})
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNone(self.service.managed_retry)
+        self.assertEqual([action[0] for action in self.client.actions],['lock'])
+
+    def test_pending_queue_wait_does_not_bypass_interrupted_return_deadline(self):
+        self.returning_world()
+        self.service.managed_return_recovery = {'started':100, 'interruptions':1}
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=221):
+            self.service._managed_defer({'kind':'return_town'},'在线请求尚未完成','online_sync_pending')
+        self.assertFalse(self.service.managed.running)
+        self.assertEqual(self.service.managed.phase,'paused')
+        self.assertEqual(self.client.actions,[])
+
+    def test_native_sync_gate_is_retryable_but_generic_busy_keeps_timeout(self):
+        self.returning_world()
+        with patch.object(self.client,'execute_game_action',side_effect=OnlineSyncBusyError('等待在线同步')):
+            for now in (100, 221):
+                with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=now):
+                    self.service._work('managed',{})
+        self.assertTrue(self.service.managed.running)
+        self.service.managed_retry = None
+        with patch.object(self.client,'execute_game_action',side_effect=GameBusyError('传送状态异常')):
+            for now in (300, 421):
+                with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=now):
+                    self.service._work('managed',{})
+        self.assertFalse(self.service.managed.running)
+        self.assertEqual(self.service.managed.phase,'paused')
+        self.assertEqual(self.client.actions,[])
+
+    def test_user_stop_during_online_wait_does_not_submit_travel(self):
+        self.returning_world()
+        raw = self.client.control_snapshot(); raw['online_pending_requests'] = 1
+        with patch.object(self.client,'control_snapshot',return_value=raw):
+            self.service._work('managed',{})
+        self.service.stop_managed(pause=True)
+        self.service._work('managed',{})
+        self.assertFalse(self.service.managed.running)
+        self.assertEqual(self.client.actions,[])
 
     def test_scene_transition_waits_without_duplicate_return_request(self):
         self.returning_world()
@@ -1567,6 +1641,42 @@ class ManagedServiceTests(unittest.TestCase):
         self.assertEqual(self.client.actions[2][0],'transfer')
         self.assertEqual(self.client.actions[2][2],'storage')
         self.assertTrue(self.client.items[0]['locked'])
+
+    def test_carriage_prewrite_change_discards_selection_and_replans_fresh(self):
+        self.client.items = []
+        self.client.carriage = [equipment(0,container='carriage',is_black_mist=True,selection_id='old-selection')]
+        self.service._publish(self.client.snapshot())
+        self.ready(farming=True,auto_equip=False)
+        def prewrite_change(*args,**kwargs):
+            self.client.carriage[0]['selection_id'] = 'fresh-selection'
+            raise GameBusyError('容器或唯一编号发生变化，未收取')
+        with patch.object(self.client,'collect_carriage',side_effect=prewrite_change) as collect:
+            for now in (100, 101):
+                with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=now):
+                    self.service._work('managed',{})
+        collect.assert_called_once()
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNone(self.service.managed.pending)
+        self.assertEqual(self.client.actions,[])
+        with patch.object(self.client,'collect_carriage',wraps=self.client.collect_carriage) as collect:
+            with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=103):
+                self.service._work('managed',{})
+        self.assertEqual(collect.call_args.args[0],'fresh-selection')
+        self.assertEqual([action[0] for action in self.client.actions],['collect_carriage'])
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNone(self.service.managed_retry)
+
+    def test_carriage_postwrite_readback_mismatch_still_stops_without_replay(self):
+        self.client.items = []
+        self.client.carriage = [equipment(0,container='carriage',selection_id='item')]
+        self.service._publish(self.client.snapshot())
+        self.ready(farming=True,auto_equip=False)
+        with patch.object(self.client,'collect_carriage',side_effect=RuntimeError('马车收取后物品回读不一致')) as collect:
+            self.service._work('managed',{})
+            self.service._work('managed',{})
+        collect.assert_called_once()
+        self.assertFalse(self.service.managed.running)
+        self.assertIn('马车收取后物品回读不一致',self.service.error)
 
     def test_collection_batch_reaches_executor_before_locks_and_disposal(self):
         self.client.items = []

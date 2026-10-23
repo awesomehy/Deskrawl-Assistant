@@ -129,12 +129,13 @@ class ActionBoundaryTests(unittest.TestCase):
         self.assertIs(selected['_confirmed_snapshot'],snapshot)
 
     def test_online_queue_blocks_travel_before_any_call(self):
+        from deskrawl_assistant.native_memory import OnlineSyncBusyError
         reader,dispatcher,read=Mock(),Mock(),Mock()
         read.singleton.side_effect=lambda name:{'SaveSystem':1000,'CloudClient':2000}[name]
         read.boolean.return_value=False
         read.integer.side_effect=lambda address:{1032:1,2276:3}[address]
         actions=GameActions(reader,dispatcher=dispatcher)
-        with self.assertRaisesRegex(GameBusyError,'待处理请求 3'):
+        with self.assertRaisesRegex(OnlineSyncBusyError,'待处理请求 3'):
             actions._return_town_call(read,5,6)
         dispatcher.invoke.assert_not_called()
 

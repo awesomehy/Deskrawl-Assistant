@@ -12,7 +12,7 @@ import hashlib
 import struct
 import time
 
-from .native_memory import MemoryReadError, SnapshotChangedError, GameBusyError, DeathRecoveryBusyError
+from .native_memory import MemoryReadError, SnapshotChangedError, GameBusyError, DeathRecoveryBusyError, OnlineSyncBusyError
 from .native_dispatcher import Argument, Invocation, MainThreadDispatcher, NativeActionError, load_profile
 from .action_log import record
 from .item_protection import divine_equipment, disposal_protection, mandatory_storage
@@ -233,7 +233,7 @@ class GameActions:
     def _require_travel_ready(self, read):
         state = self._online_state(read)
         if state['online_saving'] or state['online_pending_requests']:
-            raise GameBusyError(f"等待在线同步完成后切换场景（待处理请求 {state['online_pending_requests']}）。")
+            raise OnlineSyncBusyError(f"等待在线同步完成后切换场景（待处理请求 {state['online_pending_requests']}）。")
         return state
 
     def _equip_level(self, read, manager, selected, item, target_slot=None):

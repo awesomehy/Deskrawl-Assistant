@@ -2,13 +2,15 @@
 (function(root){
   const growthTools=typeof module!=='undefined'&&module.exports?require('./managed-growth.js'):root.ManagedGrowthUI.helpers;
   const storageTools=typeof module!=='undefined'&&module.exports?require('./automation-tools.js'):root.AutomationTools;
+  const auctionTools=typeof module!=='undefined'&&module.exports?require('./auction-ui.js'):root.AuctionUI.helpers;
   const phaseNames={idle:'尚未启动',stopped:'已停止',paused:'已暂停',starting:'准备托管',farming:'刷图中',pushing:'推图中',travel:'进入关卡',returning:'回城中',scanning:'扫描奖励',equipping:'自动换装',cleanup:'整理奖励',collecting:'收取马车 / 地面物品',opening_chests:'开启宝箱',waiting:'等待处理',blocked:'已暂停 · 需要处理',error:'已停止 · 操作异常',growing:'自动成长',shopping:'神秘商人购买',synthesizing:'自动合成'};
   phaseNames.reconnecting='断线重连中';
+  phaseNames.auction='拍卖行上传';
   const rarityNames=[['divine','神圣'],['black_mist','黑雾传说'],['ancient','远古传说'],['legendary','普通传说'],['rare','稀有'],['uncommon','优秀'],['normal','普通']];
   const disposalRarities=rarityNames.slice(2),dispositionNames={store:'放入仓库',sell:'出售',salvage:'分解',keep:'留在背包'};
   const storageMaterials=[['gold_bar','金条'],['legendary_rein','传说缰绳']];
   const storageKinds=['equipment','rune','gem',...storageMaterials.map(([key])=>key)];
-  const capabilityNames={transfer:'物品转移',lock:'装备保护',equip:'后台换装',travel:'回城 / 进入关卡',difficulty:'主城切换难度',sell:'出售',salvage:'分解',chests:'开启宝箱',ground_pickup:'地面拾取',merchant:'神秘商人消费',talents:'职业天赋加点',life_skills:'生活技能学习',skills:'技能切换',gem_synthesis:'宝石合成',rune_synthesis:'符文合成'};
+  const capabilityNames={transfer:'物品转移',lock:'装备保护',equip:'后台换装',travel:'回城 / 进入关卡',difficulty:'主城切换难度',sell:'出售',salvage:'分解',chests:'开启宝箱',ground_pickup:'地面拾取',merchant:'神秘商人消费',talents:'职业天赋加点',life_skills:'生活技能学习',skills:'技能切换',gem_synthesis:'宝石合成',rune_synthesis:'符文合成',auction_upload:'游戏拍卖行上传'};
   const gemQualities=['粗糙','碎裂','粗砺','抛光','无瑕','璀璨'];
   const runeQualities={uncommon:'优秀',rare:'稀有',grand:'宏伟',set:'符文套装'};
   function normalizeSynthesis(value={}){
@@ -51,7 +53,7 @@
   function normalizeSettings(value={}){
     const eq=value.auto_equip||{},farm=value.farming||{},cleanup=value.cleanup||{},background=value.background||{};
     const mode=oneOf(farm.mode,['repeat','push'],'repeat'),repeatMaps=Array.isArray(farm.repeat_maps)&&farm.repeat_maps.length?clone(farm.repeat_maps):farm.dungeon_id!==null&&farm.dungeon_id!==undefined?[{dungeon_id:farm.dungeon_id,difficulty:farm.difficulty||'current',runs:1}]:[];
-    return {...growthTools.normalize(value),reconnect:{enabled:value.reconnect?.enabled===true,character_index:safeNumber(value.reconnect?.character_index,1)},synthesis:normalizeSynthesis(value.synthesis),background:{rule_monitoring:background.rule_monitoring!==false,inventory_automation:background.inventory_automation!==false},auto_equip:{enabled:!!eq.enabled,minimum_delta:safeNumber(eq.minimum_delta,1),slot_locks:{...(eq.slot_locks||{})},disabled_slots:Array.isArray(eq.disabled_slots)?[...eq.disabled_slots]:[]},
+    return {...growthTools.normalize(value),auction:auctionTools.normalize(value.auction),reconnect:{enabled:value.reconnect?.enabled===true,character_index:safeNumber(value.reconnect?.character_index,1)},synthesis:normalizeSynthesis(value.synthesis),background:{rule_monitoring:background.rule_monitoring!==false,inventory_automation:background.inventory_automation!==false},auto_equip:{enabled:!!eq.enabled,minimum_delta:safeNumber(eq.minimum_delta,1),slot_locks:{...(eq.slot_locks||{})},disabled_slots:Array.isArray(eq.disabled_slots)?[...eq.disabled_slots]:[]},
       farming:{enabled:!!farm.enabled,mode,dungeon_id:mode==='repeat'&&repeatMaps.length?repeatMaps[0].dungeon_id:farm.dungeon_id??null,difficulty:mode==='repeat'&&repeatMaps.length?repeatMaps[0].difficulty:oneOf(farm.difficulty,['current','Normal','Nightmare','Inferno','Mythic'],'current'),progression:Array.isArray(farm.progression)?clone(farm.progression):[],repeat_maps:repeatMaps,free_threshold:safeNumber(farm.free_threshold,4),stargazing:normalizeStargazing(farm.stargazing)},
       cleanup:{equipment_action:oneOf(cleanup.equipment_action,['store','sell','salvage'],'store'),equipment_fallback:oneOf(cleanup.equipment_fallback,['sell','salvage'],'sell'),
         equipment_policies:Object.fromEntries(disposalRarities.map(([key])=>{const p=cleanup.equipment_policies?.[key]||{};return [key,{action:oneOf(p.action,['store','sell','salvage'],oneOf(cleanup.equipment_action,['store','sell','salvage'],'store')),fallback:oneOf(p.fallback,['sell','salvage'],oneOf(cleanup.equipment_fallback,['sell','salvage'],'sell'))}];})),equipment_pages:pageIds(cleanup.equipment_pages??storageTools.defaultPages.equipment),
@@ -73,6 +75,7 @@
     return disposalRarities.map(([key,name])=>`${name}：${dispositionNames[policies[key][fallback?'fallback':'action']]}`).join('；');
   }
   function validateSettings(settings,warehouse){
+    const auctionError=auctionTools.validation(settings.auction||auctionTools.normalize());if(auctionError)return auctionError;
     const reconnect=settings.reconnect||{enabled:false,character_index:1};
     if(typeof reconnect.enabled!=='boolean'||!Number.isInteger(reconnect.character_index)||reconnect.character_index<1||reconnect.character_index>100)return '断线重连的角色列表序号须为 1 至 100 的整数。';
     const f=settings.farming,c=settings.cleanup;
@@ -105,7 +108,7 @@
   function capabilityAvailable(value){return value===true||!!(value&&typeof value==='object'&&(value.native_verified!==false||value.test_enabled===true||value.release_enabled===true)&&(value.available===true||(value.available===undefined&&value.supported===true)));}
   function requiredCapabilities(settings){
     const c=settings.cleanup,keys=[],synthesis=normalizeSynthesis(settings.synthesis);
-    const cleanupEnabled=settings.farming.enabled||growthTools.normalize(settings).merchant.enabled||synthesis.gems.enabled||synthesis.runes.enabled;
+    const cleanupEnabled=settings.farming.enabled||growthTools.normalize(settings).merchant.enabled||synthesis.gems.enabled||synthesis.runes.enabled||settings.auction?.upload_enabled===true;
     if(cleanupEnabled)keys.push('transfer','lock','chests','ground_pickup');
     else if(settings.auto_equip.enabled)keys.push('transfer');
     if(settings.auto_equip.enabled)keys.push('equip');
@@ -115,6 +118,7 @@
     if(growth.progression.talents_enabled)keys.push('talents');if(growth.progression.skills_enabled)keys.push('skills');if(growth.life_skills.enabled)keys.push('life_skills');
     if(synthesis.gems.enabled)keys.push('gem_synthesis','transfer');
     if(synthesis.runes.enabled)keys.push('rune_synthesis','transfer');
+    if(settings.auction?.upload_enabled===true)keys.push('auction_upload','transfer');
     if(growth.merchant.enabled)keys.push('merchant','travel','transfer','lock','chests','ground_pickup');
     const actions=cleanupEnabled?Object.values(normalizeSettings(settings).cleanup.equipment_policies).flatMap(p=>[p.action,p.fallback]):[];
     if(actions.includes('sell'))keys.push('sell');if(actions.includes('salvage'))keys.push('salvage');return [...new Set(keys)];
@@ -122,7 +126,7 @@
   function controlState(packet,settings,connected,busy=false){
     const running=!!packet?.running,phase=packet?.phase||'idle',growth=growthTools.normalize(settings);
     const missing=requiredCapabilities(settings).filter(key=>!capabilityAvailable(packet?.capabilities?.[key]));
-    const configurationError=validateSettings(settings,connected?packet:undefined)||(!settings.auto_equip.enabled&&!settings.farming.enabled&&!synthesisEnabled(settings)&&!growth.merchant.enabled&&!growth.life_skills.enabled&&!growth.progression.talents_enabled&&!growth.progression.skills_enabled?'请至少启用一项托管功能。':'');
+    const configurationError=validateSettings(settings,connected?packet:undefined)||(!settings.auto_equip.enabled&&!settings.farming.enabled&&!synthesisEnabled(settings)&&!auctionTools.enabled(settings.auction)&&!growth.merchant.enabled&&!growth.life_skills.enabled&&!growth.progression.talents_enabled&&!growth.progression.skills_enabled?'请至少启用一项托管功能。':'');
     const merchantBlocked=growth.merchant.enabled&&(packet?.progression_state?.available!==true||packet.progression_state.merchant?.unlock_known!==true||packet.progression_state.merchant?.unlocked!==true);
     const serverReasons=Array.isArray(packet?.blocked_reasons)?packet.blocked_reasons.filter(reason=>typeof reason==='string'&&reason):[];
     const startDisabledReason=packet?.config_error||packet?.start_disabled_reason||serverReasons.join('；')
@@ -158,7 +162,7 @@
     else{disabled.delete(index);if(key)next.auto_equip.slot_locks[index]=key;else delete next.auto_equip.slot_locks[index];}
     next.auto_equip.disabled_slots=[...disabled].sort((a,b)=>a-b);return next;
   }
-  const foldKeys=['background','equip','farming','merchant','growth','synthesis','cleanup','talents','life','skills'];
+  const foldKeys=['background','equip','farming','merchant','growth','synthesis','auction','cleanup','talents','life','skills'];
   const foldStorageKey='deskrawl-managed-folds-v1';
   function normalizeFoldPreferences(value){
     if(!value||typeof value!=='object'||Array.isArray(value))return {};
@@ -167,7 +171,7 @@
   function defaultFolds(value){
     const s=normalizeSettings(value),growth=s.progression.talents_enabled||s.life_skills.enabled||s.progression.skills_enabled;
     return {background:s.background.rule_monitoring||s.background.inventory_automation,equip:s.auto_equip.enabled,
-      farming:s.farming.enabled,merchant:s.merchant.enabled,growth,synthesis:synthesisEnabled(s),cleanup:s.farming.enabled||s.merchant.enabled||synthesisEnabled(s),
+      farming:s.farming.enabled,merchant:s.merchant.enabled,growth,synthesis:synthesisEnabled(s),auction:auctionTools.enabled(s.auction),cleanup:s.farming.enabled||s.merchant.enabled||synthesisEnabled(s)||s.auction.upload_enabled,
       talents:s.progression.talents_enabled,life:s.life_skills.enabled,skills:s.progression.skills_enabled};
   }
   function foldSummaries(value,packet){
@@ -188,6 +192,7 @@
       merchant:state(s.merchant.enabled,`${s.merchant.trigger_percent}% 回城 · 保留 ${s.merchant.spend_to_percent}% · ${buying.length} 部位 / 每轮 ${buying.reduce((a,b)=>a+b,0)} 件`),
       growth:state(growing.length>0,growing.length?growing.join(' / ')+'自动养成':'战斗天赋 / 生活技能 / 技能预设'),
       synthesis:state(synthesisEnabled(s),`宝石${s.synthesis.gems.enabled?' → '+gemQualities[s.synthesis.gems.max_quality-1]:'关闭'} · 符文${s.synthesis.runes.enabled?' → '+runeQualities[s.synthesis.runes.max_quality]:'关闭'} · 跳过 ${s.synthesis.runes.excluded_keys.length} 种符文`),
+      auction:state(auctionTools.enabled(s.auction),`上传${s.auction.upload_enabled?'开':'关'} · 出售${s.auction.sell_enabled?'开':'关'} · 允许 ${s.auction.categories.length} 类 · 保留白名单 ${s.auction.excluded_keys.length} 种优先`),
       cleanup:{enabled:true,status:'固定保护',summary:`装备 ${folders('equipment')} 页 · 符文 ${folders('rune')} 页 · 宝石 ${folders('gem')} 页 · `+storageMaterials.map(([key,label])=>`${label} ${folders(key)} 页`).join(' · ')},
       talents:state(s.progression.talents_enabled,currentClass?`当前职业目标 ${points} / ${growthTools.talentPointLimit} 点`:'按职业保存 · 连接后显示当前预设'),
       life:state(s.life_skills.enabled,`最终点满 · ${s.life_skills.priorities.length} 个优先节点 · 保留 ${s.life_skills.gold_reserve.toLocaleString('zh-CN')} 金币`),
@@ -264,6 +269,7 @@
     next.synthesis.runes.enabled=$('managed-synthesis-runes').checked;next.synthesis.runes.max_quality=$('managed-synthesis-runes-max').value;
     next.synthesis.runes.excluded_keys=updateRuneExclusions(next.synthesis.runes.excluded_keys,[...root.document.querySelectorAll('[data-synthesis-rune-key]')].map(input=>({key:input.dataset.synthesisRuneKey,excluded:input.checked})));
     for(const kind of storageKinds)c[kind+'_pages']=pageIds([...root.document.querySelectorAll(`[data-managed-pages="${kind}"]:checked`)].map(input=>input.value));
+    next.auction=root.AuctionUI?.read(next.auction)||next.auction;
     return next;
   }
   function slots(){
@@ -420,6 +426,7 @@
     root.ManagedGrowthUI?.render(draft,packet?.progression_catalog,packet?.progression_state,running||busy,(next,renderNow=true)=>{
       draft={...readForm(),...next};markDirty();if(renderNow){renderDependencies();renderCapabilities();}else {renderFoldSummaries();renderControls();}
     },connected);
+    root.AuctionUI?.render(draft?.auction,catalog(),running||busy);
     renderSynthesis();renderFoldSummaries();renderControls();
   }
   function renderFoldSummaries(){
@@ -497,14 +504,15 @@
       if(action==='save')await save();
       if(action==='start'){
         draft=readForm();const error=validateSettings(draft,connected?packet:undefined);if(error)throw new Error(error);
-        if(!draft.auto_equip.enabled&&!draft.farming.enabled&&!synthesisEnabled(draft)&&!growthTools.enabled(draft))throw new Error('请至少启用一项托管功能。');
+        if(!draft.auto_equip.enabled&&!draft.farming.enabled&&!synthesisEnabled(draft)&&!auctionTools.enabled(draft.auction)&&!growthTools.enabled(draft))throw new Error('请至少启用一项托管功能。');
         if(dirty)await save();
         if(ticket!==actionVersion)return;
         const c=draft.cleanup;
         const growthNotice=[draft.progression.talents_enabled?'按当前职业的目标逐点学习天赋，不重置已有天赋。':'',draft.progression.skills_enabled?'到达设定等级并解锁后切换目标技能组合。':'',draft.life_skills.enabled?`按优先顺序学习生活技能，随后补满；至少保留 ${draft.life_skills.gold_reserve} 金币。`:'',draft.merchant.enabled?'灵魂碎片达到实际容量的回城比例后，整理奖励并按部位比例消费；新购买的装备重新筛选整理。':''].filter(Boolean).join('\n');
         const synthesisNotice=synthesisEnabled(draft)?'仅在主城整理时按最高产出品质，从低到高合成背包与已解锁仓库材料。'+(draft.synthesis.gems.enabled?`\n宝石合成至${gemQualities[draft.synthesis.gems.max_quality-1]}，会消耗金币。`:'')+(draft.synthesis.runes.enabled?`\n符文合成至${runeQualities[draft.synthesis.runes.max_quality]}，每次消耗 9 枚；概率合成失败也消耗，已有等级和经验不保留。已锁定、已装备及跳过名单中的 ${draft.synthesis.runes.excluded_keys.length} 种符文不参与。`:''):'';
+        const auctionNotice=auctionTools.enabled(draft.auction)?`仅处理勾选的 ${draft.auction.categories.length} 类商品。保留白名单的 ${draft.auction.excluded_keys.length} 种物品始终优先，不自动上传或出售。`+(draft.auction.upload_enabled?'\n允许将符合原生交易条件的允许列表物品移出游戏，上传至 Steam 库存；包含本来需要保护入库的高价值物品。':'')+(draft.auction.upload_enabled?'\n锁定状态不影响上传；不会自动解锁，已绑定、强化、有孔或已穿戴物品仍不参与。':'')+(draft.auction.sell_enabled?`\n允许在 Steam 市场按${auctionTools.priceRules[draft.auction.price_rule]}自动出售本工具精确匹配的允许列表上传资产。报价为买方支付总价，币种以 Steam 钱包为准。手机确认中的出售不重复提交。`:''):'';
         const cleanupNotice=(draft.farming.enabled||draft.merchant.enabled||synthesisEnabled(draft))?`不符合规则的装备按品质处理：\n${equipmentSummary(c)}。\n仓库满时清理所选页的未锁定垃圾：\n${equipmentSummary(c,true)}。\n所有符文、宝石、金条、传说缰绳必须入库，指定页满时留在背包并暂停，腾出容量后继续。出售和分解无法撤回，强化和宝石不自动返还。神圣、黑雾装备必须收纳；已锁定、符合规则与待核验装备保留。神圣装备禁止自动穿戴，主城奖励未收完不得入图。`:draft.auto_equip.enabled?'按固定单体 Boss 战力更换更高战力的装备。神圣装备禁止自动穿戴。未指定暗金时允许其他品质；指定但尚未穿上时允许普通、优秀、稀有装备过渡，穿上后只比较同名装备。不自动转移宝石。':'';
-        const confirmed=await context.confirmAction?.('启动托管？',[growthNotice,synthesisNotice,cleanupNotice].filter(Boolean).join('\n\n'),'启动托管',false);
+        const confirmed=await context.confirmAction?.('启动托管？',[growthNotice,synthesisNotice,auctionNotice,cleanupNotice].filter(Boolean).join('\n\n'),'启动托管',false);
         if(confirmed===false||ticket!==actionVersion)return;
         const result=await context.api('managed/run',{enabled:true});if(ticket===actionVersion)applyPacket(result);
       }
@@ -518,6 +526,7 @@
   }
   function init(options){
     context=options;if(initialized)return;initialized=true;root.ManagedGrowthUI?.init();draft=normalizeSettings();
+    root.AuctionUI?.init({api:context.api,toast:context.toast,confirmAction:context.confirmAction,onChange:()=>{draft=readForm();markDirty();renderDependencies();renderCapabilities();}});
     context.sharedStorage?.subscribe(applySharedPages);
     let storage=null;try{storage=root.localStorage;}catch(_){/* Storage access can be blocked independently of the UI. */}
     folds=createFoldState([...root.document.querySelectorAll('[data-managed-fold]')],storage,(key,open)=>{
@@ -526,7 +535,7 @@
     });
     writeForm();render();
     $('managed-page').addEventListener('change',event=>{
-      if(event.target.matches('input,select')&&event.target.id!=='managed-synthesis-rune-search'&&!event.target.closest('#managed-growth')){
+      if(event.target.matches('input,select')&&event.target.id!=='managed-synthesis-rune-search'&&!event.target.closest('#managed-growth, #managed-auction')){
         draft=readForm();
         const storageKind=event.target.dataset.managedPages;
         if(['rune','gem'].includes(storageKind))context.sharedStorage?.edit({[storageKind]:draft.cleanup[storageKind+'_pages']});

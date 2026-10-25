@@ -81,6 +81,7 @@ docs/*
 !docs/神秘商人接口分析.md
 !docs/screenshots/
 !docs/steam-market.md
+!docs/拍卖行与Steam市场验收说明.md
 
 !docs/经验收益说明.md
 !data/experience-types.json
@@ -97,6 +98,7 @@ docs/*
 !tools/extract_progression_catalog.py
 !tools/verify_progression_profile.py
 !tools/preview_growth_ui.py
+!tools/preview_auction_ui.py
 !tools/managed_test_settings.py
 !docs/1.2.6开发说明.md
 !docs/1.2.6验收说明.md
@@ -129,3 +131,5 @@ docs/*
 !docs/1.4.0验收说明.md
 
 !docs/1.4.1验收说明.md
+
+!docs/1.4.2验收说明.md

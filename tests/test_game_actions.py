@@ -178,13 +178,13 @@ class ActionBoundaryTests(unittest.TestCase):
         self.assertEqual(actions.verified_kinds,
             {'return_town','enter_map','switch_difficulty','equip','sell','salvage','open_chest','collect_ground',
              'allocate_talent','merchant_open','merchant_buy','merchant_close','merchant_refresh',
-             'synthesize_gems','synthesize_runes'})
+             'synthesize_gems','synthesize_runes','auction_open','auction_upload'})
         state = actions.capabilities()
         self.assertFalse(state['native_verified'])
         self.assertFalse(state['test_mode'])
         self.assertIn('尚未实机验收', state['reason'])
         for key in ('travel','difficulty','equip','sell','salvage','chests','ground_pickup','merchant','talents',
-                    'gem_synthesis','rune_synthesis'):
+                    'gem_synthesis','rune_synthesis','auction_upload'):
             self.assertTrue(state[key]['available'])
             self.assertTrue(state[key]['native_verified'])
             self.assertFalse(state[key]['test_enabled'])

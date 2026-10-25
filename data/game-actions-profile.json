@@ -20,7 +20,9 @@
     "merchant_close",
     "merchant_refresh",
     "synthesize_gems",
-    "synthesize_runes"
+    "synthesize_runes",
+    "auction_open",
+    "auction_upload"
   ],
   "sha256": {
     "GameAssembly.dll": "f23ae23f8714fa5a49b9ab4b8ae767c33f7e50afad47284d81121354d1677a46",
@@ -18691,6 +18693,602 @@
           "rawRegistrationOffset": 336
         }
       ]
+    },
+    "AuctionUI": {
+      "name": "AuctionUI",
+      "typeDefinitionIndex": 6266,
+      "fields": [
+        {
+          "name": "<ojy>k__BackingField",
+          "fieldIndex": 27275,
+          "token": "0x040011DA",
+          "typeIndex": 17719,
+          "resolvedType": "AuctionUI",
+          "typeKind": 18,
+          "attributes": "0x0011",
+          "isStatic": true,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 0
+        },
+        {
+          "name": "InventorySnapGap",
+          "fieldIndex": 27276,
+          "token": "0x040011DB",
+          "typeIndex": 29310,
+          "resolvedType": "System.Single",
+          "typeKind": 12,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 64
+        },
+        {
+          "name": "SlotContainer",
+          "fieldIndex": 27277,
+          "token": "0x040011DC",
+          "typeIndex": 31178,
+          "resolvedType": "UnityEngine.Transform",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 72
+        },
+        {
+          "name": "SlotPrefab",
+          "fieldIndex": 27278,
+          "token": "0x040011DD",
+          "typeIndex": 22224,
+          "resolvedType": "UnityEngine.GameObject",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 80
+        },
+        {
+          "name": "ReceivedSlotContainer",
+          "fieldIndex": 27279,
+          "token": "0x040011DE",
+          "typeIndex": 31178,
+          "resolvedType": "UnityEngine.Transform",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 88
+        },
+        {
+          "name": "ReceivedSlotPrefab",
+          "fieldIndex": 27280,
+          "token": "0x040011DF",
+          "typeIndex": 22224,
+          "resolvedType": "UnityEngine.GameObject",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 96
+        },
+        {
+          "name": "UploadSlot",
+          "fieldIndex": 27281,
+          "token": "0x040011E0",
+          "typeIndex": 17721,
+          "resolvedType": "AuctionUploadSlotUI",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 104
+        },
+        {
+          "name": "UploadButton",
+          "fieldIndex": 27282,
+          "token": "0x040011E1",
+          "typeIndex": 18404,
+          "resolvedType": "UnityEngine.UI.Button",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 112
+        },
+        {
+          "name": "SteamInventoryButton",
+          "fieldIndex": 27283,
+          "token": "0x040011E2",
+          "typeIndex": 18404,
+          "resolvedType": "UnityEngine.UI.Button",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 120
+        },
+        {
+          "name": "BuyItemsButton",
+          "fieldIndex": 27284,
+          "token": "0x040011E3",
+          "typeIndex": 18404,
+          "resolvedType": "UnityEngine.UI.Button",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 128
+        },
+        {
+          "name": "StatusText",
+          "fieldIndex": 27285,
+          "token": "0x040011E4",
+          "typeIndex": 30674,
+          "resolvedType": "TMPro.TextMeshProUGUI",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 136
+        },
+        {
+          "name": "HelpIcon",
+          "fieldIndex": 27286,
+          "token": "0x040011E5",
+          "typeIndex": 22224,
+          "resolvedType": "UnityEngine.GameObject",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 144
+        },
+        {
+          "name": "ojz",
+          "fieldIndex": 27287,
+          "token": "0x040011E6",
+          "typeIndex": 24106,
+          "resolvedType": "System.Int32",
+          "typeKind": 8,
+          "attributes": "0x8051",
+          "isStatic": true,
+          "isLiteral": true,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 0
+        },
+        {
+          "name": "oka",
+          "fieldIndex": 27288,
+          "token": "0x040011E7",
+          "typeIndex": 9980,
+          "resolvedType": "System.Collections.Generic.List`1<AuctionSlotUI>",
+          "typeKind": 21,
+          "attributes": "0x0021",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": true,
+          "rawRegistrationOffset": 152
+        },
+        {
+          "name": "okb",
+          "fieldIndex": 27289,
+          "token": "0x040011E8",
+          "typeIndex": 9980,
+          "resolvedType": "System.Collections.Generic.List`1<AuctionSlotUI>",
+          "typeKind": 21,
+          "attributes": "0x0021",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": true,
+          "rawRegistrationOffset": 160
+        },
+        {
+          "name": "okc",
+          "fieldIndex": 27290,
+          "token": "0x040011E9",
+          "typeIndex": 9979,
+          "resolvedType": "System.Collections.Generic.List`1<AuctionListing>",
+          "typeKind": 21,
+          "attributes": "0x0021",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": true,
+          "rawRegistrationOffset": 168
+        },
+        {
+          "name": "okd",
+          "fieldIndex": 27291,
+          "token": "0x040011EA",
+          "typeIndex": 9979,
+          "resolvedType": "System.Collections.Generic.List`1<AuctionListing>",
+          "typeKind": 21,
+          "attributes": "0x0021",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": true,
+          "rawRegistrationOffset": 176
+        },
+        {
+          "name": "oke",
+          "fieldIndex": 27292,
+          "token": "0x040011EB",
+          "typeIndex": 17714,
+          "resolvedType": "AuctionListing",
+          "typeKind": 18,
+          "attributes": "0x0001",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 184
+        },
+        {
+          "name": "okf",
+          "fieldIndex": 27293,
+          "token": "0x040011EC",
+          "typeIndex": 18256,
+          "resolvedType": "System.Boolean",
+          "typeKind": 2,
+          "attributes": "0x0001",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 192
+        },
+        {
+          "name": "okg",
+          "fieldIndex": 27294,
+          "token": "0x040011ED",
+          "typeIndex": 18256,
+          "resolvedType": "System.Boolean",
+          "typeKind": 2,
+          "attributes": "0x0001",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 193
+        },
+        {
+          "name": "okh",
+          "fieldIndex": 27295,
+          "token": "0x040011EE",
+          "typeIndex": 18256,
+          "resolvedType": "System.Boolean",
+          "typeKind": 2,
+          "attributes": "0x0001",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 194
+        },
+        {
+          "name": "oki",
+          "fieldIndex": 27296,
+          "token": "0x040011EF",
+          "typeIndex": 18256,
+          "resolvedType": "System.Boolean",
+          "typeKind": 2,
+          "attributes": "0x0001",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 195
+        },
+        {
+          "name": "okj",
+          "fieldIndex": 27297,
+          "token": "0x040011F0",
+          "typeIndex": 29911,
+          "resolvedType": "System.String",
+          "typeKind": 14,
+          "attributes": "0x0001",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 200
+        },
+        {
+          "name": "okk",
+          "fieldIndex": 27298,
+          "token": "0x040011F1",
+          "typeIndex": 29305,
+          "resolvedType": "System.Single",
+          "typeKind": 12,
+          "attributes": "0x0001",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 208
+        }
+      ]
+    },
+    "AuctionUploadSlotUI": {
+      "name": "AuctionUploadSlotUI",
+      "typeDefinitionIndex": 6267,
+      "fields": [
+        {
+          "name": "IconImage",
+          "fieldIndex": 27303,
+          "token": "0x040011F6",
+          "typeIndex": 23717,
+          "resolvedType": "UnityEngine.UI.Image",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 32
+        },
+        {
+          "name": "RarityBgImage",
+          "fieldIndex": 27304,
+          "token": "0x040011F7",
+          "typeIndex": 23717,
+          "resolvedType": "UnityEngine.UI.Image",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 40
+        },
+        {
+          "name": "HighlightImage",
+          "fieldIndex": 27305,
+          "token": "0x040011F8",
+          "typeIndex": 23717,
+          "resolvedType": "UnityEngine.UI.Image",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 48
+        },
+        {
+          "name": "EmptyIcon",
+          "fieldIndex": 27306,
+          "token": "0x040011F9",
+          "typeIndex": 29600,
+          "resolvedType": "UnityEngine.Sprite",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 56
+        },
+        {
+          "name": "<okl>k__BackingField",
+          "fieldIndex": 27307,
+          "token": "0x040011FA",
+          "typeIndex": 24346,
+          "resolvedType": "ItemData",
+          "typeKind": 18,
+          "attributes": "0x0001",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 64
+        },
+        {
+          "name": "<okm>k__BackingField",
+          "fieldIndex": 27308,
+          "token": "0x040011FB",
+          "typeIndex": 29911,
+          "resolvedType": "System.String",
+          "typeKind": 14,
+          "attributes": "0x0001",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 72
+        },
+        {
+          "name": "okn",
+          "fieldIndex": 27309,
+          "token": "0x040011FC",
+          "typeIndex": 17717,
+          "resolvedType": "AuctionUI",
+          "typeKind": 18,
+          "attributes": "0x0001",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 80
+        }
+      ]
+    },
+    "AuctionListing": {
+      "name": "AuctionListing",
+      "typeDefinitionIndex": 5644,
+      "fields": [
+        {
+          "name": "listedAt",
+          "fieldIndex": 23494,
+          "token": "0x04000315",
+          "typeIndex": 24119,
+          "resolvedType": "System.Int64",
+          "typeKind": 10,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 72
+        },
+        {
+          "name": "cancelIn",
+          "fieldIndex": 23495,
+          "token": "0x04000316",
+          "typeIndex": 24084,
+          "resolvedType": "System.Int32",
+          "typeKind": 8,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 80
+        },
+        {
+          "name": "pending",
+          "fieldIndex": 23496,
+          "token": "0x04000317",
+          "typeIndex": 18261,
+          "resolvedType": "System.Boolean",
+          "typeKind": 2,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 84
+        },
+        {
+          "name": "received",
+          "fieldIndex": 23497,
+          "token": "0x04000318",
+          "typeIndex": 18261,
+          "resolvedType": "System.Boolean",
+          "typeKind": 2,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 85
+        }
+      ]
+    },
+    "LedgerEntry": {
+      "name": "LedgerEntry",
+      "typeDefinitionIndex": 5759,
+      "fields": [
+        {
+          "name": "instanceId",
+          "fieldIndex": 24024,
+          "token": "0x04000527",
+          "typeIndex": 29915,
+          "resolvedType": "System.String",
+          "typeKind": 14,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 16
+        },
+        {
+          "name": "baseItemId",
+          "fieldIndex": 24025,
+          "token": "0x04000528",
+          "typeIndex": 29915,
+          "resolvedType": "System.String",
+          "typeKind": 14,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 24
+        },
+        {
+          "name": "rarity",
+          "fieldIndex": 24026,
+          "token": "0x04000529",
+          "typeIndex": 29915,
+          "resolvedType": "System.String",
+          "typeKind": 14,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 32
+        },
+        {
+          "name": "itemLevel",
+          "fieldIndex": 24027,
+          "token": "0x0400052A",
+          "typeIndex": 24084,
+          "resolvedType": "System.Int32",
+          "typeKind": 8,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 40
+        },
+        {
+          "name": "ancient",
+          "fieldIndex": 24028,
+          "token": "0x0400052B",
+          "typeIndex": 18261,
+          "resolvedType": "System.Boolean",
+          "typeKind": 2,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 44
+        },
+        {
+          "name": "blackMist",
+          "fieldIndex": 24029,
+          "token": "0x0400052C",
+          "typeIndex": 18261,
+          "resolvedType": "System.Boolean",
+          "typeKind": 2,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 45
+        },
+        {
+          "name": "modifiers",
+          "fieldIndex": 24030,
+          "token": "0x0400052D",
+          "typeIndex": 16253,
+          "resolvedType": "PlanModifier[]",
+          "typeKind": 29,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 48
+        },
+        {
+          "name": "sockets",
+          "fieldIndex": 24031,
+          "token": "0x0400052E",
+          "typeIndex": 24084,
+          "resolvedType": "System.Int32",
+          "typeKind": 8,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 56
+        },
+        {
+          "name": "gems",
+          "fieldIndex": 24032,
+          "token": "0x0400052F",
+          "typeIndex": 16409,
+          "resolvedType": "System.String[]",
+          "typeKind": 29,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 64
+        }
+      ]
     }
   },
   "methods": {
@@ -19449,6 +20047,93 @@
       "rva": 6058768,
       "prefix": "48895c2408574883ec30803db430640300488bd9754b488d",
       "declaring_type": "MainMenuUI"
+    },
+    "AuctionUI.Show": {
+      "name": "Show",
+      "token": "0x060012C1",
+      "isStatic": false,
+      "returnType": "System.Void",
+      "parameters": [],
+      "rva": 5491408,
+      "prefix": "488b11488b8298010000488b92a001000048ffe0cccccccc",
+      "declaring_type": "AuctionUI"
+    },
+    "AuctionUI.upload_select": {
+      "name": "fvv",
+      "token": "0x060012C4",
+      "isStatic": false,
+      "returnType": "System.Boolean",
+      "parameters": [
+        {
+          "name": "a",
+          "typeIndex": 24345,
+          "resolvedType": "ItemData"
+        },
+        {
+          "name": "b",
+          "typeIndex": 29910,
+          "resolvedType": "System.String"
+        }
+      ],
+      "rva": 5492224,
+      "prefix": "48895c24084889742410574883ec20488bf2498bf833d248",
+      "declaring_type": "AuctionUI"
+    },
+    "AuctionUI.upload_submit": {
+      "name": "fwd",
+      "token": "0x060012CC",
+      "isStatic": false,
+      "returnType": "System.Void",
+      "parameters": [],
+      "rva": 5494032,
+      "prefix": "48895c2418574883ec30803ddbcb6c0300488bd9753a488d",
+      "declaring_type": "AuctionUI"
+    },
+    "AuctionUploadSlotUI.clear": {
+      "name": "fwz",
+      "token": "0x060012E9",
+      "isStatic": false,
+      "returnType": "System.Void",
+      "parameters": [],
+      "rva": 5508704,
+      "prefix": "40534883ec208b05448b6c034c8d15adbb6d034533c9488b",
+      "declaring_type": "AuctionUploadSlotUI"
+    },
+    "ItemData.auction_tradable": {
+      "name": "cge",
+      "token": "0x0600060E",
+      "isStatic": false,
+      "returnType": "System.Boolean",
+      "parameters": [
+        {
+          "name": "a",
+          "typeIndex": 22292,
+          "resolvedType": "GeneratedItemData"
+        }
+      ],
+      "rva": 7418800,
+      "prefix": "4885d20f8490000000488b42504885c00f84830000008378",
+      "declaring_type": "ItemData"
+    },
+    "PanelBase.auction_is_open": {
+      "name": "hfz",
+      "token": "0x060018B2",
+      "isStatic": false,
+      "returnType": "System.Boolean",
+      "parameters": [],
+      "rva": 6253328,
+      "prefix": "48895c2408574883ec20803db739610300488bd97518488d",
+      "declaring_type": "PanelBase"
+    },
+    "AuctionUI.refresh_list": {
+      "name": "fwc",
+      "token": "0x060012CB",
+      "isStatic": false,
+      "returnType": "System.Void",
+      "parameters": [],
+      "rva": 5493488,
+      "prefix": "40534883ec20803dfecd6c0300488bd9755c488d0da77552",
+      "declaring_type": "AuctionUI"
     }
   },
   "singletons": {
@@ -19472,7 +20157,8 @@
     "RuneManager": 61217592,
     "CraftingPanelUI": 61236080,
     "MainMenuUI": 61238352,
-    "PopupPanel": 61217640
+    "PopupPanel": 61217640,
+    "AuctionUI": 61229352
   },
   "iat": {
     "peek_message_w_rva": 28941400

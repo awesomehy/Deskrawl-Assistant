@@ -22,13 +22,14 @@ from .mythic import MYTHIC, MAP_ID as MYTHIC_MAP, floor_id, floor_number, WORLD_
 
 from .progression import NEW_ACTIONS
 from .synthesis import KINDS as SYNTHESIS_ACTIONS
+from .auction_runtime import KINDS as AUCTION_ACTIONS
 from .run_receipts import RunReceipts
 
-KINDS = ('return_town', 'enter_map', 'switch_difficulty', 'equip', 'sell', 'salvage', 'open_chest', 'collect_ground') + NEW_ACTIONS + SYNTHESIS_ACTIONS
+KINDS = ('return_town', 'enter_map', 'switch_difficulty', 'equip', 'sell', 'salvage', 'open_chest', 'collect_ground') + NEW_ACTIONS + SYNTHESIS_ACTIONS + AUCTION_ACTIONS
 CAPABILITIES = {'travel': ('return_town', 'enter_map'), 'equip': ('equip',), 'sell': ('sell',),
     'difficulty': ('switch_difficulty',), 'salvage': ('salvage',), 'chests': ('open_chest',), 'ground_pickup': ('collect_ground',), 'talents': ('allocate_talent',),
     'life_skills': ('learn_life_skill',), 'skills': ('set_skill',), 'merchant': ('merchant_open', 'merchant_buy', 'merchant_close', 'merchant_refresh'),
-    'gem_synthesis': ('synthesize_gems',), 'rune_synthesis': ('synthesize_runes',)}
+    'gem_synthesis': ('synthesize_gems',), 'rune_synthesis': ('synthesize_runes',), 'auction_upload': AUCTION_ACTIONS}
 
 
 def normalise_run(run, completed, dead=False):
@@ -140,6 +141,7 @@ class GameActions:
         self._panel_log_cache = {}
         self._progression = None
         self._synthesis = None
+        self._auction = None
         self._reconnect = None
 
     def reconnect_runtime(self):
@@ -166,6 +168,8 @@ class GameActions:
             reason = ''
         elif compatible and len(self.enabled_kinds) == len(KINDS):
             reason = '全部动作已开放，部分新增动作尚未实机验收。'
+        elif compatible and self.enabled_kinds:
+            reason = '已开放已发布动作；新增拍卖行动作尚未实机验收，仅供开发测试。'
         result = {'compatible': compatible, 'native_verified': fully_verified,
             'build': self.profile['build'], 'reason': reason, 'installed': self.dispatcher.installed,
             'test_mode': self.allow_unverified is True}
@@ -197,6 +201,25 @@ class GameActions:
 
     def synthesis_snapshot(self, *, gems=True, runes=True):
         return self.synthesis_runtime().snapshot(gems=gems, runes=runes)
+
+    def auction_runtime(self):
+        if self._auction is None:
+            from .auction_runtime import AuctionRuntime
+            self._auction = AuctionRuntime(self)
+        return self._auction
+
+    def auction_state(self):
+        return self.auction_runtime().snapshot()
+
+    def steam_identity_snapshot(self):
+        """Read current authorized account without opening the auction UI."""
+        return self.auction_runtime().identity_snapshot()
+
+    def auction_upload(self, row, *, expected_steamid=None,
+                       cancel_event=None, validate=lambda: True):
+        return self.execute('auction_upload', {'item': row,
+                            'expected_steamid': expected_steamid},
+                            cancel_event=cancel_event, validate=validate)
 
     def mark_verified(self, kinds):
         """Called only by a supervised in-game validation, not a web endpoint."""
@@ -778,6 +801,8 @@ class GameActions:
         if not self.capabilities()['compatible']:
             raise NativeActionError(self.capabilities()['reason'])
         payload = payload or {}
+        if kind in AUCTION_ACTIONS:
+            return self.auction_runtime().execute(kind, payload, cancel_event=cancel_event, validate=validate)
         if kind in SYNTHESIS_ACTIONS:
             result = self.synthesis_runtime().execute(kind, payload, cancel_event=cancel_event, validate=validate)
             result['native_verified'] = kind in self.verified_kinds

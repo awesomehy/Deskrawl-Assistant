@@ -32,7 +32,7 @@ async function api(path,data,retry=true){
     token=session.token;
     return api(path,data,false);
   }
-  if(!response.ok)throw new Error(result.error||'操作未完成，请重试。');
+  if(!response.ok){const error=new Error(result.error||'操作未完成，请重试。');error.status=response.status;throw error;}
   return result;
 }
 function toast(message,error=false){
@@ -70,6 +70,7 @@ function switchTab(tab){
   $('rules-page').hidden=tab!=='rules';$('inventory-page').hidden=tab!=='inventory';$('logs-page').hidden=tab!=='logs';
   $('managed-page').hidden=tab!=='managed';
   window.ManagedModeUI?.setActive(tab==='managed');
+  window.InventoryAuctionUI?.setActive(tab==='inventory');
   $('loot-preview-page').hidden=tab!=='loot-preview';
   $('feedback-page').hidden=tab!=='feedback';
   if(tab==='inventory')renderInventory();
@@ -272,7 +273,7 @@ function renderInventory(){
   $('select-visible').disabled=!available.length;
   $('selected-count').textContent=state.items.filter(i=>selectedItems.has(i.selection_id)&&i.is_equipment&&i.locked===false).length;
   const hiddenSelection=[...selectedItems].filter(id=>!view.some(i=>i.selection_id===id)).length;
-  $('transfer-selection').textContent=selectedItems.size?`已选 ${selectedItems.size} 组${hiddenSelection?`（筛选外 ${hiddenSelection} 组）`:''}`:'勾选物品后移动';
+  $('transfer-selection').textContent=selectedItems.size?`已选 ${selectedItems.size} 组${hiddenSelection?`（筛选外 ${hiddenSelection} 组）`:''}`:'勾选物品后操作';
   updateControls();
   window.SteamMarketUI?.update(view,activeTab==='inventory');
 }
@@ -428,6 +429,7 @@ function updateControls(){
   if(!state)return;
   const managedRunning=!!state.managed?.running;
   const available=state.connected&&!state.busy&&!managedRunning&&state.complete,enabled=state.rules.some(r=>r.enabled);
+  window.InventoryAuctionUI?.update(state,state.items.filter(item=>selectedItems.has(item.selection_id)));
   $('connect').hidden=state.connected;$('connect').disabled=state.busy;
   $('disconnect').hidden=!state.connected;$('disconnect').disabled=state.busy||managedRunning;
   $('refresh').disabled=!state.connected||state.busy||managedRunning;
@@ -496,7 +498,7 @@ async function pollState(){
   polling=true;
   const sharedEpoch=sharedStorage?.epoch;
   try{state=await api('state');if(state.automation)sharedStorage?.observe(window.AutomationTools.sharedPages(state.automation.settings),sharedEpoch);renderState();}
-  catch(error){renderManagedTab(null);clearLootPreview('助手服务已断开，请重新启动后连接游戏。','unavailable');$('footer-state').textContent='助手服务已断开，请重新双击启动文件。';if(!state)$('operation-message').textContent=error.message;}
+  catch(error){window.InventoryAuctionUI?.update({},[]);renderManagedTab(null);clearLootPreview('助手服务已断开，请重新启动后连接游戏。','unavailable');$('footer-state').textContent='助手服务已断开，请重新双击启动文件。';if(!state)$('operation-message').textContent=error.message;}
   finally{polling=false;}
 }
 async function action(kind,data={}){
@@ -619,6 +621,7 @@ $('exit').addEventListener('click',requestExit);
 window.addEventListener('beforeunload',e=>{if(!exiting&&hasPendingDrafts()){e.preventDefault();e.returnValue='';}});
 async function boot(){
   if(desktopMode)$('usage-note').textContent='监控只自动处理新增装备；已有装备请用“一键按规则锁定”。最小化窗口可继续监控，关闭窗口会退出助手并停止监控。';
+  window.InventoryAuctionUI?.init({api,toast,onRefresh:pollState});
   try{catalog=await api('catalog');buildCatalog();window.ManagedModeUI?.init({api,toast,confirmAction,onDirty:syncDraftState,catalog,sharedStorage});await pollState();const first=state.rules[0]?.equipment_keys[0]||'LegendaryBelt3';if(first)await chooseGear(first);await window.ManagedModeUI?.refresh();await pollUpdate();setInterval(pollState,1000);setInterval(pollUpdate,1500);setInterval(()=>{if(activeTab==='logs'&&!logBefore)loadLogs(true);},2000);}catch(error){toast(error.message,true);}
 }
 function renderUpdate(){

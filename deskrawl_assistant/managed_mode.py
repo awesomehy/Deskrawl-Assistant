@@ -20,13 +20,16 @@ from .stargazing import DEFAULT_STARGAZING, validate_stargazing, enabled as star
 from .combat_rewards import CompletionRewards
 from .synthesis import (DEFAULT_SYNTHESIS, enabled as synthesis_enabled,
                         validate_settings as validate_synthesis, next_action as synthesis_action, KINDS as SYNTHESIS_ACTIONS)
+from .reconnect import DEFAULT_RECONNECT, validate_settings as validate_reconnect
 from .progression import (DEFAULT_PROGRESSION, DEFAULT_LIFE, DEFAULT_MERCHANT,
                           validate_growth, enabled as growth_enabled, growth_action, next_purchase, PURCHASE_BATCH_LIMIT)
-from .reconnect import DEFAULT_RECONNECT, validate_settings as validate_reconnect
+from .auction import (DEFAULT_AUCTION, validate_settings as validate_auction,
+                      enabled as auction_enabled, next_action as auction_action)
 
 
 DEFAULT_SETTINGS = {
     'reconnect': deepcopy(DEFAULT_RECONNECT),
+    'auction': deepcopy(DEFAULT_AUCTION),
     'synthesis': deepcopy(DEFAULT_SYNTHESIS),
     'progression': deepcopy(DEFAULT_PROGRESSION), 'life_skills': deepcopy(DEFAULT_LIFE),
     'merchant': deepcopy(DEFAULT_MERCHANT),
@@ -67,9 +70,12 @@ def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_e
     raw.setdefault('reconnect', deepcopy(DEFAULT_RECONNECT))
     raw.setdefault('background', deepcopy(DEFAULT_SETTINGS['background']))
     raw.setdefault('synthesis', deepcopy(DEFAULT_SYNTHESIS))
-    for name in ('progression', 'life_skills', 'merchant'):
+    for name in ('progression', 'life_skills', 'merchant', 'auction'):
         raw.setdefault(name, deepcopy(DEFAULT_SETTINGS[name]))
     if set(raw) != set(DEFAULT_SETTINGS): raise ValidationError('托管配置格式无效。')
+    # Migrate retired development fields before the generic shape check;
+    # otherwise an older auction section rejects every unrelated preset too.
+    raw['auction'] = validate_auction(raw['auction'])
     if isinstance(raw.get('farming'),dict):
         raw['farming'].setdefault('difficulty','current')
         raw['farming'].setdefault('repeat_maps',[])
@@ -802,7 +808,8 @@ class ManagedMode:
         if self.running or self.pending: raise ValidationError('托管已在运行。')
         if observation.get('complete') is not True: raise ValidationError('请先完整读取背包与仓库。')
         if (not self.settings['auto_equip']['enabled'] and not self.settings['farming']['enabled']
-                and not growth_enabled(self.settings) and not synthesis_enabled(self.settings)):
+                and not growth_enabled(self.settings) and not synthesis_enabled(self.settings)
+                and not auction_enabled(self.settings)):
             raise ValidationError('请至少开启一项托管功能。')
         self.__init__(self.settings)
         self.merchant_received_uids.update(observation.get('merchant_uids',[]))
@@ -1121,6 +1128,9 @@ class ManagedMode:
                 visible = visible and bool(new_id and new_id != action.get('source_run_id'))
         elif kind == 'switch_difficulty':
             visible = self._town(observation) and observation.get('scene',{}).get('difficulty')==action['difficulty']
+        elif kind == 'auction_open':
+            state = observation.get('auction', {})
+            visible = state.get('available') is True and state.get('needs_refresh') is not True
         else: visible = False
         if visible:
             self.await_effect = None; self.await_count = 0
@@ -1386,6 +1396,12 @@ class ManagedMode:
                     reason_code='equipment_fallback', reason='按品质处理从装备专用页取出的未命中装备。')
         action = self._equip(observation, all_items)
         if action: return action
+        if not self.finishing:
+            action = auction_action(self.settings, observation)
+            if action:
+                self.phase = 'auction'
+                return self._action(action['kind'], action.get('item'),
+                    **{k: v for k, v in action.items() if k not in ('kind', 'item')})
         for row in protected:
             return self._storage_transfer(observation, row, settings['equipment_pages'], all_items, mandatory=True)
         # Free the crafting workspace only after the complete protection and
@@ -1842,7 +1858,7 @@ class ManagedMode:
             if self._town(observation) and any(r.get('container')=='inventory'
                     and r.get('item_uid') in self.merchant_received_uids for r in all_items):
                 self.phase='cleanup';return self._cleanup(observation,all_items)
-            if self._town(observation) and synthesis_enabled(self.settings):
+            if self._town(observation) and (synthesis_enabled(self.settings) or auction_enabled(self.settings)):
                 self.phase = 'cleanup'
                 return self._cleanup(observation, all_items)
             action, self.growth_wait = growth_action(self.settings, observation.get('progression', {}))

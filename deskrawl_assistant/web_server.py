@@ -68,6 +68,16 @@ def make_handler(service, token):
                         return self.reply({'error':'请重新打开助手页面。','session_expired':True},403)
                     if urlsplit(self.path).query: raise ValueError('市场设置不接受查询参数。')
                     return self.reply(service.market_settings())
+                if path=='/api/auction/state':
+                    if self.headers.get('X-Assistant-Token') != token:
+                        return self.reply({'error':'请重新打开助手页面。','session_expired':True},403)
+                    if urlsplit(self.path).query: raise ValueError('拍卖状态不接受查询参数。')
+                    return self.reply(service.auction_state(desktop=getattr(self.server,'desktop',None) is not None))
+                if path=='/api/auction/manual/state':
+                    if self.headers.get('X-Assistant-Token') != token:
+                        return self.reply({'error':'请重新打开助手页面。','session_expired':True},403)
+                    if urlsplit(self.path).query: raise ValueError('批量上架状态不接受查询参数。')
+                    return self.reply(service.manual_auction_state())
                 if path=='/api/community':
                     if self.headers.get('X-Assistant-Token') != token:
                         return self.reply({'error':'请重新打开助手页面。','session_expired':True},403)
@@ -146,6 +156,21 @@ def make_handler(service, token):
                 elif path=='/api/market/settings':
                     if set(data) != {'currency_id'}: raise ValueError('市场设置参数无效。')
                     return self.reply(service.set_market_currency(data['currency_id']))
+                elif path in ('/api/auction/login', '/api/auction/logout'):
+                    if data: raise ValueError('Steam 绑定接口不接受账号、密码或会话参数。')
+                    desktop = getattr(self.server,'desktop',None)
+                    if path.endswith('/login'):
+                        if desktop is None: raise ValueError('请在助手独立窗口中绑定 Steam。')
+                        return self.reply(service.auction_login())
+                    service.auction_logout()
+                    return self.reply(service.auction_state(desktop=desktop is not None))
+                elif path=='/api/auction/manual/preview':
+                    return self.reply(service.manual_auction_preview(data))
+                elif path=='/api/auction/manual/start':
+                    return self.reply(service.manual_auction_start(data))
+                elif path=='/api/auction/manual/cancel':
+                    if data: raise ValueError('停止批量上架不接受额外参数。')
+                    return self.reply(service.manual_auction_cancel())
                 elif path in ('/api/game/start','/api/game/close'):
                     return self.reply(service.game_action(path.rsplit('/',1)[-1],data))
                 elif path in ('/api/update/check','/api/update/install'):

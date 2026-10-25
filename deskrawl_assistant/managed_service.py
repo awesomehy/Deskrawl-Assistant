@@ -15,10 +15,12 @@ from .native_dispatcher import NativeActionError, GUARD_FAILED, REJECTED
 from .paths import RESOURCE_ROOT
 from .stargazing import enabled as stargazing_enabled, decide as stargazing_decide, combat_rewards_clear, combat_rewards_known
 from .loot_preview import decorate_equipment
+from .reconnect import ReconnectFlow
 from .item_protection import disposal_protection, mandatory_storage
 from .action_log import record
-from .reconnect import ReconnectFlow
 from .progression import catalog as growth_catalog, growth_action, next_purchase, NEW_ACTIONS, PURCHASE_BATCH_LIMIT, enabled as growth_enabled
+from .auction import next_action as auction_action, validate_settings as validate_auction
+from .auction_runtime import auction_eligibility
 
 SYNTHESIS_ACTIONS = ('synthesize_gems', 'synthesize_runes')
 
@@ -38,6 +40,8 @@ def _synthesis_action_key(action):
 def required_capabilities(settings):
     required = {'transfer'}
     synthesis_enabled = False
+    if settings.get('auction', {}).get('upload_enabled'):
+        required.update(('auction_upload', 'lock', 'chests', 'ground_pickup'))
     if settings['auto_equip']['enabled']: required.add('equip')
     if settings['background']['rule_monitoring']: required.add('lock')
     if settings.get('progression', {}).get('talents_enabled'): required.add('talents')
@@ -53,7 +57,8 @@ def required_capabilities(settings):
         if (settings['farming']['mode']=='push' or settings['farming']['difficulty']!='current'
                 or any(row['difficulty']!='current' for row in settings['farming'].get('repeat_maps',[]))):
             required.add('difficulty')
-    if settings['farming']['enabled'] or settings.get('merchant', {}).get('enabled') or synthesis_enabled:
+    if (settings['farming']['enabled'] or settings.get('merchant', {}).get('enabled') or synthesis_enabled
+            or settings.get('auction', {}).get('upload_enabled')):
         required.update(('lock', 'chests', 'ground_pickup'))
         required.update(equipment_actions(settings['cleanup']))
     return required - {'store'}
@@ -125,7 +130,9 @@ class ManagedServiceMixin:
         self.managed = ManagedMode()
         self.managed_merchant_uids = self.journal.merchant_item_uids()
         self.managed_control = {}
+        self.managed_control_read_at = None
         self.managed_growth = {'available': False, 'reason': '连接游戏后读取成长状态。'}
+        self.managed_auction = {}
         self.managed_capabilities = {}
         self.managed_history = []
         self.managed_started_at = None
@@ -184,6 +191,8 @@ class ManagedServiceMixin:
 
     def _managed_refresh_control(self):
         """Called only by a new assistant's read worker, never by an HTTP GET."""
+        with self.guard:
+            self.managed_control_read_at = None
         if not self.client.connected: return
         if not hasattr(self.client,'control_snapshot'): return
         try:
@@ -194,6 +203,7 @@ class ManagedServiceMixin:
         except Exception as exc:
             value = {'available':False,'reason':str(exc)}
             capabilities = {}
+        read_at = time.monotonic()
         growth = {'available': False, 'reason': '成长读取入口尚未载入。'}
         if hasattr(self.client, 'progression_snapshot'):
             # Price previews are read-only and independent of enabling purchases.
@@ -203,6 +213,7 @@ class ManagedServiceMixin:
         with self.guard:
             self.managed_growth = deepcopy(growth)
             self.managed_control = deepcopy(value)
+            self.managed_control_read_at = read_at
             self.managed_capabilities = deepcopy(capabilities)
 
     def _managed_scene(self):
@@ -270,6 +281,7 @@ class ManagedServiceMixin:
         payload = self.state()
         raw = {(r.get('container'),r.get('slot_index')):r for c in snap.get('containers',{}).values() for r in c.get('slots',[])}
         observations = {(a.container,a.index):a.observation for a in self.adapter.adapt_snapshot(snap).items}
+        market_catalog = self._market_catalog() if self.managed.settings['auction']['upload_enabled'] else None
         for item in payload['items']:
             source = raw.get((item['container'],item['slot_index']),{})
             item['issues'] = list(source.get('issues',[]))
@@ -278,6 +290,15 @@ class ManagedServiceMixin:
             item['slot_locked'] = source.get('slot_locked')
             item['identity_verified'] = source.get('identity_verified')
             item['base_rarity'] = source.get('base_rarity')
+            item['bound'] = source.get('bound')
+            item['is_equipped'] = source.get('is_equipped')
+            evidence = source.get('read_evidence', {})
+            item['auction_identity_verified'] = (source.get('identity_verified') is True
+                or source.get('identity_verified') is not False and evidence.get('snapshot_consistent') is True
+                and bool(source.get('item_uid')) and bool(source.get('instance_id')))
+            item['auction_candidate'] = bool(market_catalog and market_catalog.resolve(source)[0]
+                and auction_eligibility({**source, 'auction_identity_verified': item['auction_identity_verified']},
+                    preliminary=True)['eligible'])
             item['equip_slot'] = source.get('equip_slot')
             if not item['is_equipment']:
                 item['rarity'] = source.get('rarity',source.get('base_rarity'))
@@ -340,6 +361,7 @@ class ManagedServiceMixin:
                 'gold_ledger':deepcopy(self.managed_control.get('gold_ledger', {})),
                 'run_history':deepcopy(control.get('run_history', {})),
                 'synthesis':self._managed_synthesis_state(scene),
+                'auction':self._managed_auction_state(scene),
                 'storage':{'page_size':snap.get('transfer',{}).get('page_size'),
                            'allowed_indices':snap.get('transfer',{}).get('storage_indices',[])}}
 
@@ -425,6 +447,8 @@ class ManagedServiceMixin:
             if getattr(self,'game_transition',False): raise ValidationError('游戏正在启动或退出，请稍候。')
             if self.managed.running or self.operation_kind=='managed': raise ValidationError('请先暂停托管再修改设置。')
             settings = validate_settings(raw,equipment_keys=self.ui['equipment'])
+            catalog = self._market_catalog()
+            settings['auction'] = validate_auction(settings['auction'], catalog.items if catalog else ())
             self._validate_managed_storage_pages(settings['cleanup'])
             if settings['merchant']['enabled']:
                 shop=self.managed_growth.get('merchant',{})
@@ -605,17 +629,20 @@ class ManagedServiceMixin:
 
     def _managed_execute(self, action, observation):
         kind,item = action['kind'],action.get('item')
-        def active(): return self.managed.running and not self.cancelled.is_set()
-        if not active(): raise ValidationError('托管已取消。')
-        if self.managed.finishing and (kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh','allocate_talent','learn_life_skill','set_skill',*SYNTHESIS_ACTIONS)
-                or action.get('reason_code') == 'synthesis_prepare'):
+        def active():
+            return (self.managed.running and not self.cancelled.is_set()
+                    and not (self.managed.finishing and (kind in ('auction_open', 'auction_upload')
+                        or action.get('reason_code') == 'auction_prepare')))
+        if not self.managed.running or self.cancelled.is_set(): raise ValidationError('托管已取消。')
+        if self.managed.finishing and (kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh','allocate_talent','learn_life_skill','set_skill','auction_upload','auction_open',*SYNTHESIS_ACTIONS)
+                or action.get('reason_code') in ('synthesis_prepare', 'auction_prepare')):
             return {'verified':False,'retryable':True,'reason':'已请求停止，改为回城整理。'}
         # Inventory writes need fresh rule/equip checks. Pickup backends already
         # resolve the drop, verify receiving capacity/identity and confirm the
         # receipt themselves; do not scan campaign/character/rules twice here.
         if kind not in ('collect_ground', 'collect_carriage'):
             observation = self._managed_observation(inventory_only=kind in ('lock','transfer','sell','salvage')
-                and action.get('reason_code') not in ('equip_prepare', 'synthesis_prepare'))
+                and action.get('reason_code') not in ('equip_prepare', 'synthesis_prepare', 'auction_prepare'))
         if observation.get('complete') is not True: raise SnapshotChangedError('物品正在变化，等待重新规划。')
         scene = observation.get('scene',{})
         if scene.get('scene_changing') is True or scene.get('teleporting') is True:
@@ -636,6 +663,13 @@ class ManagedServiceMixin:
             if planned is None or _synthesis_action_key(action) != _synthesis_action_key(planned):
                 return {'verified':False,'retryable':True,'reason':'合成材料、品质上限或排除名单已变化，重新规划。'}
             action = {**action, **planned}
+        if kind in ('auction_upload', 'auction_open') or action.get('reason_code') == 'auction_prepare':
+            if not self._managed_identity_ok(observation, require_character=True):
+                return {'verified': False, 'retryable': True, 'reason': self.managed.status}
+            planned = auction_action(self.managed.settings, observation)
+            if (not planned or planned['kind'] != kind
+                    or planned.get('item', {}).get('item_uid') != (item or {}).get('item_uid')):
+                return {'verified': False, 'retryable': True, 'reason': '拍卖白名单、保留数量或物品状态已变化，重新规划。'}
         pending = scene.get('online_pending_requests')
         if kind in ('return_town','enter_dungeon','switch_difficulty') and type(pending) is int and pending > 0:
             raise OnlineSyncBusyError(f'等待在线请求处理完成后切换场景（待处理请求 {pending}）。')
@@ -668,8 +702,8 @@ class ManagedServiceMixin:
                 return {'verified':False, 'retryable':True, 'reason':'观星状态或实际奖励已变化，重新核验后再切图。'}
         if kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh') and not stargazing_entry and not managed_town_rewards_clear(observation):
             return {'verified':False,'retryable':True,'reason':'主城奖励尚未收取或收纳完成，继续整理后再进入地图。'}
-        if self.managed.finishing and (kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh','allocate_talent','learn_life_skill','set_skill',*SYNTHESIS_ACTIONS)
-                or action.get('reason_code') == 'synthesis_prepare'):
+        if self.managed.finishing and (kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh','allocate_talent','learn_life_skill','set_skill','auction_upload','auction_open',*SYNTHESIS_ACTIONS)
+                or action.get('reason_code') in ('synthesis_prepare', 'auction_prepare')):
             return {'verified':False,'retryable':True,'reason':'已请求停止，改为回城整理。'}
         if action.get('reason_code') == 'background_organize':
             if (not self.managed.settings['background']['inventory_automation']
@@ -679,6 +713,7 @@ class ManagedServiceMixin:
                       'switch_difficulty':'difficulty', 'allocate_talent':'talents', 'learn_life_skill':'life_skills',
                       'set_skill':'skills', 'merchant_buy':'merchant', 'merchant_open':'merchant', 'merchant_close':'merchant', 'merchant_refresh':'merchant',
                       'synthesize_gems':'gem_synthesis', 'synthesize_runes':'rune_synthesis',
+                      'auction_open':'auction_upload',
                       'collect_ground':'ground_pickup','collect_carriage':'transfer'}.get(kind,kind)
         if not available_capability(self.managed_page()['capabilities'].get(capability)):
             raise ValidationError('当前托管动作能力尚未核验：'+capability)
@@ -705,7 +740,7 @@ class ManagedServiceMixin:
                 missing=sorted(selected-{r['slot'] for r in state.get('merchant',{}).get('stock',[])})
                 if not self.managed.merchant_pending or not missing or action.get('shop_slots')!=missing:
                     return {'verified':False,'retryable':True,'reason':'商人库存已变化，重新读取报价。'}
-        if item and kind in ('transfer','lock','equip','sell','salvage','open_chest'):
+        if item and kind in ('transfer','lock','equip','sell','salvage','open_chest','auction_upload'):
             current = next((r for r in observation['items'] if identity(r)==identity(item)
                             and r.get('container')==item.get('container')),None)
             if not current: raise SnapshotChangedError('物品已移动或变化。')
@@ -759,7 +794,7 @@ class ManagedServiceMixin:
                     or item.get('kind') not in ('rune','gem')
                     or self.managed.settings['cleanup'][item['kind']+'_action'] != 'sell'):
                 raise ValidationError('当前物品不能按此策略处置。')
-        if kind in ('transfer','lock','equip','sell','salvage','open_chest'):
+        if kind in ('transfer','lock','equip','sell','salvage','open_chest','auction_upload'):
             if not source: raise SnapshotChangedError('物品已移动或变化，请重新扫描。')
             if source.get('slot_index')!=item.get('slot_index') or source.get('count')!=item.get('count'):
                 raise SnapshotChangedError('物品格位或数量已变化。')
@@ -801,13 +836,52 @@ class ManagedServiceMixin:
         else:
             native_kind = 'enter_map' if kind=='enter_dungeon' else kind
             payload = {**action,'item':source or item}
+            auction_intent = None
+            if kind == 'auction_upload':
+                coordinator = self._auction_service()
+                config = deepcopy(self.managed.settings['auction'])
+                auction_state = observation.get('auction', {})
+                steamid = auction_state.get('steamid') if auction_state.get('steamid_verified') is True else None
+                payload['expected_steamid'] = steamid
+                ticket = None
+                if config['sell_enabled']:
+                    ticket = coordinator.prepare(item, steamid, config)
+                    if not ticket:
+                        return {'verified': False, 'retryable': True,
+                            'reason': '正在后台核验 Steam 库存基线，核验失败将跳过此物品。'}
+                if not active() or self.managed.finishing:
+                    return {'verified': False, 'retryable': True, 'reason': '托管已结束，不再上传物品。'}
+                auction_intent = coordinator.submitted(item, steamid, ticket)
             if kind=='equip': payload['expected_replaced_uid']=current_score.get('replaced_uid')
             if kind=='enter_dungeon': payload['map_id']=action['dungeon_id']
             if kind=='collect_ground': payload['selection_id']=item['selection_id']
             if kind in ('sell','salvage'):
                 payload.update(disposition_authorized=True,rule_matched=item.get('matches') is True,
                                rule_pending=item.get('review') is True or bool(item.get('issues')))
-            result = self.client.execute_game_action(native_kind,payload,self.cancelled,validate=active)
+            try:
+                result = self.client.execute_game_action(native_kind,payload,self.cancelled,validate=active)
+            except Exception as exc:
+                if kind == 'auction_open':
+                    self.auction_refresh_after = time.monotonic() + 60
+                    # Preserve diagnostic codes without logging arbitrary
+                    # exception text, HTTP payloads or account credentials.
+                    record('managed_auction_open_deferred', error_type=type(exc).__name__,
+                           state=getattr(exc, 'state', None),
+                           last_call=getattr(exc, 'last_call', None),
+                           uncertain=getattr(exc, 'uncertain', False))
+                    return {'verified': False, 'retryable': True,
+                        'reason': '游戏拍卖行列表暂未读取，跳过本轮上传，其他托管继续。'}
+                if auction_intent and (getattr(exc, 'mutation_started', None) is False
+                        or isinstance(exc, NativeActionError) and exc.state == GUARD_FAILED and not exc.uncertain):
+                    coordinator.rejected(auction_intent)
+                    return {'verified': False, 'retryable': True,
+                        'reason': '游戏尚未提交该物品上传，稍后重新核验，其他托管继续。'}
+                raise
+            if auction_intent:
+                if result.get('effect_confirmed') is True:
+                    coordinator.confirmed(auction_intent, result)
+                elif result.get('not_submitted') is True:
+                    coordinator.rejected(auction_intent)
             if result.get('transition_requested'):
                 if kind == 'enter_dungeon':
                     self.managed.expect_run_entry(action, observation)

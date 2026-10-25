@@ -264,6 +264,12 @@ class RuntimeClient:
     def synthesis_snapshot(self, *, gems=True, runes=True):
         with self._guard: return self._game_actions().synthesis_snapshot(gems=gems, runes=runes)
 
+    def auction_state(self):
+        with self._guard: return self._game_actions().auction_state()
+
+    def steam_identity_snapshot(self):
+        with self._guard: return self._game_actions().steam_identity_snapshot()
+
     def execute_game_action(self, kind, payload, cancel_event=None, *, validate=lambda:True):
         with self._guard:
             result = self._game_actions().execute(kind,payload,cancel_event=cancel_event,validate=validate)

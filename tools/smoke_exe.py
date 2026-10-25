@@ -23,7 +23,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.4.1'
+NAME = 'Deskrawl装备助手-v1.4.2'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -77,10 +77,17 @@ def main():
         assert 'deskrawl_assistant.' + module in bundled_modules.toc
     for module in ('synthesis', 'synthesis_runtime', 'steam_market', 'market_currency'):
         assert 'deskrawl_assistant.' + module in bundled_modules.toc
+    for module in ('auction', 'auction_runtime', 'auction_service', 'manual_auction',
+                   'steam_session', 'steam_trading', 'steam_listing_receipts'):
+        assert 'deskrawl_assistant.' + module in bundled_modules.toc
+    for asset in ('auction-ui.js', 'auction-ui.css', 'inventory-auction.js', 'inventory-auction.css'):
+        assert 'deskrawl_assistant/web/' + asset in normalized
+    assert not any(marker in name.lower() for name in names for marker in
+                   ('steam-session', 'steam-sale-journal', 'auction-pending', 'auction-upload-intents', '.dpapi'))
     assert not any(n.startswith('deskrawl_assistant.remote_') for n in bundled_modules.toc)
     assert not any(n.startswith(('deskrawl_assistant.account_', 'deskrawl_assistant.sandbox_accounts')) for n in bundled_modules.toc)
     managed_page = archive.extract(normalized['deskrawl_assistant/web/index.html']).decode('utf-8')
-    assert managed_page.count('data-managed-fold="') == 10
+    assert managed_page.count('data-managed-fold="') == 11
     assert 'id="managed-reconnect"' in managed_page and 'id="managed-reconnect-index"' in managed_page
     assert 'deskrawl_assistant/update_replace.ps1' in normalized
     assert 'data/compatibility-baseline.json' in normalized
@@ -88,7 +95,7 @@ def main():
     assert set(actions_profile['verified_kinds']) == {
         'return_town','enter_map','switch_difficulty','equip','sell','salvage','open_chest','collect_ground',
         'allocate_talent','merchant_open','merchant_buy','merchant_close','merchant_refresh',
-        'synthesize_gems','synthesize_runes'}
+        'synthesize_gems','synthesize_runes','auction_open','auction_upload'}
     growth = json.loads(archive.extract(normalized['data/progression-catalog.json']))
     assert set(actions_profile['enabled_kinds']) == {'learn_life_skill', 'set_skill'}
     assert set(growth['heroes']) == {'1','2','4','8'}
@@ -117,7 +124,7 @@ def main():
                 result = {'schema': 1, 'client_id': payload['client_id'], 'token': 'a' * 64}
             elif self.path == '/v1/report':
                 assert self.headers.get('Authorization') == 'Bearer ' + 'a' * 64
-                assert payload['version'] == '1.4.1'
+                assert payload['version'] == '1.4.2'
                 result = {'accepted': True, 'report_id': payload['report_id'],
                           'sequence': payload['sequence'], 'accepted_at': datetime.now(timezone.utc).isoformat()}
             else:
@@ -185,7 +192,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.4.1'
+                assert request('/api/state')['app_version'] == '1.4.2'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -240,6 +247,16 @@ def main():
         assert not request('/api/state')['automation']['running']
         managed = request('/api/managed')
         assert not managed['running'] and managed['phase'] == 'idle'
+        assert managed['settings']['auction'] == {
+            'upload_enabled': False, 'sell_enabled': False, 'price_rule': 'lowest_sell',
+            'categories': [], 'item_keys': [], 'excluded_keys': []}
+        assert request('/api/state')['manual_auction_availability']['available'] is False
+        steam = request('/api/auction/state')
+        assert not steam.get('steam', {}).get('authenticated')
+        assert not request('/api/auction/manual/state')['running']
+        for asset in ('auction-ui.js', 'auction-ui.css', 'inventory-auction.js', 'inventory-auction.css'):
+            assert request('/' + asset)
+        report['checks'].append('上架及出售默认关闭、类别为空；Steam 未登录，断连禁止手动上架，交易模块与四个页面资源完整内置且无个人凭证')
         stargazing = managed['settings']['farming']['stargazing']
         assert not stargazing['enabled'] and all(stargazing['rewards'].values())
         assert 'id="managed-stargazing"' in request('/').decode('utf-8')
@@ -344,6 +361,8 @@ def main():
         managed_settings['merchant'].update(trigger_percent=93, spend_to_percent=17)
         managed_settings['merchant']['weights']['2'] = 1
         managed_settings['merchant']['weights']['7'] = 10
+        managed_settings['auction'].update(upload_enabled=True, categories=['grand_rune'],
+            excluded_keys=['LegendaryRune_HunterSpecial1'], price_rule='highest_buy')
         saved_managed = request('/api/managed/settings', {'settings':managed_settings})['settings']
         assert saved_managed['cleanup']['rune_pages'] == [2,4]
         settings['gems']['pages'] = [1]
@@ -460,6 +479,9 @@ def main():
         restored_managed = request('/api/managed')
         assert restored_managed['settings'] == saved_managed and not restored_managed['running']
         assert restored_managed['settings']['reconnect'] == {'enabled': True, 'character_index': 2}
+        assert restored_managed['settings']['auction'] == saved_managed['auction']
+        assert not restored_managed['settings']['auction']['sell_enabled']
+        report['checks'].append('上架类别、强制保留名单和定价规则保存重启后保留；未登录不自动出售，不启动托管')
         report['checks'].append('断线重连模块与控件已内置，默认关闭；角色序号与开关保存重启后保留且不自动托管')
         assert request('/api/community')['enabled'] is True
         assert request('/api/community')['url'] == receipt_url

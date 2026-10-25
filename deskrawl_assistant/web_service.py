@@ -52,7 +52,11 @@ def item_kind(row):
     return 'material','材料 / 其他'
 
 
-class AssistantService(ManagedServiceMixin):
+from .auction_service import AuctionServiceMixin
+from .manual_auction import ManualAuctionServiceMixin
+
+
+class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedServiceMixin):
     def __init__(self, client=None, config=None, *, game_lifecycle=None):
         self.catalog = load_catalog(BASE / 'data/game-catalog.json')
         tables = json.loads((BASE / 'data/game-catalog.json').read_text(encoding='utf-8'))['tables']
@@ -489,7 +493,7 @@ class AssistantService(ManagedServiceMixin):
             'slots':[{'key':k,'name':v} for k,v in SLOT_LABELS.items()],
             'pools':pools, 'class_pools':class_pools,
             'headline_stats':{p['slot']:sorted(headline_stats(p['slot'])) for p in self.pools['slotPools']},
-            'collectibles':collectibles}
+            'collectibles':collectibles, 'auction_items':self._auction_catalog_payload()}
 
     def _persist(self, rules):
         if self.managed.running or self.operation_kind=='managed':
@@ -734,6 +738,7 @@ class AssistantService(ManagedServiceMixin):
             result['character'] = self._character_payload(character)
             result['compatibility'] = dict(getattr(self.client,'compatibility',{'phase':'idle','message':'连接时自动检测游戏兼容性'}))
             result['managed'] = {'running':self.managed.running,'phase':self.managed.phase,'status':self.managed.status}
+            result['manual_auction_availability'] = self.manual_auction_availability()
         result['game'] = (self.game_lifecycle.state(known_running_pid=result['pid'] if result['connected'] else None)
                           if hasattr(self,'game_lifecycle') else {})
         if not snap: return result
@@ -883,6 +888,7 @@ class AssistantService(ManagedServiceMixin):
                 message = '装备清单已刷新。'
             elif kind=='monitor':
                 message = self._monitor_once()
+                self._managed_refresh_control()
             elif kind=='managed':
                 message = self._managed_once()
             elif kind=='move_items':
@@ -1291,4 +1297,5 @@ class AssistantService(ManagedServiceMixin):
         if getattr(self, 'community', None) is not None: self.community.close()
         if getattr(self, 'market', None) is not None: self.market.close()
         if getattr(self, 'market_currency', None) is not None: self.market_currency.close()
+        if getattr(self, 'auction_coordinator', None) is not None: self.auction_coordinator.close()
         self.client.close()

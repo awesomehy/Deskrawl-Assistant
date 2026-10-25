@@ -8,12 +8,16 @@
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/community-stats.css">
   <link rel="stylesheet" href="/synthesis-ui.css">
+  <link rel="stylesheet" href="/auction-ui.css">
+  <link rel="stylesheet" href="/inventory-auction.css">
   <link rel="stylesheet" href="/steam-market.css">
   <script src="/inventory-tools.js" defer></script>
   <script src="/automation-tools.js" defer></script>
   <script src="/managed-growth.js" defer></script>
+  <script src="/auction-ui.js" defer></script>
   <script src="/managed-mode.js" defer></script>
   <script src="/steam-market.js" defer></script>
+  <script src="/inventory-auction.js" defer></script>
   <script src="/app.js" defer></script>
   <script src="/rule-tools.js" defer></script>
 </head>
@@ -78,7 +82,8 @@
           </div>
         </details>
         <div class="operations"><div class="scope-picker"><label for="action-scope">批量范围</label><select id="action-scope" title="全部解锁、按规则锁定的作用范围；锁定所选装备以勾选为准。"><option value="all">背包 + 仓库</option><option value="inventory">仅背包</option><option value="storage">仅仓库</option></select></div><button id="unlock-all" class="button danger">一键全部解锁</button><button id="lock-selected" class="button">锁定所选装备 <span id="selected-count">0</span></button><button id="lock-rules" class="button primary">一键按规则锁定</button><div class="monitor-control"><div><strong>持续监控</strong><small>新增装备按规则自动锁定</small></div><button id="monitor-switch" class="switch" role="switch" aria-checked="false" aria-label="持续监控背包和仓库"><span></span></button></div></div>
-        <div class="transfer-operations"><span id="transfer-selection">勾选物品后移动</span><button id="move-storage" class="button">移入仓库 <span id="move-storage-count">0</span></button><button id="move-inventory" class="button">取回背包 <span id="move-inventory-count">0</span></button><small id="transfer-hint">同种同等级宝石优先堆叠，保留数量与锁定状态。</small></div>
+        <div class="transfer-operations"><span id="transfer-selection">勾选物品后操作</span><button id="move-storage" class="button">移入仓库 <span id="move-storage-count">0</span></button><button id="move-inventory" class="button">取回背包 <span id="move-inventory-count">0</span></button><div class="inventory-auction-actions"><button id="inventory-auction-upload" class="button" type="button" aria-describedby="inventory-auction-availability" disabled>上架交易所</button><small id="inventory-auction-availability" role="status" hidden></small></div><small id="transfer-hint">同种同等级宝石优先堆叠，保留数量与锁定状态。</small></div>
+        <div id="inventory-auction-progress" class="inventory-auction-progress" role="status" hidden><div><strong id="inventory-auction-progress-title">批量上架</strong><span id="inventory-auction-progress-message"></span></div><button id="inventory-auction-details" class="text-button" type="button">查看进度</button></div>
         <div class="operation-notice"><span id="operation-message">连接游戏后自动读取装备。</span><div class="progress-wrap" hidden id="progress-wrap"><progress id="operation-progress" max="1" value="0"></progress><small id="progress-label"></small></div><button id="stop" class="text-button" hidden>停止操作</button></div>
         <div class="inventory-filters"><label class="search"><span>⌕</span><input id="item-search" placeholder="搜索物品…" aria-label="搜索背包和仓库物品"></label><select id="kind-filter" aria-label="物品类型"><option value="">全部物品</option><option value="equipment">装备</option><option value="material">材料 / 其他</option><option value="gem">宝石</option><option value="chest">宝箱</option><option value="rune">符文</option></select><label class="inventory-tradable-filter" title="仅显示已确认可在 Steam 社区市场交易的物品"><input id="inventory-tradable" type="checkbox">可交易</label><label class="market-currency-control" for="market-currency">市场币种<select id="market-currency" disabled><option value="0">自动（Steam 返回币种）</option></select></label><small id="market-currency-error" class="market-currency-error" role="status" aria-live="polite" hidden></small><button id="inventory-reset" class="text-button">清除筛选 / 排序</button><span id="visible-count"></span></div>
         <details class="inventory-advanced"><summary>更多装备条件 <small>职业、部位、标签与等级范围</small></summary><div class="inventory-filter-grid">
@@ -240,8 +245,26 @@
               </div>
             </div>
           </details>
+          <details class="panel managed-card managed-fold" data-managed-fold="auction">
+            <summary class="managed-fold-heading"><div class="managed-fold-title"><span class="eyebrow">06 · 先上传，再出售</span><h2>拍卖行与 Steam 市场</h2><p data-managed-fold-summary="auction"></p></div><span class="managed-fold-status" data-managed-fold-status="auction">未启用</span><span class="managed-fold-caret" aria-hidden="true">⌄</span><span class="managed-fold-hint" aria-hidden="true"></span></summary>
+            <div id="managed-auction" class="managed-fold-content"><div class="auction-settings">
+              <div class="auction-kind-grid">
+                <section class="auction-kind"><div class="auction-kind-heading"><h3>游戏拍卖行上传</h3><label class="managed-toggle"><input id="auction-upload-enabled" type="checkbox">启用自动上传</label></div><p>在主城将允许列表中的物品上传到 Steam 库存，物品会离开游戏。上传本身不设置售价；最多同时上传 8 件，已绑定、强化、有孔或已穿戴物品不参与。</p></section>
+                <section class="auction-kind"><div class="auction-kind-heading"><h3>Steam 市场出售</h3><label class="managed-toggle"><input id="auction-sell-enabled" type="checkbox" aria-disabled="true" aria-describedby="auction-sell-login-note">启用自动出售</label></div><p>先启用游戏拍卖行上传并登录 Steam，再出售本工具已确认上传并精确匹配的允许列表资产；不会出售 Steam 中原本持有的其他资产。真实出售涉及资金，提交后可能需要 Steam 手机确认。</p><p id="auction-sell-login-note" role="status">请先启用游戏拍卖行上传，再启用 Steam 市场出售；取消上传会同时取消出售。</p><label class="auction-field" for="auction-price-rule">出售报价<select id="auction-price-rule"><option value="lowest_sell">最低在售价</option><option value="highest_buy">最高求购价</option></select></label><p>报价为买方支付总价，手续费由 Steam 结算；仅使用 Steam 钱包币种，界面的参考换算币种不影响交易。</p></section>
+              </div>
+              <p class="auction-retention-note">托管上传按允许类别和强制保留商品执行，锁定状态不影响上传。不会自动解锁；已绑定、强化、有孔或已穿戴物品仍不参与。</p>
+              <section class="auction-login-card"><div class="auction-login-heading"><h3>Steam 登录</h3><div class="auction-login-actions"><span id="auction-steam-status">尚未登录 Steam</span><button id="auction-login" class="button ghost" type="button">登录 Steam</button><button id="auction-logout" class="button ghost" type="button" hidden>退出登录</button><button id="auction-refresh" class="button ghost" type="button">刷新状态</button></div></div><div class="auction-wallet"><span>实际交易币种</span><strong id="auction-wallet-currency">等待读取 Steam 钱包币种</strong></div><p id="auction-login-note">请在桌面助手中登录 Steam；无需提供 Cookie 或令牌。</p></section>
+              <div class="auction-status-grid" aria-live="polite"><section class="auction-status-card"><strong>游戏上传状态</strong><p id="auction-upload-status">等待上传状态</p><small id="auction-listing-count">游戏上传名额待读取 · 当前数量未知</small></section><section class="auction-status-card"><strong>Steam 出售状态</strong><p id="auction-sell-status">等待出售状态</p></section></div>
+              <p id="auction-confirmation" class="auction-confirmation" role="status" hidden></p><p id="auction-api-error" class="auction-api-error" role="alert" hidden></p>
+              <section class="auction-choices"><div class="auction-choices-heading"><h3>允许上架的商品类别</h3><small id="auction-category-count">已允许 0 类</small></div><p>勾选后允许处理该类别的商品；下方“强制保留商品”按具体商品设置，始终优先。新类别默认不勾选。</p><div id="auction-category-options" class="auction-category-options" role="group" aria-label="允许上架的商品类别"></div><p>金条、开光石可预先配置；缺少原生实例编号的物品暂需手动上传，不会自动尝试。</p></section>
+              <details class="auction-choices auction-retained-choices" id="auction-retained-fold">
+                <summary class="auction-choices-heading"><h3>强制保留商品（不自动上传或出售）</h3><small id="auction-excluded-count">已保留 0 种</small><span class="auction-retained-caret" aria-hidden="true">⌄</span></summary>
+                <div class="auction-retained-content"><p>按具体商品保留全部数量，始终优先于允许类别。目录包含当前未持有的商品，可预先勾选；搜索和收起列表不会清除已保存的选择。</p><label class="auction-search-label" for="auction-excluded-search">搜索保留的商品<input id="auction-excluded-search" type="search" autocomplete="off" placeholder="搜索名称、品质、类别或 ID…"></label><div id="auction-excluded-options" class="auction-item-options" role="group" aria-label="不自动上传或出售的保留白名单"></div></div>
+              </details>
+            </div></div>
+          </details>
           <details class="panel managed-card managed-cleanup-card managed-fold" data-managed-fold="cleanup">
-            <summary class="managed-fold-heading"><div class="managed-fold-title"><span class="eyebrow">06 · 先保留，后处置</span><h2>回城整理</h2><p data-managed-fold-summary="cleanup"></p></div><span class="managed-fold-status" data-managed-fold-status="cleanup">待读取</span><span class="managed-fold-caret" aria-hidden="true">⌄</span><span class="managed-fold-hint" aria-hidden="true"></span></summary>
+            <summary class="managed-fold-heading"><div class="managed-fold-title"><span class="eyebrow">07 · 先保留，后处置</span><h2>回城整理</h2><p data-managed-fold-summary="cleanup"></p></div><span class="managed-fold-status" data-managed-fold-status="cleanup">待读取</span><span class="managed-fold-caret" aria-hidden="true">⌄</span><span class="managed-fold-hint" aria-hidden="true"></span></summary>
             <div class="managed-fold-content">
             <p class="managed-footnote">新用户默认：装备 1／2／3 页，符文 4 页，宝石、金条与传说缰绳 5 页。金条与缰绳可独立选择存放页，已保存的自定义分区继续沿用。只使用已解锁的所选页；没有可用目标页时保留物品并暂停，可修改分区后继续。</p>
             <div class="managed-policy-presets"><span>未命中装备快捷设置</span><button class="button ghost" type="button" data-managed-preset="sell_low">普通 / 优秀出售，其余分解</button><button class="button ghost" type="button" data-managed-preset="sell">全部出售</button><button class="button ghost" type="button" data-managed-preset="salvage">全部分解</button><button class="button ghost" type="button" data-managed-preset="store">全部入库</button></div>
@@ -325,5 +348,23 @@
   <dialog id="manage-dialog" class="rule-tool-dialog" aria-labelledby="manage-title"><h2 id="manage-title">管理词条组合</h2><p>勾选需要清理的组合，然后批量删除。</p><div class="tool-selection"><button id="manage-all" class="button ghost">全选</button><button id="manage-none" class="button ghost">全不选</button><span id="manage-count"></span></div><div id="manage-list" class="manage-list"></div><div class="dialog-actions"><button id="manage-close" class="button">关闭</button><button id="manage-delete" class="button danger" disabled>删除所选组合</button></div></dialog>
   <dialog id="copy-dialog" class="rule-tool-dialog" aria-labelledby="copy-title"><h2 id="copy-title">复制到同类装备</h2><p id="copy-source"></p><label class="tool-field">复制范围<select id="copy-scope"><option value="all">此装备的全部已保存组合</option><option value="current">仅当前已保存组合</option></select></label><label class="tool-field">目标装备<select id="copy-target"></select></label><div id="copy-target-preview" class="copy-target-preview"></div><label class="tool-field">复制方式<select id="copy-mode"><option value="append">追加 · 保留目标已有组合</option><option value="replace">替换 · 清理目标已有组合</option></select></label><p id="copy-summary"></p><p>复制名称、词条条件及启用状态；相同组合自动跳过。仅复制已保存的内容，当前未保存的改动仍可继续编辑。</p><div class="dialog-actions"><button id="copy-cancel" class="button">取消</button><button id="copy-confirm" class="button primary">复制组合</button></div></dialog>
   <div id="managed-gear-menu" class="managed-gear-menu" hidden><p id="managed-gear-scope"></p><label class="search managed-picker-search"><span>⌕</span><input id="managed-gear-search" placeholder="搜索装备名称…" aria-label="搜索可用暗金装备" autocomplete="off"></label><div id="managed-gear-choices" class="managed-gear-choices" role="listbox" aria-label="自动换装选项"></div></div>
+  <dialog id="inventory-auction-dialog" class="inventory-auction-dialog" aria-labelledby="inventory-auction-title">
+    <div class="inventory-auction-heading"><div><span class="eyebrow">所选商品 · 手动批量操作</span><h2 id="inventory-auction-title">上架交易所</h2></div><button id="inventory-auction-close" class="button ghost" type="button">关闭</button></div>
+    <div class="inventory-auction-content">
+      <p id="inventory-auction-description"></p>
+      <div id="inventory-auction-options" class="inventory-auction-options">
+        <label class="inventory-auction-steam-option"><input id="inventory-auction-with-steam" type="checkbox" aria-disabled="true" aria-describedby="inventory-auction-login-tip inventory-auction-steam-note">同时上架 Steam 市场</label>
+        <small id="inventory-auction-login-tip" class="inventory-auction-login-tip" role="status" hidden>请先前往“托管模式 → 拍卖行与 Steam 市场 → Steam 登录”绑定 Steam 账号，登录有效后再勾选。</small>
+        <label id="inventory-auction-price-field">定价规则<select id="inventory-auction-price" aria-label="定价规则"><option value="lowest_sell">最低在售价</option><option value="highest_buy">最高求购价</option></select></label>
+        <small id="inventory-auction-price-note">按提交时的实时价格，使用 Steam 钱包币种；价格为买方含手续费总价。</small>
+      </div>
+      <div id="inventory-auction-steam" class="inventory-auction-steam" hidden><div><strong id="inventory-auction-steam-status">正在核验 Steam 登录…</strong><small id="inventory-auction-steam-note"></small></div></div>
+      <p id="inventory-auction-summary" class="inventory-auction-summary" role="status" aria-live="polite"></p>
+      <div id="inventory-auction-error" class="inline-error" role="alert" hidden></div>
+      <div id="inventory-auction-items" class="inventory-auction-items" aria-label="本次商品清单"></div>
+      <p id="inventory-auction-scope" class="inventory-auction-scope">仅处理本次勾选的商品，包含筛选条件外仍被勾选的商品。不使用托管模式的自动出售范围与保留设置；请核对清单。</p>
+    </div>
+    <div class="inventory-auction-footer"><span id="inventory-auction-footer-note">确认后，仓库商品会先取回背包再上传。</span><button id="inventory-auction-recheck" class="button" type="button">重新核验</button><button id="inventory-auction-cancel" class="button danger" type="button" hidden>停止后续操作</button><button id="inventory-auction-submit" class="button primary" type="button" disabled>确认上传</button></div>
+  </dialog>
   <dialog id="confirm-dialog"><div class="dialog-icon">↗</div><h2 id="confirm-title"></h2><p id="confirm-body"></p><div class="dialog-actions"><button id="confirm-cancel" class="button">取消</button><button id="confirm-ok" class="button danger">确认</button></div></dialog>
 </body></html>

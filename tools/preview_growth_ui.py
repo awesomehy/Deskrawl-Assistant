@@ -30,7 +30,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
    soul_shards:{current:1800,maximum:3000},talents:{ranks:{},unspent:10},life_skills:{ranks:{}},
    merchant:{unlock_known:true,unlocked:true,unlock_requirements:catalog.shop_unlock,stock:catalog.shop.map(row=>({...row,price:row.base_price*7}))},
    skills:{equipped:[null,null,null,null],available:catalog.heroes['4'].abilities.map(s=>s.id)}}};
- ManagedModeUI.init({catalog:()=>({equipment:[],equipped_slot_options:[]}),onDirty:()=>{},
+ ManagedModeUI.init({catalog:{equipment:[],equipped_slot_options:[]},onDirty:()=>{},
   toast:()=>{},confirmAction:async()=>true,api:async(route,payload)=>{
    if(route==='managed/settings')packet.settings=payload.settings;
    if(route==='managed/run')packet.running=payload.enabled;
@@ -69,7 +69,7 @@ class Handler(make_handler(SimpleNamespace(), 'offline-fixture')):
         if not self.valid_host():return self.reply({'error':'仅限本机访问。'},403)
         if self.path=='/':
             html=(WEB/'index.html').read_text(encoding='utf-8')
-            html=re.sub(r'<script src="/(?!automation-tools.js|managed-growth.js|managed-mode.js)[^"]+" defer></script>','',html)
+            html=re.sub(r'<script src="/(?!automation-tools.js|managed-growth.js|auction-ui.js|managed-mode.js)[^"]+" defer></script>','',html)
             html=html.replace('__APP_VERSION__','1.2.6 · 离线布局检查')
             return self.reply(html.replace('</body>','<script src="/fixture.js" defer></script></body>'),content_type='text/html; charset=utf-8')
         if self.path=='/fixture.js':return self.reply(FIXTURE_JS,content_type='text/javascript; charset=utf-8')

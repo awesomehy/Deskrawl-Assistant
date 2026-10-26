@@ -506,6 +506,9 @@ class ProgressionRuntime:
             diagnostic.update(quantity=quantity, shop_slot=payload['shop_slot'],
                               expected_price=payload['expected_price'],
                               before_shards=before['soul_shards']['current'])
+        elif kind == 'merchant_refresh':
+            diagnostic.update(shop_slots=required, before_shards=before['soul_shards']['current'],
+                              stock_slots=sorted(r['slot'] for r in before['merchant']['stock']))
         record('growth_action_requested', **diagnostic)
         result = self.actions.dispatcher.invoke(calls, guards, cancel_event=cancel_event, validate=validate)
         deadline = time.monotonic() + (12 if kind.startswith('merchant') else 3)
@@ -534,6 +537,7 @@ class ProgressionRuntime:
                 elif kind == 'merchant_open': confirmed = after['merchant']['open']
                 elif kind == 'merchant_close': confirmed = not after['merchant']['open']
                 elif kind == 'merchant_refresh':
+                    observed['stock_slots'] = sorted(r['slot'] for r in after['merchant']['stock'])
                     confirmed = (set(required)<={r['slot'] for r in after['merchant']['stock']}
                                  and after['soul_shards']['current']==before['soul_shards']['current'])
                 else:
@@ -558,6 +562,13 @@ class ProgressionRuntime:
             record('growth_action_unconfirmed', **diagnostic, attempts=attempts,
                    last_read_error=last_read_error, observed=observed,
                    native_state={name:result.get(name) for name in ('state','sequence','last_call','completed')})
+            if kind == 'merchant_refresh' and result.get('completed') is True:
+                # SaveSystem.egx is an asynchronous, non-purchasing sync call.
+                # A completed invocation is NOT a refill receipt. Let managed
+                # mode retain this fence and poll fresh stock without re-entry.
+                return {**result, 'kind':kind, 'effect_confirmed':False,
+                        'merchant_refresh_pending':True,
+                        'before_shards':before['soul_shards']['current']}
             label = {'allocate_talent':'战斗天赋加点', 'learn_life_skill':'生活技能学习',
                      'set_skill':'技能切换', 'merchant_open':'打开神秘商人',
                      'merchant_close':'关闭神秘商人', 'merchant_refresh':'神秘商人库存补充',

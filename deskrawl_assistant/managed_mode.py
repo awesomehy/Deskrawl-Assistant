@@ -802,6 +802,8 @@ class ManagedMode:
         self.merchant_counts = {}
         self.merchant_last_balance = None
         self.merchant_last_capacity = None
+        self.merchant_refresh_wait = None
+        self.merchant_refresh_deferred = False
         self.growth_wait = ''
 
     def start(self, observation):
@@ -842,6 +844,7 @@ class ManagedMode:
         self.running = False; self.phase = 'stopped'; self.status = reason
         self.pending = None; self.equip_reserved = None
         self.await_effect = None
+        self.merchant_refresh_wait = None
         self.finishing = False
         return self.state()
 
@@ -1333,8 +1336,10 @@ class ManagedMode:
         selected={int(k) for k,v in self.settings['merchant']['weights'].items() if v>0}
         missing=sorted(selected-{r['slot'] for r in shop['stock']})
         if missing:
+            if self.merchant_refresh_deferred: return None
             return self._action('merchant_refresh',class_mask=state['class_mask'],shop_slots=missing,
                 reason='商人预缓存库存用完，等待游戏同步补充库存后继续购买。')
+        self.merchant_refresh_deferred = False
         purchase=next_purchase(self.settings['merchant'],state,self.merchant_counts,
                                max_quantity=min(PURCHASE_BATCH_LIMIT,self._bag_free(observation)))
         if not purchase:return None
@@ -1801,9 +1806,15 @@ class ManagedMode:
                     self.status = state.get('reason') or '等待读取灵魂碎片容量。'; return None
                 shards = state['soul_shards']
                 trigger = shards['current'] * 100 >= shards['maximum'] * self.settings['merchant']['trigger_percent']
+                selected = {int(k) for k,v in self.settings['merchant']['weights'].items() if v > 0}
+                stock_ready = selected <= {r['slot'] for r in state.get('merchant',{}).get('stock',[])}
                 changed = (self.merchant_last_balance is None or shards['current'] > self.merchant_last_balance
-                           or shards['maximum'] != self.merchant_last_capacity)
-                if trigger and changed: self.merchant_pending = True
+                           or shards['maximum'] != self.merchant_last_capacity
+                           or self.merchant_refresh_deferred and stock_ready)
+                # A delayed refill already submitted its sync. Do not repeatedly
+                # return to town or resubmit it, even if shards keep increasing.
+                if trigger and changed and (not self.merchant_refresh_deferred or stock_ready):
+                    self.merchant_pending = True
                 if self.merchant_pending:
                     self.phase = 'cleanup' if self._town(observation) else 'returning'
                     return self._cleanup(observation, all_items)

@@ -124,6 +124,151 @@ class FakeManagedClient:
 
 
 class ManagedServiceTests(unittest.TestCase):
+    def start_delayed_merchant_refill(self, *, farming=False):
+        from test_progression import state
+        self.client.items=[]
+        growth=state();growth['busy']=False
+        growth['merchant']['stock']=[r for r in growth['merchant']['stock'] if r['slot']!=7]
+        self.client.progression_snapshot=Mock(side_effect=lambda **kw:deepcopy(growth))
+        self.client.capabilities['merchant']={'available':True,'native_verified':True}
+        self.service._managed_refresh_control()
+        cfg=self.settings(farming=farming);cfg['merchant']['enabled']=True
+        cfg['merchant']['weights'].update({'2':10,'7':10})
+        self.service.save_managed(cfg);self.service.set_managed_running(True)
+        def native(kind,payload):
+            if kind=='merchant_refresh':
+                return {'completed':True,'effect_confirmed':False,'merchant_refresh_pending':True,
+                        'before_shards':growth['soul_shards']['current']}
+            if kind=='merchant_close':growth['merchant']['open']=False
+            if kind=='enter_map':
+                self.client.in_town=False;self.client.current_map=payload['map_id']
+            return {'effect_confirmed':True}
+        self.client.native_handler=native
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=100):
+            for _ in range(5):
+                self.service._managed_once()
+                if self.service.managed.merchant_refresh_wait:break
+        self.assertIsNotNone(self.service.managed.merchant_refresh_wait)
+        self.assertEqual([a[0] for a in self.client.actions],['merchant_refresh'])
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNone(self.service.managed.await_effect)
+        return growth
+
+    def test_delayed_refill_polls_without_resubmit_and_preserves_purchase_ratio(self):
+        from test_progression import state
+        growth=self.start_delayed_merchant_refill()
+        self.service.managed.merchant_counts={'2':6,'7':2}
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=180):
+            for _ in range(8):self.service._managed_once()
+        self.assertEqual([a[0] for a in self.client.actions],['merchant_refresh'])
+        self.assertTrue(self.service.managed.running)
+        growth['merchant']['stock']=state()['merchant']['stock']
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=181):
+            self.service._managed_once()
+        self.assertIsNone(self.service.managed.merchant_refresh_wait)
+        self.assertEqual(self.service.managed.merchant_counts,{'2':6,'7':2})
+        action=self.service.managed.next_action(self.service._managed_observation())
+        self.assertEqual(action['kind'],'merchant_buy');self.assertEqual(action['shop_slot'],2)
+
+    def test_missing_refill_stock_skips_shopping_and_returns_to_farming(self):
+        self.start_delayed_merchant_refill(farming=True)
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=221):
+            self.service._managed_once()
+            self.assertTrue(self.service.managed.merchant_refresh_deferred)
+            for _ in range(8):self.service._managed_once()
+        self.assertTrue(self.service.managed.running,self.service.managed.status)
+        kinds=[a[0] for a in self.client.actions]
+        self.assertEqual(kinds.count('merchant_refresh'),1)
+        self.assertNotIn('merchant_buy',kinds)
+        self.assertIn('merchant_close',kinds)
+        self.assertIn('enter_map',kinds)
+
+    def test_refill_timeout_cleans_confirmed_gear_before_leaving(self):
+        self.start_delayed_merchant_refill(farming=True)
+        self.client.items=[equipment(item_uid='bought-before-refill',is_black_mist=True),
+                           equipment(1,item_uid='bought-junk-before-refill')]
+        self.service.managed.merchant_received_uids.update(('bought-before-refill','bought-junk-before-refill'))
+        self.service.managed_merchant_uids.update(('bought-before-refill','bought-junk-before-refill'))
+        self.service.managed.merchant_cleanup_pending=True
+        self.service.managed.settings['cleanup'].update(equipment_action='store',equipment_fallback='salvage')
+        original=self.client.native_handler
+        def native(kind,payload):
+            if kind in ('sell','salvage'):
+                self.assertEqual(payload['item']['item_uid'],'bought-junk-before-refill')
+                self.client.items=[r for r in self.client.items if r['item_uid']!='bought-junk-before-refill']
+                return {'effect_confirmed':True,'quantity':1}
+            return original(kind,payload)
+        self.client.native_handler=native
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=221):
+            for _ in range(12):self.service._managed_once()
+        kinds=[a[0] for a in self.client.actions]
+        self.assertLess(kinds.index('merchant_close'),kinds.index('lock'))
+        self.assertLess(kinds.index('lock'),kinds.index('transfer'))
+        self.assertLess(kinds.index('transfer'),kinds.index('enter_map'))
+        disposal=next(kind for kind in kinds if kind in ('sell','salvage'))
+        self.assertLess(kinds.index('lock'),kinds.index(disposal))
+        self.assertLess(kinds.index(disposal),kinds.index('enter_map'))
+        self.assertEqual(kinds.count('merchant_refresh'),1)
+        self.assertTrue(self.service.managed.running,self.service.managed.status)
+
+    def test_refill_timeout_with_unreadable_state_pauses_with_original_fence(self):
+        growth=self.start_delayed_merchant_refill()
+        growth['available']=False
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=221):
+            self.service._managed_once()
+        self.assertEqual(self.service.managed.phase,'paused')
+        self.assertTrue(self.service.managed_can_resume)
+        self.assertIsNotNone(self.service.managed.merchant_refresh_wait)
+        self.assertEqual([a[0] for a in self.client.actions],['merchant_refresh'])
+
+    def test_refill_cannot_confirm_while_online_requests_are_pending(self):
+        from test_progression import state
+        growth=self.start_delayed_merchant_refill()
+        growth['merchant']['stock']=state()['merchant']['stock']
+        control=self.client.control_snapshot
+        self.client.control_snapshot=lambda:dict(control(),online_pending_requests=1)
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=150):
+            self.service._managed_once()
+        self.assertIsNotNone(self.service.managed.merchant_refresh_wait)
+        self.assertEqual([a[0] for a in self.client.actions],['merchant_refresh'])
+
+    def test_refill_fence_survives_pause_resume_but_stop_clears_it(self):
+        from test_progression import state
+        growth=self.start_delayed_merchant_refill()
+        self.service.managed.pause()
+        self.service.managed.resume(self.service._managed_observation())
+        growth['merchant']['stock']=state()['merchant']['stock']
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=150):
+            self.service._managed_once()
+        self.assertIsNone(self.service.managed.merchant_refresh_wait)
+        self.assertTrue(self.service.managed.running)
+        self.assertEqual([a[0] for a in self.client.actions],['merchant_refresh'])
+        self.service.managed.merchant_refresh_wait={'action':{}}
+        self.service.managed.stop()
+        self.assertIsNone(self.service.managed.merchant_refresh_wait)
+
+    def test_refill_currency_change_never_silently_authorizes_another_purchase(self):
+        growth=self.start_delayed_merchant_refill()
+        growth['soul_shards']['current']-=21
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=150):
+            self.service._managed_once()
+        self.assertEqual(self.service.managed.phase,'paused')
+        self.assertIsNotNone(self.service.managed.merchant_refresh_wait)
+        self.assertEqual([a[0] for a in self.client.actions],['merchant_refresh'])
+
+    def test_finish_request_settles_refill_then_cleans_without_new_purchases(self):
+        from test_progression import state
+        growth=self.start_delayed_merchant_refill()
+        self.service.managed.request_finish()
+        growth['merchant']['stock']=state()['merchant']['stock']
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=150):
+            for _ in range(8):self.service._managed_once()
+        self.assertFalse(self.service.managed.running,self.service.managed.status)
+        kinds=[a[0] for a in self.client.actions]
+        self.assertEqual(kinds.count('merchant_refresh'),1)
+        self.assertNotIn('merchant_buy',kinds)
+        self.assertNotIn('merchant_open',kinds)
+
     def test_merchant_and_farming_start_without_unrelated_skill_controller(self):
         from test_progression import state
         growth=state();growth['merchant'].update(unlock_known=True,unlocked=True)

@@ -1027,6 +1027,62 @@ class ManagedServiceMixin:
         self.managed.status = '等待游戏完成回城；传送或在线同步期间不重复请求。'
         return self.managed.status
 
+    def _managed_wait_merchant_refresh(self, observation):
+        """Poll a submitted, non-spending stock sync; never invoke it again."""
+        wait = self.managed.merchant_refresh_wait
+        action = wait['action']
+        state = observation.get('progression', {})
+        scene = observation.get('scene', {})
+        balance = state.get('soul_shards', {}).get('current')
+        readable = state.get('available') is True
+        if readable and (state.get('class_mask') != action['class_mask']
+                         or balance != wait['before_shards']):
+            self.managed._pause('补货核验期间角色或灵魂碎片已变化，托管已暂停；未重复提交补货或购买。')
+            self.managed_can_resume = True
+            self._managed_freeze_clock()
+            record('managed_merchant_refresh_changed', before_shards=wait['before_shards'],
+                   after_shards=balance, class_mask=state.get('class_mask'))
+            return
+        stable = (observation.get('complete') is True and readable and state.get('busy') is False
+                  and state.get('merchant', {}).get('available') is True
+                  and scene.get('available') is True and scene.get('in_town') is True
+                  and all(scene.get(key) is False for key in ('scene_changing','teleporting','online_saving'))
+                  and type(scene.get('online_pending_requests')) is int and scene['online_pending_requests'] == 0)
+        stock = sorted(r['slot'] for r in state.get('merchant', {}).get('stock', []))
+        elapsed = time.monotonic() - wait['started']
+        if stable and set(action['shop_slots']) <= set(stock):
+            self.managed.merchant_refresh_wait = None
+            # Pause/resume can clear pending; the original receipt remains the
+            # only allowed action until it has been checked against fresh data.
+            self.managed.pending = action
+            self.managed.complete(action['action_id'], result={'verified':True})
+            self.managed.status = '神秘商人库存已补充，继续托管流程。'
+            record('managed_merchant_refresh_confirmed', shop_slots=action['shop_slots'],
+                   stock_slots=stock, elapsed_seconds=round(elapsed, 2))
+        elif elapsed >= 120:
+            if stable:
+                # Stock remaining empty is not an uncertain purchase. Finish
+                # screening gear already bought, and wait for stock recovery
+                # before another shopping round. Never fabricate a receipt.
+                self.managed.merchant_refresh_wait = None
+                self.managed.pending = self.managed.await_effect = None
+                self.managed.merchant_refresh_deferred = True
+                self.managed.merchant_pending = False
+                self.managed.merchant_cleanup_pending = True
+                self.managed.merchant_last_balance = balance
+                self.managed.merchant_last_capacity = state['soul_shards']['maximum']
+                self.managed.status = '商人库存暂未补充，跳过本轮消费；整理已购装备后继续托管。'
+                record('managed_merchant_refresh_deferred', shop_slots=action['shop_slots'],
+                       stock_slots=stock, elapsed_seconds=round(elapsed, 2))
+            else:
+                self.managed._pause('神秘商人补货后游戏状态持续未稳定，托管已暂停；未重复提交补货或购买。')
+                self.managed_can_resume = True
+                self._managed_freeze_clock()
+                record('managed_merchant_refresh_paused', stock_slots=stock,
+                       elapsed_seconds=round(elapsed, 2), scene=self._transition_scene(scene))
+        else:
+            self.managed.status = '等待神秘商人同步补充库存，未重复提交补货或购买。'
+
     def _managed_once(self):
         self.managed_fast_followup = False
         if self._managed_reconnect_once(): return self.managed.status
@@ -1040,6 +1096,9 @@ class ManagedServiceMixin:
             # a backoff or an already submitted stargazing transition.
             self.managed.observe_runs(observation)
             if not self.managed.running: return self.managed.status
+            if self.managed.merchant_refresh_wait:
+                self._managed_wait_merchant_refresh(observation)
+                return self.managed.status
             retry = self.managed_retry
             if retry:
                 scene = observation['scene']
@@ -1193,6 +1252,16 @@ class ManagedServiceMixin:
             raise
         receipt = result.pop('_receipt_snapshot',None)
         with self.guard:
+            if action['kind'] == 'merchant_refresh' and result.get('merchant_refresh_pending') is True:
+                if (self.managed.running and not self.cancelled.is_set() and self.managed.pending
+                        and self.managed.pending['action_id'] == action['action_id']):
+                    self.managed_retry = None
+                    self.managed.merchant_refresh_wait = {'action':deepcopy(action),
+                        'before_shards':result['before_shards'], 'started':time.monotonic()}
+                    self.managed.status = '等待神秘商人同步补充库存，未重复提交补货或购买。'
+                    record('managed_merchant_refresh_pending', shop_slots=action['shop_slots'],
+                           before_shards=result['before_shards'])
+                return self.managed.status
             if result.get('transition_requested'):
                 self.managed_retry = None
                 self.managed.status = '已请求场景切换，等待游戏确认。'

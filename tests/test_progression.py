@@ -436,6 +436,33 @@ class MerchantPolicyTests(unittest.TestCase):
         self.assertEqual(next_purchase(cfg,current,counts)['shop_slot'],1)
         counts['1']=2;self.assertEqual(next_purchase(cfg,current,counts)['shop_slot'],2)
 
+    def test_deferred_refill_keeps_farming_until_stock_recovers_even_with_full_shards(self):
+        cfg=settings();cfg['merchant']['enabled']=True
+        cfg['farming']['enabled']=False
+        cfg['merchant']['weights']={str(n):int(n==7) for n in range(1,11)}
+        current=state(shards=2000)
+        current['merchant']['stock']=[r for r in current['merchant']['stock'] if r['slot']!=7]
+        world=observation([],town=True,progression=current)
+        engine=ManagedMode(cfg);engine.start(world)
+        engine.merchant_refresh_deferred=True
+        engine.merchant_last_balance=1900;engine.merchant_last_capacity=2000
+        for _ in range(8):
+            self.assertIsNone(engine.next_action(world))
+            self.assertTrue(engine.running);self.assertFalse(engine.merchant_pending)
+        current['merchant']['stock']=state()['merchant']['stock']
+        action=engine.next_action(observation([],town=True,progression=current))
+        self.assertEqual(action['kind'],'merchant_buy')
+        self.assertEqual(action['shop_slot'],7)
+        self.assertFalse(engine.merchant_refresh_deferred)
+
+    def test_deferred_refill_cannot_reenter_the_batch_purchase_fast_path(self):
+        cfg=settings();cfg['merchant']['enabled']=True
+        current=state();current['merchant']['stock']=[]
+        world=observation([],town=True,progression=current)
+        engine=ManagedMode(cfg);engine.start(world);engine.merchant_refresh_deferred=True
+        self.assertIsNone(engine._merchant_purchase(world))
+        self.assertIsNone(engine.pending)
+
     def test_bought_divine_and_matched_gear_locked_and_stored_before_next_purchase(self):
         for row in (equipment('bought',rarity=4),equipment('bought',matches=True)):
             cfg=settings(equipment_action='salvage');cfg['merchant']['enabled']=True

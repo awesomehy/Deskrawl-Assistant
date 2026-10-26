@@ -485,6 +485,45 @@ class RuntimeBoundaryTests(unittest.TestCase):
         self.assertEqual(calls[0].arguments[0].value,0)
         self.assertEqual(result['before_shards'],after['soul_shards']['current'])
 
+    def test_delayed_refill_returns_pending_fence_instead_of_verified_success(self):
+        before=state()
+        before['merchant']['stock']=[r for r in before['merchant']['stock'] if r['slot']!=7]
+        runtime,actions,_=self.fixture(before,deepcopy(before))
+        with patch('deskrawl_assistant.progression_runtime.time.monotonic',side_effect=[0,0,13]), \
+                patch('deskrawl_assistant.progression_runtime.time.sleep'), \
+                patch('deskrawl_assistant.progression_runtime.record') as recorded:
+            result=runtime.execute('merchant_refresh',{'class_mask':4,'shop_slots':[7]})
+        self.assertTrue(result['merchant_refresh_pending'])
+        self.assertFalse(result['effect_confirmed'])
+        self.assertEqual(result['before_shards'],before['soul_shards']['current'])
+        self.assertEqual(actions.dispatcher.invoke.call_count,1)
+        failure=next(c.kwargs for c in recorded.call_args_list if c.args[0]=='growth_action_unconfirmed')
+        self.assertEqual(failure['shop_slots'],[7])
+        self.assertNotIn(7,failure['observed']['stock_slots'])
+
+    def test_unreadable_refill_receipt_also_keeps_submitted_fence(self):
+        before=dict(state(),_guards=[],_item_map={'SoulShard':123})
+        runtime,actions,_=self.fixture(before,before)
+        runtime.snapshot.side_effect=[before,MemoryReadError('同步中')]
+        with patch('deskrawl_assistant.progression_runtime.time.monotonic',side_effect=[0,0,13]), \
+                patch('deskrawl_assistant.progression_runtime.time.sleep'):
+            result=runtime.execute('merchant_refresh',{'class_mask':4,'shop_slots':[7]})
+        self.assertTrue(result['merchant_refresh_pending'])
+        self.assertFalse(result['effect_confirmed'])
+        self.assertEqual(actions.dispatcher.invoke.call_count,1)
+
+    def test_refill_without_completed_invocation_keeps_uncertain_protection(self):
+        before=state()
+        before['merchant']['stock']=[r for r in before['merchant']['stock'] if r['slot']!=7]
+        runtime,actions,_=self.fixture(before,deepcopy(before))
+        actions.dispatcher.invoke.side_effect=None
+        actions.dispatcher.invoke.return_value={'completed':False}
+        with patch('deskrawl_assistant.progression_runtime.time.monotonic',side_effect=[0,0,13]), \
+                patch('deskrawl_assistant.progression_runtime.time.sleep'), \
+                self.assertRaises(NativeActionError) as caught:
+            runtime.execute('merchant_refresh',{'class_mask':4,'shop_slots':[7]})
+        self.assertTrue(caught.exception.uncertain)
+
     def test_pending_online_request_defers_purchase_and_refill_before_submission(self):
         for kind in ('merchant_buy', 'merchant_refresh'):
             for sync in ({'online_saving':False,'online_pending_requests':1},

@@ -23,7 +23,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.4.3'
+NAME = 'Deskrawl装备助手-v1.4.4'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -32,6 +32,7 @@ def main():
     parser.add_argument('--connect-game', action='store_true')
     parser.add_argument('--desktop', action='store_true')
     parser.add_argument('--test-managed', action='store_true', help='Check the explicit test entry without connecting to a game.')
+    parser.add_argument('--check-update', action='store_true', help='Also verify a live HTTPS update check against GitHub.')
     parser.add_argument('--exe', type=Path, help='Test a separately packaged executable.')
     parser.add_argument('--report', type=Path, help='Save verification without replacing another build report.')
     args = parser.parse_args()
@@ -66,6 +67,7 @@ def main():
     assert 'deskrawl_assistant/web/rule-tools.js' in normalized
     assert 'deskrawl_assistant/web/inventory-tools.js' in normalized
     bundled_modules = archive.open_embedded_archive(next(n for n in names if n.endswith('.pyz')))
+    assert all(module in bundled_modules.toc for module in ('truststore', 'truststore._api', 'truststore._windows'))
     assert 'deskrawl_assistant.stargazing' in bundled_modules.toc
     assert 'deskrawl_assistant.affix_pools' in bundled_modules.toc
     for module in ('reconnect', 'reconnect_runtime'):
@@ -124,7 +126,7 @@ def main():
                 result = {'schema': 1, 'client_id': payload['client_id'], 'token': 'a' * 64}
             elif self.path == '/v1/report':
                 assert self.headers.get('Authorization') == 'Bearer ' + 'a' * 64
-                assert payload['version'] == '1.4.3'
+                assert payload['version'] == '1.4.4'
                 result = {'accepted': True, 'report_id': payload['report_id'],
                           'sequence': payload['sequence'], 'accepted_at': datetime.now(timezone.utc).isoformat()}
             else:
@@ -192,7 +194,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.4.3'
+                assert request('/api/state')['app_version'] == '1.4.4'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -232,6 +234,20 @@ def main():
 
     try:
         start()
+        if args.check_update:
+            deadline = time.monotonic() + 45
+            while time.monotonic() < deadline:
+                update = request('/api/update')
+                if update['phase'] in ('up_to_date', 'available'):
+                    assert not update['error']
+                    report['update_check'] = {key:update[key] for key in
+                        ('phase', 'current_version', 'latest_version', 'checked_at')}
+                    report['checks'].append('冻结程序使用 Windows 原生证书验证成功读取 GitHub 更新信息')
+                    break
+                assert update['phase'] in ('idle', 'checking'), update
+                time.sleep(.2)
+            else:
+                raise AssertionError('Frozen updater did not finish its HTTPS check')
         deadline = time.monotonic() + 10
         while time.monotonic() < deadline:
             community = request('/api/community')

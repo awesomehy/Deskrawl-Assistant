@@ -5,8 +5,9 @@ import unittest
 from unittest.mock import Mock, patch
 
 from deskrawl_assistant.native_dispatcher import NativeActionError, load_profile
-from deskrawl_assistant.native_memory import MemoryReadError
-from deskrawl_assistant.synthesis_runtime import SynthesisRuntime, gem_inputs, gem_recipes, rune_inputs
+from deskrawl_assistant.native_memory import MemoryReadError, GameBusyError
+from deskrawl_assistant.synthesis_runtime import (SynthesisRuntime, SynthesisReceiptPending,
+                                                gem_inputs, gem_recipes, rune_inputs)
 
 
 def gem(slot, count=10, **extra):
@@ -213,6 +214,135 @@ class SnapshotAndReceiptTests(unittest.TestCase):
         runtime._guard_bag_identities(read, 1000, 2)
         read.read.assert_any_call(116, 32)
         read.read.assert_any_call(216, 32)
+
+    def rune_execution(self):
+        runtime, actions = self.runtime()
+        before = [rune(i) for i in range(9)]
+        recipe = {'recipe_id':'cube:uncommon:rare', 'input_quality':'uncommon',
+                  'output_quality':'rare', 'available':True}
+        read = Mock(); read.ptr.return_value = 0; read.boolean.return_value = False
+        read.singleton.return_value = 700
+        read.pointers.return_value = list(range(1000,1009))
+        actions.reader.string.return_value = ''
+        copy = Mock(); copy.boolean.return_value = False
+        runtime._context = Mock(return_value=(read,100,200))
+        runtime._copy = Mock(return_value=copy)
+        runtime._singleton = Mock(return_value=500)
+        runtime._bag = Mock(return_value=(before,{},300,40))
+        runtime._guard_bag_identities = Mock(); runtime._guard_inputs = Mock()
+        runtime._runes = Mock(return_value={'recipes':[recipe], 'online':True,
+            'sequence':10, 'equipped_uids':[]})
+        runtime._invoke = Mock(return_value={'sequence':1})
+        selected = [dict(row,quantity=1) for row in before]
+        payload = {'recipe_id':recipe['recipe_id'], 'input_uids':[r['item_uid'] for r in before],
+            'inputs':selected, 'count':1, 'max_quality':'rare', 'character_id':'role-a'}
+        receipt = {'inputs':selected, 'outputs':[dict(rune(12),quantity=1)],
+            'recipe_id':recipe['recipe_id'], 'receipt_id':'test-receipt', 'quantity':1}
+        return runtime, payload, receipt
+
+    def test_delayed_rune_receipt_recovers_without_another_native_submission(self):
+        runtime, payload, receipt = self.rune_execution()
+        runtime._confirm = Mock(side_effect=SynthesisReceiptPending('delayed',uncertain=True))
+        with patch('deskrawl_assistant.synthesis_runtime.time.monotonic',return_value=100):
+            result = runtime.execute('synthesize_runes',payload)
+        self.assertTrue(result['synthesis_pending'])
+        self.assertFalse(runtime._uncertain)
+        with self.assertRaises(GameBusyError): runtime.execute('synthesize_runes',payload)
+        # Reconcile uses the real material/sequence validator, including a
+        # same-quality output (an unsuccessful probabilistic upgrade).
+        runtime._bag.return_value = ([rune(12)],{},300,40)
+        runtime._runes.return_value = {'sequence':11}
+        runtime._cleanup_cube = Mock(return_value=True)
+        result = runtime.reconcile('role-a')
+        self.assertTrue(result['effect_confirmed'])
+        self.assertEqual(result['outputs'][0]['item_uid'],'rune-12')
+        self.assertEqual(runtime._invoke.call_count,1)
+        self.assertIsNone(runtime._pending)
+        self.assertIsNone(runtime.reconcile('role-a'))
+
+    def test_receipt_timeout_stays_read_only_and_does_not_accept_wrong_sequence(self):
+        runtime, payload, _ = self.rune_execution()
+        runtime._confirm = Mock(side_effect=SynthesisReceiptPending('delayed',uncertain=True))
+        with patch('deskrawl_assistant.synthesis_runtime.time.monotonic',return_value=100):
+            runtime.execute('synthesize_runes',payload)
+        runtime._bag.return_value = ([rune(12)],{},300,40)
+        runtime._runes.return_value = {'sequence':12}
+        with patch('deskrawl_assistant.synthesis_runtime.time.monotonic',return_value=221):
+            result = runtime.reconcile('role-a')
+        self.assertTrue(result['synthesis_pending']); self.assertTrue(result['timed_out'])
+        self.assertEqual(runtime._invoke.call_count,1)
+        self.assertIsNotNone(runtime._pending)
+        runtime._runes.return_value = {'sequence':11}
+        runtime._cleanup_cube = Mock(return_value=True)
+        self.assertTrue(runtime.reconcile('role-a')['effect_confirmed'])
+
+    def test_pending_receipt_rejects_character_change_without_cleaning_ui(self):
+        runtime, payload, _ = self.rune_execution()
+        runtime._confirm = Mock(side_effect=SynthesisReceiptPending('delayed',uncertain=True))
+        runtime.execute('synthesize_runes',payload)
+        with self.assertRaisesRegex(NativeActionError,'角色已变化'):
+            runtime.reconcile('role-b')
+        self.assertEqual(runtime._invoke.call_count,1)
+
+    def test_confirmed_craft_cleanup_can_recover_without_latching_economic_uncertainty(self):
+        runtime, payload, receipt = self.rune_execution()
+        runtime._confirm = Mock(return_value=receipt)
+        runtime._cleanup_cube = Mock(side_effect=[False,True])
+        result = runtime.execute('synthesize_runes',payload)
+        self.assertTrue(result['effect_confirmed']); self.assertTrue(result['ui_cleanup_pending'])
+        self.assertFalse(runtime._uncertain)
+        self.assertIsNone(runtime._pending)
+        with self.assertRaises(GameBusyError): runtime.execute('synthesize_runes',payload)
+        self.assertFalse(runtime.reconcile('role-a')['ui_cleanup_pending'])
+        self.assertEqual(runtime._invoke.call_count,1)
+        self.assertIsNone(runtime._cleanup_pending)
+
+    def test_cleanup_resets_confirmed_animation_and_preserves_player_selections(self):
+        runtime, _, _ = self.rune_execution()
+        read = runtime._context.return_value[0]
+        read.boolean.return_value = True
+        self.assertTrue(runtime._cleanup_cube(700,True,input_uids={'rune-0'}))
+        self.assertEqual([c.method for c in runtime._invoke.call_args.args[0]],
+                         ['CubePanelUI.gbu','PanelBase.Close'])
+        runtime._invoke.reset_mock()
+        read.boolean.return_value = False
+        runtime.reader.string.return_value = 'player-new-rune'
+        self.assertTrue(runtime._cleanup_cube(700,True,input_uids={'rune-0'}))
+        runtime._invoke.assert_not_called()
+        runtime.reader.string.return_value = 'rune-0'
+        self.assertTrue(runtime._cleanup_cube(700,True,input_uids={'rune-0'}))
+        calls = runtime._invoke.call_args.args[0]
+        self.assertEqual([c.method for c in calls],['CubePanelUI.gbu'])
+
+    def test_cleanup_already_finished_does_not_require_another_native_call(self):
+        runtime, _, _ = self.rune_execution()
+        runtime._invoke.side_effect = AssertionError('already clean')
+        self.assertTrue(runtime._cleanup_cube(700,True,input_uids={'rune-0'}))
+        runtime._invoke.assert_not_called()
+
+    def test_pending_receipt_never_resets_the_unconfirmed_animation(self):
+        runtime, payload, _ = self.rune_execution()
+        runtime._confirm = Mock(side_effect=SynthesisReceiptPending('delayed',uncertain=True))
+        runtime._cleanup_cube = Mock(side_effect=AssertionError('unconfirmed receipt'))
+        runtime.execute('synthesize_runes',payload)
+        runtime._receipt = Mock(return_value=None)
+        self.assertTrue(runtime.reconcile('role-a')['synthesis_pending'])
+        runtime._cleanup_cube.assert_not_called()
+
+    def test_cleanup_busy_error_does_not_invalidate_confirmed_receipt(self):
+        runtime, _, _ = self.rune_execution()
+        runtime._context.side_effect = GameBusyError('busy cleanup')
+        self.assertFalse(runtime._cleanup_cube(700,True,input_uids={'rune-0'}))
+        self.assertFalse(runtime._uncertain)
+        runtime._invoke.assert_not_called()
+
+    def test_uncertain_native_batch_never_enters_receipt_recovery(self):
+        runtime, payload, _ = self.rune_execution()
+        runtime._invoke.side_effect = NativeActionError('native timeout',uncertain=True)
+        with self.assertRaises(NativeActionError): runtime.execute('synthesize_runes',payload)
+        self.assertTrue(runtime._uncertain); self.assertIsNone(runtime._pending)
+        with self.assertRaises(NativeActionError): runtime.execute('synthesize_runes',payload)
+        self.assertEqual(runtime._invoke.call_count,1)
 
 
 if __name__ == '__main__':

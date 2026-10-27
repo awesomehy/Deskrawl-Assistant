@@ -4,3 +4,4 @@ pyinstaller-hooks-contrib==2026.8
 pywebview==6.2.1
 pythonnet==3.1.0
 capstone==5.0.7
+truststore==0.10.5

@@ -1823,6 +1823,29 @@ class ManagedServiceTests(unittest.TestCase):
         self.assertFalse(self.service.managed.running)
         self.assertIn('马车收取后物品回读不一致',self.service.error)
 
+    def test_carriage_collecting_state_waits_and_replans_without_stopping(self):
+        from deskrawl_assistant.carriage_transfer import CarriageUnavailable
+        self.client.items = []
+        self.client.carriage = [equipment(0,container='carriage',selection_id='old-selection')]
+        self.service._publish(self.client.snapshot())
+        self.ready(farming=True,auto_equip=False)
+        def collecting(*args, **kwargs):
+            self.client.carriage[0]['selection_id'] = 'fresh-selection'
+            raise CarriageUnavailable('马车正在收集物品，等待下一次读取。')
+        with patch.object(self.client,'collect_carriage',side_effect=collecting) as collect:
+            for now in (100,101):
+                with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=now):
+                    self.service._work('managed',{})
+        collect.assert_called_once()
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNone(self.service.managed.pending)
+        self.assertEqual(self.client.actions,[])
+        with patch.object(self.client,'collect_carriage',wraps=self.client.collect_carriage) as collect:
+            with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=103):
+                self.service._work('managed',{})
+        self.assertEqual(collect.call_args.args[0],'fresh-selection')
+        self.assertTrue(self.service.managed.running)
+
     def test_collection_batch_reaches_executor_before_locks_and_disposal(self):
         self.client.items = []
         self.client.carriage = [equipment(0, container='carriage', is_black_mist=True,

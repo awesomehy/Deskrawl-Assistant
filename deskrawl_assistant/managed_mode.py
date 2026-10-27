@@ -806,7 +806,7 @@ class ManagedMode:
         self.merchant_refresh_deferred = False
         self.growth_wait = ''
 
-    def start(self, observation):
+    def start(self, observation, *, observe_metrics=True):
         if self.running or self.pending: raise ValidationError('托管已在运行。')
         if observation.get('complete') is not True: raise ValidationError('请先完整读取背包与仓库。')
         if (not self.settings['auto_equip']['enabled'] and not self.settings['farming']['enabled']
@@ -834,7 +834,8 @@ class ManagedMode:
         if not self.settings['farming']['enabled']:
             self.target_dungeon = observation.get('scene', {}).get('dungeon_id')
         self._baseline_runs(observation)
-        self.metrics.observe(observation)
+        if observe_metrics:
+            self.metrics.observe(observation)
         self.phase = 'cleanup' if self.settings['farming']['enabled'] and self._town(observation) else 'farming'
         self.reward_barrier = self.phase == 'cleanup'
         self.status = '托管已开始。'
@@ -864,7 +865,7 @@ class ManagedMode:
         self.pending = None; self.await_effect = None
         return self.state()
 
-    def resume(self, observation):
+    def resume(self, observation, *, observe_metrics=True):
         if self.running or self.pending is not None: raise ValidationError('托管正在运行。')
         if self.phase != 'paused': raise ValidationError('本次托管已停止，请重新开始。')
         if observation.get('complete') is not True: raise ValidationError('请先完整读取背包与仓库。')
@@ -885,7 +886,8 @@ class ManagedMode:
         self.phase = 'cleanup' if (self.settings['farming']['enabled'] or self.finishing) and self._town(observation) else 'farming'
         self.reward_barrier = self.phase == 'cleanup'
         self.barrier_reads = 0
-        self.metrics.observe(observation)
+        if observe_metrics:
+            self.metrics.observe(observation)
         self.cleanup_processing = False
         self.status = '继续本次托管，累计掉落统计已保留。'
         return self.state()

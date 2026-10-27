@@ -264,6 +264,11 @@ class RuntimeClient:
     def synthesis_snapshot(self, *, gems=True, runes=True):
         with self._guard: return self._game_actions().synthesis_snapshot(gems=gems, runes=runes)
 
+    def reconcile_synthesis(self, character_id, *, cancel_event=None, validate=lambda: True):
+        with self._guard:
+            return self._game_actions().synthesis_runtime().reconcile(character_id,
+                cancel_event=cancel_event, validate=validate)
+
     def auction_state(self):
         with self._guard: return self._game_actions().auction_state()
 

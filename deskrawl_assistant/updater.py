@@ -4,11 +4,14 @@ from __future__ import annotations
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 import ctypes
+import errno
 import hashlib
 import json
 import os
 from pathlib import Path
 import re
+import socket
+import ssl
 import struct
 import subprocess
 import sys
@@ -20,11 +23,13 @@ import urllib.request
 import uuid
 
 from .paths import RESOURCE_ROOT, runtime_dir, data_root
+from .action_log import record
 from .version import VERSION, GITHUB_REPOSITORY, REPOSITORY_URL
 
 API_ROOT = 'https://api.github.com/repos/' + GITHUB_REPOSITORY
 MAX_EXE_BYTES = 256 * 1024 * 1024
 CHECK_INTERVAL = 3600
+CHECK_RETRY_DELAYS = (60, 180, 300)
 ALLOWED_HOSTS = {'api.github.com', 'github.com', 'release-assets.githubusercontent.com',
                  'objects.githubusercontent.com', 'github-releases.githubusercontent.com'}
 
@@ -49,12 +54,32 @@ class GitHubRedirect(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(request, fp, code, message, headers, newurl)
 
 
+def github_ssl_context():
+    # Windows can retrieve missing intermediates and build alternate chains via
+    # CryptoAPI. Merely copying its certificates into OpenSSL can't do that.
+    # Keep this context private to each updater request; never patch global SSL.
+    if sys.platform == 'win32':
+        try:
+            from truststore import SSLContext
+        except ImportError:
+            raise RuntimeError('更新所需的系统证书组件缺失，请重新安装助手。') from None
+        context = SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    else:
+        context = ssl.create_default_context()
+    context.verify_mode = ssl.CERT_REQUIRED
+    context.check_hostname = True
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
+    context.set_alpn_protocols(['http/1.1'])
+    return context
+
+
 def open_github(url, accept):
     trusted_url(url)
     request = urllib.request.Request(url, headers={'Accept':accept,
         'User-Agent':'Deskrawl-Assistant/' + VERSION, 'X-GitHub-Api-Version':'2022-11-28'})
     # Respect the user's network proxy. No GitHub credentials are needed or read.
-    return urllib.request.build_opener(GitHubRedirect()).open(request, timeout=25)
+    return urllib.request.build_opener(GitHubRedirect(),
+        urllib.request.HTTPSHandler(context=github_ssl_context())).open(request, timeout=25)
 
 
 @dataclass(frozen=True)
@@ -193,6 +218,8 @@ class UpdateManager:
         self.poll_thread = None
         self.release = None
         self.last_check = None
+        self.check_failures = 0
+        self.check_delay = CHECK_INTERVAL
         self.phase = 'idle'
         self.error = ''
         self.checked_at = None
@@ -223,7 +250,13 @@ class UpdateManager:
                 return
             while not self.closed.is_set():
                 self.check()
-                if self.closed.wait(CHECK_INTERVAL):
+                with self.guard:
+                    worker = self.worker if self.phase == 'checking' else None
+                if worker is not None:
+                    worker.join()
+                with self.guard:
+                    delay = self.check_delay
+                if self.closed.wait(delay):
                     return
         self.poll_thread = threading.Thread(target=poll, daemon=True)
         self.poll_thread.start()
@@ -248,21 +281,67 @@ class UpdateManager:
                 if self.closed.is_set():
                     return
                 self.release = release
+                self.check_failures, self.check_delay = 0, CHECK_INTERVAL
+                self.error = ''
                 newer = version_tuple(release.version) > version_tuple(self.current_version)
                 self.phase = 'available' if newer else 'up_to_date'
                 self.checked_at = datetime.now(timezone.utc).isoformat()
                 self.message = '发现新版本 v' + release.version if newer else '当前 v' + self.current_version + '，暂无新版本。'
+            record('update_check_succeeded', current_version=self.current_version,
+                latest_version=release.version, process_id=os.getpid())
         except Exception as exc:
             with self.guard:
-                self.phase, self.error = 'error', self._message(exc)
-                self.message = '检查更新失败，可稍后重试；装备功能仍可使用。'
+                if self.closed.is_set():
+                    return
+                self.check_failures += 1
+                self.check_delay = (CHECK_RETRY_DELAYS[self.check_failures - 1]
+                    if self.check_failures <= len(CHECK_RETRY_DELAYS) else CHECK_INTERVAL)
+                self.phase, self.error = 'error', self._message(exc, operation='check')
+                self.message = '检查更新失败，将自动重试；装备功能仍可使用。'
+            record('update_check_failed', current_version=self.current_version, process_id=os.getpid(),
+                **self._failure_details(exc))
 
     @staticmethod
-    def _message(exc):
-        if isinstance(exc, urllib.error.HTTPError) and exc.code in (403, 429):
-            return 'GitHub 检查次数暂时受限，请稍后重试。'
+    def _failure_details(exc):
+        # Exception text, URLs, proxy credentials and local paths are deliberately
+        # excluded. Keep only typed error codes for local troubleshooting.
+        reason = exc.reason if isinstance(exc, urllib.error.URLError) else exc
+        details = {'error_type':type(exc).__name__, 'reason_type':type(reason).__name__}
+        for name in ('errno', 'winerror', 'verify_code'):
+            value = getattr(reason, name, None)
+            if type(value) is int:
+                details[name] = value
+        if isinstance(exc, urllib.error.HTTPError):
+            details['http_status'] = exc.code
+        return details
+
+    @staticmethod
+    def _message(exc, *, operation='check'):
+        if isinstance(exc, urllib.error.HTTPError):
+            if exc.code == 429 or (exc.code == 403 and exc.headers is not None and
+                    exc.headers.get('X-RateLimit-Remaining') == '0'):
+                return 'GitHub 检查次数暂时受限，请稍后重试。'
+            return 'GitHub 请求失败（HTTP ' + str(exc.code) + '），请稍后重试。'
+        reason = exc.reason if isinstance(exc, urllib.error.URLError) else exc
+        if isinstance(reason, ssl.SSLCertVerificationError):
+            return 'GitHub HTTPS 证书校验失败，请检查系统时间、证书及代理设置。'
+        if isinstance(reason, ssl.SSLError):
+            return 'GitHub HTTPS 连接失败，请检查网络或代理设置。'
+        if isinstance(reason, socket.gaierror):
+            return '无法解析 GitHub 地址，请检查 DNS 或代理设置。'
+        if isinstance(reason, TimeoutError):
+            return '连接 GitHub 超时，请检查网络或代理设置。'
+        if isinstance(reason, PermissionError):
+            return ('无法写入程序目录，请检查目录权限或安全软件。' if operation == 'install'
+                else '更新网络请求被系统拒绝，请检查防火墙、代理或安全软件。')
+        if isinstance(reason, FileNotFoundError) and operation == 'check':
+            return '检查更新所需的运行文件不可用，请重新启动助手后重试。'
         if isinstance(exc, (OSError, urllib.error.URLError)):
-            return '无法连接 GitHub 或写入程序目录，请检查网络和目录权限。'
+            return ('更新文件读写失败，请检查目录权限、可用空间或安全软件。'
+                if operation == 'install' and not isinstance(exc, urllib.error.URLError) and
+                    getattr(exc, 'errno', None) in (errno.ENOSPC, errno.EROFS, errno.ENOENT,
+                        errno.EEXIST, errno.ENOTDIR, errno.EISDIR)
+                else '无法连接 GitHub，请检查网络或代理设置。')
         return str(exc)[:300]
 
     def install(self):
@@ -308,8 +387,10 @@ class UpdateManager:
             if self.abort:
                 self.abort()
             with self.guard:
-                self.phase, self.error, self.progress = 'error', self._message(exc), None
+                self.phase, self.error, self.progress = 'error', self._message(exc, operation='install'), None
                 self.message = '更新未完成，旧程序和个人配置保留。'
+            record('update_install_failed', current_version=self.current_version, process_id=os.getpid(),
+                **self._failure_details(exc))
         finally:
             if owned and stage is not None and stage.exists():
                 stage.unlink()

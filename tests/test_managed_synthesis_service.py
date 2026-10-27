@@ -392,3 +392,158 @@ class ManagedSynthesisServiceTests(unittest.TestCase):
             changed = {**raw, key: value}
             if key == 'internal_name': changed['name_key'] = value
             self.assertFalse(retained_merchant_item(changed), (key, value))
+
+    def pending_craft(self, *, cleanup=False):
+        self.enable(gems=True)
+        self.client.items = []
+        self.client.synthesis_snapshot = Mock(return_value={'gems':{'available':True,'recipes':[]}})
+        action = dict(self.craft(),action_id='delayed-craft')
+        receipt = {'effect_confirmed':True, 'receipt_id':'delayed-receipt',
+            'inputs':[{'internal_name':'GemRuby1','count':10,'quantity':10,'container':'inventory','slot_index':0}],
+            'outputs':[{'internal_name':'GemRuby2','count':1,'quantity':1,'container':'inventory','slot_index':0}]}
+        initial = dict(receipt,ui_cleanup_pending=True) if cleanup else {
+            'effect_confirmed':False,'synthesis_pending':True}
+        self.client.native_handler = lambda kind,payload: deepcopy(initial)
+        def plan(world):
+            self.service.managed.pending = deepcopy(action)
+            return deepcopy(action)
+        with patch.object(self.service.managed,'next_action',side_effect=plan), \
+                patch('deskrawl_assistant.synthesis.next_action',return_value=deepcopy(action)):
+            self.service._managed_once()
+        self.assertIsNotNone(self.service.managed_synthesis_wait)
+        self.client.reconcile_synthesis = Mock()
+        return action,receipt
+
+    def test_late_receipt_blocks_other_actions_and_is_committed_once(self):
+        action,receipt = self.pending_craft()
+        self.client.reconcile_synthesis.return_value = {'synthesis_pending':True}
+        with patch.object(self.service.managed,'next_action',side_effect=AssertionError('must not plan')):
+            self.service._managed_once()
+            self.assertTrue(self.service.managed.running)
+            self.assertEqual(len(self.client.actions),1)
+            self.service.managed_synthesis_wait['next_at'] = 0
+            self.client.reconcile_synthesis.return_value = deepcopy(receipt)
+            self.service._managed_once()
+        self.assertIsNone(self.service.managed_synthesis_wait)
+        self.assertEqual(self.service.managed.await_effect['action_id'],action['action_id'])
+        self.assertEqual(self.service.managed.metrics.synthesis_ids,{'delayed-receipt'})
+        self.assertEqual(len(self.client.actions),1)
+        self.assertEqual(sum(row['count'] for row in self.service.managed.metrics.totals.values()),0)
+
+    def test_receipt_timeout_pauses_with_statistics_and_resume_rechecks_original(self):
+        _,receipt = self.pending_craft()
+        self.client.reconcile_synthesis.return_value = {'synthesis_pending':True,'timed_out':True}
+        self.service._managed_once()
+        self.assertFalse(self.service.managed.running)
+        self.assertEqual(self.service.managed.phase,'paused')
+        self.assertIsNotNone(self.service.managed_synthesis_wait)
+        self.service.managed.settings['synthesis']['gems']['enabled'] = False
+        self.service.managed.resume(self.service._managed_observation())
+        self.service.managed_synthesis_wait['next_at'] = 0
+        self.client.reconcile_synthesis.return_value = receipt
+        self.service._managed_once()
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNone(self.service.managed_synthesis_wait)
+        self.assertEqual(len(self.client.actions),1)
+
+    def test_confirmed_cleanup_recovers_without_recounting_or_new_craft(self):
+        _,_ = self.pending_craft(cleanup=True)
+        self.assertEqual(self.service.managed_synthesis_wait['stage'],'cleanup')
+        self.assertEqual(self.service.managed.metrics.synthesis_ids,{'delayed-receipt'})
+        self.client.reconcile_synthesis.return_value = {'ui_cleanup_pending':False}
+        with patch.object(self.service.managed,'next_action',side_effect=AssertionError('must not plan')):
+            self.service._managed_once()
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNone(self.service.managed_synthesis_wait)
+        self.assertEqual(self.service.managed.metrics.synthesis_ids,{'delayed-receipt'})
+        self.assertEqual(len(self.client.actions),1)
+
+    def test_stop_and_changed_character_cannot_discard_pending_receipt(self):
+        self.pending_craft()
+        self.service.managed.stop()
+        self.assertIsNotNone(self.service.managed_synthesis_wait)
+        self.service.managed.running = True
+        self.client.character_id = 'different-character'
+        self.service._managed_once()
+        self.assertEqual(self.service.managed.phase,'paused')
+        self.client.reconcile_synthesis.assert_not_called()
+        self.assertEqual(len(self.client.actions),1)
+
+    def test_finish_during_pending_receipt_only_settles_existing_craft(self):
+        _,receipt = self.pending_craft()
+        self.service.managed.request_finish()
+        self.client.reconcile_synthesis.return_value = receipt
+        self.service._managed_once()
+        self.assertTrue(self.service.managed.finishing)
+        self.assertIsNone(self.service.managed_synthesis_wait)
+        self.assertEqual(len(self.client.actions),1)
+
+    def assert_restart_accounts_transformation_before_loot(self, *, pause):
+        self.pending_craft()
+        self.service.managed.settings['cleanup']['rune_pages'] = [1]
+        gem = service_fixtures.equipment(key='GemRuby1', is_equipment=False,
+            kind='gem', item_class='GemData', base_rarity=0, count=10,
+            item_uid='', instance_id='')
+        self.client.items = [gem]
+        before = self.service._managed_observation()
+        self.service.managed.metrics.observe(before)
+        self.client.items = [dict(gem, name_key='GemRuby2', internal_name='GemRuby2', count=1)]
+        after = self.service._managed_observation()
+        receipt = {'effect_confirmed':True, 'receipt_id':'delayed-receipt',
+            'inputs':[dict(before['items'][0], quantity=10)],
+            'outputs':[dict(after['items'][0], quantity=1)]}
+        self.service.stop_managed(pause=pause)
+        self.service.set_managed_running(True)
+        self.assertEqual(sum(row['count'] for row in self.service.managed.metrics.totals.values()),0)
+        self.client.reconcile_synthesis.return_value = receipt
+        self.service._managed_once()
+        self.service.managed.metrics.observe(self.service._managed_observation())
+        self.assertEqual(self.service.managed.metrics.synthesis_ids,{'delayed-receipt'})
+        self.assertEqual(sum(row['count'] for row in self.service.managed.metrics.totals.values()),0)
+        # A real pickup after recovery still counts; no global rebaseline.
+        self.client.items.append(dict(gem, slot_index=1, name_key='GemEmerald1',
+                                      internal_name='GemEmerald1', count=2))
+        self.service.managed.metrics.observe(self.service._managed_observation())
+        self.assertEqual(sum(row['count'] for row in self.service.managed.metrics.totals.values()),2)
+        self.assertEqual(len(self.client.actions),1)
+
+    def test_pause_resume_defers_loot_observation_until_receipt_recovery(self):
+        self.assert_restart_accounts_transformation_before_loot(pause=True)
+
+    def test_stop_restart_defers_loot_baseline_until_receipt_recovery(self):
+        self.assert_restart_accounts_transformation_before_loot(pause=False)
+
+    def test_confirmed_receipt_during_pause_is_cached_for_resume(self):
+        _,receipt = self.pending_craft()
+        self.service.managed.settings['cleanup']['rune_pages'] = [1]
+        def acknowledge_while_pausing(*args, **kwargs):
+            self.service.stop_managed(pause=True)
+            return deepcopy(receipt)
+        self.client.reconcile_synthesis.side_effect = acknowledge_while_pausing
+        self.service._managed_once()
+        self.assertFalse(self.service.managed.running)
+        self.assertEqual(self.service.managed_synthesis_wait['confirmed'],receipt)
+        self.service.set_managed_running(True)
+        self.service._managed_once()
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNone(self.service.managed_synthesis_wait)
+        self.assertEqual(self.service.managed.metrics.synthesis_ids,{'delayed-receipt'})
+        self.client.reconcile_synthesis.assert_called_once()
+        self.assertEqual(len(self.client.actions),1)
+
+    def test_cleanup_timeout_preserves_receipt_and_can_resume_cleanup_only(self):
+        self.pending_craft(cleanup=True)
+        self.service.managed.settings['cleanup']['rune_pages'] = [1]
+        self.service.managed_synthesis_wait['started'] -= 121
+        self.client.reconcile_synthesis.return_value = {'ui_cleanup_pending':True}
+        self.service._managed_once()
+        self.assertEqual(self.service.managed.phase,'paused')
+        self.assertEqual(self.service.managed.metrics.synthesis_ids,{'delayed-receipt'})
+        self.service.set_managed_running(True)
+        self.service.managed_synthesis_wait['next_at'] = 0
+        self.client.reconcile_synthesis.return_value = {'ui_cleanup_pending':False}
+        self.service._managed_once()
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNone(self.service.managed_synthesis_wait)
+        self.assertEqual(self.service.managed.metrics.synthesis_ids,{'delayed-receipt'})
+        self.assertEqual(len(self.client.actions),1)

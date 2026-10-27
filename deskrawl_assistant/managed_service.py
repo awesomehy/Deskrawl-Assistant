@@ -21,6 +21,7 @@ from .action_log import record
 from .progression import catalog as growth_catalog, growth_action, next_purchase, NEW_ACTIONS, PURCHASE_BATCH_LIMIT, enabled as growth_enabled
 from .auction import next_action as auction_action, validate_settings as validate_auction
 from .auction_runtime import auction_eligibility
+from .carriage_transfer import CarriageUnavailable
 
 SYNTHESIS_ACTIONS = ('synthesize_gems', 'synthesize_runes')
 
@@ -143,6 +144,9 @@ class ManagedServiceMixin:
         self.managed_transition = None
         self.managed_retry = None
         self.managed_return_recovery = None
+        # Keep submitted craft receipts across user pause/stop, independently
+        # of planner resets. They must settle before any later inventory work.
+        self.managed_synthesis_wait = None
         self.managed_reconnect = ReconnectFlow()
         self._managed_reconnect_read_since = None
         self.managed_elapsed = 0
@@ -531,12 +535,14 @@ class ManagedServiceMixin:
                 if self.managed_can_resume and hasattr(self.managed,'resume'):
                     self.managed_retry = None
                     self.managed_return_recovery = None
-                    self.managed.resume(observation)
+                    self.managed.resume(observation, observe_metrics=self.managed_synthesis_wait is None)
                 else:
                     self.managed_transition = None
                     self.managed_retry = None
                     self.managed_return_recovery = None
-                    self.managed.start(observation)
+                    # Account the outstanding transformation before observing
+                    # its output as loot, including after a user stop/restart.
+                    self.managed.start(observation, observe_metrics=self.managed_synthesis_wait is None)
                     self.managed_started_at = datetime.now(timezone.utc).isoformat()
                     self.managed_elapsed = 0
                     self.managed_history = []
@@ -831,11 +837,19 @@ class ManagedServiceMixin:
             result = self.client.lock_equipment(source,lambda row:active())
             result = {**result,'verified':result.get('status') in ('locked','already_locked')}
         elif kind=='collect_carriage':
-            result = self.client.collect_carriage(item['selection_id'],active)
+            try:
+                result = self.client.collect_carriage(item['selection_id'],active)
+            except CarriageUnavailable as exc:
+                # This typed exception is raised only before collection writes.
+                # Discard the stale selection and let the normal backoff obtain
+                # a fresh drop/capacity snapshot; postwrite errors stay fatal.
+                raise GameBusyError(str(exc)) from exc
             result = {**result,'verified':result.get('moved')==1}
         else:
             native_kind = 'enter_map' if kind=='enter_dungeon' else kind
             payload = {**action,'item':source or item}
+            if kind in SYNTHESIS_ACTIONS:
+                payload['character_id'] = self.managed.character_id
             auction_intent = None
             if kind == 'auction_upload':
                 coordinator = self._auction_service()
@@ -1083,10 +1097,70 @@ class ManagedServiceMixin:
         else:
             self.managed.status = '等待神秘商人同步补充库存，未重复提交补货或购买。'
 
+    def _managed_wait_synthesis(self, observation):
+        wait = self.managed_synthesis_wait
+        with self.guard:
+            if not self.managed.running or self.cancelled.is_set():
+                return self.managed.status
+            character = self.managed._control_character_id(observation)
+            if (observation.get('session') != wait['session']
+                    or character != wait['character_id']):
+                return self._managed_pause_synthesis('合成核验期间连接或角色已变化，请先核验原角色的合成结果。')
+            if time.monotonic() < wait.get('next_at', 0):
+                return self.managed.status
+        result = wait.get('confirmed')
+        if result is None:
+            result = self.client.reconcile_synthesis(character, cancel_event=self.cancelled,
+                validate=lambda: self.managed.running and not self.cancelled.is_set())
+        with self.guard:
+            if wait['stage'] == 'receipt' and (not isinstance(result, dict)
+                    or not (result.get('synthesis_pending') or result.get('effect_confirmed'))):
+                return self._managed_pause_synthesis('原合成核验记录未完整读取，未重复提交合成。')
+            if isinstance(result, dict) and result.get('effect_confirmed'):
+                wait['confirmed'] = result
+            if not self.managed.running or self.cancelled.is_set():
+                return self.managed.status
+            pending = isinstance(result, dict) and (result.get('synthesis_pending')
+                or wait['stage'] == 'cleanup' and result.get('ui_cleanup_pending'))
+            if pending:
+                wait['next_at'] = time.monotonic() + 2
+                if result.get('timed_out') or time.monotonic() - wait['started'] >= 120:
+                    reason = ('合成已提交，连续 2 分钟未确认材料与产物；未重复消耗。'
+                              if wait['stage'] == 'receipt' else '合成结果已确认，但魔盒清理持续未完成；未再次合成。')
+                    return self._managed_pause_synthesis(reason)
+                self.managed.status = ('合成已提交，等待材料与产物回执；未重复消耗材料。'
+                    if wait['stage'] == 'receipt' else '合成结果已确认，等待魔盒完成清理后继续托管。')
+                return self.managed.status
+            if wait['stage'] == 'cleanup':
+                self.managed_synthesis_wait = None
+                self.managed.status = '魔盒清理已完成，继续托管。'
+                record('managed_synthesis_cleanup_confirmed', kind=wait['action']['kind'])
+                return self.managed.status
+            action = wait['action']
+            if result.get('ui_cleanup_pending'):
+                wait.update(stage='cleanup', confirmed=None, started=time.monotonic(), next_at=0)
+            else:
+                self.managed_synthesis_wait = None
+            self.managed.pending = action
+            result = dict(result, verified=True)
+            record('managed_synthesis_receipt_recovered', kind=action['kind'], receipt_id=result.get('receipt_id'))
+        return self._managed_complete_action(action, result, observation)
+
+    def _managed_pause_synthesis(self, reason):
+        # Preserve the pending receipt/cleanup and statistics. Resume polls the
+        # same operation even if its feature was switched off in the meantime.
+        self.managed._pause(reason + ' 托管已暂停；继续时会先核验原操作。')
+        self.managed_can_resume = True
+        self._managed_freeze_clock()
+        record('managed_synthesis_recovery_paused', stage=self.managed_synthesis_wait['stage'])
+        return self.managed.status
+
     def _managed_once(self):
         self.managed_fast_followup = False
         if self._managed_reconnect_once(): return self.managed.status
         observation = self._managed_observation()
+        if self.managed_synthesis_wait:
+            return self._managed_wait_synthesis(observation)
         with self.guard:
             # The same bridge connection can remain alive across role changes.
             # Reject them before retry/transition paths update counts or receipts.
@@ -1250,7 +1324,19 @@ class ManagedServiceMixin:
                     else '游戏暂未接受回城请求，等待结算或同步完成。')
                 return self._managed_defer(action,reason,code,native_state=exc.state)
             raise
-        receipt = result.pop('_receipt_snapshot',None)
+        if action['kind'] in SYNTHESIS_ACTIONS and (result.get('synthesis_pending')
+                or result.get('effect_confirmed') and result.get('ui_cleanup_pending')):
+            with self.guard:
+                self.managed_synthesis_wait = {'action':deepcopy(action),
+                    'session':observation.get('session'),
+                    'character_id':self.managed._control_character_id(observation),
+                    'stage':'receipt' if result.get('synthesis_pending') else 'cleanup',
+                    'started':time.monotonic(), 'next_at':0}
+                if result.get('synthesis_pending'):
+                    self.managed_retry = None
+                    self.managed.status = '合成已提交，等待材料与产物回执；未重复消耗材料。'
+                    record('managed_synthesis_receipt_pending',kind=action['kind'])
+                    return self.managed.status
         with self.guard:
             if action['kind'] == 'merchant_refresh' and result.get('merchant_refresh_pending') is True:
                 if (self.managed.running and not self.cancelled.is_set() and self.managed.pending
@@ -1270,6 +1356,11 @@ class ManagedServiceMixin:
                 self.managed.pending = None
                 self.managed.status = result.get('reason','等待下一轮读取。')
                 return self.managed.status
+        return self._managed_complete_action(action, result, observation, transition=transition)
+
+    def _managed_complete_action(self, action, result, observation, *, transition=None):
+        receipt = result.pop('_receipt_snapshot',None)
+        with self.guard:
             self.managed_retry = None
             # A cancelled in-flight action may already have completed. Log its
             # receipt but never resume the planner or submit another action.

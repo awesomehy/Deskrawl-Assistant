@@ -87,6 +87,10 @@ def rune_inputs(rows, uids, recipe, maximum, excluded, equipped=()):
     return result
 
 
+class SynthesisReceiptPending(NativeActionError):
+    """The native batch finished, but its economic receipt is still pending."""
+
+
 class SynthesisRuntime:
     def __init__(self, actions):
         self.actions, self.reader = actions, actions.reader
@@ -95,6 +99,8 @@ class SynthesisRuntime:
         self._scanned = set()
         self._scan_positions = {}
         self._uncertain = False
+        self._pending = None
+        self._cleanup_pending = None
 
     def _copy(self):
         result = _GrowthCopy(self.reader)
@@ -203,7 +209,7 @@ class SynthesisRuntime:
         for group, requested in (('gems', gems), ('runes', runes)):
             if not requested:
                 continue
-            if self._uncertain:
+            if self._uncertain or self._pending or self._cleanup_pending:
                 result[group] = {'available': False, 'recipes': [],
                                  'reason': '上一轮合成或界面清理仍待核验，禁止重复消耗材料。'}
                 continue
@@ -370,6 +376,8 @@ class SynthesisRuntime:
     def execute(self, kind, payload, *, cancel_event=None, validate=lambda: True):
         if self._uncertain:
             raise NativeActionError('上一轮合成结果仍未确认，禁止重复消耗材料；请先人工核验。', uncertain=True)
+        if self._pending or self._cleanup_pending:
+            raise GameBusyError('上一轮合成仍在核验或清理，仅允许继续核验原操作。')
         if kind not in ('synthesize_gems', 'synthesize_runes'):
             raise NativeActionError('未知合成动作。')
         read, manager, save = self._context()
@@ -377,7 +385,7 @@ class SynthesisRuntime:
         rows, registry, array, capacity = self._bag(read)
         self._guard_bag_identities(read, array, capacity)
         group = 'gems' if kind == 'synthesize_gems' else 'runes'
-        ui, opened, cleanup_needed = None, False, False
+        ui, opened = None, False
         if group == 'gems':
             recipe = next((r for r in gem_recipes() if r['recipe_id'] == payload.get('recipe_id')), None)
             maximum, count = payload.get('max_quality'), payload.get('count')
@@ -442,25 +450,76 @@ class SynthesisRuntime:
             raise SnapshotChangedError('合成材料与规划不一致，重新读取后再执行。')
         try:
             result = self._invoke(calls, read, copy, cancel_event=cancel_event, validate=validate)
-            cleanup_needed = ui is not None
-            self._uncertain = True
-            receipt = self._confirm(kind, rows, selected, recipe, payload['count'], before_state, result)
-            self._uncertain = False
-            result.update(receipt, kind=kind, effect_confirmed=True, online_save_confirmed=False,
-                          native_verified=False)
-            return result
         except NativeActionError as exc:
             if exc.uncertain:
                 self._uncertain = True
-                cleanup_needed = ui is not None
             raise
-        finally:
-            if cleanup_needed:
-                cleaned = self._cleanup_cube(ui, opened)
-                if 'result' in locals():
-                    result['ui_cleanup_pending'] = not cleaned
+        # Only a completed mailbox batch can enter receipt recovery. A native
+        # timeout/partial batch remains fenced above and is never resubmitted.
+        self._pending = {'kind': kind, 'before': deepcopy(rows), 'selected': selected,
+            'recipe': recipe, 'count': payload['count'], 'state': before_state,
+            'invocation': result, 'started': time.monotonic(),
+            'character_id': payload.get('character_id'), 'ui': ui, 'opened': opened}
+        try:
+            receipt = self._confirm(kind, rows, selected, recipe, payload['count'], before_state, result)
+        except SynthesisReceiptPending:
+            return self._pending_result()
+        except NativeActionError as exc:
+            if exc.uncertain:
+                self._uncertain = True
+            raise
+        return self._confirmed(receipt, cancel_event=cancel_event, validate=validate)
 
-    def _cleanup_cube(self, ui, opened):
+    def _pending_result(self):
+        elapsed = time.monotonic() - self._pending['started']
+        return {'kind': self._pending['kind'], 'effect_confirmed': False,
+                'synthesis_pending': True, 'timed_out': elapsed >= 120,
+                'reason': '合成已提交，等待材料与产物回执；未重复消耗材料。'}
+
+    def _confirmed(self, receipt, *, cancel_event=None, validate=lambda: True):
+        pending = self._pending
+        result = dict(pending['invocation'], **receipt, kind=pending['kind'],
+                      effect_confirmed=True, online_save_confirmed=False, native_verified=False)
+        self._pending = None
+        self._uncertain = False
+        if pending['ui'] is not None:
+            self._cleanup_pending = {'ui': pending['ui'], 'opened': pending['opened'],
+                'input_uids': {r['item_uid'] for r in pending['selected']},
+                'character_id': pending['character_id']}
+            self._recover_cleanup(cancel_event=cancel_event, validate=validate)
+        result['ui_cleanup_pending'] = self._cleanup_pending is not None
+        return result
+
+    def reconcile(self, character_id, *, cancel_event=None, validate=lambda: True):
+        """Poll the original receipt; never select materials or submit a craft."""
+        pending = self._pending or self._cleanup_pending
+        if pending is None:
+            return None
+        if pending.get('character_id') is not None and character_id != pending['character_id']:
+            raise NativeActionError('合成核验期间角色已变化，未继续清理或消耗材料。', uncertain=True)
+        if self._uncertain:
+            raise NativeActionError('原生合成执行状态不明确，不能自动恢复。', uncertain=True)
+        if self._pending:
+            try:
+                receipt = self._receipt(pending['kind'], pending['before'], pending['selected'],
+                    pending['recipe'], pending['count'], pending['state'], pending['invocation'])
+            except (MemoryReadError, ValueError, KeyError, struct.error, UnicodeError):
+                receipt = None
+            if receipt is not None:
+                return self._confirmed(receipt, cancel_event=cancel_event, validate=validate)
+            return self._pending_result()
+        self._recover_cleanup(cancel_event=cancel_event, validate=validate)
+        return {'ui_cleanup_pending': self._cleanup_pending is not None}
+
+    def _recover_cleanup(self, *, cancel_event=None, validate=lambda: True):
+        pending = self._cleanup_pending
+        if pending is None or not validate() or cancel_event is not None and cancel_event.is_set():
+            return
+        if self._cleanup_cube(pending['ui'], pending['opened'], input_uids=pending['input_uids'],
+                              cancel_event=cancel_event, validate=validate):
+            self._cleanup_pending = None
+
+    def _cleanup_cube(self, ui, opened, *, input_uids, cancel_event=None, validate=lambda: True):
         """Clear only assistant selections; close only assistant-opened panel.
 
         Cube UI slots are references, not a material inventory. gbu invokes the
@@ -471,15 +530,36 @@ class SynthesisRuntime:
             read, _, _ = self._context(after=True)
             if read.singleton('CubePanelUI') != ui:
                 return True
+            # gbu itself clears +252 and cancels the result tween. Once the
+            # economic receipt is confirmed, waiting for this flag to clear
+            # could prevent the very reset needed to recover the UI.
+            animating = read.boolean(ui + 252)
+            slots = read.pointers(read.ptr(ui + 64), 'CubeSlotUI', limit=16)
+            if len(slots) != 9:
+                return False
+            has_selection = False
+            for slot in slots:
+                read.verify(slot, 'CubeSlotUI')
+                obj = read.ptr(slot + 64)
+                uid = self.reader.string(read.ptr(slot + 72))
+                if uid and uid not in input_uids:
+                    read.finish()
+                    return True  # Player has replaced our selections: leave them.
+                if obj and not uid:
+                    return False
+                has_selection = has_selection or bool(obj or uid)
+            visible = read.boolean(ui + 40)
+            if not animating and not has_selection and (not opened or not visible):
+                read.finish()
+                return True  # Native animation/player cleanup already finished.
             calls = [Invocation('CubePanelUI.gbu', instance=ui)]
-            if opened and read.boolean(ui + 40):
+            if opened and visible:
                 calls.append(Invocation('PanelBase.Close', instance=ui))
-            self._invoke(calls, read, self._copy())
+            self._invoke(calls, read, self._copy(), cancel_event=cancel_event, validate=validate)
             return True
-        except (MemoryReadError, ValueError, KeyError):
-            # A tainted native mailbox cannot safely be reused for cleanup.
-            # Keep the uncertain latch and let the service stop, never resend.
-            self._uncertain = True
+        except (MemoryReadError, ValueError, KeyError, struct.error):
+            # Economic confirmation is independent of UI cleanup. Retry only
+            # guarded cleanup; never invalidate a receipt or resend a craft.
             return False
 
     def _confirm(self, kind, before, selected, recipe, count, state, invocation):
@@ -487,43 +567,48 @@ class SynthesisRuntime:
         last_error = ''
         while time.monotonic() < deadline:
             try:
-                read, manager, save = self._context(after=True)
-                copy = self._copy()
-                rows, _, _, _ = self._bag(read)
-                if kind == 'synthesize_gems':
-                    gold = self._gold(copy)
-                    confirmed = (_total(before, recipe['input_key']) - _total(rows, recipe['input_key']) == count * 10
-                                 and _total(rows, recipe['output_key']) - _total(before, recipe['output_key']) == count
-                                 and state['gold'] - gold == count * recipe['gold_cost'])
-                    outputs, remaining = [], count
-                    # Native add merges/fills slots; capture only actual deltas.
-                    old = {r['slot_index']: r for r in before}
-                    for row in rows:
-                        previous = old.get(row['slot_index'], {})
-                        delta = row['count'] - (previous.get('count', 0) if item_key(previous) == item_key(row) else 0)
-                        if item_key(row) == recipe['output_key'] and delta > 0:
-                            take = min(delta, remaining)
-                            outputs.append(dict(deepcopy(row), quantity=take)); remaining -= take
-                    confirmed = confirmed and remaining == 0
-                    sequence = invocation.get('sequence')
-                else:
-                    after = self._runes(copy, manager, save)
-                    old_uids = {r.get('item_uid') for r in before if r.get('item_uid')}
-                    new_rows = [r for r in rows if r.get('item_uid') and r['item_uid'] not in old_uids]
-                    consumed = {r['item_uid'] for r in selected}
-                    confirmed = (not any(r.get('item_uid') in consumed for r in rows)
-                                 and len(new_rows) == 1 and new_rows[0].get('item_class') == 'RuneData'
-                                 and rune_quality(new_rows[0]) in (recipe['input_quality'], recipe['output_quality'])
-                                 and (not state['online'] or after['sequence'] == state['sequence'] + 1))
-                    outputs = [dict(deepcopy(r), quantity=1) for r in new_rows]
-                    sequence = after['sequence'] if state['online'] else invocation.get('sequence')
-                read.finish(); copy.finish()
-                if confirmed:
-                    return {'inputs': selected, 'outputs': outputs, 'recipe_id': recipe['recipe_id'],
-                            'receipt_id': f"synthesis:{self.reader.session_id}:{kind}:{sequence}",
-                            'sequence': sequence, 'quantity': count}
+                receipt = self._receipt(kind, before, selected, recipe, count, state, invocation)
+                if receipt is not None:
+                    return receipt
             except (MemoryReadError, ValueError, KeyError, struct.error, UnicodeError) as exc:
                 last_error = str(exc)
             time.sleep(.1)
         suffix = f'（{last_error}）' if last_error else ''
-        raise NativeActionError('合成请求已提交，但材料与产物结果尚未核验' + suffix + '；已停止重复消耗。', uncertain=True)
+        raise SynthesisReceiptPending('合成请求已提交，但材料与产物结果尚未核验' + suffix + '；未重复消耗。', uncertain=True)
+
+    def _receipt(self, kind, before, selected, recipe, count, state, invocation):
+        read, manager, save = self._context(after=True)
+        copy = self._copy()
+        rows, _, _, _ = self._bag(read)
+        if kind == 'synthesize_gems':
+            gold = self._gold(copy)
+            confirmed = (_total(before, recipe['input_key']) - _total(rows, recipe['input_key']) == count * 10
+                         and _total(rows, recipe['output_key']) - _total(before, recipe['output_key']) == count
+                         and state['gold'] - gold == count * recipe['gold_cost'])
+            outputs, remaining = [], count
+            old = {r['slot_index']: r for r in before}
+            for row in rows:
+                previous = old.get(row['slot_index'], {})
+                delta = row['count'] - (previous.get('count', 0) if item_key(previous) == item_key(row) else 0)
+                if item_key(row) == recipe['output_key'] and delta > 0:
+                    take = min(delta, remaining)
+                    outputs.append(dict(deepcopy(row), quantity=take)); remaining -= take
+            confirmed = confirmed and remaining == 0
+            sequence = invocation.get('sequence')
+        else:
+            after = self._runes(copy, manager, save)
+            old_uids = {r.get('item_uid') for r in before if r.get('item_uid')}
+            new_rows = [r for r in rows if r.get('item_uid') and r['item_uid'] not in old_uids]
+            consumed = {r['item_uid'] for r in selected}
+            confirmed = (not any(r.get('item_uid') in consumed for r in rows)
+                         and len(new_rows) == 1 and new_rows[0].get('item_class') == 'RuneData'
+                         and rune_quality(new_rows[0]) in (recipe['input_quality'], recipe['output_quality'])
+                         and (not state['online'] or after['sequence'] == state['sequence'] + 1))
+            outputs = [dict(deepcopy(r), quantity=1) for r in new_rows]
+            sequence = after['sequence'] if state['online'] else invocation.get('sequence')
+        read.finish(); copy.finish()
+        if confirmed:
+            return {'inputs': selected, 'outputs': outputs, 'recipe_id': recipe['recipe_id'],
+                    'receipt_id': f"synthesis:{self.reader.session_id}:{kind}:{sequence}",
+                    'sequence': sequence, 'quantity': count}
+        return None

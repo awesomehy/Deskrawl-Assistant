@@ -80,7 +80,11 @@ class NativeReader:
         if not module:
             raise MemoryReadError("游戏尚未载入装备数据，请进入主城后重试")
         root = self.memory.path.parent
-        if Path(module["path"]).parent != root:
+        try:
+            same_directory = root.samefile(Path(module["path"]).parent)
+        except OSError as exc:
+            raise MemoryReadError("无法核验游戏模块与进程目录，请检查游戏文件是否可访问") from exc
+        if not same_directory:
             raise MemoryReadError("游戏模块路径与进程不一致")
         from .game_compatibility import resolve, type_rows
         result = resolve(root, Path(module['path']), self.on_compatibility)

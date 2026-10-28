@@ -19939,6 +19939,16 @@
       "prefix": "48895c2418574883ec30ff8100010000488bf9488b89d800",
       "declaring_type": "CubePanelUI"
     },
+    "CubePanelUI.gbf": {
+      "name": "gbf",
+      "token": "0x060013AD",
+      "isStatic": false,
+      "returnType": "System.Void",
+      "parameters": [],
+      "rva": 5610288,
+      "prefix": "48895c241048896c2418574883ec20803d5e066b0300488b",
+      "declaring_type": "CubePanelUI"
+    },
     "et.dbi": {
       "name": "dbi",
       "token": "0x060009AA",

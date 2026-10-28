@@ -240,6 +240,32 @@ class SnapshotAndReceiptTests(unittest.TestCase):
             'recipe_id':recipe['recipe_id'], 'receipt_id':'test-receipt', 'quantity':1}
         return runtime, payload, receipt
 
+    def cube_state(self, runtime, *, visible=False, animating=False, selections=()):
+        """Mutable native UI fake: consumed materials may still occupy UI slots."""
+        state = {'visible': visible, 'animating': animating,
+                 'selections': list(selections) + [(0, '')] * (9 - len(selections))}
+        read = runtime._context.return_value[0]
+        slots = [1000 + index * 128 for index in range(9)]
+        read.pointers.return_value = slots
+
+        def pointer(address):
+            if address == 700 + 64:
+                return 900
+            for index, slot in enumerate(slots):
+                obj, uid = state['selections'][index]
+                if address == slot + 64:
+                    return obj
+                if address == slot + 72:
+                    return 30000 + index if uid else 0
+            return 0
+
+        read.ptr.side_effect = pointer
+        read.boolean.side_effect = lambda address: {
+            700 + 40: state['visible'], 700 + 252: state['animating']}.get(address, False)
+        runtime.reader.string.side_effect = lambda address: (
+            state['selections'][address - 30000][1] if 30000 <= address < 30009 else '')
+        return state
+
     def test_delayed_rune_receipt_recovers_without_another_native_submission(self):
         runtime, payload, receipt = self.rune_execution()
         runtime._confirm = Mock(side_effect=SynthesisReceiptPending('delayed',uncertain=True))
@@ -297,22 +323,116 @@ class SnapshotAndReceiptTests(unittest.TestCase):
         self.assertEqual(runtime._invoke.call_count,1)
         self.assertIsNone(runtime._cleanup_pending)
 
-    def test_cleanup_resets_confirmed_animation_and_preserves_player_selections(self):
+    def test_cleanup_clears_consumed_references_then_confirms_slots_and_panel(self):
         runtime, _, _ = self.rune_execution()
-        read = runtime._context.return_value[0]
-        read.boolean.return_value = True
+        state = self.cube_state(runtime, visible=True, animating=True,
+                                selections=[(20000, 'rune-0')])
+
+        def native_reset(*args, **kwargs):
+            state.update(visible=False, animating=False, selections=[(0, '')] * 9)
+        runtime._invoke.side_effect = native_reset
         self.assertTrue(runtime._cleanup_cube(700,True,input_uids={'rune-0'}))
         self.assertEqual([c.method for c in runtime._invoke.call_args.args[0]],
-                         ['CubePanelUI.gbu','PanelBase.Close'])
-        runtime._invoke.reset_mock()
-        read.boolean.return_value = False
-        runtime.reader.string.return_value = 'player-new-rune'
+                         ['CubePanelUI.gbu','CubePanelUI.gbf','PanelBase.Close'])
+        self.assertEqual(runtime._context.call_count, 2)
+
+    def test_cleanup_preserves_player_materials_and_their_open_panel(self):
+        runtime, _, _ = self.rune_execution()
+        self.cube_state(runtime, visible=True, selections=[(20000, 'player-new-rune')])
         self.assertTrue(runtime._cleanup_cube(700,True,input_uids={'rune-0'}))
         runtime._invoke.assert_not_called()
-        runtime.reader.string.return_value = 'rune-0'
+
+    def test_cleanup_of_hidden_consumed_slots_does_not_reopen_panel(self):
+        runtime, _, _ = self.rune_execution()
+        state = self.cube_state(runtime, selections=[(20000, 'rune-0')])
+        runtime._invoke.side_effect = lambda *a, **k: state.update(selections=[(0, '')] * 9)
         self.assertTrue(runtime._cleanup_cube(700,True,input_uids={'rune-0'}))
+        self.assertEqual([c.method for c in runtime._invoke.call_args.args[0]],
+                         ['CubePanelUI.gbu','CubePanelUI.gbf'])
+
+    def test_cleanup_incomplete_native_reset_stays_pending_and_retries_only_reset(self):
+        runtime, _, _ = self.rune_execution()
+        state = self.cube_state(runtime, animating=True, selections=[(20000, 'rune-0')])
+        # Ending the animation alone was the original bug: UI references remain.
+        runtime._invoke.side_effect = lambda *a, **k: state.update(animating=False)
+        self.assertFalse(runtime._cleanup_cube(700,True,input_uids={'rune-0'}))
+        runtime._invoke.side_effect = lambda *a, **k: state.update(selections=[(0, '')] * 9)
+        self.assertTrue(runtime._cleanup_cube(700,True,input_uids={'rune-0'}))
+        for call in runtime._invoke.call_args_list:
+            self.assertEqual([c.method for c in call.args[0]],
+                             ['CubePanelUI.gbu','CubePanelUI.gbf'])
+
+    def test_cleanup_does_not_clear_unknown_material_identity(self):
+        runtime, _, _ = self.rune_execution()
+        self.cube_state(runtime, selections=[(20000, '')])
+        self.assertFalse(runtime._cleanup_cube(700,True,input_uids={'rune-0'}))
+        runtime._invoke.assert_not_called()
+
+    def test_player_selection_after_cleanup_readback_is_preserved(self):
+        runtime, _, _ = self.rune_execution()
+        state = self.cube_state(runtime, selections=[(20000, 'rune-0')])
+        runtime._invoke.side_effect = lambda *a, **k: state.update(
+            selections=[(20001, 'player-new-rune')] + [(0, '')] * 8, visible=True)
+        self.assertTrue(runtime._cleanup_cube(700,True,input_uids={'rune-0'}))
+        self.assertEqual(runtime._invoke.call_count, 1)
+        self.assertEqual(state['selections'][0][1], 'player-new-rune')
+
+    def test_old_hidden_consumed_refs_recover_before_selecting_next_batch(self):
+        runtime, payload, _ = self.rune_execution()
+        self.cube_state(runtime, selections=[(20000+i, f'consumed-{i}') for i in range(9)])
+        runtime._confirm = Mock(side_effect=SynthesisReceiptPending('delayed', uncertain=True))
+        self.assertTrue(runtime.execute('synthesize_runes', payload)['synthesis_pending'])
         calls = runtime._invoke.call_args.args[0]
-        self.assertEqual([c.method for c in calls],['CubePanelUI.gbu'])
+        names = [c.method for c in calls]
+        self.assertLess(names.index('CubePanelUI.Open'), names.index('CubePanelUI.gbh'))
+        self.assertEqual(names.count('CubePanelUI.gbp'), 1)
+        self.assertNotIn('CubePanelUI.gbf', names)  # Native Open resets the old references.
+
+    def test_existing_or_unknown_cube_selections_block_a_fresh_craft(self):
+        cases = [
+            ('visible consumed refs', True, [(20000, 'consumed')], {}),
+            ('live bag UID', False, [(20000, 'rune-0')], {}),
+            ('live storage UID', False, [(20000, 'stored-rune')], {'stored-rune': 50000}),
+            ('mixed stale and live', False, [(20000, 'consumed'), (20001, 'rune-0')], {}),
+            ('unknown UID', False, [(20000, '')], {}),
+            ('unknown material', False, [(0, 'consumed')], {}),
+        ]
+        for label, visible, selections, registry in cases:
+            with self.subTest(label=label):
+                runtime, payload, _ = self.rune_execution()
+                self.cube_state(runtime, visible=visible, selections=selections)
+                rows, _, array, capacity = runtime._bag.return_value
+                runtime._bag.return_value = rows, registry, array, capacity
+                with self.assertRaisesRegex(GameBusyError, '已有玩家选择'):
+                    runtime.execute('synthesize_runes', payload)
+                runtime._invoke.assert_not_called()
+
+    def test_two_consecutive_batches_clear_their_own_consumed_references(self):
+        runtime, payload, receipt = self.rune_execution()
+        state = self.cube_state(runtime)
+        runtime._confirm = Mock(return_value=receipt)
+
+        def native_batch(calls, *args, **kwargs):
+            names = [c.method for c in calls]
+            if 'CubePanelUI.gbp' in names:
+                state.update(visible=True, animating=True,
+                    selections=[(20000+i, uid) for i, uid in enumerate(payload['input_uids'])])
+            else:
+                self.assertEqual(names, ['CubePanelUI.gbu','CubePanelUI.gbf','PanelBase.Close'])
+                state.update(visible=False, animating=False, selections=[(0, '')] * 9)
+            return {'sequence': 1}
+
+        runtime._invoke.side_effect = native_batch
+        for start in (0, 20):
+            rows = [rune(i) for i in range(start, start+9)]
+            runtime._bag.return_value = rows, {}, 300, 40
+            payload.update(inputs=[dict(r, quantity=1) for r in rows],
+                           input_uids=[r['item_uid'] for r in rows])
+            result = runtime.execute('synthesize_runes', payload)
+            self.assertTrue(result['effect_confirmed'])
+            self.assertFalse(result['ui_cleanup_pending'])
+            self.assertIsNone(runtime._cleanup_pending)
+        self.assertEqual(runtime._invoke.call_count, 4)  # Two crafts, two verified cleanups.
 
     def test_cleanup_already_finished_does_not_require_another_native_call(self):
         runtime, _, _ = self.rune_execution()
@@ -335,6 +455,26 @@ class SnapshotAndReceiptTests(unittest.TestCase):
         self.assertFalse(runtime._cleanup_cube(700,True,input_uids={'rune-0'}))
         self.assertFalse(runtime._uncertain)
         runtime._invoke.assert_not_called()
+
+    def test_cleanup_native_error_preserves_receipt_and_only_retries_ui_cleanup(self):
+        runtime, payload, receipt = self.rune_execution()
+        runtime._confirm = Mock(return_value=receipt)
+        state = self.cube_state(runtime)
+
+        def native_batch(calls, *args, **kwargs):
+            if any(c.method == 'CubePanelUI.gbp' for c in calls):
+                state['animating'] = True
+                return {'sequence': 1}
+            raise NativeActionError('cleanup delayed', uncertain=True)
+        runtime._invoke.side_effect = native_batch
+        result = runtime.execute('synthesize_runes', payload)
+        self.assertTrue(result['effect_confirmed'])
+        self.assertTrue(result['ui_cleanup_pending'])
+        self.assertFalse(runtime._uncertain)
+        self.assertIsNone(runtime._pending)
+        with self.assertRaises(GameBusyError):
+            runtime.execute('synthesize_runes', payload)
+        self.assertEqual(runtime._invoke.call_count, 2)
 
     def test_uncertain_native_batch_never_enters_receipt_recovery(self):
         runtime, payload, _ = self.rune_execution()

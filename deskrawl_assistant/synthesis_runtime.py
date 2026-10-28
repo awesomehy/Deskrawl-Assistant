@@ -373,6 +373,19 @@ class SynthesisRuntime:
         return self.actions.dispatcher.invoke(calls, guards, cancel_event=cancel_event,
                                                timeout=5, validate=validate)
 
+    def _cube_selections(self, read, ui):
+        slots = read.pointers(read.ptr(ui + 64), 'CubeSlotUI', limit=16)
+        if len(slots) != 9:
+            raise MemoryReadError('魔盒材料槽位数量不一致。')
+        selections = []
+        for slot in slots:
+            read.verify(slot, 'CubeSlotUI')
+            obj = read.ptr(slot + 64)
+            uid = self.reader.string(read.ptr(slot + 72))
+            if obj or uid:
+                selections.append((obj, uid))
+        return slots, selections
+
     def execute(self, kind, payload, *, cancel_event=None, validate=lambda: True):
         if self._uncertain:
             raise NativeActionError('上一轮合成结果仍未确认，禁止重复消耗材料；请先人工核验。', uncertain=True)
@@ -425,14 +438,19 @@ class SynthesisRuntime:
             opened = not read.boolean(ui + 40)
             if read.boolean(ui + 252):
                 raise GameBusyError('符文魔盒正在处理上一轮操作。')
-            slots = read.pointers(read.ptr(ui + 64), 'CubeSlotUI', limit=16)
-            if len(slots) != 9:
-                raise MemoryReadError('魔盒材料槽位数量不一致。')
-            for slot in slots:
-                read.verify(slot, 'CubeSlotUI')
-                # Preserve player selections instead of resetting their UI.
-                if read.ptr(slot + 64) or self.reader.string(read.ptr(slot + 72)):
+            slots, selections = self._cube_selections(read, ui)
+            if selections:
+                live_uids = {r.get('item_uid') for r in rows if r.get('item_uid')}
+                # Older versions ended the animation without clearing consumed
+                # slot references. A closed, idle cube can safely be reopened
+                # only when ALL references identify runes absent from both the
+                # complete bag and generated-item registry. Open's native reset
+                # clears those references before our new selections are placed.
+                if not opened or any(not obj or not uid or uid in registry or uid in live_uids
+                                     for obj, uid in selections):
                     raise GameBusyError('魔盒中已有玩家选择的材料，请先完成或清空该操作。')
+                for obj, _ in selections:
+                    read.verify(obj, 'RuneData')
             calls = [Invocation('SaveSystem.ekf', instance=save, require_true=True),
                      Invocation('SaveSystem.eke', instance=save,
                                 arguments=(Argument.integer({'uncommon': 1, 'rare': 2, 'grand': 3}[recipe['input_quality']]),), require_true=True)]
@@ -522,42 +540,38 @@ class SynthesisRuntime:
     def _cleanup_cube(self, ui, opened, *, input_uids, cancel_event=None, validate=lambda: True):
         """Clear only assistant selections; close only assistant-opened panel.
 
-        Cube UI slots are references, not a material inventory. gbu invokes the
-        game's own reset/animation cleanup; it never refunds/debits materials.
-        SaveSystem's online request is independent and is never resubmitted.
+        gbu ends the result animation; gbf resets the slot references through
+        CubeSlotUI.gcl. Neither operation crafts or changes the material count.
+        Confirm the resulting UI state independently of the economic receipt.
         """
         try:
-            read, _, _ = self._context(after=True)
-            if read.singleton('CubePanelUI') != ui:
-                return True
-            # gbu itself clears +252 and cancels the result tween. Once the
-            # economic receipt is confirmed, waiting for this flag to clear
-            # could prevent the very reset needed to recover the UI.
-            animating = read.boolean(ui + 252)
-            slots = read.pointers(read.ptr(ui + 64), 'CubeSlotUI', limit=16)
-            if len(slots) != 9:
-                return False
-            has_selection = False
-            for slot in slots:
-                read.verify(slot, 'CubeSlotUI')
-                obj = read.ptr(slot + 64)
-                uid = self.reader.string(read.ptr(slot + 72))
-                if uid and uid not in input_uids:
+            # Inspect again after invocation: a completed mailbox is not proof
+            # that the animation, selection slots and panel are actually clean.
+            for attempt in range(2):
+                read, _, _ = self._context(after=True)
+                if read.singleton('CubePanelUI') != ui:
+                    read.finish()
+                    return True
+                animating = read.boolean(ui + 252)
+                _, selections = self._cube_selections(read, ui)
+                if any(uid and uid not in input_uids for _, uid in selections):
                     read.finish()
                     return True  # Player has replaced our selections: leave them.
-                if obj and not uid:
+                if any(obj and not uid for obj, uid in selections):
                     return False
-                has_selection = has_selection or bool(obj or uid)
-            visible = read.boolean(ui + 40)
-            if not animating and not has_selection and (not opened or not visible):
-                read.finish()
-                return True  # Native animation/player cleanup already finished.
-            calls = [Invocation('CubePanelUI.gbu', instance=ui)]
-            if opened and visible:
-                calls.append(Invocation('PanelBase.Close', instance=ui))
-            self._invoke(calls, read, self._copy(), cancel_event=cancel_event, validate=validate)
-            return True
-        except (MemoryReadError, ValueError, KeyError, struct.error):
+                visible = read.boolean(ui + 40)
+                if not animating and not selections and (not opened or not visible):
+                    read.finish()
+                    return True
+                if attempt:
+                    read.finish()
+                    return False
+                calls = [Invocation('CubePanelUI.gbu', instance=ui),
+                         Invocation('CubePanelUI.gbf', instance=ui)]
+                if opened and visible:
+                    calls.append(Invocation('PanelBase.Close', instance=ui))
+                self._invoke(calls, read, self._copy(), cancel_event=cancel_event, validate=validate)
+        except (MemoryReadError, NativeActionError, ValueError, KeyError, struct.error, UnicodeError):
             # Economic confirmation is independent of UI cleanup. Retry only
             # guarded cleanup; never invalidate a receipt or resend a craft.
             return False

@@ -1064,6 +1064,7 @@ class ManagedFinishAndBackgroundTests(unittest.TestCase):
         verified(engine,entering)
         self.assertIsNone(engine.next_action(town))
         combat = observation(); combat['scene']['difficulty']=entering.get('difficulty')
+        combat['scene']['run']['id'] = 'fresh-arrival'
         returning = engine.next_action(combat); self.assertEqual(returning['kind'],'return_town')
         verified(engine,returning)
         self.assertIsNone(engine.next_action(combat))

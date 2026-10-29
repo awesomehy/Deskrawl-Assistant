@@ -61,6 +61,20 @@ def run_record(value):
     return value
 
 
+def run_entry_confirmed(action, scene):
+    """Arrival needs a current destination plan, not the source settlement."""
+    run = run_record(scene.get('run'))
+    source = action.get('source_run_id')
+    return (scene.get('available') is True and scene.get('in_town') is not True
+        and scene.get('in_dungeon') is not False
+        and not any(scene.get(key) is True for key in ('scene_changing', 'teleporting', 'dead'))
+        and str(scene.get('dungeon_id')) == str(action['dungeon_id'])
+        and (not action.get('difficulty') or scene.get('difficulty') == action['difficulty'])
+        and bool(run.get('id')) and not run.get('retained_terminal')
+        and run.get('status') in ('running', 'settling', 'success')
+        and (not source or run['id'] != source))
+
+
 def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_empty_rune_pages=False,
                       allow_empty_storage_pages=False):
     """Validate choices and require open destinations when permissions are known."""
@@ -1124,13 +1138,7 @@ class ManagedMode:
         elif kind == 'return_town':
             visible = self._town(observation)
         elif kind == 'enter_dungeon':
-            scene = observation.get('scene', {})
-            visible = (not self._town(observation) and str(scene.get('dungeon_id')) == str(action['dungeon_id'])
-                       and (not action.get('difficulty') or scene.get('difficulty')==action['difficulty'])
-                       and run_record(scene.get('run')).get('status') in ('running', 'settling', 'success'))
-            if action.get('reason_code') == 'stargazing_skip':
-                new_id = run_record(scene.get('run')).get('id')
-                visible = visible and bool(new_id and new_id != action.get('source_run_id'))
+            visible = run_entry_confirmed(action, observation.get('scene', {}))
         elif kind == 'switch_difficulty':
             visible = self._town(observation) and observation.get('scene',{}).get('difficulty')==action['difficulty']
         elif kind == 'auction_open':
@@ -1520,6 +1528,7 @@ class ManagedMode:
             return self._action('switch_difficulty',difficulty=entry_difficulty,
                 reason='主城整理完成，切换到'+DIFFICULTY_LABELS[entry_difficulty]+'难度。')
         return self._action('enter_dungeon', dungeon_id=self.target_dungeon,difficulty=self.target_difficulty,
+                            source_run_id=run_record(scene.get('run')).get('id'),
                             reason='奖励整理完成，返回目标关卡。')
 
     @staticmethod
@@ -1866,6 +1875,9 @@ class ManagedMode:
                 if scene.get('dungeon_id') is not None and str(scene['dungeon_id']) != str(self.target_dungeon):
                     self.phase = 'returning'
                     return self._return_town(observation, all_items, reason='当前关卡与托管目标不同，回城整理后切换关卡。')
+                if any(value is True for value in (scene.get('completion_visible') or {}).values()):
+                    self.status = '检测到结算界面，正在核验本局结果；尚未计数或切图。'
+                    return None
                 action = self._stargazing(observation)
                 if action: return action
             if self._town(observation) and any(r.get('container')=='inventory'

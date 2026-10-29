@@ -1,14 +1,14 @@
 # Deskrawl 装备助手
 
-为 Deskrawl 提供装备筛选、物品整理与自动刷图的 Windows x64 工具。使用独立窗体，无需安装 Python。当前版本：**v1.4.5**。
+为 Deskrawl 提供装备筛选、物品整理与自动刷图的 Windows x64 工具。使用独立窗体，无需安装 Python。当前版本：**v1.4.6**。
 
-修复托管符文合成后魔盒残留材料引用，导致下一轮误判为玩家选材并在两分钟后暂停的问题。合成结果确认后清空材料槽并回读核验，保留玩家手动选材。[本版说明](docs/1.4.5验收说明.md)。
+修复结算弹窗已出现、辅助波次或怪物数据不一致时，托管仍等待而不继续推图的问题；进图确认增加新旧关卡计划核验，保留先拾取奖励再离开的流程。[本版说明](docs/1.4.6验收说明.md)。
 
 如果觉得本软件对你有帮助，欢迎在 [GitHub 项目](https://github.com/awesomehy/Deskrawl-Assistant) 点亮 **Star**！
 
 ## 下载与使用
 
-**[下载 v1.4.5 exe](https://github.com/awesomehy/Deskrawl-Assistant/releases/download/v1.4.5/Deskrawl-Assistant-v1.4.5.exe)** · [全部 Releases 与更新记录](https://github.com/awesomehy/Deskrawl-Assistant/releases)
+**[下载 v1.4.6 exe](https://github.com/awesomehy/Deskrawl-Assistant/releases/download/v1.4.6/Deskrawl-Assistant-v1.4.6.exe)** · [全部 Releases 与更新记录](https://github.com/awesomehy/Deskrawl-Assistant/releases)
 
 1. 下载并双击 exe；启动游戏、进入角色，在助手顶部点击“连接游戏”。主城和战斗场景均可使用。
 2. 在“装备筛选规则”中配置并启用规则，到“背包与仓库”检查结果，按需开启持续监控和自动整理。
@@ -57,7 +57,7 @@ Steam 登录凭证以当前 Windows 用户的 DPAPI 加密保存在本机，重�
 
 ## 开发与更新记录
 
-[版本记录](docs/版本记录.md) · [1.4.5 验收说明](docs/1.4.5验收说明.md) · [源码运行与构建](docs/开发与构建.md) · [第三方资源说明](NOTICE.md)
+[版本记录](docs/版本记录.md) · [1.4.6 验收说明](docs/1.4.6验收说明.md) · [源码运行与构建](docs/开发与构建.md) · [第三方资源说明](NOTICE.md)
 
 ## 贡献
 

@@ -32,10 +32,10 @@ CAPABILITIES = {'travel': ('return_town', 'enter_map'), 'equip': ('equip',), 'se
     'gem_synthesis': ('synthesize_gems',), 'rune_synthesis': ('synthesize_runes',), 'auction_upload': AUCTION_ACTIONS}
 
 
-def normalise_run(run, completed, dead=False):
+def normalise_run(run, completed, dead=False, completion_visible=None):
     """Separate a confirmed win from the later reward/return completion flag.
 
-    WaveManager.esx sets 249 after the last wave and persists the map-complete
+    WaveManager sets 249 after the last wave and persists the map-complete
     key. With built-in repeat, the plan can restart without ever setting 248.
     A confirmed final kill may count the run while rewards are still settling;
     it must not force a town return before the game's completion flow finishes.
@@ -43,12 +43,24 @@ def normalise_run(run, completed, dead=False):
     if not run:
         return None
     result = {**run, 'dungeon_id':run.get('map_id'), 'status':'running'}
+    final_wave = (type(run.get('wave_count')) is int and run['wave_count'] > 0
+        and type(run.get('wave_index')) is int and run['wave_index'] >= run['wave_count']
+        and run.get('wave_active') is False and run.get('enemy_count') == 0)
+    popup = (completion_visible or {}).get(
+        'MythicCompletionUI' if run.get('difficulty') == MYTHIC else 'CombatMapCompletionUI') is True
     if dead or run.get('dead') or run.get('phase') == 'dead':
         result.update(status='failed', completion_evidence='verified_Player_dead_flag')
+    elif (popup and run.get('id') and run.get('map_id') in completed
+            and not run.get('retained_terminal') and run.get('wave_active') is False
+            and (run.get('finished') is True or run.get('final_kill_settled') is True or final_wave)):
+        # The native success dialog opens after the game's reward settlement.
+        # Its current-plan read is guarded by the caller. Once it is visible,
+        # auxiliary enemy-list/wave counters must not leave a finished run in
+        # "settling" forever. A dialog alone cannot complete a fresh active run.
+        result.update(status='success', completion_confirmed=True,
+            completion_evidence='verified_completion_UI_and_current_WaveManager_and_SaveSystem_completed_map')
     elif run.get('finished') or run.get('final_kill_settled') is True:
-        valid = (run.get('map_id') in completed and type(run.get('wave_count')) is int
-            and run['wave_count'] > 0 and run.get('wave_index', -1) >= run['wave_count']
-            and run.get('wave_active') is False and run.get('enemy_count') == 0)
+        valid = run.get('map_id') in completed and final_wave
         result.update(status='success' if valid and run.get('finished') else 'settling',
             completion_confirmed=valid,
             completion_evidence='WaveManager_completed_last_wave_and_SaveSystem_completed_map' if valid else 'incomplete_completion_evidence')
@@ -530,6 +542,7 @@ class GameActions:
     def control_snapshot(self, recommendation=None):
         """Read-only: actual progression plus loaded map objects and ground loot."""
         run_history = None
+        native_campaign = recommendation is None
         try:
             if not self.capabilities()['compatible']:
                 raise NativeActionError(self.capabilities()['reason'])
@@ -611,8 +624,26 @@ class GameActions:
                 wave = copy.verify(copy.ptr(manager+104),'WaveManager')
                 map_id,scene_difficulty = floor_id(copy.integer(wave+304)),MYTHIC
                 read.guards.extend(copy.guards)
+            campaign_run = recommendation.get('run')
+            settlement = None
+            if (scene == 0 and any(value is True for value in completion.values())
+                    and not scene_changing and not teleporting and campaign_run):
+                # Bind the dialog to the still-current native plan, retaining
+                # these guards through the full snapshot. A same-map restart
+                # or old dialog during travel cannot promote a stale campaign.
+                from .recommendation_reader import _campaign_run
+                copy = _Copy(self.reader)
+                current = _campaign_run(copy, manager, difficulty)
+                if (not current or current['id'] != campaign_run.get('id')
+                        or current['map_id'] != map_id or current['difficulty'] != scene_difficulty):
+                    raise SnapshotChangedError('结算界面与当前关卡计划正在切换，等待重新读取。')
+                read.guards.extend(copy.guards)
+                campaign_run, settlement = current, completion
             read.finish()
-            run = normalise_run(recommendation.get('run'), completed | set(progress['mythic_completed']), dead)
+            run = normalise_run(campaign_run, completed | set(progress['mythic_completed']), dead, settlement)
+            if native_campaign and settlement is not None:
+                run_history = self._run_receipts.observe(getattr(self.reader, 'session_id', None),
+                                                        progress['character_id'], run)
             if progress['character_id'] != self._last_character:
                 self._last_terminal_run = None
                 self._last_character = progress['character_id']

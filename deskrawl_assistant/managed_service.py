@@ -5,7 +5,7 @@ import json
 import time
 
 from .managed_mode import (ManagedMode, DEFAULT_SETTINGS, validate_settings, identity,
-    run_record, DIFFICULTIES, FARM_DIFFICULTIES, equip_candidate_allowed, equipment_actions, equipment_policy, storage_material_kind, item_kind,
+    run_record, run_entry_confirmed, DIFFICULTIES, FARM_DIFFICULTIES, equip_candidate_allowed, equipment_actions, equipment_policy, storage_material_kind, item_kind,
     managed_required_storage, managed_town_rewards_clear)
 from .models import ValidationError
 from .storage_preferences import available_storage_pages, validate_available_storage_pages
@@ -922,7 +922,9 @@ class ManagedServiceMixin:
         return {**{k:scene.get(k) for k in ('available','in_town','in_dungeon','dungeon_id',
                     'difficulty','scene_changing','teleporting','dead','completion_visible',
                     'online_saving','online_pending_requests','player_state','gathering','travel_blocked')},
-                'run_id':run.get('id'),'run_status':run.get('status')}
+                'run_id':run.get('id'),'run_status':run.get('status'),
+                **{key:run.get(key) for key in ('finished','final_kill_settled','wave_index','wave_count',
+                    'wave_active','enemy_count','completion_confirmed','completion_evidence','retained_terminal')}}
 
     def _managed_defer(self, action, reason, code, *, native_state=None):
         """Only known pre-write gates and explicitly refused single calls retry."""
@@ -1217,12 +1219,7 @@ class ManagedServiceMixin:
                         transition['skip_cancelled'] = True
                     if not self.managed.running: return self.managed.status
                 confirmed = observation.get('complete') is True and scene.get('available') is True and (scene.get('in_town') is True if action['kind']=='return_town'
-                     else scene.get('in_dungeon') is True and str(scene.get('dungeon_id'))==str(action['dungeon_id'])
-                     and (not action.get('difficulty') or scene.get('difficulty')==action['difficulty'])
-                     and run_record(scene.get('run')).get('status') in ('running','settling','success'))
-                if confirmed and action['kind'] == 'enter_dungeon' and action.get('reason_code') == 'stargazing_skip':
-                    new_id = run_record(scene.get('run')).get('id')
-                    confirmed = bool(new_id and new_id != action.get('source_run_id'))
+                     else run_entry_confirmed(action, scene))
                 if confirmed:
                     self.managed_transition = None
                     if action['kind']=='return_town':

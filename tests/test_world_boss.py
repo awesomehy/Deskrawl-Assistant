@@ -9,7 +9,9 @@ from unittest.mock import Mock, patch
 from deskrawl_assistant.game_actions import GameActions, _Read
 from deskrawl_assistant.native_dispatcher import NativeActionError
 from deskrawl_assistant.native_memory import MemoryReadError, SnapshotChangedError
-from deskrawl_assistant.managed_mode import ManagedMode
+from deskrawl_assistant.managed_mode import ManagedMode, validate_settings
+from deskrawl_assistant.models import ValidationError
+import test_managed_service as service_fixture
 from deskrawl_assistant.world_boss import PUMPKIN, entry_status, read_entry, target_blocked
 from tests.test_completion_type_initialization import CompletionFixture
 from tests.test_managed_mode import settings, verified, after_rewards
@@ -92,31 +94,33 @@ class EntryStateTests(unittest.TestCase):
 
 
 class BossManagedTests(unittest.TestCase):
-    def engine(self,two=False,stargazing=False):
+    def engine(self, *, remaining=1, farming=True, mode='repeat', town=False, stargazing=False):
         cfg=settings()
-        cfg['farming'].update(dungeon_id=PUMPKIN,difficulty='Normal',
-            repeat_maps=[{'dungeon_id':PUMPKIN,'difficulty':'Normal','runs':2}])
-        if two:cfg['farming']['repeat_maps'].append({'dungeon_id':'a','difficulty':'Normal','runs':1})
+        cfg['pumpkin']={'enabled':True,'difficulty':'Normal'}
+        cfg['farming'].update(enabled=farming, mode=mode, dungeon_id='a',difficulty='Normal',
+            repeat_maps=[{'dungeon_id':'a','difficulty':'Normal','runs':2},
+                         {'dungeon_id':'b','difficulty':'Normal','runs':3}])
         cfg['farming']['stargazing']['enabled']=stargazing
-        world=scene(PUMPKIN)
-        world['scene']['maps_by_difficulty']=options()
+        world=scene(None if town else PUMPKIN, town=town)
+        world['scene']['maps_by_difficulty']=options(remaining)
         engine=ManagedMode(cfg);engine.start(world)
         return engine,world
 
-    def test_repeat_two_wins_rotate_but_failure_does_not_count(self):
-        engine,world=self.engine(True)
-        for run_id,status,count,target in [('loss','failed',0,PUMPKIN),('win1','success',1,PUMPKIN),('win2','success',0,'a')]:
+    def test_boss_success_and_failure_do_not_change_original_repeat_quotas(self):
+        engine,world=self.engine(remaining=5)
+        for run_id,status,count in [('loss','failed',0),('win1','success',1),('win2','success',2)]:
             world['scene']['run'].update(id=run_id,status=status)
             action=after_rewards(engine,world)
             self.assertEqual(action['kind'],'return_town');verified(engine,action)
-            self.assertEqual((engine.repeat_completed,engine.target_dungeon),(count,target))
+            self.assertEqual((engine.pumpkin_completed,engine.repeat_completed,engine.repeat_index),(count,0,0))
             town=scene(None,town=True);town['scene']['maps_by_difficulty']=options()
             entry=engine.next_action(town)
             self.assertEqual(entry['kind'],'enter_dungeon');verified(engine,entry)
-            world=scene(engine.target_dungeon,run_id=run_id+'-fresh')
+            self.assertEqual(entry['dungeon_id'],PUMPKIN)
+            world=scene(PUMPKIN,run_id=run_id+'-fresh')
             world['scene']['maps_by_difficulty']=options()
 
-    def test_last_entry_finishes_and_rewards_are_collected_before_pausing_in_town(self):
+    def test_last_paid_run_finishes_then_resumes_original_target_after_cleanup(self):
         engine,world=self.engine()
         world['scene']['maps_by_difficulty']=options(0)
         self.assertIsNone(engine.next_action(world));self.assertTrue(engine.running)
@@ -124,25 +128,138 @@ class BossManagedTests(unittest.TestCase):
         action=after_rewards(engine,world)
         self.assertEqual(action['kind'],'return_town');verified(engine,action)
         town=scene(None,town=True);town['scene']['maps_by_difficulty']=options(0)
-        self.assertIsNone(engine.next_action(town))
-        self.assertEqual(engine.phase,'paused');self.assertIn('次数',engine.status)
-        self.assertEqual(engine.repeat_completed,1)
+        entry=engine.next_action(town)
+        self.assertEqual((entry['kind'],entry['dungeon_id']),('enter_dungeon','a'))
+        self.assertTrue(engine.running);self.assertFalse(engine.pumpkin_active)
+        self.assertEqual((engine.pumpkin_completed,engine.repeat_completed),(1,0))
 
-    def test_stargazing_does_not_discard_last_paid_boss_entry(self):
-        engine,world=self.engine(stargazing=True)
-        world['scene']['maps_by_difficulty']=options(0)
+    def test_boss_never_uses_original_stargazing_or_repeat_counter(self):
+        engine,world=self.engine(remaining=5,stargazing=True)
         world['loot_plan']=plan(world)
         self.assertIsNone(engine.next_action(world))
-        self.assertEqual(engine.stargazing_state['verdict'],'keep')
+        self.assertEqual(engine.stargazing_state['verdict'],'idle')
         self.assertEqual(engine.repeat_completed,0)
 
-    def test_stargazing_skip_with_remaining_entries_preserves_repeat_count(self):
-        engine,world=self.engine(stargazing=True)
-        world['loot_plan']=plan(world)
-        action=engine.next_action(world)
-        self.assertEqual(action['kind'],'return_town')
-        self.assertEqual(action['reason_code'],'stargazing_skip')
+    def test_starts_with_boss_before_original_maps_and_restores_partial_second_map(self):
+        engine,town=self.engine(town=True)
+        engine.repeat_index=1;engine.repeat_completed=2
+        engine.target_dungeon='b'
+        action=engine.next_action(town)
+        self.assertEqual((action['kind'],action['dungeon_id']),('enter_dungeon',PUMPKIN))
+        verified(engine,action)
+        world=scene(PUMPKIN,status='success',run_id='boss-last');world['scene']['maps_by_difficulty']=options(0)
+        action=after_rewards(engine,world);self.assertEqual(action['kind'],'return_town');verified(engine,action)
+        town['scene']['maps_by_difficulty']=options(0)
+        action=engine.next_action(town)
+        self.assertEqual(action['dungeon_id'],'b')
+        self.assertEqual((engine.repeat_index,engine.repeat_completed),(1,2))
+
+    def test_push_target_is_preserved_by_boss_success_and_failure(self):
+        for status in ('success','failed'):
+            engine,world=self.engine(mode='push')
+            world['scene']['run'].update(id='boss-'+status,status=status)
+            action=after_rewards(engine,world);verified(engine,action)
+            town=scene(None,town=True);town['scene']['maps_by_difficulty']=options(0)
+            self.assertEqual(engine.next_action(town)['dungeon_id'],'a')
+            self.assertFalse(engine.push_failed)
+
+    def test_boss_only_waits_without_pausing_and_resumes_after_daily_reset(self):
+        engine,town=self.engine(remaining=0,farming=False,town=True)
+        self.assertIsNone(engine.next_action(town))
+        self.assertTrue(engine.running);self.assertEqual(engine.phase,'waiting')
+        self.assertIn('次数',engine.status)
+        town['scene']['maps_by_difficulty']=options(100)
+        self.assertEqual(engine.next_action(town)['dungeon_id'],PUMPKIN)
+
+    def test_unknown_quota_waits_but_known_season_end_or_locked_boss_falls_back(self):
+        engine,town=self.engine(town=True)
+        town['scene']['maps_by_difficulty']={}
+        self.assertIsNone(engine.next_action(town));self.assertTrue(engine.running)
+        self.assertIn('未确认',engine.status)
+        for extra in ({'unlocked':False}, {'world_boss':{'available':True,'open':False,'remaining':100}}):
+            engine,town=self.engine(town=True)
+            town['scene']['maps_by_difficulty']=options(1,**extra)
+            self.assertEqual(engine.next_action(town)['dungeon_id'],'a')
+
+    def test_ordinary_run_is_completed_before_daily_reset_priority_takes_effect(self):
+        engine,town=self.engine(remaining=0,town=True)
+        entry=engine.next_action(town);verified(engine,entry)
+        world=scene('a',run_id='ordinary');world['scene']['maps_by_difficulty']=options(100)
+        self.assertIsNone(engine.next_action(world))
+        world['scene']['run']['status']='success'
+        action=after_rewards(engine,world);verified(engine,action)
+        town['scene']['maps_by_difficulty']=options(100)
+        self.assertEqual(engine.next_action(town)['dungeon_id'],PUMPKIN)
+        self.assertEqual(engine.repeat_completed,1)
+
+    def test_boss_only_does_not_count_or_crash_on_an_existing_ordinary_run(self):
+        cfg=settings(farm=False);cfg['farming'].update(dungeon_id=None,repeat_maps=[])
+        cfg['pumpkin']={'enabled':True,'difficulty':'Normal'}
+        world=scene('a');world['scene']['maps_by_difficulty']=options()
+        engine=ManagedMode(cfg);engine.start(world)
+        world['scene']['run'].update(id='ordinary-win',status='success')
+        self.assertEqual(after_rewards(engine,world)['kind'],'return_town')
         self.assertEqual(engine.repeat_completed,0)
+
+    def test_existing_paid_boss_run_finishes_before_switching_to_configured_difficulty(self):
+        cfg=settings();cfg['pumpkin']={'enabled':True,'difficulty':'Normal'}
+        world=scene(PUMPKIN,difficulty='Inferno')
+        engine=ManagedMode(cfg);engine.start(world)
+        self.assertIsNone(engine.next_action(world))
+        self.assertEqual(engine.target_difficulty,'Inferno')
+
+
+class BossMigrationTests(unittest.TestCase):
+    def test_old_boss_selection_moves_to_independent_switch_and_keeps_other_quota(self):
+        cfg=settings();cfg.pop('pumpkin')
+        cfg['farming'].update(dungeon_id=PUMPKIN,difficulty='Inferno',repeat_maps=[
+            {'dungeon_id':PUMPKIN,'difficulty':'Inferno','runs':100},
+            {'dungeon_id':'a','difficulty':'Normal','runs':300}])
+        before=deepcopy(cfg);result=validate_settings(cfg)
+        self.assertEqual(result['pumpkin'],{'enabled':True,'difficulty':'Inferno'})
+        self.assertEqual(result['farming']['repeat_maps'],[{'dungeon_id':'a','difficulty':'Normal','runs':300}])
+        self.assertEqual(result['farming']['dungeon_id'],'a')
+        self.assertEqual(validate_settings(result),result);self.assertEqual(cfg,before)
+
+    def test_legacy_boss_only_and_disabled_plans_do_not_require_an_original_map(self):
+        for enabled in (True,False):
+            cfg=settings();cfg.pop('pumpkin');cfg['farming'].update(enabled=enabled,dungeon_id=PUMPKIN,repeat_maps=[])
+            result=validate_settings(cfg)
+            self.assertEqual(result['pumpkin']['enabled'],enabled)
+            self.assertFalse(result['farming']['enabled']);self.assertIsNone(result['farming']['dungeon_id'])
+            self.assertEqual(result['farming']['repeat_maps'],[])
+
+    def test_new_user_default_is_off_and_difficulty_is_limited(self):
+        self.assertEqual(validate_settings(settings())['pumpkin'],{'enabled':False,'difficulty':'current'})
+        for value in ({'enabled':'yes','difficulty':'Normal'},{'enabled':True,'difficulty':'Mythic'}):
+            cfg=settings();cfg['pumpkin']=value
+            with self.assertRaises(ValidationError):validate_settings(cfg)
+
+
+class BossServiceTests(unittest.TestCase):
+    setUp = service_fixture.ManagedServiceTests.setUp
+    settings = service_fixture.ManagedServiceTests.settings
+
+    def test_boss_only_can_start_without_original_map_and_preserves_saved_switch(self):
+        self.client.items = []
+        self.service._publish(self.client.snapshot())
+        cfg = self.settings(); cfg['pumpkin'] = {'enabled':True, 'difficulty':'Normal'}
+        self.service.save_managed(cfg)
+        result = self.service.set_managed_running(True)
+        self.assertTrue(result['running'])
+        self.assertFalse(result['settings']['farming']['enabled'])
+        self.service.managed.pause(); self.service._init_managed()
+        self.assertEqual(self.service.managed.settings['pumpkin'], cfg['pumpkin'])
+
+    def test_quota_exhausted_between_plan_and_dispatch_replans_without_native_call(self):
+        self.client.items = []; self.service._publish(self.client.snapshot())
+        cfg = self.settings(); cfg['pumpkin'] = {'enabled':True, 'difficulty':'Normal'}
+        self.service.save_managed(cfg); self.service.set_managed_running(True)
+        world = self.service._managed_observation()
+        world['scene']['maps_by_difficulty'] = options(0)
+        result = self.service._managed_execute({'kind':'enter_dungeon', 'dungeon_id':PUMPKIN, 'difficulty':'Normal'}, world)
+        self.assertTrue(result['retryable']); self.assertFalse(result['verified'])
+        self.assertEqual(self.client.actions, [])
 
 
 class BossNativeEntryTests(unittest.TestCase):

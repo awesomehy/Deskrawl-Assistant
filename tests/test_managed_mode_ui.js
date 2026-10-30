@@ -1,12 +1,12 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const ui=require('../deskrawl_assistant/web/managed-mode.js');
-test('stargazing migration is opt-in with all rewards selected and fixed categories cannot be cleared',()=>{
+test('retired stargazing migrates disabled while preserving reward preferences',()=>{
   const first=ui.normalizeSettings();assert.equal(first.farming.stargazing.enabled,false);
   assert.ok(Object.values(first.farming.stargazing.rewards).every(Boolean));
   const rewards=Object.fromEntries(Object.keys(first.farming.stargazing.rewards).map(key=>[key,false]));
   const saved=ui.normalizeSettings({farming:{stargazing:{enabled:true,rewards}}});
-  assert.equal(saved.farming.stargazing.enabled,true);
+  assert.equal(saved.farming.stargazing.enabled,false);
   assert.deepEqual(Object.entries(saved.farming.stargazing.rewards).filter(([,v])=>v).map(([key])=>key),
     ['divine_equipment','black_mist_equipment','set_rune','legendary_rune']);
   assert.deepEqual(ui.normalizeSettings(saved).farming.stargazing,saved.farming.stargazing);

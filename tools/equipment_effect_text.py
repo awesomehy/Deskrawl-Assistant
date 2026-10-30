@@ -7,12 +7,17 @@ import math
 import re
 import struct
 
+try:
+    from .equipment_description_assets import Reader, damage_tokens, status_tokens, linked_asset
+except ImportError:  # Direct exporter invocation.
+    from equipment_description_assets import Reader, damage_tokens, status_tokens, linked_asset
 
-def _number(value, percent=False):
+
+def _number(value, percent=False, places=1):
     if not math.isfinite(value):
         raise ValueError('Nonfinite equipment effect parameter')
     value *= 100 if percent else 1
-    return f'{value:.1f}'.rstrip('0').rstrip('.') + ('%' if percent else '')
+    return f'{value:.{places}f}'.rstrip('0').rstrip('.') + ('%' if percent else '')
 
 
 def _string(data, offset):
@@ -27,13 +32,66 @@ def _string(data, offset):
     return data[offset + 4:end].decode('utf-8')
 
 
-def render_equipment_effect(kind, data, text):
+def render_equipment_effect(kind, data, text, *, effect_key='', resolve=None):
     """Return resolved prose for supported effects, or '' for other classes.
 
     Layout mismatches and unresolved template tokens abort the export rather
     than publish an effect with guessed parameters.
     """
-    if kind == 'EquipmentEffect_PotionDrops':
+    key = effect_key + '.Desc'
+    if kind == 'EquipmentEffect_HighestElementalDamageBonus':
+        bonus, = struct.unpack('<f', data)
+        if bonus < 0:
+            raise ValueError('Invalid elemental damage bonus')
+        values = {'bonus': _number(bonus, True)}
+    elif kind == 'EquipmentEffect_DamagePerNearbyEnemy':
+        radius, damage, bosses = struct.unpack('<ffi', data)
+        if not math.isfinite(radius) or radius <= 0 or damage < 0 or bosses < 1:
+            raise ValueError('Invalid nearby-enemy damage parameters')
+        values = {'damage': _number(damage, True), 'bossWeight': str(bosses)}
+    elif kind == 'EquipmentEffect_IronThornFrenzy':
+        if len(data) != 20:
+            raise ValueError('Unverified iron-thorn effect layout')
+        hits, cooldown = struct.unpack_from('<if', data, 12)
+        if hits < 1 or cooldown < 0:
+            raise ValueError('Invalid iron-thorn effect parameters')
+        values = {'hits': str(hits), 'cooldown': _number(cooldown, places=2)}
+    elif kind in ('EquipmentEffect_DamagePerStatusStack', 'EquipmentEffect_DamagePerActiveSummon'):
+        if len(data) != 16:
+            raise ValueError('Unverified linked damage effect layout')
+        damage, = struct.unpack_from('<f', data, 12)
+        if damage < 0:
+            raise ValueError('Invalid linked damage bonus')
+        values = {'damage': _number(damage, True)}
+        if kind == 'EquipmentEffect_DamagePerStatusStack':
+            _, status = linked_asset(data, 0, resolve, 'StatusEffectData')
+            values.update(status_tokens(status))
+        else:
+            ability, _ = linked_asset(data, 0, resolve, 'AbilityData')
+            values['ability'] = text(ability)
+            if not values['ability']:
+                raise ValueError('Missing equipment summoning ability name')
+    elif kind == 'EquipmentEffect_TriggerEffectsOnHit':
+        reader = Reader(data)
+        _, count, reference, chance = reader.take('iiqf')
+        if count != 1 or not reference or not 0 <= chance <= 1:
+            raise ValueError('Unverified triggered equipment effects')
+        key = reader.string()
+        if not key:
+            return ''
+        values = {'chance': _number(chance, True), **damage_tokens(data)}
+    elif kind == 'EquipmentEffect_SelfStatusStackTriggerAbility':
+        if len(data) != 32:
+            raise ValueError('Unverified soul-impact effect layout')
+        _, ability = linked_asset(data, 16, resolve, 'AbilityData')
+        values = damage_tokens(ability)
+    elif kind == 'EquipmentEffect_StatusOnCritTaken':
+        if len(data) != 20:
+            raise ValueError('Unverified on-crit status effect layout')
+        _, status = linked_asset(data, 0, resolve, 'StatusEffectData')
+        values = status_tokens(status, shield=True)
+        values.pop('stacks')
+    elif kind == 'EquipmentEffect_PotionDrops':
         chance, cooldown = struct.unpack('<ff', data)
         if not 0 <= chance <= 1 or cooldown < 0:
             raise ValueError('Invalid potion drop parameters')

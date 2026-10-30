@@ -1,5 +1,6 @@
 """Synthetic executor checks. No threads, process reads or native dispatch."""
 from copy import deepcopy
+import json
 import unittest
 from unittest.mock import Mock, patch
 
@@ -32,6 +33,9 @@ class StargazingServiceTests(unittest.TestCase):
                                      {'dungeon_id':'other-map','difficulty':'Normal','runs':2}]
         cfg['farming']['stargazing']['enabled']=True
         self.service.save_managed(cfg)
+        # Exercise the retained internal algorithm explicitly; the public
+        # settings boundary now disables this hidden feature.
+        self.service.managed.settings['farming']['stargazing']['enabled']=True
         self.service.set_managed_running(True)
 
     def test_combat_skip_rechecks_plan_then_requires_new_run_before_committing_target(self):
@@ -136,9 +140,31 @@ class StargazingServiceTests(unittest.TestCase):
         cfg=deepcopy(self.service.managed.settings)
         cfg['farming']['stargazing']['rewards'].update(gem=False,divine_equipment=False)
         self.service.save_managed(cfg)
+        self.assertFalse(self.service.managed.settings['farming']['stargazing']['enabled'])
+        self.assertFalse(json.loads(self.service.managed_config.read_text(encoding='utf-8'))['farming']['stargazing']['enabled'])
         self.service._init_managed()
+        self.assertFalse(self.service.managed.settings['farming']['stargazing']['enabled'])
         choices=self.service.managed.settings['farming']['stargazing']['rewards']
         self.assertFalse(choices['gem']);self.assertTrue(choices['divine_equipment'])
+
+    def test_legacy_enabled_file_loads_disabled_without_skipping_or_changing_quotas(self):
+        self.service.stop_managed()
+        cfg=deepcopy(self.service.managed.settings)
+        cfg['farming']['stargazing']['enabled']=True
+        cfg['farming']['stargazing']['rewards']['gem']=False
+        self.service.managed_config.write_text(json.dumps(cfg),encoding='utf-8')
+        self.service._init_managed()
+        self.service._managed_refresh_control()
+        current=self.service.managed.settings['farming']
+        self.assertFalse(current['stargazing']['enabled'])
+        self.assertFalse(current['stargazing']['rewards']['gem'])
+        self.assertEqual(current['repeat_maps'],cfg['farming']['repeat_maps'])
+        self.service.set_managed_running(True)
+        self.service._managed_once()
+        self.assertEqual(self.client.actions,[])
+        self.assertTrue(self.service.managed.running)
+        self.assertEqual(self.service.managed.repeat_completed,0)
+        self.assertEqual(self.service.managed.stargazing_state['skipped'],0)
 
     def request_town_for_stargazing(self):
         self.service.managed.stargazing_return={'source_run_id':self.run_id,'next_repeat_index':1}

@@ -1002,13 +1002,13 @@
       "item_type": 3,
       "rarity": 4,
       "icon": "/icons/DivineBow1.png",
-      "description": "攻击命中时有{chance}几率在目标位置降下多把奥术匕首。每次匕首命中造成{damage}武器伤害的奥术伤害。",
+      "description": "攻击命中时有20%几率在目标位置降下多把奥术匕首。每次匕首命中造成275%武器伤害的奥术伤害。",
       "effect_groups": [
         {
           "title": "物品效果",
           "values": [],
           "texts": [
-            "攻击命中时有{chance}几率在目标位置降下多把奥术匕首。每次匕首命中造成{damage}武器伤害的奥术伤害。"
+            "攻击命中时有20%几率在目标位置降下多把奥术匕首。每次匕首命中造成275%武器伤害的奥术伤害。"
           ]
         }
       ],
@@ -1223,7 +1223,7 @@
           "title": "物品效果",
           "values": [],
           "texts": [
-            "向前发出一道灵魂波，对命中的每个敌人造成一次相当于{soulDamage}武器伤害的物理伤害，并施加一次[恍惚]。"
+            "向前发出一道灵魂波，对命中的每个敌人造成一次相当于800%武器伤害的物理伤害，并施加一次[恍惚]。"
           ]
         }
       ],
@@ -4707,13 +4707,13 @@
       "item_type": 3,
       "rarity": 3,
       "icon": "/icons/LegendaryBelt4.png",
-      "description": "铁棘生效期间，每承受{hits}次敌人的直接命中，就触发一次额外的铁棘脉冲，每{cooldown}秒最多触发一次。",
+      "description": "铁棘生效期间，每承受2次敌人的直接命中，就触发一次额外的铁棘脉冲，每0.2秒最多触发一次。",
       "effect_groups": [
         {
           "title": "物品效果",
           "values": [],
           "texts": [
-            "铁棘生效期间，每承受{hits}次敌人的直接命中，就触发一次额外的铁棘脉冲，每{cooldown}秒最多触发一次。"
+            "铁棘生效期间，每承受2次敌人的直接命中，就触发一次额外的铁棘脉冲，每0.2秒最多触发一次。"
           ]
         }
       ],
@@ -5040,7 +5040,7 @@
           "title": "物品效果",
           "values": [],
           "texts": [
-            "魔法屏障可吸收最多相当于{shield}最大生命值的伤害。持续{duration}。"
+            "魔法屏障可吸收最多相当于20%最大生命值的伤害。持续8s。"
           ]
         }
       ],
@@ -5334,13 +5334,13 @@
       "item_type": 3,
       "rarity": 3,
       "icon": "/icons/LegendaryGloves8.png",
-      "description": "施放冲锋时获得一层增益，持续{duration}。每层使造成的伤害额外提高{damage}，最多{stacks}层。",
+      "description": "施放冲锋时获得一层增益，持续5s。每层使造成的伤害额外提高8%，最多20层。",
       "effect_groups": [
         {
           "title": "物品效果",
           "values": [],
           "texts": [
-            "施放冲锋时获得一层增益，持续{duration}。每层使造成的伤害额外提高{damage}，最多{stacks}层。"
+            "施放冲锋时获得一层增益，持续5s。每层使造成的伤害额外提高8%，最多20层。"
           ]
         }
       ],
@@ -5738,13 +5738,13 @@
       "item_type": 3,
       "rarity": 3,
       "icon": "/icons/LegendaryNeck8.png",
-      "description": "你最高的元素伤害加成提高{bonus}。",
+      "description": "你最高的元素伤害加成提高25%。",
       "effect_groups": [
         {
           "title": "物品效果",
           "values": [],
           "texts": [
-            "你最高的元素伤害加成提高{bonus}。"
+            "你最高的元素伤害加成提高25%。"
           ]
         }
       ],
@@ -8621,13 +8621,13 @@
       "item_type": 3,
       "rarity": 3,
       "icon": "/icons/LegendaryShoulder5.png",
-      "description": "每个存续的{ability}使造成的伤害额外提高{damage}。",
+      "description": "每个存续的灵体分身使造成的伤害额外提高25%。",
       "effect_groups": [
         {
           "title": "物品效果",
           "values": [],
           "texts": [
-            "每个存续的{ability}使造成的伤害额外提高{damage}。"
+            "每个存续的灵体分身使造成的伤害额外提高25%。"
           ]
         }
       ],
@@ -8646,13 +8646,13 @@
       "item_type": 3,
       "rarity": 3,
       "icon": "/icons/LegendaryShoulder6.png",
-      "description": "每个近处敌人使你造成的伤害额外提高{damage}。首领按{bossWeight}个敌人计算。",
+      "description": "每个近处敌人使你造成的伤害额外提高3%。首领按5个敌人计算。",
       "effect_groups": [
         {
           "title": "物品效果",
           "values": [],
           "texts": [
-            "每个近处敌人使你造成的伤害额外提高{damage}。首领按{bossWeight}个敌人计算。"
+            "每个近处敌人使你造成的伤害额外提高3%。首领按5个敌人计算。"
           ]
         }
       ],

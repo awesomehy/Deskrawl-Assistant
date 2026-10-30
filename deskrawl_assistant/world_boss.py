@@ -11,6 +11,7 @@ from .native_memory import MemoryReadError
 
 MAP_TYPE = 4
 PUMPKIN = 'WorldBossPumpkin'
+DEFAULT_PUMPKIN = {'enabled': False, 'difficulty': 'current'}
 DAILY_LIMIT = 100
 RESET_OFFSET_SECONDS = 32400
 # MapData.PdtOffset is a fixed -7 hours, including the November event end.
@@ -19,6 +20,31 @@ WINDOW_TIMEZONE = timezone(timedelta(hours=-7))
 
 def is_world_boss(map_id):
     return map_id == PUMPKIN
+
+
+def pumpkin_option(scene, difficulty):
+    rows = (scene.get('maps_by_difficulty') or {}).get(difficulty, [])
+    return next((row for row in rows if row.get('map_id', row.get('id')) == PUMPKIN), None)
+
+
+def pumpkin_status(scene, difficulty):
+    """Unknown availability waits; known quota/season/unlock gates fall back."""
+    row = pumpkin_option(scene, difficulty)
+    if row is None:
+        return 'unknown', '南瓜王入场状态尚未确认，等待读取。'
+    state = row.get('world_boss') or {}
+    if row.get('unlocked') is False:
+        return 'unavailable', row.get('entry_reason') or '南瓜王尚未解锁。'
+    if state.get('available') is not True:
+        return 'unknown', row.get('entry_reason') or '南瓜王每日次数尚未确认，等待读取。'
+    remaining = state.get('remaining')
+    if type(remaining) is not int or not 0 <= remaining <= DAILY_LIMIT:
+        return 'unknown', '南瓜王每日次数尚未确认，等待读取。'
+    if remaining == 0 or state.get('open') is False:
+        return 'unavailable', row.get('entry_reason') or state.get('reason') or '南瓜王今日入场次数已用尽。'
+    if row.get('can_enter') is True:
+        return 'ready', ''
+    return 'unknown', row.get('entry_reason') or '南瓜王入场条件尚未确认，等待读取。'
 
 
 def entry_status(day, used, start='', end='', *, now=None):

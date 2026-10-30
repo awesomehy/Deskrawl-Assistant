@@ -6,6 +6,7 @@ remain separate so this catalogue cannot change inventory automation policy.
 from pathlib import Path
 import hashlib
 import json
+import re
 import struct
 import sys
 
@@ -79,6 +80,7 @@ def main():
         groups = list(other.get(key, {}).get('effect_groups', []))
         description = text(label_key+'.Desc')
         effect_ids = []
+        resolved_templates = {}
         if cls == 'ItemData':
             cursor = Cursor(data, item_layout(data)['effects'])
             for _ in range(cursor.count()):
@@ -88,19 +90,37 @@ def main():
                 effect_key, effect_data = payload(effect)
                 effect_ids.append(effect_key)
                 effect_text = text(effect_key+'.Desc') or text(effect_key.replace('_Effect','Effect')+'.Desc')
-                if not effect_text:
+                if not effect_text or re.search(r'\{[^{}]+\}', effect_text):
+                    template = effect_text
                     script_file, script_id = struct.unpack_from('<iq', effect.get_raw_data(), 16)
                     effect_class = classes.get(script_id) if script_file == 1 else None
-                    try:effect_text = render_equipment_effect(effect_class, effect_data, text)
-                    except ValueError as exc:raise ValueError(f'{key}: {effect_key} ({effect_class}): {effect_data.hex()}') from exc
+                    def resolve(file_id, path_id):
+                        linked = PPtr(m_FileID=file_id, m_PathID=path_id, assetsfile=effect.assets_file).deref()
+                        if not linked: raise ValueError('Missing linked description asset')
+                        script_file, script_id = struct.unpack_from('<iq', linked.get_raw_data(), 16)
+                        linked_name, linked_data = payload(linked)
+                        return classes.get(script_id) if script_file == 1 else None, linked_name, linked_data
+                    try:
+                        effect_text = render_equipment_effect(effect_class, effect_data, text,
+                                                              effect_key=effect_key, resolve=resolve)
+                        if template and not effect_text:
+                            raise ValueError('Unsupported equipment description template')
+                    except (ValueError, struct.error) as exc:
+                        raise ValueError(f'{key}: {effect_key} ({effect_class}): {effect_data.hex()}') from exc
+                    if template:
+                        resolved_templates[template] = effect_text
                 # Some passive implementation assets have no individual text;
                 # their equipment description is the game's user-facing text.
                 if effect_text:
                     groups.append({'title':'物品效果', 'values':[], 'texts':[effect_text]})
+        description = resolved_templates.get(description, description)
         if description and not any(description in g.get('texts', []) for g in groups):
             groups.insert(0, {'title':'装备效果' if kind=='equipment' else '物品说明', 'values':[], 'texts':[description]})
         if kind == 'equipment' and not description:
             description = '\n'.join(t for g in groups for t in g.get('texts', []))
+        if kind == 'equipment' and any(re.search(r'\{[^{}]+\}', value)
+                for value in [description] + [t for g in groups for t in g.get('texts', [])]):
+            raise ValueError('Unresolved equipment description token: ' + key)
         note = other.get(key, {}).get('effect_note','')
         if item_type == 2 and item_effect == 1:
             groups.append({'title':'物品效果', 'values':[], 'texts':['使用后解锁仆人：'+name+'。']})

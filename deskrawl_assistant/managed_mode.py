@@ -15,7 +15,8 @@ from .game_panel_log import DisposalLogCursor
 from .item_protection import divine_equipment, mandatory_storage, disposal_protection, is_rune, is_minion_equipment, town_rewards_clear
 from .storage_preferences import DEFAULT_STORAGE_PAGES, validate_available_storage_pages
 from .mythic import MYTHIC, floor_number
-from .world_boss import target_blocked as boss_target_blocked
+from .world_boss import (PUMPKIN, DEFAULT_PUMPKIN, is_world_boss, pumpkin_status,
+                         target_blocked as boss_target_blocked)
 from .equipment_requirements import equip_eligibility
 from .chests import is_chest
 from .stargazing import DEFAULT_STARGAZING, validate_stargazing, enabled as stargazing_enabled, decide as stargazing_decide, combat_rewards_clear, combat_rewards_known
@@ -30,6 +31,7 @@ from .auction import (DEFAULT_AUCTION, validate_settings as validate_auction,
 
 
 DEFAULT_SETTINGS = {
+    'pumpkin': deepcopy(DEFAULT_PUMPKIN),
     'reconnect': deepcopy(DEFAULT_RECONNECT),
     'auction': deepcopy(DEFAULT_AUCTION),
     'synthesis': deepcopy(DEFAULT_SYNTHESIS),
@@ -40,7 +42,8 @@ DEFAULT_SETTINGS = {
     'farming': {'enabled': False, 'mode': 'repeat', 'dungeon_id': None, 'difficulty':'current',
                 'progression': [], 'repeat_maps': [], 'free_threshold': 4, 'stargazing': deepcopy(DEFAULT_STARGAZING)},
     'cleanup': {'equipment_action': 'store', 'equipment_fallback': 'sell', 'equipment_policies': {},
-                'minion_equipment_action': 'store', 'minion_equipment_pages': list(DEFAULT_STORAGE_PAGES['equipment']),
+                'minion_equipment_action': 'store', 'minion_equipment_policies': {},
+                'minion_equipment_pages': list(DEFAULT_STORAGE_PAGES['equipment']),
                 'equipment_pages': list(DEFAULT_STORAGE_PAGES['equipment']), 'rune_action': 'store', 'rune_pages': list(DEFAULT_STORAGE_PAGES['rune']),
                 'gem_action': 'store', 'gem_pages': list(DEFAULT_STORAGE_PAGES['gem']),
                 'gold_bar_action': 'store', 'gold_bar_pages': list(DEFAULT_STORAGE_PAGES['gem']),
@@ -50,9 +53,14 @@ STORAGE_MATERIALS = {'gold_bar': '金条', 'legendary_rein': '传说缰绳'}
 EQUIPMENT_BUCKETS = ('divine', 'black_mist', 'ancient', 'legendary', 'rare', 'uncommon', 'normal')
 BUCKET_LABELS = dict(zip(EQUIPMENT_BUCKETS, ('神圣', '黑雾传说', '远古传说', '普通传说', '稀有', '优秀', '普通')))
 DISPOSABLE_BUCKETS = EQUIPMENT_BUCKETS[2:]
+MINION_DISPOSABLE_BUCKETS = ('legendary', 'rare')
 DIFFICULTIES = ('Normal','Nightmare','Inferno')
 FARM_DIFFICULTIES = (*DIFFICULTIES,MYTHIC)
 DIFFICULTY_LABELS = {**dict(zip(DIFFICULTIES,('普通','噩梦','炼狱'))),MYTHIC:'神话裂隙'}
+
+
+def farming_enabled(settings):
+    return settings['farming']['enabled'] or settings.get('pumpkin', {}).get('enabled') is True
 
 
 def run_record(value):
@@ -84,6 +92,8 @@ def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_e
     if not isinstance(raw, dict):
         raise ValidationError('托管配置格式无效。')
     raw = deepcopy(raw)
+    legacy_pumpkin = 'pumpkin' not in raw
+    raw.setdefault('pumpkin', deepcopy(DEFAULT_PUMPKIN))
     raw.setdefault('reconnect', deepcopy(DEFAULT_RECONNECT))
     raw.setdefault('background', deepcopy(DEFAULT_SETTINGS['background']))
     raw.setdefault('synthesis', deepcopy(DEFAULT_SYNTHESIS))
@@ -97,11 +107,29 @@ def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_e
         raw['farming'].setdefault('difficulty','current')
         raw['farming'].setdefault('repeat_maps',[])
         raw['farming'].setdefault('stargazing', deepcopy(DEFAULT_STARGAZING))
+        farm = raw['farming']
+        repeats = farm['repeat_maps']
+        if isinstance(repeats, list):
+            bosses = [row for row in repeats if isinstance(row, dict) and is_world_boss(row.get('dungeon_id'))]
+            if not repeats and is_world_boss(farm.get('dungeon_id')):
+                bosses = [{'difficulty': farm['difficulty']}]
+            if bosses:
+                if legacy_pumpkin:
+                    raw['pumpkin'] = {'enabled': farm.get('enabled') is True, 'difficulty': bosses[0].get('difficulty', 'current')}
+                farm['repeat_maps'] = [row for row in repeats if row not in bosses]
+                if is_world_boss(farm.get('dungeon_id')):
+                    farm['dungeon_id'] = None
+                if farm.get('mode') == 'repeat' and not farm['repeat_maps']:
+                    farm['enabled'] = False
+            if isinstance(farm.get('progression'), list):
+                farm['progression'] = [row for row in farm['progression']
+                    if not is_world_boss(row.get('dungeon_id') if isinstance(row, dict) else row)]
     if isinstance(raw.get('auto_equip'),dict):
         raw['auto_equip'].setdefault('disabled_slots',[])
     if isinstance(raw.get('cleanup'),dict):
         raw['cleanup'].setdefault('equipment_policies',{})
         raw['cleanup'].setdefault('minion_equipment_action', 'store')
+        raw['cleanup'].setdefault('minion_equipment_policies', {})
         raw['cleanup'].setdefault('minion_equipment_pages', deepcopy(raw['cleanup'].get('equipment_pages', DEFAULT_STORAGE_PAGES['equipment'])))
         for kind in STORAGE_MATERIALS:
             raw['cleanup'].setdefault(kind+'_action', 'store')
@@ -111,6 +139,9 @@ def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_e
         if not isinstance(raw[group], dict) or set(raw[group]) != set(defaults):
             raise ValidationError('托管配置字段不完整：' + group)
     e, f, c = result['auto_equip'], result['farming'], result['cleanup']
+    if (type(result['pumpkin']['enabled']) is not bool
+            or result['pumpkin']['difficulty'] not in ('current', *DIFFICULTIES)):
+        raise ValidationError('南瓜王开关或难度配置无效。')
     result['synthesis'] = validate_synthesis(result['synthesis'])
     result['reconnect'] = validate_reconnect(result['reconnect'])
     f['stargazing'] = validate_stargazing(f['stargazing'])
@@ -168,6 +199,14 @@ def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_e
         raise ValidationError('未命中装备处理方式无效。')
     if c['minion_equipment_action'] not in ('store', 'sell', 'salvage'):
         raise ValidationError('仆从装备处理方式无效。')
+    minion_policies = c['minion_equipment_policies']
+    if (not isinstance(minion_policies, dict) or not set(minion_policies) <= set(MINION_DISPOSABLE_BUCKETS)
+            or any(action not in ('store', 'sell', 'salvage') for action in minion_policies.values())):
+        raise ValidationError('仆从装备品质处理配置无效；黑雾传说固定锁定入库。')
+    # Preserve the old servant-only disposition for both editable qualities;
+    # never inherit the character equipment's disposal permissions.
+    c['minion_equipment_policies'] = {bucket: minion_policies.get(bucket, c['minion_equipment_action'])
+                                    for bucket in MINION_DISPOSABLE_BUCKETS}
     policies = c['equipment_policies']
     if not isinstance(policies,dict) or not set(policies) <= set(DISPOSABLE_BUCKETS):
         raise ValidationError('装备品质处理配置无效；神圣和黑雾装备固定保留。')
@@ -310,7 +349,13 @@ def equipment_bucket(row):
 
 def equipment_policy(cleanup, row, *, fallback=False):
     if is_minion_equipment(row):
-        return cleanup.get('minion_equipment_action', 'store')
+        if mandatory_storage(row) or row.get('locked') is True:
+            return 'store'
+        bucket = {2: 'rare', 3: 'legendary'}.get(row.get('rarity'))
+        if bucket not in MINION_DISPOSABLE_BUCKETS:
+            return 'store'
+        return cleanup.get('minion_equipment_policies', {}).get(bucket,
+            cleanup.get('minion_equipment_action', 'store'))
     bucket = equipment_bucket(row)
     if bucket not in DISPOSABLE_BUCKETS:
         raise ValidationError('当前装备品质不能按垃圾策略处理。')
@@ -320,7 +365,9 @@ def equipment_policy(cleanup, row, *, fallback=False):
 
 
 def equipment_actions(cleanup):
-    return {cleanup.get('minion_equipment_action', 'store')} | {equipment_policy(cleanup,{'rarity':rarity,'is_ancient':ancient},fallback=fallback)
+    minion_actions = {equipment_policy(cleanup, {'is_minion_equipment': True, 'rarity': rarity})
+                      for rarity in (2, 3)}
+    return minion_actions | {equipment_policy(cleanup,{'rarity':rarity,'is_ancient':ancient},fallback=fallback)
         for rarity,ancient in ((0,False),(1,False),(2,False),(3,False),(3,True)) for fallback in (False,True)}
 
 
@@ -815,6 +862,11 @@ class ManagedMode:
         self.run_counter_fallbacks = {}
         self.run_history_sequence = None
         self.run_entry = None
+        self.pumpkin_active = False
+        self.pumpkin_difficulty = None
+        self.pumpkin_fallback = None
+        self.pumpkin_completed = 0
+        self.pumpkin_reason = ''
         self.completion_rewards = CompletionRewards()
         self.stargazing_seen = set()
         self.stargazing_skipped = set()
@@ -847,7 +899,7 @@ class ManagedMode:
     def start(self, observation, *, observe_metrics=True):
         if self.running or self.pending: raise ValidationError('托管已在运行。')
         if observation.get('complete') is not True: raise ValidationError('请先完整读取背包与仓库。')
-        if (not self.settings['auto_equip']['enabled'] and not self.settings['farming']['enabled']
+        if (not self.settings['auto_equip']['enabled'] and not farming_enabled(self.settings)
                 and not growth_enabled(self.settings) and not synthesis_enabled(self.settings)
                 and not auction_enabled(self.settings)):
             raise ValidationError('请至少开启一项托管功能。')
@@ -858,6 +910,9 @@ class ManagedMode:
         self.character_id = self._control_character_id(observation)
         if self.target_difficulty is None:
             self.target_difficulty = observation.get('scene',{}).get('world_difficulty') or observation.get('scene',{}).get('difficulty')
+        self.pumpkin_difficulty = self.settings['pumpkin']['difficulty']
+        if self.pumpkin_difficulty == 'current':
+            self.pumpkin_difficulty = observation.get('scene',{}).get('world_difficulty') or observation.get('scene',{}).get('difficulty')
         if self.settings['farming']['enabled']:
             if self.settings['farming']['mode']=='push':
                 target = observation.get('farming_start')
@@ -871,10 +926,15 @@ class ManagedMode:
                 self.target_dungeon,self.target_difficulty = first['dungeon_id'],first['difficulty']
         if not self.settings['farming']['enabled']:
             self.target_dungeon = observation.get('scene', {}).get('dungeon_id')
+        if self.settings['pumpkin']['enabled'] and is_world_boss(observation.get('scene', {}).get('dungeon_id')):
+            self._activate_pumpkin()
+            # Finish an already paid entry even if its difficulty differs
+            # from the preference for future entries.
+            self.target_difficulty = observation['scene'].get('difficulty') or self.pumpkin_difficulty
         self._baseline_runs(observation)
         if observe_metrics:
             self.metrics.observe(observation)
-        self.phase = 'cleanup' if self.settings['farming']['enabled'] and self._town(observation) else 'farming'
+        self.phase = 'cleanup' if farming_enabled(self.settings) and self._town(observation) else 'farming'
         self.reward_barrier = self.phase == 'cleanup'
         self.status = '托管已开始。'
         return self.state()
@@ -921,7 +981,7 @@ class ManagedMode:
         # Re-reading the original character must settle it before another craft.
         if not self.await_effect or self.await_effect.get('kind') not in SYNTHESIS_ACTIONS:
             self.await_effect = None; self.await_count = 0
-        self.phase = 'cleanup' if (self.settings['farming']['enabled'] or self.finishing) and self._town(observation) else 'farming'
+        self.phase = 'cleanup' if (farming_enabled(self.settings) or self.finishing) and self._town(observation) else 'farming'
         self.reward_barrier = self.phase == 'cleanup'
         self.barrier_reads = 0
         if observe_metrics:
@@ -965,7 +1025,33 @@ class ManagedMode:
                 'merchant_counts': deepcopy(self.merchant_counts), 'push_failed': self.push_failed,
                 'repeat_index':self.repeat_index,'repeat_completed':self.repeat_completed,
                 'repeat_maps':deepcopy(self.repeat_maps),'statistics': self.metrics.state(),
+                'pumpkin': {'active': self.pumpkin_active, 'completed': self.pumpkin_completed, 'reason': self.pumpkin_reason},
                 'stargazing': deepcopy(self.stargazing_state)}
+
+    def _activate_pumpkin(self):
+        if not self.pumpkin_active:
+            self.pumpkin_fallback = (self.target_dungeon, self.target_difficulty)
+        self.pumpkin_active = True
+        self.target_dungeon, self.target_difficulty = PUMPKIN, self.pumpkin_difficulty
+
+    def _select_farming_target(self, observation):
+        """Pick only after town cleanup; never abandon a paid boss entry."""
+        if self.settings['pumpkin']['enabled']:
+            if self.pumpkin_difficulty not in DIFFICULTIES:
+                self.status = '等待读取南瓜王目标难度。'; return False
+            state, self.pumpkin_reason = pumpkin_status(observation.get('scene', {}), self.pumpkin_difficulty)
+            if state == 'unknown':
+                self.status = self.pumpkin_reason; return False
+            if state == 'ready':
+                self._activate_pumpkin(); return True
+        if self.pumpkin_active:
+            self.target_dungeon, self.target_difficulty = self.pumpkin_fallback
+            self.pumpkin_active = False
+        if self.settings['farming']['enabled']:
+            return True
+        self.phase = 'waiting'
+        self.status = (self.pumpkin_reason + ' 等待每日重置或活动开放。') if self.settings['pumpkin']['enabled'] else '整理完成，继续监控。'
+        return False
 
     @staticmethod
     def _town(observation):
@@ -1456,10 +1542,10 @@ class ManagedMode:
             if not is_minion_equipment(row): continue
             if not self._safe(row) or self._protected(row):
                 return self._pause('仆从装备身份或品质尚未核验，保留物品并等待重新读取。')
-            handling = settings['minion_equipment_action']
+            handling = equipment_policy(settings, row)
             if handling == 'store':
                 return self._storage_transfer(observation, row, settings['minion_equipment_pages'], all_items, mandatory=True)
-            return self._action(handling, row, reason='按仆从装备独立配置处理奖励。')
+            return self._action(handling, row, reason='按仆从装备品质配置处理奖励。')
         # Free the crafting workspace only after the complete protection and
         # auto-equip stages. Storage materials remain available to the planner
         # until it has exhausted eligible recipes, even if their home is full.
@@ -1555,12 +1641,13 @@ class ManagedMode:
             self.merchant_pending = False
             self.merchant_last_balance = state['soul_shards']['current']
             self.merchant_last_capacity = state['soul_shards']['maximum']
-        if not self.settings['farming']['enabled']:
+        if not farming_enabled(self.settings):
             self.phase = 'waiting'; self.status = self.growth_wait or '整理和消费完成，继续监控成长。'
             return None
         if self._bag_free(observation) < self.settings['farming']['free_threshold']:
             return self._pause('整理后背包空格仍少于回城门槛，保留装备或材料占用较多，请先处理容量。')
         scene = observation.get('scene',{})
+        if not self._select_farming_target(observation): return None
         if reason := boss_target_blocked(scene,self.target_dungeon,self.target_difficulty):
             return self._pause(reason)
         self.phase = 'travel'
@@ -1572,7 +1659,7 @@ class ManagedMode:
                 reason='主城整理完成，切换到'+DIFFICULTY_LABELS[entry_difficulty]+'难度。')
         return self._action('enter_dungeon', dungeon_id=self.target_dungeon,difficulty=self.target_difficulty,
                             source_run_id=run_record(scene.get('run')).get('id'),
-                            reason='奖励整理完成，返回目标关卡。')
+                            reason='奖励整理完成，优先挑战南瓜王。' if self.pumpkin_active else '奖励整理完成，返回目标关卡。')
 
     @staticmethod
     def _run_counter(run):
@@ -1648,6 +1735,12 @@ class ManagedMode:
         difficulty = run.get('difficulty') or scene.get('difficulty') or self.target_difficulty
         # A run active at startup can belong to another map. Do not count it.
         if str(dungeon)!=str(self.target_dungeon) or difficulty!=self.target_difficulty: return
+        if is_world_boss(dungeon):
+            if self.pumpkin_active and status == 'success' and run_id is not None and str(run_id) not in self.handled_runs:
+                self.handled_runs.add(str(run_id))
+                self.pumpkin_completed += 1
+            return
+        if not self.settings['farming']['enabled']: return
         counter = self._run_counter(run)
         if (self.settings['farming']['mode']=='repeat' and counter and run_id is not None
                 and not run.get('retained_terminal')):
@@ -1729,7 +1822,7 @@ class ManagedMode:
 
     def observe_runs(self, observation):
         """Account verified run evidence independently of inventory/action waits."""
-        if not self.running or not self.settings['farming']['enabled']: return
+        if not self.running or not farming_enabled(self.settings): return
         history = self._run_history(observation)
         if history:
             cursor = self.run_history_sequence
@@ -1747,7 +1840,7 @@ class ManagedMode:
 
     def _stargazing(self, observation):
         """Called only for a live target run, after return/cleanup safety gates."""
-        if not stargazing_enabled(self.settings): return None
+        if self.pumpkin_active or not stargazing_enabled(self.settings): return None
         scene = observation['scene']
         run = run_record(scene.get('run'))
         run_id = run.get('id')
@@ -1845,7 +1938,7 @@ class ManagedMode:
                 self.status = '等待游戏完成场景切换，不重复请求。'; return None
             if scene.get('online_saving') is True:
                 self.status = '等待游戏完成在线同步。'; return None
-            if (self.settings['farming']['enabled'] and scene.get('available') is True
+            if (farming_enabled(self.settings) and scene.get('available') is True
                     and scene.get('dead') is True and not self._town(observation)):
                 # Death recovery must not depend on a still-readable wave plan,
                 # merchant data, or growth data while the character is dead.
@@ -1878,7 +1971,7 @@ class ManagedMode:
                 if self.merchant_pending:
                     self.phase = 'cleanup' if self._town(observation) else 'returning'
                     return self._cleanup(observation, all_items)
-            if self.settings['farming']['enabled']:
+            if farming_enabled(self.settings):
                 scene = observation.get('scene', {})
                 if scene.get('available') is False:
                     self.status = '等待场景状态读取。'; return None
@@ -1944,7 +2037,7 @@ class ManagedMode:
             action = self._background_organize(observation, all_items)
             if action: return action
             self.status = self.growth_wait or (self.stargazing_state['reason'] if stargazing_enabled(self.settings)
-                and self.stargazing_state['reason'] else '正在刷图，等待奖励或更好的装备。' if self.settings['farming']['enabled'] else '正在监控装备与成长目标。')
+                and self.stargazing_state['reason'] and not self.pumpkin_active else '正在刷南瓜王，等待本局完成与奖励。' if self.pumpkin_active else '正在刷图，等待奖励或更好的装备。' if self.settings['farming']['enabled'] else '正在监控装备与成长目标。')
             return None
         except (ValidationError, KeyError, TypeError, ValueError) as exc:
             return self._pause('托管读取未确认，已暂停：' + str(exc))

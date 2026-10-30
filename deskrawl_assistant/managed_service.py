@@ -6,7 +6,8 @@ import time
 
 from .managed_mode import (ManagedMode, DEFAULT_SETTINGS, validate_settings, identity,
     run_record, run_entry_confirmed, DIFFICULTIES, FARM_DIFFICULTIES, equip_candidate_allowed, equipment_actions, equipment_policy, storage_material_kind, item_kind,
-    managed_required_storage, managed_town_rewards_clear)
+    managed_required_storage, managed_town_rewards_clear, farming_enabled)
+from .world_boss import PUMPKIN, pumpkin_status
 from .models import ValidationError
 from .storage_preferences import available_storage_pages, validate_available_storage_pages
 from .rules import evaluate, DEFAULT_MIN_CONFIDENCE
@@ -53,12 +54,14 @@ def required_capabilities(settings):
             required.add(capability)
             synthesis_enabled = True
     if settings.get('merchant', {}).get('enabled'): required.update(('merchant', 'travel', 'lock', 'chests', 'ground_pickup'))
-    if settings['farming']['enabled'] or settings.get('merchant', {}).get('enabled'):
+    if farming_enabled(settings) or settings.get('merchant', {}).get('enabled'):
         required.update(('lock','travel','chests','ground_pickup'))
-        if (settings['farming']['mode']=='push' or settings['farming']['difficulty']!='current'
+        if settings['farming']['enabled'] and (settings['farming']['mode']=='push' or settings['farming']['difficulty']!='current'
                 or any(row['difficulty']!='current' for row in settings['farming'].get('repeat_maps',[]))):
             required.add('difficulty')
-    if (settings['farming']['enabled'] or settings.get('merchant', {}).get('enabled') or synthesis_enabled
+        if settings.get('pumpkin', {}).get('enabled') and settings['pumpkin']['difficulty'] != 'current':
+            required.add('difficulty')
+    if (farming_enabled(settings) or settings.get('merchant', {}).get('enabled') or synthesis_enabled
             or settings.get('auction', {}).get('upload_enabled')):
         required.update(('lock', 'chests', 'ground_pickup'))
         required.update(equipment_actions(settings['cleanup']))
@@ -158,6 +161,9 @@ class ManagedServiceMixin:
             if self.managed_config.exists():
                 settings = validate_settings(json.loads(self.managed_config.read_text(encoding='utf-8')),
                                              equipment_keys=self.ui['equipment'],allow_empty_storage_pages=True)
+                # The entry is retired. Keep reward preferences, but never
+                # let a hidden legacy switch continue abandoning runs.
+                settings['farming']['stargazing']['enabled'] = False
                 self._validate_slot_locks(settings)
                 loaded = True
                 missing_pages = [label for group, label in (('equipment', '装备'), ('rune', '符文'), ('gem', '宝石'),
@@ -404,7 +410,7 @@ class ManagedServiceMixin:
                        if isinstance(capabilities.get(key),dict) else '尚未核验') for key in missing]
             control_available = self.managed_control.get('available') is True
             control_error = (self.managed_control.get('reason') or '等待关卡与场景完整读取。') if not control_available else ''
-            if engine['settings']['farming']['enabled'] and not control_available:
+            if farming_enabled(engine['settings']) and not control_available:
                 blocked.append('关卡读取：'+control_error)
             if growth_enabled(engine['settings']) and self.managed_growth.get('available') is not True:
                 blocked.append('成长读取：'+(self.managed_growth.get('reason') or '等待成长状态完整读取。'))
@@ -455,6 +461,7 @@ class ManagedServiceMixin:
             if getattr(self,'game_transition',False): raise ValidationError('游戏正在启动或退出，请稍候。')
             if self.managed.running or self.operation_kind=='managed': raise ValidationError('请先暂停托管再修改设置。')
             settings = validate_settings(raw,equipment_keys=self.ui['equipment'])
+            settings['farming']['stargazing']['enabled'] = False
             catalog = self._market_catalog()
             settings['auction'] = validate_auction(settings['auction'], catalog.items if catalog else ())
             self._validate_managed_storage_pages(settings['cleanup'])
@@ -515,7 +522,9 @@ class ManagedServiceMixin:
                     validate_settings(self.managed.settings)
                     farming = self.managed.settings['farming']
                     if self.managed_can_resume:
-                        targets = [{'dungeon_id':self.managed.target_dungeon,'difficulty':self.managed.target_difficulty}]
+                        target, tier = (self.managed.pumpkin_fallback if self.managed.pumpkin_active else
+                                        (self.managed.target_dungeon, self.managed.target_difficulty))
+                        targets = [{'dungeon_id':target,'difficulty':tier}]
                     elif farming['mode']=='push':
                         targets = [highest_unlocked_map(self.managed_catalog,self.managed_control)]
                         observation['farming_start'] = targets[0]
@@ -681,6 +690,10 @@ class ManagedServiceMixin:
                     or planned.get('item', {}).get('item_uid') != (item or {}).get('item_uid')):
                 return {'verified': False, 'retryable': True, 'reason': '拍卖白名单、保留数量或物品状态已变化，重新规划。'}
         pending = scene.get('online_pending_requests')
+        if kind == 'enter_dungeon' and action.get('dungeon_id') == PUMPKIN:
+            state, reason = pumpkin_status(scene, action.get('difficulty'))
+            if state != 'ready':
+                return {'verified': False, 'retryable': True, 'reason': reason}
         if kind in ('return_town','enter_dungeon','switch_difficulty') and type(pending) is int and pending > 0:
             raise OnlineSyncBusyError(f'等待在线请求处理完成后切换场景（待处理请求 {pending}）。')
         if kind == 'return_town' and scene.get('dead') is not True:
@@ -1217,7 +1230,7 @@ class ManagedServiceMixin:
                 scene = observation['scene']
                 if action['kind']=='return_town' and observation.get('session') != transition.get('session'):
                     return self._managed_pause_return('游戏连接或角色已改变，未确认原回城结果。')
-                if action['kind']=='return_town' and self.managed.settings['farming']['enabled']:
+                if action['kind']=='return_town' and farming_enabled(self.managed.settings):
                     source = action.get('source_run_id')
                     run = run_record(scene.get('run'))
                     if source and (str(source) in self.managed.handled_runs

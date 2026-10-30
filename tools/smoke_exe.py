@@ -23,7 +23,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.5.0'
+NAME = 'Deskrawl装备助手-v1.5.1'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -134,7 +134,7 @@ def main():
                 result = {'schema': 1, 'client_id': payload['client_id'], 'token': 'a' * 64}
             elif self.path == '/v1/report':
                 assert self.headers.get('Authorization') == 'Bearer ' + 'a' * 64
-                assert payload['version'] == '1.5.0'
+                assert payload['version'] == '1.5.1'
                 result = {'accepted': True, 'report_id': payload['report_id'],
                           'sequence': payload['sequence'], 'accepted_at': datetime.now(timezone.utc).isoformat()}
             else:
@@ -202,7 +202,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.5.0'
+                assert request('/api/state')['app_version'] == '1.5.1'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -274,6 +274,7 @@ def main():
         assert managed['settings']['auction'] == {
             'upload_enabled': False, 'sell_enabled': False, 'price_rule': 'lowest_sell',
             'categories': [], 'item_keys': [], 'excluded_keys': []}
+        assert managed['settings']['pumpkin'] == {'enabled': False, 'difficulty': 'current'}
         assert request('/api/state')['manual_auction_availability']['available'] is False
         steam = request('/api/auction/state')
         assert not steam.get('steam', {}).get('authenticated')
@@ -284,12 +285,14 @@ def main():
         stargazing = managed['settings']['farming']['stargazing']
         assert not stargazing['enabled'] and all(stargazing['rewards'].values())
         assert 'id="managed-stargazing"' in request('/').decode('utf-8')
+        assert 'class="managed-stargazing" hidden' in request('/').decode('utf-8')
         assert not any('remote-control' in n for n in names)
         cleanup = managed['settings']['cleanup']
         assert [cleanup[k+'_pages'] for k in ('equipment','rune','gem')] == [[1,2,3],[4],[5]]
         assert [cleanup[k+'_pages'] for k in ('gold_bar', 'legendary_rein')] == [[5], [5]]
         assert all(cleanup[k+'_action'] == 'store' for k in ('gold_bar', 'legendary_rein'))
         assert cleanup['minion_equipment_action'] == 'store'
+        assert cleanup['minion_equipment_policies'] == {'legendary': 'store', 'rare': 'store'}
         assert cleanup['minion_equipment_pages'] == [1, 2, 3]
         auto = request('/api/state')['automation']['settings']
         assert [auto[k]['pages'] for k in ('pressure','runes','gems')] == [[1,2,3],[4],[5]]
@@ -363,6 +366,10 @@ def main():
             'LegendaryMinionGear1', 'RareMinionGear1', 'RareMinionGear2', 'RareMinionGear3'}
         for item in catalog['equipment']:
             assert request(item['icon']).startswith(b'\x89PNG')
+        descriptions = [text for item in catalog['equipment']
+            for text in [item.get('description', ''),
+                *(group.get('text', '') for group in item.get('effect_groups', []))]]
+        assert not any(re.search(r'\{[A-Za-z_][A-Za-z_0-9]*\}', text) for text in descriptions)
         report['checks'].append('页面脚本、样式、229 张装备图标与 67 件传说装备词典正常读取，含四种仆从装备')
         for item in item_ui['items'].values():
             assert request(item['icon']).startswith(b'\x89PNG')
@@ -376,6 +383,10 @@ def main():
         assert shared['gem_pages'] == [3,5] and shared['rune_pages'] == [1,4]
         assert not request('/api/state')['automation']['running']
         managed_settings = managed['settings']
+        managed_settings['pumpkin'] = {'enabled': True, 'difficulty': 'Nightmare'}
+        managed_settings['cleanup'].update(minion_equipment_pages=[5],
+            minion_equipment_policies={'legendary': 'salvage', 'rare': 'sell'})
+        managed_settings['farming']['stargazing']['enabled'] = True
         assert managed_settings['reconnect'] == {'enabled': False, 'character_index': 1}
         managed_settings['reconnect'] = {'enabled': True, 'character_index': 2}
         managed_settings['farming']['stargazing']['rewards']['gem'] = False
@@ -392,6 +403,10 @@ def main():
         managed_settings['auction'].update(upload_enabled=True, categories=['grand_rune'],
             excluded_keys=['LegendaryRune_HunterSpecial1'], price_rule='highest_buy')
         saved_managed = request('/api/managed/settings', {'settings':managed_settings})['settings']
+        assert saved_managed['pumpkin'] == {'enabled': True, 'difficulty': 'Nightmare'}
+        assert saved_managed['cleanup']['minion_equipment_policies'] == {'legendary': 'salvage', 'rare': 'sell'}
+        assert not saved_managed['farming']['stargazing']['enabled']
+        report['checks'].append('南瓜王独立优先配置、仆从装备分品质策略保存正常；观星入口隐藏且旧开关强制关闭，装备说明无残留模板')
         assert saved_managed['cleanup']['rune_pages'] == [2,4]
         settings['gems']['pages'] = [1]
         settings['runes']['pages'] = [2,4]

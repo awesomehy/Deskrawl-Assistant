@@ -65,6 +65,28 @@ test('equipment effects are visible on inventory and worn equipment previews',()
   }
 });
 
+test('servant equipment detail shows rule results, affix hits, and a rule editor entry',()=>{
+  const p=page();
+  p.context.gear={name:'黄金河汗之鞍',name_key:'LegendaryMinionGear1',is_equipment:true,
+    is_minion_equipment:true,kind:'equipment',container:'inventory',slot_label:'仆从装备',
+    class_mask:15,rarity:3,rarity_label:'传说',level:70,matches:true,review:false,
+    matched_combinations:['仆从冷却规则'],groups:{base:[],secondary:[],unknown:[],
+      primary:[{key:'Stats.CooldownReduction',name:'冷却缩减',display_value:'10%',matched:true,
+        matched_rules:['仆从冷却规则']}]},reasons:[]};
+  p.run('renderComparison=()=>{throw new Error("Servant gear cannot replace character gear");};');
+  const html=p.run('equipmentPreviewHtml(gear)');
+  assert.match(html,/符合规则/);
+  assert.match(html,/命中组合：仆从冷却规则/);
+  assert.match(html,/class="affix-row matched"/);
+  assert.match(html,/data-configure-item="LegendaryMinionGear1"/);
+  assert.match(html,/仆从装备使用自身筛选规则/);
+  assert.doesNotMatch(html,/独立收纳|不参与角色装备筛选/);
+  p.context.gear.matches=false;p.context.gear.review=true;
+  assert.match(p.run('resultBadge(gear)'),/待核验/);
+  p.context.gear.review=false;
+  assert.match(p.run('resultBadge(gear)'),/未命中/);
+});
+
 test('retired reports cannot be opened and register no sampling or calibration timers',()=>{
   const p=page();p.run("switchTab('managed');switchTab('recommendations');switchTab('experience');");
   assert.equal(p.run('activeTab'),'managed');

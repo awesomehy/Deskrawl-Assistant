@@ -358,6 +358,20 @@ class ActionBoundaryTests(unittest.TestCase):
             'rarity':3, 'is_ancient':True, 'upgrade_level':10, 'socketed_gems':['Gem1']},
             {'disposition_authorized':True})
 
+    def test_retired_minion_disposition_flag_cannot_bypass_matched_protection(self):
+        base = {'is_equipment':True, 'modifiers_complete':True, 'rarity':3, 'equip_slot':12}
+        for kind in ('sell', 'salvage'):
+            payload = {'disposition_authorized':True, 'rule_matched':True,
+                       'minion_matched_action':kind}
+            for patch in ({}, {'locked':True}, {'slot_locked':True}, {'is_black_mist':True},
+                          {'rarity':4}, {'rarity':2}, {'equip_slot':0}, {'modifiers_complete':False}):
+                with self.subTest(kind=kind, patch=patch), self.assertRaises(NativeActionError):
+                    GameActions._disposition({**base, **patch}, payload)
+            for patch in ({'rule_pending':True}, {'minion_matched_action':'store'},
+                          {'disposition_authorized':False}):
+                with self.subTest(kind=kind, patch=patch), self.assertRaises(NativeActionError):
+                    GameActions._disposition(base, {**payload, **patch})
+
     def test_preexisting_cancellation_never_reads_game(self):
         event = threading.Event(); event.set()
         reader, dispatcher = Mock(), Mock()

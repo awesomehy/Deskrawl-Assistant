@@ -23,7 +23,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.5.1'
+NAME = 'Deskrawl装备助手-v1.5.2'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -134,7 +134,7 @@ def main():
                 result = {'schema': 1, 'client_id': payload['client_id'], 'token': 'a' * 64}
             elif self.path == '/v1/report':
                 assert self.headers.get('Authorization') == 'Bearer ' + 'a' * 64
-                assert payload['version'] == '1.5.1'
+                assert payload['version'] == '1.5.2'
                 result = {'accepted': True, 'report_id': payload['report_id'],
                           'sequence': payload['sequence'], 'accepted_at': datetime.now(timezone.utc).isoformat()}
             else:
@@ -202,7 +202,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.5.1'
+                assert request('/api/state')['app_version'] == '1.5.2'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -300,6 +300,9 @@ def main():
         assert 'data/game-actions-profile.json' in normalized
         assert request('/automation-tools.js') and request('/managed-mode.js')
         assert '托管模式' in request('/').decode('utf-8')
+        assert '符合筛选规则的角色装备' in request('/').decode('utf-8')
+        assert '符合筛选规则的仆从装备' in request('/').decode('utf-8')
+        assert 'managed-minion-legendary_match' not in request('/').decode('utf-8')
         report['checks'].append('托管页面与动作配置内置；新用户装备1/2/3、符文4、宝石5；断线不误报解锁，托管默认停止')
         report['checks'].append('全部托管、商人、天赋、生活技能与技能切换入口正常开放；实机验证状态单独记录，未连接时不执行动作')
         assert managed['settings']['merchant']['trigger_percent'] == 85
@@ -385,7 +388,7 @@ def main():
         managed_settings = managed['settings']
         managed_settings['pumpkin'] = {'enabled': True, 'difficulty': 'Nightmare'}
         managed_settings['cleanup'].update(minion_equipment_pages=[5],
-            minion_equipment_policies={'legendary': 'salvage', 'rare': 'sell'})
+            minion_equipment_policies={'legendary': 'salvage', 'rare': 'sell', 'legendary_match': 'sell'})
         managed_settings['farming']['stargazing']['enabled'] = True
         assert managed_settings['reconnect'] == {'enabled': False, 'character_index': 1}
         managed_settings['reconnect'] = {'enabled': True, 'character_index': 2}
@@ -406,7 +409,7 @@ def main():
         assert saved_managed['pumpkin'] == {'enabled': True, 'difficulty': 'Nightmare'}
         assert saved_managed['cleanup']['minion_equipment_policies'] == {'legendary': 'salvage', 'rare': 'sell'}
         assert not saved_managed['farming']['stargazing']['enabled']
-        report['checks'].append('南瓜王独立优先配置、仆从装备分品质策略保存正常；观星入口隐藏且旧开关强制关闭，装备说明无残留模板')
+        report['checks'].append('南瓜王独立优先配置、仆从未命中品质策略保存正常；命中装备固定保护，旧命中处置字段丢弃；观星隐藏，装备说明无残留模板')
         assert saved_managed['cleanup']['rune_pages'] == [2,4]
         settings['gems']['pages'] = [1]
         settings['runes']['pages'] = [2,4]

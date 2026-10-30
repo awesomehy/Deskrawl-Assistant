@@ -243,7 +243,6 @@ function renderCharacter(){
   $('character-content').innerHTML=!c.available?'<div class="empty-state">'+esc(c.reason)+'</div>':`<div class="equipped-grid">${slotLabels.map((label,n)=>{const item=c.equipment.find(i=>i.equipped_slot===n);return item?`<button class="equipped-card ${equippedPreviewId===item.selection_id?'active':''}" data-equipped="${esc(item.selection_id)}"><span class="equipped-slot">${label}</span><div>${item.icon?`<img src="${esc(item.icon)}" alt="">`:''}<strong class="quality-item-name ${itemNameClass(item)}">${esc(item.name)}</strong></div>${equipmentTags(item)}<small>Lv.${esc(item.level)} · +${esc(item.upgrade??0)} · ${item.occupied_sockets}/${esc(item.sockets??'?')} 孔</small></button>`:`<div class="equipped-card empty"><span class="equipped-slot">${label}</span><small>未穿戴</small></div>`;}).join('')}</div><details class="all-character-attributes" ${attributesOpen?'open':''}><summary>全部角色属性 · ${c.attributes.length} 项</summary><div class="character-attribute-grid">${c.attributes.map(a=>`<div><span>${esc(a.name)}</span><strong>${esc(a.display_value)}</strong></div>`).join('')}</div></details>`;
 }
 function resultBadge(item){
-  if(item.is_minion_equipment)return '<span class="badge miss">独立收纳</span>';
   if(!item.is_equipment)return '<span class="badge miss">—</span>';
   const mark=item.primary_perfect?'<span class="badge primary-perfect" title="四条随机主词条全部命中同一个启用组合，不检查副词条">✦ 主词条全中</span>':'';
   const normal=item.matches?'<span class="badge match">符合规则</span>':item.review?'<span class="badge review">待核验</span>':'<span class="badge miss">未命中</span>';
@@ -296,9 +295,9 @@ function equipmentPreviewHtml(item,moveButton=''){
     ${worn||item.is_minion_equipment?'':renderComparison(item)}
     ${renderEffects(item)}
     ${['base','primary','secondary','unknown'].map(g=>{const values=item.groups[g]||[];return values.length?`<div class="detail-group"><h4>${{base:'基础属性 · 不参与筛选',primary:'主词条',secondary:'副词条',unknown:'待核验词条'}[g]}</h4><div class="type-list">${values.map(v=>`<div class="affix-row ${v.matched?'matched':''}" data-affix-key="${esc(v.key)}" title="${esc(v.value_note||(v.matched?'命中规则：'+v.matched_rules.join('、'):''))}"><span class="affix-name">${esc(v.name)}</span><strong class="affix-value">${esc(v.display_value??'未读取')}</strong>${v.matched?'<small class="affix-hit" aria-label="命中规则">✓</small>':''}</div>`).join('')}</div></div>`:'';}).join('')}
-    <p class="detail-hint">${item.is_minion_equipment?'仆从装备按回城整理的独立设置处理，不参与角色装备筛选和自动换装。':worn?'当前穿戴装备的属性预览。':'绿色为命中已启用规则的词条；整件装备是否达标见下方结果。'}数值包含已确认的装备强化。</p>
+    <p class="detail-hint">${worn?'当前穿戴装备的属性预览。':'绿色为命中已启用规则的词条；整件装备是否达标见下方结果。'}${item.is_minion_equipment?'仆从装备使用自身筛选规则及独立仓库分区，不参与角色自动换装。':''}数值包含已确认的装备强化。</p>
     ${renderGems(item)}
-    <div class="detail-rule">${worn?'':resultBadge(item)}${item.primary_perfect_combinations?.length?`<p class="perfect-combinations">主词条全中组合：${item.primary_perfect_combinations.map(esc).join('、')}<small>四条随机主词条都在该组合的勾选范围内；此标记不检查副词条，不改变自动锁定条件。</small></p>`:''}${item.matched_combinations?.length?`<p class="matched-combinations">命中组合：${item.matched_combinations.map(esc).join('、')}</p>`:''}${item.reasons.map(r=>`<p>${esc(r)}</p>`).join('')}${item.is_minion_equipment?'':`<button class="text-button" data-configure-item="${esc(item.name_key)}">配置这件装备的规则 →</button>`}</div>${moveButton}`;
+    <div class="detail-rule">${worn?'':resultBadge(item)}${item.primary_perfect_combinations?.length?`<p class="perfect-combinations">主词条全中组合：${item.primary_perfect_combinations.map(esc).join('、')}<small>四条随机主词条都在该组合的勾选范围内；此标记不检查副词条，不改变自动锁定条件。</small></p>`:''}${item.matched_combinations?.length?`<p class="matched-combinations">命中组合：${item.matched_combinations.map(esc).join('、')}</p>`:''}${item.reasons.map(r=>`<p>${esc(r)}</p>`).join('')}<button class="text-button" data-configure-item="${esc(item.name_key)}">配置这件装备的规则 →</button></div>${moveButton}`;
 }
 function renderEquippedPreview(){
   const dialog=$('equipped-dialog');

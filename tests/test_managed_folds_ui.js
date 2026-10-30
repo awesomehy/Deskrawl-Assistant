@@ -68,7 +68,7 @@ test('collapsed headers describe saved map loops, protected storage, growth and 
   assert.match(rows.farming.summary,/第一张图 · 300 局 → 第二张图 · 200 局/);
   assert.match(rows.farming.summary,/空格 < 8 回城/);assert.equal(rows.farming.status,'已启用');
   assert.match(rows.equip.summary,/暗金限制 1 部位 · 跳过 1 部位/);
-  assert.match(rows.cleanup.summary,/角色装备 1 \/ 2 \/ 3 页 · 仆从装备 普通传说放入仓库 \/ 稀有放入仓库 \/ 1 \/ 2 \/ 3 页 · 符文 4 页 · 宝石 5 页/);assert.equal(rows.cleanup.status,'固定保护');
+  assert.match(rows.cleanup.summary,/角色装备 1 \/ 2 \/ 3 页 · 仆从装备 命中规则锁定入库 \/ 传说未命中放入仓库 \/ 稀有放入仓库 \/ 1 \/ 2 \/ 3 页 · 符文 4 页 · 宝石 5 页/);assert.equal(rows.cleanup.status,'固定保护');
   assert.match(rows.merchant.summary,/85% 回城 · 保留 0% · 2 部位 \/ 每轮 11 件/);
   assert.match(rows.talents.summary,/18 \/ 70 点/);assert.match(rows.skills.summary,/2 个预设技能/);
   assert.match(rows.life.summary,/最终点满 · 2 个优先节点/);

@@ -54,6 +54,7 @@ EQUIPMENT_BUCKETS = ('divine', 'black_mist', 'ancient', 'legendary', 'rare', 'un
 BUCKET_LABELS = dict(zip(EQUIPMENT_BUCKETS, ('神圣', '黑雾传说', '远古传说', '普通传说', '稀有', '优秀', '普通')))
 DISPOSABLE_BUCKETS = EQUIPMENT_BUCKETS[2:]
 MINION_DISPOSABLE_BUCKETS = ('legendary', 'rare')
+CHEST_BATCH_LIMIT = 20
 DIFFICULTIES = ('Normal','Nightmare','Inferno')
 FARM_DIFFICULTIES = (*DIFFICULTIES,MYTHIC)
 DIFFICULTY_LABELS = {**dict(zip(DIFFICULTIES,('普通','噩梦','炼狱'))),MYTHIC:'神话裂隙'}
@@ -200,11 +201,11 @@ def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_e
     if c['minion_equipment_action'] not in ('store', 'sell', 'salvage'):
         raise ValidationError('仆从装备处理方式无效。')
     minion_policies = c['minion_equipment_policies']
-    if (not isinstance(minion_policies, dict) or not set(minion_policies) <= set(MINION_DISPOSABLE_BUCKETS)
+    if (not isinstance(minion_policies, dict) or not set(minion_policies) <= (set(MINION_DISPOSABLE_BUCKETS) | {'legendary_match'})
             or any(action not in ('store', 'sell', 'salvage') for action in minion_policies.values())):
-        raise ValidationError('仆从装备品质处理配置无效；黑雾传说固定锁定入库。')
-    # Preserve the old servant-only disposition for both editable qualities;
-    # never inherit the character equipment's disposal permissions.
+        raise ValidationError('仆从装备品质处理配置无效；黑雾传说及命中规则的装备固定锁定入库。')
+    # Discard the retired matched disposition without losing saved miss policies
+    # or warehouse pages. Rule matches are always protected, including old saves.
     c['minion_equipment_policies'] = {bucket: minion_policies.get(bucket, c['minion_equipment_action'])
                                     for bucket in MINION_DISPOSABLE_BUCKETS}
     policies = c['equipment_policies']
@@ -349,7 +350,7 @@ def equipment_bucket(row):
 
 def equipment_policy(cleanup, row, *, fallback=False):
     if is_minion_equipment(row):
-        if mandatory_storage(row) or row.get('locked') is True:
+        if mandatory_storage(row) or row.get('locked') is True or row.get('matches') is True:
             return 'store'
         bucket = {2: 'rare', 3: 'legendary'}.get(row.get('rarity'))
         if bucket not in MINION_DISPOSABLE_BUCKETS:
@@ -365,7 +366,7 @@ def equipment_policy(cleanup, row, *, fallback=False):
 
 
 def equipment_actions(cleanup):
-    minion_actions = {equipment_policy(cleanup, {'is_minion_equipment': True, 'rarity': rarity})
+    minion_actions = {equipment_policy(cleanup, {'is_minion_equipment': True, 'rarity': rarity, 'matches': False})
                       for rarity in (2, 3)}
     return minion_actions | {equipment_policy(cleanup,{'rarity':rarity,'is_ancient':ancient},fallback=fallback)
         for rarity,ancient in ((0,False),(1,False),(2,False),(3,False),(3,True)) for fallback in (False,True)}
@@ -882,6 +883,7 @@ class ManagedMode:
         self.reward_barrier = False
         self.barrier_reads = 0
         self.cleanup_processing = False
+        self.chest_batch_active = False
         self.finishing = False
         self.pressure_active = False
         self.finish_empty_reads = 0
@@ -1070,14 +1072,17 @@ class ManagedMode:
         return capacity - occupied
 
     @staticmethod
+    def _bag_chest_count(all_items):
+        return sum(_quantity(row) for row in all_items
+                   if row.get('container') == 'inventory' and item_kind(row) == 'chest')
+
+    @staticmethod
     def _safe(row):
         return bool(identity(row) and not row.get('issues') and row.get('movable', True) is not False
                     and type(row.get('locked')) is bool and type(row.get('count', 1)) is int and row.get('count', 1) > 0)
 
     @staticmethod
     def _review(row):
-        if is_minion_equipment(row):
-            return bool(row.get('issues'))
         if row.get('issues') or row.get('rule_status') in ('review', 'unknown'): return True
         if row.get('rule_status') == 'no_rule' and row.get('rules_known') is True: return False
         return row.get('review') is not False
@@ -1095,7 +1100,6 @@ class ManagedMode:
         # and positive retention evidence suffice to lock/store it; never turn
         # a missing affix read into a disposal decision or a batch-wide wait.
         if mandatory_storage(row) or row.get('locked') is True: return False
-        if is_minion_equipment(row): return not cls._quality_known(row)
         return (cls._review(row) or not cls._quality_known(row)
                 or type(row.get('matches')) is not bool)
 
@@ -1106,7 +1110,8 @@ class ManagedMode:
 
     @classmethod
     def _disposable(cls, row):
-        return item_kind(row) == 'equipment' and cls._safe(row) and not cls._protected(row) and row.get('matches') is False
+        return (item_kind(row) == 'equipment' and cls._safe(row) and not cls._protected(row)
+                and row.get('matches') is False)
 
     def _action(self, kind, row=None, **data):
         self.finish_empty_reads = 0
@@ -1489,7 +1494,11 @@ class ManagedMode:
             self.merchant_cleanup_pending = False
         settings = self.settings['cleanup']
         bag = [r for r in all_items if r.get('container') == 'inventory']
-        if not self.cleanup_processing and self._bag_free(observation) > 0:
+        chests = [r for r in bag if item_kind(r) == 'chest']
+        chest_count = self._bag_chest_count(bag)
+        if chest_count >= CHEST_BATCH_LIMIT or chests and self._bag_free(observation) == 0:
+            self.chest_batch_active = True
+        if not self.cleanup_processing and not self.chest_batch_active and self._bag_free(observation) > 0:
             action, sources_empty = self._collect_rewards(observation, all_items)
             if action or not sources_empty:
                 return action
@@ -1536,8 +1545,8 @@ class ManagedMode:
         for row in protected:
             return self._storage_transfer(observation, row,
                 settings['minion_equipment_pages' if is_minion_equipment(row) else 'equipment_pages'], all_items, mandatory=True)
-        # Servant equipment has its own disposition and never uses character
-        # affix rules or the character warehouse's junk-eviction fallback.
+        # Matched/locked servant gear was protected above. Only verified misses
+        # follow the saved per-quality disposition; unknown reads stay safe.
         for row in bag:
             if not is_minion_equipment(row): continue
             if not self._safe(row) or self._protected(row):
@@ -1591,8 +1600,26 @@ class ManagedMode:
             if handling == 'store':
                 return self._storage_transfer(observation, row, pages, all_items)
             return self._action(handling, row, reason='按托管配置处理奖励。')
-        # Finish the current equipment/rune/gem batch before refilling. All
-        # outside rewards must be collected before opening bag chests.
+        # Drain the current chest batch before refilling. Keep this latch after
+        # each receipt so new equipment is screened/locked/processed first,
+        # even once the remaining chest count has dropped below the threshold.
+        if self.chest_batch_active:
+            if any(observation.get(source, {}).get('complete') is not True
+                   for source in ('carriage', 'ground')):
+                self.status = '等待完整读取马车与地面奖励，再继续分批开箱。'
+                return None
+            for row in chests:
+                if self._safe(row) and row.get('locked') is False:
+                    # Native use consumes the chest before spawning its loot
+                    # on the ground; opening does not need an empty bag slot.
+                    return self._action('open_chest', row,
+                        reason='先分批打开背包宝箱并整理产物，再继续收取马车与地面奖励。')
+            if chest_count >= CHEST_BATCH_LIMIT or self._bag_free(observation) == 0:
+                return self._pause('背包宝箱达到整理门槛或背包已满，但剩余宝箱均已锁定或身份未确认；已保留，请先处理后继续。')
+            self.chest_batch_active = False
+        # Below the threshold, keep the normal collect/process/open order.
+        # Every pickup is replanned, so collecting the twentieth chest starts
+        # the next opening batch instead of filling all remaining bag slots.
         action, sources_empty = self._collect_rewards(observation, all_items)
         if action or not sources_empty:
             self.cleanup_processing = False
@@ -1600,7 +1627,6 @@ class ManagedMode:
         # Each chest opening starts another collection batch and lock barrier.
         for row in bag:
             if item_kind(row) == 'chest' and self._safe(row) and row.get('locked') is False:
-                if self._bag_free(observation) == 0: return self._pause('背包没有空格，暂不能安全打开宝箱。')
                 return self._action('open_chest', row, reason='奖励处理完毕，打开宝箱后重新扫描。')
         if self.finishing:
             if self.merchant_opened and observation.get('progression', {}).get('merchant', {}).get('open'):
@@ -1953,6 +1979,17 @@ class ManagedMode:
                     self.status = '正在结束托管，等待场景稳定后回城整理。'; return None
                 self.phase = 'cleanup' if self._town(observation) else 'returning'
                 return self._cleanup(observation, all_items)
+            chest_count = self._bag_chest_count(all_items)
+            if scene.get('available') is True and scene.get('dead') is not True:
+                if not self._town(observation) and chest_count >= CHEST_BATCH_LIMIT:
+                    self.phase = 'returning'
+                    return self._return_town(observation, all_items,
+                        reason=f'背包宝箱总数达到 {CHEST_BATCH_LIMIT} 个，回城优先开箱并整理。')
+                if self._town(observation) and (self.chest_batch_active
+                        or chest_count >= CHEST_BATCH_LIMIT
+                        or chest_count > 0 and self._bag_free(observation) == 0):
+                    self.phase = 'cleanup'
+                    return self._cleanup(observation, all_items)
             if self.settings['merchant']['enabled']:
                 state = observation.get('progression', {})
                 if state.get('available') is not True:

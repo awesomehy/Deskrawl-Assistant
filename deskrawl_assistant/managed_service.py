@@ -325,9 +325,7 @@ class ManagedServiceMixin:
                     item['issues'].append('装备实例读取不完整。')
                 known = identity_known and all(obs.groups_complete.get(g) is True for g in ('primary','secondary'))
                 active_rules = [r for r in self._rules() if r.enabled and item['name_key'] in r.equipment_keys]
-                if is_minion_equipment(item):
-                    item['matches'], item['review'], item['rule_status'] = False, bool(item['issues']), 'no_rule'
-                elif not known or not item['rules_known']:
+                if not known or not item['rules_known']:
                     item['review'] = True; item['rule_status'] = 'review'
                 elif not active_rules:
                     item['matches'] = False; item['review'] = False; item['rule_status'] = 'no_rule'

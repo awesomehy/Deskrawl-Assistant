@@ -8,7 +8,7 @@
   phaseNames.auction='拍卖行上传';
   const rarityNames=[['divine','神圣'],['black_mist','黑雾传说'],['ancient','远古传说'],['legendary','普通传说'],['rare','稀有'],['uncommon','优秀'],['normal','普通']];
   const disposalRarities=rarityNames.slice(2),dispositionNames={store:'放入仓库',sell:'出售',salvage:'分解',keep:'留在背包'};
-  const minionRarities=[['legendary','普通传说'],['rare','稀有']];
+  const minionRarities=[['legendary','传说未命中'],['rare','稀有']];
   const storageMaterials=[['gold_bar','金条'],['legendary_rein','传说缰绳']];
   const storageKinds=['equipment','minion_equipment','rune','gem',...storageMaterials.map(([key])=>key)];
   const capabilityNames={transfer:'物品转移',lock:'装备保护',equip:'后台换装',travel:'回城 / 进入关卡',difficulty:'主城切换难度',sell:'出售',salvage:'分解',chests:'开启宝箱',ground_pickup:'地面拾取',merchant:'神秘商人消费',talents:'职业天赋加点',life_skills:'生活技能学习',skills:'技能切换',gem_synthesis:'宝石合成',rune_synthesis:'符文合成',auction_upload:'游戏拍卖行上传'};
@@ -95,7 +95,7 @@
     if(new Set(f.repeat_maps.map(row=>`${row.difficulty}:${row.dungeon_id}`)).size!==f.repeat_maps.length)return '两张重复刷图关卡不能相同。';
     if(!Number.isInteger(f.free_threshold)||f.free_threshold<1||f.free_threshold>2048)return '回城阈值须为 1 至 2048 的整数。';
     if(!c.equipment_pages.length)return '请选择装备存放页，黑雾 / 神圣与符合规则的装备需要保留空间。';
-    if(!c.minion_equipment_pages.length)return '请至少勾选一个仆从装备存放页，用于保留黑雾或已锁定的仆从装备。';
+    if(!c.minion_equipment_pages.length)return '请至少勾选一个仆从装备存放页，用于保留黑雾、命中规则或已锁定的仆从装备。';
     if(!c.rune_pages.length)return '请勾选符文存放页，所有符文必须收纳。';
     if(!c.gem_pages.length)return '请至少勾选一个宝石存放页，宝石必须收纳。';
     for(const [key,label] of storageMaterials){
@@ -217,7 +217,7 @@
       growth:state(growing.length>0,growing.length?growing.join(' / ')+'自动养成':'战斗天赋 / 生活技能 / 技能预设'),
       synthesis:state(synthesisEnabled(s),`宝石${s.synthesis.gems.enabled?' → '+gemQualities[s.synthesis.gems.max_quality-1]:'关闭'} · 符文${s.synthesis.runes.enabled?' → '+runeQualities[s.synthesis.runes.max_quality]:'关闭'} · 跳过 ${s.synthesis.runes.excluded_keys.length} 种符文`),
       auction:state(auctionTools.enabled(s.auction),`上传${s.auction.upload_enabled?'开':'关'} · 出售${s.auction.sell_enabled?'开':'关'} · 允许 ${s.auction.categories.length} 类 · 保留白名单 ${s.auction.excluded_keys.length} 种优先`),
-      cleanup:{enabled:true,status:'固定保护',summary:`角色装备 ${folders('equipment')} 页 · 仆从装备 ${minionRarities.map(([key,name])=>`${name}${dispositionNames[s.cleanup.minion_equipment_policies[key]]}`).join(' / ')} / ${folders('minion_equipment')} 页 · 符文 ${folders('rune')} 页 · 宝石 ${folders('gem')} 页 · `+storageMaterials.map(([key,label])=>`${label} ${folders(key)} 页`).join(' · ')},
+      cleanup:{enabled:true,status:'固定保护',summary:`角色装备 ${folders('equipment')} 页 · 仆从装备 命中规则锁定入库 / ${minionRarities.map(([key,name])=>`${name}${dispositionNames[s.cleanup.minion_equipment_policies[key]]}`).join(' / ')} / ${folders('minion_equipment')} 页 · 符文 ${folders('rune')} 页 · 宝石 ${folders('gem')} 页 · `+storageMaterials.map(([key,label])=>`${label} ${folders(key)} 页`).join(' · ')},
       talents:state(s.progression.talents_enabled,currentClass?`当前职业目标 ${points} / ${growthTools.talentPointLimit} 点`:'按职业保存 · 连接后显示当前预设'),
       life:state(s.life_skills.enabled,`最终点满 · ${s.life_skills.priorities.length} 个优先节点 · 保留 ${s.life_skills.gold_reserve.toLocaleString('zh-CN')} 金币`),
       skills:state(s.progression.skills_enabled,currentClass?`${growthTools.skillTargets(stages).filter(Boolean).length} 个预设技能 · 达到等级后切换`:'按职业保存 · 达到等级后切换')
@@ -542,7 +542,7 @@
         const growthNotice=[draft.progression.talents_enabled?'按当前职业的目标逐点学习天赋，不重置已有天赋。':'',draft.progression.skills_enabled?'到达设定等级并解锁后切换目标技能组合。':'',draft.life_skills.enabled?`按优先顺序学习生活技能，随后补满；至少保留 ${draft.life_skills.gold_reserve} 金币。`:'',draft.merchant.enabled?'灵魂碎片达到实际容量的回城比例后，整理奖励并按部位比例消费；新购买的装备重新筛选整理。':''].filter(Boolean).join('\n');
         const synthesisNotice=synthesisEnabled(draft)?'仅在主城整理时按最高产出品质，从低到高合成背包与已解锁仓库材料。'+(draft.synthesis.gems.enabled?`\n宝石合成至${gemQualities[draft.synthesis.gems.max_quality-1]}，会消耗金币。`:'')+(draft.synthesis.runes.enabled?`\n符文合成至${runeQualities[draft.synthesis.runes.max_quality]}，每次消耗 9 枚；概率合成失败也消耗，已有等级和经验不保留。已锁定、已装备及跳过名单中的 ${draft.synthesis.runes.excluded_keys.length} 种符文不参与。`:''):'';
         const auctionNotice=auctionTools.enabled(draft.auction)?`仅处理勾选的 ${draft.auction.categories.length} 类商品。保留白名单的 ${draft.auction.excluded_keys.length} 种物品始终优先，不自动上传或出售。`+(draft.auction.upload_enabled?'\n允许将符合原生交易条件的允许列表物品移出游戏，上传至 Steam 库存；包含本来需要保护入库的高价值物品。':'')+(draft.auction.upload_enabled?'\n锁定状态不影响上传；不会自动解锁，已绑定、强化、有孔或已穿戴物品仍不参与。':'')+(draft.auction.sell_enabled?`\n允许在 Steam 市场按${auctionTools.priceRules[draft.auction.price_rule]}自动出售本工具精确匹配的允许列表上传资产。报价为买方支付总价，币种以 Steam 钱包为准。手机确认中的出售不重复提交。`:''):'';
-        const cleanupNotice=(farmingEnabled(draft)||draft.merchant.enabled||synthesisEnabled(draft))?`不符合规则的装备按品质处理：\n${equipmentSummary(c)}。\n仆从装备：黑雾传说固定锁定入库；${minionRarities.map(([key,name])=>name+dispositionNames[c.minion_equipment_policies[key]]).join("、")}。\n仓库满时清理所选页的未锁定垃圾：\n${equipmentSummary(c,true)}。\n所有符文、宝石、金条、传说缰绳必须入库，指定页满时留在背包并暂停，腾出容量后继续。出售和分解无法撤回，强化和宝石不自动返还。神圣、黑雾装备必须收纳；已锁定、符合规则与待核验装备保留。神圣装备禁止自动穿戴，主城奖励未收完不得入图。`:draft.auto_equip.enabled?'按固定单体 Boss 战力更换更高战力的装备。神圣装备禁止自动穿戴。未指定暗金时允许其他品质；指定但尚未穿上时允许普通、优秀、稀有装备过渡，穿上后只比较同名装备。不自动转移宝石。':'';
+        const cleanupNotice=(farmingEnabled(draft)||draft.merchant.enabled||synthesisEnabled(draft))?`不符合规则的装备按品质处理：\n${equipmentSummary(c)}。\n仆从装备：黑雾传说和命中规则的装备固定锁定入库；${minionRarities.map(([key,name])=>name+dispositionNames[c.minion_equipment_policies[key]]).join("、")}。\n仓库满时清理所选页的未锁定垃圾：\n${equipmentSummary(c,true)}。\n所有符文、宝石、金条、传说缰绳必须入库，指定页满时留在背包并暂停，腾出容量后继续。出售和分解无法撤回，强化和宝石不自动返还。神圣、黑雾装备必须收纳；已锁定、待核验及命中筛选规则的角色和仆从装备固定保留。神圣装备禁止自动穿戴，主城奖励未收完不得入图。`:draft.auto_equip.enabled?'按固定单体 Boss 战力更换更高战力的装备。神圣装备禁止自动穿戴。未指定暗金时允许其他品质；指定但尚未穿上时允许普通、优秀、稀有装备过渡，穿上后只比较同名装备。不自动转移宝石。':'';
         const confirmed=await context.confirmAction?.('启动托管？',[growthNotice,synthesisNotice,auctionNotice,cleanupNotice].filter(Boolean).join('\n\n'),'启动托管',false);
         if(confirmed===false||ticket!==actionVersion)return;
         const result=await context.api('managed/run',{enabled:true});if(ticket===actionVersion)applyPacket(result);

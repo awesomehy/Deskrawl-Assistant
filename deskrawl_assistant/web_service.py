@@ -763,7 +763,7 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
             matched_combinations = []
             primary_perfect = []
             if observation:
-                item_rules = [r for r in rules if r.enabled and key in r.equipment_keys and not is_minion_equipment(row)]
+                item_rules = [r for r in rules if r.enabled and key in r.equipment_keys]
                 evaluations = [evaluate(r,observation,self.catalog) for r in item_rules]
                 for modifier in adapted_item.display_modifiers:
                     stat, group = modifier.stat_key, modifier.group
@@ -784,9 +784,6 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
                 else: reasons = ['尚未启用这件装备的筛选规则']
                 review = decision.action=='review'
             else: review = row.get('is_equipment') is True
-            if is_minion_equipment(row):
-                match, review, matched_combinations, primary_perfect = False, bool(row.get('issues')), [], []
-                reasons = ['仆从装备使用回城整理中的独立配置，不参与角色装备筛选。']
             selection_id = row.get('transfer_key') or row.get('instance_id')
             movable = bool(result['complete'] and result['transfer'].get('available') and row.get('transfer_key') and not row.get('issues'))
             if row.get('container')=='storage' and row.get('slot_index') not in result['transfer'].get('storage_indices',[]):

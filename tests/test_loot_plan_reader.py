@@ -54,7 +54,7 @@ class Fixture:
         native = self.allocate(128)
         self.ptr(self.map + 16, native)
         self.memory.write_fixture(native + 56, b'RedForest2\0' + bytes(21))
-        self.integer(self.manager + 168, 1)
+        self.integer(self.manager + 176, 1)
         self.integer(self.area + 120, 0)
         self.integer(self.save + 32, 1)
         self.ptr(self.manager + 104, self.wave_manager)
@@ -65,8 +65,8 @@ class Fixture:
         self.integer(self.wave_manager + 48, 1)
         self.boolean(self.wave_manager + 96, True)
         self.text(self.plan + 16, 'private-run-identity')
-        self.text(self.plan + 24, 'RedForest2')
-        self.text(self.plan + 48, 'Normal')
+        self.text(self.plan + 32, 'RedForest2')
+        self.text(self.plan + 56, 'Normal')
         self.reader = SimpleNamespace(memory=self.memory, profile=profile,
             resolved_profiles={'recommendation-types.json': {'types': []}},
             native_layout={'game_manager_rva': 0x1234, 'game_area_manager_rva': 0x5678},
@@ -159,7 +159,7 @@ class Fixture:
             self.wave_objects.append(wave)
             self.loot_objects.append(loot)
         self.waves_array = self.array('RunWave', self.wave_objects)
-        self.ptr(self.plan + 88, self.waves_array)
+        self.ptr(self.plan + 104, self.waves_array)
 
 
 class LootPlanReaderTests(unittest.TestCase):
@@ -228,7 +228,7 @@ class LootPlanReaderTests(unittest.TestCase):
             elif target == 'map':
                 f.ptr(f.wave_manager + 40, f.map + 8)
             else:
-                f.text(f.plan + 24, 'OtherMap')
+                f.text(f.plan + 32, 'OtherMap')
             result = read_loot_plan(f.reader)
             self.assertFalse(result['available'])
             self.assertEqual(result['waves'], [])

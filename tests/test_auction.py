@@ -78,7 +78,8 @@ class AuctionPolicyTests(unittest.TestCase):
         self.assertEqual(managed['auction'], new)
 
     def test_categories_authorize_each_known_family_and_exact_exclusions_win(self):
-        cases = [('DivineBoots1', {}, 'divine_equipment'),
+        cases = [('LegendaryMinionGear1', {'is_black_mist': True}, 'minion_equipment'),
+                 ('DivineBoots1', {}, 'divine_equipment'),
                  ('LegendaryBoots1', {'is_black_mist': True}, 'black_mist_equipment'),
                  ('HunterSetRune1_1', {}, 'set_rune'),
                  ('LegendaryRune_HunterSpecial1', {}, 'grand_rune'),

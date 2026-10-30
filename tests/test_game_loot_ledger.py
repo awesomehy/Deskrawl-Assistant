@@ -2,7 +2,7 @@ import struct
 import unittest
 from unittest.mock import Mock, patch
 
-from deskrawl_assistant.game_loot_ledger import read_loot_ledger
+from deskrawl_assistant.game_loot_ledger import read_loot_ledger, _receipt_cursor
 from deskrawl_assistant.native_memory import MemoryReadError, SnapshotChangedError
 
 
@@ -20,7 +20,7 @@ class GameLootLedgerTests(unittest.TestCase):
         self.copy.read.side_effect=lambda address,size:struct.pack('<Qiiii',7000,2,0,0,1) if address==8024 else b'\0'*size
         self.entries=[struct.pack('<Iiii',0,-1,0,1),struct.pack('<Iiii',1,-1,2,2)]
         self.copy.array.side_effect=lambda obj,stride,*args,**kw:[struct.pack('<i',n) for n in (0,0,0,1,0,0)] if obj==4000 else self.entries
-        self.copy.list.return_value=[struct.pack('<QiBB2x',10000,2,1,0)]
+        self.copy.queue.return_value=[struct.pack('<QiBB2x',10000,2,1,0)]
         self.action_read=Mock();self.action_read.singleton.return_value=8000
 
     def read(self):
@@ -37,15 +37,48 @@ class GameLootLedgerTests(unittest.TestCase):
         self.copy.finish.assert_called_once()
 
     def test_invalid_receipt_and_duplicate_policy_fail_closed(self):
-        self.copy.list.return_value=[struct.pack('<QiBB2x',10000,9,0,0)]
+        self.copy.queue.return_value=[struct.pack('<QiBB2x',10000,9,0,0)]
         with self.assertRaises(MemoryReadError):self.read()
-        self.copy.list.return_value=[]
+        self.copy.queue.return_value=[]
         self.entries=[struct.pack('<Iiii',0,-1,0,1),struct.pack('<Iiii',1,-1,0,2)]
         with self.assertRaisesRegex(MemoryReadError,'重复'):self.read()
 
     def test_snapshot_guard_failure_is_not_an_empty_or_confirmed_ledger(self):
         self.copy.finish.side_effect=SnapshotChangedError('changing')
         with self.assertRaises(SnapshotChangedError):self.read()
+        self.assertNotIn('_loot_receipt_cursor', self.reader.__dict__)
+
+    def test_full_queue_rotation_preserves_old_indices_and_assigns_new_ones(self):
+        self.copy.queue.return_value *= 100
+        version = [100]
+        read = self.copy.read.side_effect
+        self.copy.read.side_effect = lambda address,size: struct.pack('<I', version[0]) if address==5036 else read(address,size)
+        first = self.read()
+        self.assertEqual([r['index'] for r in first['receipts']], list(range(100)))
+        version[0] += 2  # One dequeue and one enqueue, including identical items.
+        second = self.read()
+        self.assertEqual([r['index'] for r in second['receipts']], list(range(1,101)))
+        self.assertEqual(second['id'], first['id'])
+        self.assertEqual(second['receipts'], self.read()['receipts'])
+
+    def test_rejected_rotation_does_not_advance_committed_cursor(self):
+        self.read()
+        previous = self.reader._loot_receipt_cursor
+        self.copy.finish.side_effect=SnapshotChangedError('changing')
+        with self.assertRaises(SnapshotChangedError): self.read()
+        self.assertIs(self.reader._loot_receipt_cursor, previous)
+
+    def test_cursor_handles_growth_wrap_clear_and_new_source(self):
+        first = _receipt_cursor(None, 'a', [5]*6, 5, 0xfffffffe)
+        grown = _receipt_cursor(first, 'a', [7]*6, 7, 0)
+        self.assertEqual(grown['end'], 7)
+        full = _receipt_cursor(None, 'a', [100]*6, 100, 100)
+        rotated = _receipt_cursor(full, 'a', [110]*6, 100, 120)
+        self.assertEqual(rotated['end'], 110)
+        cleared = _receipt_cursor(rotated, 'a', [0]*6, 0, 121)
+        self.assertEqual(cleared['end'], 0)
+        self.assertEqual(_receipt_cursor(rotated, 'b', [110]*6, 1, 1)['end'], 1)
+        self.assertEqual(_receipt_cursor(rotated, 'a', [110]*6, 0, 121)['end'], 0)
 
 
 if __name__=='__main__':unittest.main()

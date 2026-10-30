@@ -1,4 +1,4 @@
-"""Warehouse page entitlement guards for the verified 1.0.2a layout."""
+"""Warehouse page entitlement guards for the verified 1.1.0 layout."""
 import json
 from types import SimpleNamespace
 import struct
@@ -34,10 +34,10 @@ class StorageAccessTests(unittest.TestCase):
         self.pointer(self.objects['PlayerCombatController']+32,self.objects['Player'])
         self.integer(self.objects['Player']+616,3)
         self.integer(self.objects['SaveSystem']+32,1)
-        self.pointer(self.objects['CloudClient']+408,0xDEAD0000)  # Previous build's field is not a DLC object.
-        self.pointer(self.objects['CloudClient']+416,self.objects['DlcState'])
+        self.pointer(self.objects['CloudClient']+424,0xDEAD0000)  # Previous build's field is not a DLC object.
+        self.pointer(self.objects['CloudClient']+432,self.objects['DlcState'])
         self.p.put(self.objects['DlcState']+16,b'\1')
-        self.pointer(self.objects['SaveSystem']+216,self.objects['LocalDlcEntitlement'])
+        self.pointer(self.objects['SaveSystem']+232,self.objects['LocalDlcEntitlement'])
         self.p.put(self.objects['LocalDlcEntitlement']+28,b'\1')
 
     def pointer(self,address,value): self.p.put(address,struct.pack('<Q',value))
@@ -48,10 +48,10 @@ class StorageAccessTests(unittest.TestCase):
         self.assertEqual(state['storage_indices'],list(range(250)))
         self.assertEqual(state['storage_pages'],5)
         observed = dict(guards)
-        self.assertIn(self.objects['CloudClient']+416,observed)
-        self.assertNotIn(self.objects['CloudClient']+408,observed)
-        self.pointer(self.objects['CloudClient']+416,0)
-        self.assertNotEqual(self.p.read(self.objects['CloudClient']+416,8),observed[self.objects['CloudClient']+416])
+        self.assertIn(self.objects['CloudClient']+432,observed)
+        self.assertNotIn(self.objects['CloudClient']+424,observed)
+        self.pointer(self.objects['CloudClient']+432,0)
+        self.assertNotEqual(self.p.read(self.objects['CloudClient']+432,8),observed[self.objects['CloudClient']+432])
 
     def test_without_online_entitlement_only_open_normal_pages_are_allowed(self):
         self.integer(self.objects['Player']+616,1)

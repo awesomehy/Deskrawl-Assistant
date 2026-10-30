@@ -1,6 +1,6 @@
 """Render verified serialized equipment effects with the game's own text.
 
-The 1.0.3 description methods use these localisation keys and the 0.# / 0.#%
+The reviewed description methods use these localisation keys and the 0.# / 0.#%
 formats. This is an export-time reader; it does not affect equipment scoring.
 """
 import math
@@ -63,8 +63,15 @@ def render_equipment_effect(kind, data, text):
         chance = struct.unpack_from('<f', data, offset)[0]
         if not 0 <= chance <= 1:
             raise ValueError('Invalid equipment trigger chance')
-        key = _string(data, offset + 4)
+        if kind == 'EquipmentEffect_TriggerKillEffectsOnHit':
+            cooldown = struct.unpack_from('<f', data, 4)[0]
+            if not math.isfinite(cooldown) or cooldown < 0:
+                raise ValueError('Invalid kill trigger cooldown')
+        key = _string(data, offset + (8 if kind == 'EquipmentEffect_TriggerKillEffectsOnHit' else 4))
         values = {'chance':_number(chance, True)}
+        if kind == 'EquipmentEffect_TriggerKillEffectsOnHit':
+            if cooldown <= 0:raise ValueError('Invalid kill trigger rate')
+            values['maxTriggers'] = str(round(1 / cooldown))
     else:
         return ''
     template = text(key)

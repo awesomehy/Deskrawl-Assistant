@@ -26,11 +26,13 @@ from .storage_preferences import SHARED_STORAGE_GROUPS, validate_shared_pages, w
 from copy import deepcopy
 from .version import VERSION
 from .managed_service import ManagedServiceMixin
+from .item_protection import is_minion_equipment
+from .chests import is_chest
 from . import features
 
 BASE = RESOURCE_ROOT
 SLOT_LABELS = {'Weapon':'武器','Helm':'头盔','Chest':'胸甲','Pants':'裤子','Boots':'靴子','Belt':'腰带',
-               'Ring':'戒指','Necklace':'项链','Gloves':'手套','Shoulder':'护肩','Back':'披风'}
+               'Ring':'戒指','Necklace':'项链','Gloves':'手套','Shoulder':'护肩','Back':'披风','Minion':'仆从装备'}
 CLASS_LABELS = {'Barbarian':'战士','Mage':'法师','Hunter':'猎人','Monk':'武僧'}
 
 
@@ -45,9 +47,9 @@ def all_rows(snapshot):
 
 
 def item_kind(row):
-    if row.get('is_equipment'): return 'equipment','装备'
+    if row.get('is_equipment'): return 'equipment', '仆从装备' if is_minion_equipment(row) else '装备'
     if row.get('item_class')=='GemData' or row.get('internal_name','').startswith('Gem'): return 'gem','宝石'
-    if row.get('internal_name','').startswith('TreasureChest'): return 'chest','宝箱'
+    if is_chest(row): return 'chest','宝箱'
     if row.get('item_class')=='RuneData': return 'rune','符文'
     return 'material','材料 / 其他'
 
@@ -761,7 +763,7 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
             matched_combinations = []
             primary_perfect = []
             if observation:
-                item_rules = [r for r in rules if r.enabled and key in r.equipment_keys]
+                item_rules = [r for r in rules if r.enabled and key in r.equipment_keys and not is_minion_equipment(row)]
                 evaluations = [evaluate(r,observation,self.catalog) for r in item_rules]
                 for modifier in adapted_item.display_modifiers:
                     stat, group = modifier.stat_key, modifier.group
@@ -782,6 +784,9 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
                 else: reasons = ['尚未启用这件装备的筛选规则']
                 review = decision.action=='review'
             else: review = row.get('is_equipment') is True
+            if is_minion_equipment(row):
+                match, review, matched_combinations, primary_perfect = False, bool(row.get('issues')), [], []
+                reasons = ['仆从装备使用回城整理中的独立配置，不参与角色装备筛选。']
             selection_id = row.get('transfer_key') or row.get('instance_id')
             movable = bool(result['complete'] and result['transfer'].get('available') and row.get('transfer_key') and not row.get('issues'))
             if row.get('container')=='storage' and row.get('slot_index') not in result['transfer'].get('storage_indices',[]):
@@ -797,6 +802,7 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
                 'locked':row.get('locked'),'level':row.get('item_level'),'upgrade':row.get('upgrade_level'),
                 **(self._equipment_facts(row) if kind=='equipment' else {'rarity':rarity}),
                 'icon':meta.get('icon'),'slot':meta.get('slot'),'slot_label':SLOT_LABELS.get(meta.get('slot'), '未知部位') if kind=='equipment' else kind_label,
+                'is_minion_equipment': is_minion_equipment(row),
                 'class_mask':meta.get('class_mask',0),'groups':groups,'matches':match,'matched_combinations':matched_combinations,
                 'review':review,'reasons':reasons,'primary_perfect':bool(primary_perfect),
                 'primary_perfect_combinations':primary_perfect})
@@ -805,7 +811,9 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
                 result['items'][-1]['power'] = preview(row,character,self.item_ui)
         for container in ('inventory','storage'):
             values = [i for i in result['items'] if i['container']==container]
-            result['counts'][container] = {'equipment':sum(i['is_equipment'] for i in values),'locked':sum(i['is_equipment'] and i['locked'] is True for i in values),
+            result['counts'][container] = {'equipment':sum(i['is_equipment'] for i in values),
+                'minion_equipment':sum(i['is_minion_equipment'] for i in values),
+                'locked':sum(i['is_equipment'] and i['locked'] is True for i in values),
                 'matches':sum(i['matches'] and i['locked'] is False for i in values),
                 'occupied':snap['containers'].get(container,{}).get('occupied_count',0),
                 'capacity':snap['containers'].get(container,{}).get('slot_count',0)}

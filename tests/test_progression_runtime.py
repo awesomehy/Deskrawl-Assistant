@@ -21,11 +21,11 @@ class PreviewReadTests(unittest.TestCase):
         pointers={profile['statics']['merchant_stock_type']:1000,1184:2000,2000:3000,
                   4000:4001,6000:6001,9000:9001,10000:9001,4032:6000,4024:5000,9016:5001,10016:5002}
         copy.copied_only.side_effect=lambda:nullcontext()
-        copy.ptr.side_effect=pointers.get;copy.dictionary.return_value={2:4000}
+        copy.ptr.side_effect=pointers.get;copy.dictionary.return_value={5003:4000}
         copy.verify.side_effect=lambda obj,name:obj;copy.array.return_value=[bytes(8)]*4
         copy.integer.side_effect=lambda address:{9068:21,10068:21,4016:70}[address]
         copy.read.side_effect=lambda address,size:struct.pack('<Qiiii',7000,3,1,2,9) if address==6016 else struct.pack('<Q',9000 if address==7056 else 10000)
-        reader.string.side_effect=lambda pointer:{5000:'Inferno1',5001:'server-offer',5002:'next-offer'}[pointer]
+        reader.string.side_effect=lambda pointer:{5003:'Helm',5000:'Inferno1',5001:'server-offer',5002:'next-offer'}[pointer]
         quotes=runtime._merchant_quotes(copy)
         self.assertEqual(quotes['helm'],{'price':21,'prices':[21,21],'level':70,'difficulty':'Inferno1','instance_id':'server-offer'})
         copy.read.assert_any_call(7056,8)
@@ -225,8 +225,8 @@ class PreviewReadTests(unittest.TestCase):
         copy.verify.side_effect=verify
         copy.dictionary.side_effect=lambda obj,*args:({index:obj for index,obj in enumerate(items.values())} if obj==90000 else {soul:100} if obj==90001 else {})
         copy.list.return_value=[];copy.array.return_value=[];copy.boolean.return_value=False
-        integers={hero+48:4,soul+140:2000,singletons['SaveSystem']+32:1,
-                  **{items[row['id']]+216:row['slot'] for row in data['shop']}}
+        integers={hero+48:4,soul+156:2000,singletons['SaveSystem']+32:1,
+                  **{items[row['id']]+232:row['slot'] for row in data['shop']}}
         copy.integer.side_effect=lambda address:integers.get(address,0)
         reader.string.side_effect=lambda key:list(items)[key]
         names={hero:data['heroes']['4']['id'],**{obj:key for key,obj in items.items()}}
@@ -307,7 +307,7 @@ class RuntimeBoundaryTests(unittest.TestCase):
         copy.copied_only.side_effect = nullcontext
         copy.verify.side_effect = lambda obj, name: obj
         copy.ptr.side_effect = lambda address: {1056:2000,1064:3000,3032:4000,3112:5000,2080:6000}.get(address, 7000)
-        copy.integer.side_effect = lambda address: before['merchant']['stock'][0]['slot'] if address==1215 else before['class_mask']
+        copy.integer.side_effect = lambda address: before['merchant']['stock'][0]['slot'] if address==1231 else before['class_mask']
         skills = catalog()['heroes'][str(before['class_mask'])]['abilities']
         names = {101 + n:s['id'] for n,s in enumerate(skills)}
         copy.list.return_value = [struct.pack('<Q', ptr) for ptr in names]

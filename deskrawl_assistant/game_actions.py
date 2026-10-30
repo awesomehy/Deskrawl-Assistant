@@ -24,6 +24,8 @@ from .progression import NEW_ACTIONS
 from .synthesis import KINDS as SYNTHESIS_ACTIONS
 from .auction_runtime import KINDS as AUCTION_ACTIONS
 from .run_receipts import RunReceipts
+from .chests import is_chest
+from . import world_boss
 
 KINDS = ('return_town', 'enter_map', 'switch_difficulty', 'equip', 'sell', 'salvage', 'open_chest', 'collect_ground') + NEW_ACTIONS + SYNTHESIS_ACTIONS + AUCTION_ACTIONS
 CAPABILITIES = {'travel': ('return_town', 'enter_map'), 'equip': ('equip',), 'sell': ('sell',),
@@ -243,7 +245,7 @@ class GameActions:
         self.reader.check_game_files()
         read = _Read(self.reader, self.profile)
         manager = read.singleton('GameManager')
-        if read.integer(manager+168) != 1:
+        if read.integer(manager+176) != 1:
             raise NativeActionError('请先进入角色，当前不能执行托管动作')
         area = read.singleton('GameAreaManager')
         scene = read.integer(area+120)
@@ -281,7 +283,7 @@ class GameActions:
         config = copy.verify(copy.ptr(manager + 32), 'GameConfig')
         character = {'available': True,
                      'level': decode_obscured_int(copy.read(player + 32, 16)),
-                     'max_level': copy.integer(config + 264)}
+                     'max_level': copy.integer(config + 256)}
         if target_slot in (6, 7):
             equipment = read.singleton('EquipmentManager')
             equipped = copy.dictionary(copy.ptr(equipment + 40), 'pointer')
@@ -289,7 +291,7 @@ class GameActions:
                 {'equipped_slot': slot, 'internal_name': self.reader.asset_name(equipped[slot])}
                 for slot in (6, 7) if equipped.get(slot)]
         current = {**selected, 'base_rarity': copy.integer(item + 36),
-                   'equip_slot': copy.integer(item + 144)}
+                   'equip_slot': copy.integer(item + 160)}
         eligibility = equip_eligibility(current, character, target_slot=target_slot)
         copy.finish()
         read.guards.extend(copy.guards)
@@ -354,7 +356,7 @@ class GameActions:
 
     def _ground(self, read, manager, selection_id=None):
         rows = []
-        list_obj = read.ptr(manager+216)
+        list_obj = read.ptr(manager+224)
         world = read.list(list_obj, 'LootDrop', 8192, selected_only=selection_id is not None)
         carriage = read.ptr(manager+88)
         carriage_items = set()
@@ -435,7 +437,7 @@ class GameActions:
         if current not in (0,1,2) or maximum not in (0,1,2) or current>maximum:
             raise NativeActionError('当前难度或难度解锁状态未确认')
         config = read.verify(read.ptr(manager+32),'GameConfig')
-        tiers = read.pointers(read.ptr(config+200),'DifficultyTierConfig',16)
+        tiers = read.pointers(read.ptr(config+192),'DifficultyTierConfig',16)
         values = []
         for obj in tiers:
             if obj: values.append(read.integer(read.verify(obj,'DifficultyTierConfig')+16))
@@ -511,7 +513,7 @@ class GameActions:
         from .recommendation_reader import read_campaign
         read = _Read(self.reader, self.profile)
         manager = read.singleton('GameManager')
-        if read.integer(manager + 168) != 1:
+        if read.integer(manager + 176) != 1:
             raise NativeActionError('请先进入角色，再读取关卡。')
         save = read.singleton('SaveSystem')
         read.read(save + 32, 8)
@@ -569,6 +571,16 @@ class GameActions:
             completed = set(progress['completed_maps'].get(difficulty, []))
             objects = self._map_objects(read, area)
             catalog = _catalog()
+            boss_states = {}
+            for row in catalog['maps']:
+                if row.get('map_type') != world_boss.MAP_TYPE: continue
+                obj = objects.get(row['map_id'])
+                try:
+                    if not obj: raise MemoryReadError('世界首领资源尚未载入。')
+                    boss_states[row['map_id']] = world_boss.read_entry(read,obj)
+                except (MemoryReadError, ValueError, KeyError, UnicodeError, struct.error) as exc:
+                    if isinstance(exc, SnapshotChangedError): raise
+                    boss_states[row['map_id']] = {'available':False,'can_enter':False,'reason':str(exc)}
             maps_by_difficulty = {}
             for tier in difficulties:
                 key,diff_value = tier['id'],tier['value']
@@ -585,6 +597,13 @@ class GameActions:
                     'completed':row['map_id'] in tier_completed, 'loaded':row['map_id'] in objects,
                     'requirements':requirements, 'can_enter':tier['unlocked'] and row['map_id'] in tier_unlocked and row['map_id'] in objects and enough,
                     'min_level':row.get('min_level'), 'max_level':row.get('max_level')})
+                    if row['map_id'] in boss_states:
+                        option = maps[-1]
+                        state = boss_states[row['map_id']]
+                        option['world_boss'] = state
+                        option['entry_reason'] = (state['reason'] or
+                            ('请先通关当前难度的灰烬之冠 7。' if not option['unlocked'] else ''))
+                        option['can_enter'] = option['can_enter'] and state['can_enter']
                 maps_by_difficulty[key] = maps
             mythic = next((row for row in catalog['maps'] if row['map_id']==MYTHIC_MAP and row.get('map_type')==1),None)
             maps_by_difficulty[MYTHIC] = []
@@ -902,7 +921,7 @@ class GameActions:
                 raise NativeActionError('神话裂隙层数与目标类型不一致。')
             row = next((row for row in state.get('maps_by_difficulty',{}).get(target_difficulty,state['maps']) if row['map_id'] == key), None)
             if not row or not row['can_enter']:
-                raise NativeActionError('目标关卡尚未解锁、缺少材料或资源未载入')
+                raise NativeActionError((row or {}).get('entry_reason') or '目标关卡尚未解锁、缺少材料或资源未载入')
             if not floor and target_difficulty != state['difficulty']:
                 raise NativeActionError('请先在游戏里切换难度；托管不会绕过难度解锁')
             if floor and (scene!=1 or stargazing_entry):
@@ -910,9 +929,14 @@ class GameActions:
             native_key = MYTHIC_MAP if floor else key
             obj = self._map_objects(read, area, native_key)[native_key]
             read.read(obj+24, 24)  # prerequisite and availability flags
+            if world_boss.is_world_boss(key):
+                # Recheck immediately before dispatch and retain the daily
+                # state guards. Native entry performs its own final checks.
+                boss = world_boss.read_entry(read,obj)
+                if not boss['can_enter']: raise NativeActionError(boss['reason'])
             if floor:
                 if read.integer(obj+32)!=1: raise NativeActionError('神话裂隙地图类型未确认。')
-                if read.boolean(manager+260): raise GameBusyError('游戏正在提交关卡请求，等待完成。')
+                if read.boolean(manager+276): raise GameBusyError('游戏正在提交关卡请求，等待完成。')
                 # Match MythicPortalInteractable: native unlock + material gates,
                 # then the floor-aware GameManager entry. WaveManager consumes
                 # entry materials when accepting the run, never deduct twice here.
@@ -946,8 +970,10 @@ class GameActions:
                     merchant = read.singleton('MerchantUI')
                     calls = [Invocation('MerchantUI.gzy', merchant, (Argument.integer(index), Argument(raw=b'\0'*8)))]
             elif kind == 'open_chest':
-                if selected.get('item_type') != 2 or selected.get('internal_name') not in ('TreasureChest1', 'TreasureChest2', 'TreasureChest3'):
-                    # These are verified consumable assets, not a ChestData class.
+                if (selected.get('item_type') != 2 or not is_chest(selected)
+                        or read.integer(item + 56) != 2):
+                    # ItemData.Effect == OpenChest; never use a consumable merely
+                    # because its name contains "Chest" or its type is Consumable.
                     raise NativeActionError('原生开箱入口只接受已确认的宝箱')
                 consumable = read.singleton('ConsumableItemSystem')
                 calls = [Invocation('ConsumableItemSystem.eyu', consumable,

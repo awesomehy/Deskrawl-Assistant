@@ -13,6 +13,7 @@ sys.path.insert(0, str(BASE))
 from deskrawl_assistant.native_reader import decode_obscured_float
 from deskrawl_assistant.stat_display import is_percent_stat
 from extract_equipment_ui import enum_values
+from item_asset_layout import item_layout
 
 
 class Cursor:
@@ -124,13 +125,14 @@ def main():
         name,data=payload(obj)
         item_type=struct.unpack_from('<i',data,12)[0]
         if name in entries and '.' not in name and item_type!=1:
-            item_kind='gem' if kind=='GemData' else 'rune' if kind=='RuneData' else 'equipment' if name in groups['equipment_names'] else 'chest' if name.startswith('TreasureChest') else 'material'
+            item_effect = struct.unpack_from('<i', data, item_layout(data)['effect'])[0]
+            item_kind='gem' if kind=='GemData' else 'rune' if kind=='RuneData' else 'equipment' if name in groups['equipment_names'] else 'chest' if item_type == 2 and item_effect == 2 else 'material'
             collectibles[name]={'key':name,'name':label(name),'kind':item_kind,'item_type':item_type}
         if name not in wanted: continue
         c=Cursor(data)
         sprite=ref(obj,c.take('iq'))
         if not sprite or sprite.type.name!='Sprite': raise ValueError('Missing sprite: '+name)
-        c.pos=168
+        c.pos=item_layout(data)['effects']
         inherited_effects=effects(c,obj)
         abilities=grants(c,obj)
         fixed=[attribute(c) for _ in range(c.count())]

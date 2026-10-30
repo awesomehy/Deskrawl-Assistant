@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "metadata_sha256": "93f914c1e0119b82c98ca0647542c3afe0fade976d456f2212b03d699e6813de",
-  "game_assembly_sha256": "f23ae23f8714fa5a49b9ab4b8ae767c33f7e50afad47284d81121354d1677a46",
+  "metadata_sha256": "26de344c09a88a59d19b81053c62f0612cc748206799e9f28297db4d72ad33d5",
+  "game_assembly_sha256": "72c9bd3a42790516c18c4728a25d6eff481bf8232288a2bfe60f550f7bfdbe26",
   "source": "Verified shipped MapData and Enemy assets; integrity-checked Obscured values. No player/save data.",
   "asset_sha256": {
-    "resources.assets": "aac3f4d0e4502ec8e58b7a592cdb83ef641cddb7b24ed8e244e913212ddcb9c1",
-    "sharedassets0.assets": "6fd77bbdbbc0aa08aa79e37f401e17dd6ed3120d16deb0ead4810e0c524ebc80",
-    "globalgamemanagers.assets": "5ed9ad645ce33193611ccc26090a516182f508a8b028bdb9db8ba290a5eff40d"
+    "resources.assets": "2ae84fe8a3873a2ebb2bef42497c89ee4323c59153cf38b2931b5252c5e732fc",
+    "sharedassets0.assets": "e012b4b1cf6ae22c4c2bb30a792c782edd5cc78894636111380b80d840597a9d",
+    "globalgamemanagers.assets": "d81c2a91ecd67d8aa7ec89731d2bd8d7e4bb027f232719be5a72a3e8c5c238b8"
   },
   "config": {
     "XpPerBaseHealth": 1.0,
@@ -105,7 +105,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60292
+      "source_path_id": 62018
     },
     {
       "map_id": "Beach2",
@@ -166,7 +166,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60293
+      "source_path_id": 62019
     },
     {
       "map_id": "Beach3",
@@ -227,7 +227,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60294
+      "source_path_id": 62020
     },
     {
       "map_id": "Beach4",
@@ -284,7 +284,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60295
+      "source_path_id": 62021
     },
     {
       "map_id": "Beach5",
@@ -330,7 +330,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60296
+      "source_path_id": 62022
     },
     {
       "map_id": "Beach6",
@@ -386,7 +386,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60297
+      "source_path_id": 62023
     },
     {
       "map_id": "Beach7",
@@ -474,7 +474,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60298
+      "source_path_id": 62024
     },
     {
       "map_id": "CorruptForest1",
@@ -520,7 +520,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60299
+      "source_path_id": 62025
     },
     {
       "map_id": "CorruptForest2",
@@ -581,7 +581,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60300
+      "source_path_id": 62026
     },
     {
       "map_id": "CorruptForest3",
@@ -642,7 +642,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60301
+      "source_path_id": 62027
     },
     {
       "map_id": "CorruptForest4",
@@ -724,7 +724,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60302
+      "source_path_id": 62028
     },
     {
       "map_id": "CorruptForest5",
@@ -790,7 +790,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60303
+      "source_path_id": 62029
     },
     {
       "map_id": "CorruptForest6",
@@ -856,7 +856,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60304
+      "source_path_id": 62030
     },
     {
       "map_id": "CorruptForest7",
@@ -949,7 +949,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60305
+      "source_path_id": 62031
     },
     {
       "map_id": "DefiledKeep1",
@@ -1000,7 +1000,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60306
+      "source_path_id": 62032
     },
     {
       "map_id": "DefiledKeep2",
@@ -1051,7 +1051,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60307
+      "source_path_id": 62033
     },
     {
       "map_id": "DefiledKeep3",
@@ -1112,7 +1112,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60308
+      "source_path_id": 62034
     },
     {
       "map_id": "DefiledKeep4",
@@ -1184,7 +1184,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60309
+      "source_path_id": 62035
     },
     {
       "map_id": "DefiledKeep5",
@@ -1240,7 +1240,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60310
+      "source_path_id": 62036
     },
     {
       "map_id": "DefiledKeep6",
@@ -1296,7 +1296,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60311
+      "source_path_id": 62037
     },
     {
       "map_id": "DefiledKeep7",
@@ -1369,7 +1369,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60312
+      "source_path_id": 62038
     },
     {
       "map_id": "Desert1",
@@ -1415,7 +1415,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60313
+      "source_path_id": 62039
     },
     {
       "map_id": "Desert2",
@@ -1476,7 +1476,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60314
+      "source_path_id": 62040
     },
     {
       "map_id": "Desert3",
@@ -1537,7 +1537,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60315
+      "source_path_id": 62041
     },
     {
       "map_id": "Desert4",
@@ -1604,7 +1604,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60316
+      "source_path_id": 62042
     },
     {
       "map_id": "Desert5",
@@ -1665,7 +1665,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60317
+      "source_path_id": 62043
     },
     {
       "map_id": "Desert6",
@@ -1731,7 +1731,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60318
+      "source_path_id": 62044
     },
     {
       "map_id": "Desert7",
@@ -1824,7 +1824,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60319
+      "source_path_id": 62045
     },
     {
       "map_id": "Dungeon1",
@@ -1885,7 +1885,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60321
+      "source_path_id": 62047
     },
     {
       "map_id": "Dungeon2",
@@ -1956,7 +1956,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60322
+      "source_path_id": 62048
     },
     {
       "map_id": "Dungeon3",
@@ -2027,7 +2027,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60323
+      "source_path_id": 62049
     },
     {
       "map_id": "Dungeon4",
@@ -2109,7 +2109,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60324
+      "source_path_id": 62050
     },
     {
       "map_id": "DungeonL1",
@@ -2170,7 +2170,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60325
+      "source_path_id": 62051
     },
     {
       "map_id": "DungeonL2",
@@ -2231,7 +2231,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60326
+      "source_path_id": 62052
     },
     {
       "map_id": "DungeonL3",
@@ -2319,7 +2319,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60327
+      "source_path_id": 62053
     },
     {
       "map_id": "Forest1",
@@ -2365,7 +2365,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60331
+      "source_path_id": 62057
     },
     {
       "map_id": "Forest2",
@@ -2411,7 +2411,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60332
+      "source_path_id": 62058
     },
     {
       "map_id": "Forest3",
@@ -2467,7 +2467,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60333
+      "source_path_id": 62059
     },
     {
       "map_id": "Forest4",
@@ -2519,7 +2519,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60334
+      "source_path_id": 62060
     },
     {
       "map_id": "Forest5",
@@ -2575,7 +2575,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60335
+      "source_path_id": 62061
     },
     {
       "map_id": "Forest6",
@@ -2621,7 +2621,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60336
+      "source_path_id": 62062
     },
     {
       "map_id": "Forest7",
@@ -2694,7 +2694,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60337
+      "source_path_id": 62063
     },
     {
       "map_id": "LockedMap",
@@ -2750,7 +2750,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 5379
+      "source_path_id": 5415
     },
     {
       "map_id": "MythicDungeon",
@@ -2813,7 +2813,7 @@
       "boss_replaces_last_wave": true,
       "supported": false,
       "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
-      "source_path_id": 60339
+      "source_path_id": 62065
     },
     {
       "map_id": "RedDesert1",
@@ -2859,7 +2859,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60340
+      "source_path_id": 62066
     },
     {
       "map_id": "RedDesert2",
@@ -2920,7 +2920,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60341
+      "source_path_id": 62067
     },
     {
       "map_id": "RedDesert3",
@@ -2986,7 +2986,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60342
+      "source_path_id": 62068
     },
     {
       "map_id": "RedDesert4",
@@ -3058,7 +3058,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60343
+      "source_path_id": 62069
     },
     {
       "map_id": "RedDesert5",
@@ -3119,7 +3119,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60344
+      "source_path_id": 62070
     },
     {
       "map_id": "RedDesert6",
@@ -3190,7 +3190,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60345
+      "source_path_id": 62071
     },
     {
       "map_id": "RedDesert7",
@@ -3293,7 +3293,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60346
+      "source_path_id": 62072
     },
     {
       "map_id": "RedForest1",
@@ -3339,7 +3339,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60347
+      "source_path_id": 62073
     },
     {
       "map_id": "RedForest2",
@@ -3385,7 +3385,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60348
+      "source_path_id": 62074
     },
     {
       "map_id": "RedForest3",
@@ -3441,7 +3441,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60349
+      "source_path_id": 62075
     },
     {
       "map_id": "RedForest4",
@@ -3508,7 +3508,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60350
+      "source_path_id": 62076
     },
     {
       "map_id": "RedForest5",
@@ -3574,7 +3574,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60351
+      "source_path_id": 62077
     },
     {
       "map_id": "RedForest6",
@@ -3635,7 +3635,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60352
+      "source_path_id": 62078
     },
     {
       "map_id": "RedForest7",
@@ -3708,7 +3708,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60353
+      "source_path_id": 62079
     },
     {
       "map_id": "SnowHill1",
@@ -3754,7 +3754,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60354
+      "source_path_id": 62080
     },
     {
       "map_id": "SnowHill2",
@@ -3800,7 +3800,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60355
+      "source_path_id": 62081
     },
     {
       "map_id": "SnowHill3",
@@ -3856,7 +3856,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60356
+      "source_path_id": 62082
     },
     {
       "map_id": "SnowHill4",
@@ -3928,7 +3928,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60357
+      "source_path_id": 62083
     },
     {
       "map_id": "SnowHill5",
@@ -3989,7 +3989,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60358
+      "source_path_id": 62084
     },
     {
       "map_id": "SnowHill6",
@@ -4050,7 +4050,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60359
+      "source_path_id": 62085
     },
     {
       "map_id": "SnowHill7",
@@ -4128,7 +4128,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60360
+      "source_path_id": 62086
     },
     {
       "map_id": "TrainingGrounds",
@@ -4159,7 +4159,7 @@
       "boss_replaces_last_wave": true,
       "supported": false,
       "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
-      "source_path_id": 60362
+      "source_path_id": 62088
     },
     {
       "map_id": "TreasureBarrens",
@@ -4262,7 +4262,7 @@
       "boss_replaces_last_wave": true,
       "supported": false,
       "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
-      "source_path_id": 60363
+      "source_path_id": 62089
     },
     {
       "map_id": "TreasureForest",
@@ -4365,7 +4365,7 @@
       "boss_replaces_last_wave": true,
       "supported": false,
       "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
-      "source_path_id": 60364
+      "source_path_id": 62090
     },
     {
       "map_id": "TreasureKeep",
@@ -4468,7 +4468,7 @@
       "boss_replaces_last_wave": true,
       "supported": false,
       "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
-      "source_path_id": 60365
+      "source_path_id": 62091
     },
     {
       "map_id": "Volcano1",
@@ -4514,7 +4514,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60366
+      "source_path_id": 62092
     },
     {
       "map_id": "Volcano2",
@@ -4560,7 +4560,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60367
+      "source_path_id": 62093
     },
     {
       "map_id": "Volcano3",
@@ -4616,7 +4616,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60368
+      "source_path_id": 62094
     },
     {
       "map_id": "Volcano4",
@@ -4693,7 +4693,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60369
+      "source_path_id": 62095
     },
     {
       "map_id": "Volcano5",
@@ -4744,7 +4744,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60370
+      "source_path_id": 62096
     },
     {
       "map_id": "Volcano6",
@@ -4800,7 +4800,7 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60371
+      "source_path_id": 62097
     },
     {
       "map_id": "Volcano7",
@@ -4883,7 +4883,74 @@
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 60372
+      "source_path_id": 62098
+    },
+    {
+      "map_id": "WorldBossPumpkin",
+      "stage": "南瓜王",
+      "family": "WorldBossPumpkin",
+      "map_type": 4,
+      "min_level": 70,
+      "max_level": 70,
+      "waves": 6,
+      "prerequisite": "Volcano7",
+      "requirements": [],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "ZombieWolf",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Stumplin",
+              "count": 8,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "ZombieWolf",
+              "count": 3,
+              "row": 0
+            },
+            {
+              "enemy_id": "Stumplin",
+              "count": 6,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "WorldBossPumpkin",
+            "count": 1,
+            "row": 1
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "boss_replaces_last_wave": true,
+      "supported": false,
+      "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
+      "source_path_id": 62099
     }
   ],
   "enemies": {
@@ -4898,7 +4965,7 @@
       "attack_speed": 1.5,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 60993
+      "source_path_id": 62737
     },
     "DefiledKeepScarab": {
       "enemy_id": "DefiledKeepScarab",
@@ -4911,7 +4978,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61064
+      "source_path_id": 62812
     },
     "DefiledKeepDragon": {
       "enemy_id": "DefiledKeepDragon",
@@ -4924,7 +4991,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 6500,
       "high_difficulty_damage": 38,
-      "source_path_id": 61047
+      "source_path_id": 62794
     },
     "DefiledKeepOoze": {
       "enemy_id": "DefiledKeepOoze",
@@ -4937,7 +5004,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61010
+      "source_path_id": 62755
     },
     "DefiledKeepReaper": {
       "enemy_id": "DefiledKeepReaper",
@@ -4950,7 +5017,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 7500,
       "high_difficulty_damage": 38,
-      "source_path_id": 61021
+      "source_path_id": 62766
     },
     "DefiledKeepAxemaster": {
       "enemy_id": "DefiledKeepAxemaster",
@@ -4963,7 +5030,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 60995
+      "source_path_id": 62739
     },
     "VolcanoCinderlash": {
       "enemy_id": "VolcanoCinderlash",
@@ -4976,7 +5043,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 62459
+      "source_path_id": 64227
     },
     "VolcanoEmberBat": {
       "enemy_id": "VolcanoEmberBat",
@@ -4989,7 +5056,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 62407
+      "source_path_id": 64174
     },
     "VolcanoMagmaGolem": {
       "enemy_id": "VolcanoMagmaGolem",
@@ -5002,7 +5069,7 @@
       "attack_speed": 0.6000000238418579,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61052
+      "source_path_id": 62800
     },
     "VolcanoDemonLord": {
       "enemy_id": "VolcanoDemonLord",
@@ -5015,7 +5082,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 11000,
       "high_difficulty_damage": 38,
-      "source_path_id": 62065
+      "source_path_id": 63822
     },
     "VolcanoDragon": {
       "enemy_id": "VolcanoDragon",
@@ -5028,7 +5095,7 @@
       "attack_speed": 0.6000000238418579,
       "high_difficulty_health": 7000,
       "high_difficulty_damage": 34,
-      "source_path_id": 61506
+      "source_path_id": 63254
     },
     "OrcWarrior": {
       "enemy_id": "OrcWarrior",
@@ -5041,7 +5108,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61612
+      "source_path_id": 63359
     },
     "TreasureForestDragon": {
       "enemy_id": "TreasureForestDragon",
@@ -5054,7 +5121,7 @@
       "attack_speed": 1.5,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61613
+      "source_path_id": 63361
     },
     "SnowHillFrostDragon": {
       "enemy_id": "SnowHillFrostDragon",
@@ -5067,7 +5134,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 6000,
       "high_difficulty_damage": 30,
-      "source_path_id": 61614
+      "source_path_id": 63362
     },
     "Wolf": {
       "enemy_id": "Wolf",
@@ -5080,7 +5147,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61615
+      "source_path_id": 63363
     },
     "Dragon": {
       "enemy_id": "Dragon",
@@ -5093,7 +5160,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61616
+      "source_path_id": 63364
     },
     "RedDesertImp": {
       "enemy_id": "RedDesertImp",
@@ -5106,7 +5173,7 @@
       "attack_speed": 0.6499999761581421,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61617
+      "source_path_id": 63365
     },
     "TreasureBarrensDragonBoss": {
       "enemy_id": "TreasureBarrensDragonBoss",
@@ -5119,7 +5186,7 @@
       "attack_speed": 1.5,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61618
+      "source_path_id": 63366
     },
     "BeachCrabBoss": {
       "enemy_id": "BeachCrabBoss",
@@ -5132,7 +5199,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61619
+      "source_path_id": 63367
     },
     "DesertEagle": {
       "enemy_id": "DesertEagle",
@@ -5145,7 +5212,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61620
+      "source_path_id": 63368
     },
     "BeachSerpent": {
       "enemy_id": "BeachSerpent",
@@ -5158,7 +5225,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61621
+      "source_path_id": 63369
     },
     "RedForestHobgoblin": {
       "enemy_id": "RedForestHobgoblin",
@@ -5171,7 +5238,7 @@
       "attack_speed": 1.0,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61622
+      "source_path_id": 63370
     },
     "SnowHillZombieWarrior": {
       "enemy_id": "SnowHillZombieWarrior",
@@ -5184,7 +5251,7 @@
       "attack_speed": 0.6000000238418579,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61623
+      "source_path_id": 63371
     },
     "Boar": {
       "enemy_id": "Boar",
@@ -5197,7 +5264,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61624
+      "source_path_id": 63372
     },
     "TreasureKeepDragonBoss": {
       "enemy_id": "TreasureKeepDragonBoss",
@@ -5210,7 +5277,7 @@
       "attack_speed": 1.5,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61625
+      "source_path_id": 63373
     },
     "SnowHillRockElemental": {
       "enemy_id": "SnowHillRockElemental",
@@ -5223,7 +5290,7 @@
       "attack_speed": 0.6000000238418579,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61626
+      "source_path_id": 63374
     },
     "SkeletonArcher": {
       "enemy_id": "SkeletonArcher",
@@ -5236,7 +5303,7 @@
       "attack_speed": 0.8299999833106995,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61627
+      "source_path_id": 63375
     },
     "RedDesertRockGolem": {
       "enemy_id": "RedDesertRockGolem",
@@ -5249,7 +5316,7 @@
       "attack_speed": 1.0,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61628
+      "source_path_id": 63376
     },
     "BeachHermitCrab_BossMinion": {
       "enemy_id": "BeachHermitCrab_BossMinion",
@@ -5262,7 +5329,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61629
+      "source_path_id": 63377
     },
     "DesertHarpy": {
       "enemy_id": "DesertHarpy",
@@ -5275,7 +5342,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61630
+      "source_path_id": 63378
     },
     "RedForestGiant": {
       "enemy_id": "RedForestGiant",
@@ -5288,7 +5355,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61631
+      "source_path_id": 63379
     },
     "Ogre": {
       "enemy_id": "Ogre",
@@ -5301,7 +5368,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61632
+      "source_path_id": 63380
     },
     "Stumplin": {
       "enemy_id": "Stumplin",
@@ -5314,7 +5381,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61633
+      "source_path_id": 63381
     },
     "ZombieWolf": {
       "enemy_id": "ZombieWolf",
@@ -5327,7 +5394,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61634
+      "source_path_id": 63382
     },
     "RedDesertSatyr": {
       "enemy_id": "RedDesertSatyr",
@@ -5340,7 +5407,7 @@
       "attack_speed": 1.5,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61635
+      "source_path_id": 63383
     },
     "DarkElfMage": {
       "enemy_id": "DarkElfMage",
@@ -5353,7 +5420,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 4000,
       "high_difficulty_damage": 26,
-      "source_path_id": 61636
+      "source_path_id": 63384
     },
     "DesertWasp": {
       "enemy_id": "DesertWasp",
@@ -5366,7 +5433,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61637
+      "source_path_id": 63385
     },
     "ForestSpiderKing": {
       "enemy_id": "ForestSpiderKing",
@@ -5379,7 +5446,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61638
+      "source_path_id": 63386
     },
     "BeachHermitCrab": {
       "enemy_id": "BeachHermitCrab",
@@ -5392,7 +5459,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61639
+      "source_path_id": 63387
     },
     "SnowHillWhelp": {
       "enemy_id": "SnowHillWhelp",
@@ -5405,7 +5472,7 @@
       "attack_speed": 1.0,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61640
+      "source_path_id": 63388
     },
     "RedForestTiger": {
       "enemy_id": "RedForestTiger",
@@ -5418,7 +5485,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61641
+      "source_path_id": 63389
     },
     "RedForestBear": {
       "enemy_id": "RedForestBear",
@@ -5431,7 +5498,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61642
+      "source_path_id": 63390
     },
     "SkeletonWarrior": {
       "enemy_id": "SkeletonWarrior",
@@ -5444,7 +5511,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61643
+      "source_path_id": 63391
     },
     "BeachTurtleBoss": {
       "enemy_id": "BeachTurtleBoss",
@@ -5457,7 +5524,7 @@
       "attack_speed": 0.4000000059604645,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61644
+      "source_path_id": 63392
     },
     "Raptor": {
       "enemy_id": "Raptor",
@@ -5470,7 +5537,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 4000,
       "high_difficulty_damage": 24,
-      "source_path_id": 61645
+      "source_path_id": 63393
     },
     "RedDesertAirWarlord": {
       "enemy_id": "RedDesertAirWarlord",
@@ -5483,7 +5550,7 @@
       "attack_speed": 1.0,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61646
+      "source_path_id": 63394
     },
     "RedForestDragon": {
       "enemy_id": "RedForestDragon",
@@ -5496,7 +5563,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61647
+      "source_path_id": 63395
     },
     "Spider": {
       "enemy_id": "Spider",
@@ -5509,7 +5576,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61648
+      "source_path_id": 63396
     },
     "DesertManticoraBoss": {
       "enemy_id": "DesertManticoraBoss",
@@ -5522,7 +5589,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61649
+      "source_path_id": 63397
     },
     "BeachNaga": {
       "enemy_id": "BeachNaga",
@@ -5535,7 +5602,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61650
+      "source_path_id": 63398
     },
     "TreasureForestDragonBoss": {
       "enemy_id": "TreasureForestDragonBoss",
@@ -5548,7 +5615,7 @@
       "attack_speed": 1.5,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61651
+      "source_path_id": 63399
     },
     "BeachSquid": {
       "enemy_id": "BeachSquid",
@@ -5561,7 +5628,20 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61652
+      "source_path_id": 63400
+    },
+    "WorldBossPumpkin": {
+      "enemy_id": "WorldBossPumpkin",
+      "base_level": 1,
+      "base_health": 150000,
+      "base_damage": 21,
+      "move_speed": 2.0,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 1.5,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 63401
     },
     "GoblinWarrior": {
       "enemy_id": "GoblinWarrior",
@@ -5574,7 +5654,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61654
+      "source_path_id": 63403
     },
     "BigTreant": {
       "enemy_id": "BigTreant",
@@ -5587,7 +5667,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61655
+      "source_path_id": 63404
     },
     "Werewolf": {
       "enemy_id": "Werewolf",
@@ -5600,7 +5680,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 4400,
       "high_difficulty_damage": 28,
-      "source_path_id": 61656
+      "source_path_id": 63405
     },
     "DesertKoboldWarrior": {
       "enemy_id": "DesertKoboldWarrior",
@@ -5613,7 +5693,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61657
+      "source_path_id": 63406
     },
     "PoisonSpider": {
       "enemy_id": "PoisonSpider",
@@ -5626,7 +5706,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61658
+      "source_path_id": 63407
     },
     "TreasureForestDragon2": {
       "enemy_id": "TreasureForestDragon2",
@@ -5639,7 +5719,7 @@
       "attack_speed": 1.5,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61659
+      "source_path_id": 63408
     },
     "RedDesertCrocodile": {
       "enemy_id": "RedDesertCrocodile",
@@ -5652,7 +5732,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61660
+      "source_path_id": 63409
     },
     "SnowHillIceHound": {
       "enemy_id": "SnowHillIceHound",
@@ -5665,7 +5745,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61661
+      "source_path_id": 63410
     },
     "RedForestFaeDragon": {
       "enemy_id": "RedForestFaeDragon",
@@ -5678,7 +5758,7 @@
       "attack_speed": 1.0,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61662
+      "source_path_id": 63411
     },
     "SnowHillSlime": {
       "enemy_id": "SnowHillSlime",
@@ -5691,7 +5771,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61663
+      "source_path_id": 63412
     },
     "DesertKoboldThief": {
       "enemy_id": "DesertKoboldThief",
@@ -5704,7 +5784,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61664
+      "source_path_id": 63413
     },
     "RedDesertSerparmat": {
       "enemy_id": "RedDesertSerparmat",
@@ -5717,7 +5797,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61665
+      "source_path_id": 63414
     },
     "VolcanoHellguard": {
       "enemy_id": "VolcanoHellguard",
@@ -5730,7 +5810,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 61881
+      "source_path_id": 63634
     }
   },
   "evidence": {

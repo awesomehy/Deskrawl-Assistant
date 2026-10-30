@@ -161,10 +161,14 @@ def _rune_action(config, state, rows, allowed, free):
             continue
         a, b = RUNE_QUALITIES.index(source), RUNE_QUALITIES.index(target)
         chance = recipe.get('chance')
+        cost = recipe.get('gold_cost', 0)
+        gold = state.get('gold')
         if (not a < b <= maximum or b != a + 1 or recipe.get('input_count') != 9
                 or recipe.get('output_count') != 1 or not recipe.get('recipe_id')
                 or type(chance) not in (int, float) or not 0 < chance <= 1
-                or recipe.get('available') is False):
+                or recipe.get('available') is False
+                or type(cost) is not int or cost < 0
+                or cost and (type(gold) is not int or gold < cost)):
             continue
         candidates = [row for row in rows if _eligible(row, 'rune', allowed)
                       and rune_quality(row) == source and item_key(row) not in excluded

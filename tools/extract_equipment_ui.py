@@ -8,6 +8,7 @@ import UnityPy
 
 BASE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BASE / 'tools'))
+from item_asset_layout import item_layout
 from inspect_affix_groups import compressed_integer, METADATA_HASH
 
 
@@ -71,8 +72,9 @@ def main():
         p = (32+n+3)&~3
         if len(data) < p+144: raise ValueError('Truncated equipment')
         icon_file, icon_id = struct.unpack_from('<iq', data, p)
-        slot = struct.unpack_from('<i', data, p+132)[0]
-        classes = struct.unpack_from('<i', data, p+140)[0]
+        layout = item_layout(data[p:])
+        slot = struct.unpack_from('<i', data, p+layout['slot'])[0]
+        classes = struct.unpack_from('<i', data, p+layout['class_mask'])[0]
         rarity = struct.unpack_from('<i', data, p+16)[0]
         if slot not in slots or not 0 <= classes <= 15 or name in rows: raise ValueError('Invalid equipment fields')
         if icon_file == 0:

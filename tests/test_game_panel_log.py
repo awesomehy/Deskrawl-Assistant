@@ -95,8 +95,8 @@ class ReaderTests(unittest.TestCase):
 
     def raw_read(self,address,size):
         if address==7016:return self.raw
-        colors={6208:(232/255,232/255,232/255,1),6224:(.4,.5,1,1),6240:(1,1,0,1),
-                6256:(1,.5,0,1),6272:(1,219/255,154/255,1)}
+        colors={6216:(232/255,232/255,232/255,1),6232:(.4,.5,1,1),6248:(1,1,0,1),
+                6264:(1,.5,0,1),6280:(1,219/255,154/255,1)}
         return struct.pack('<ffff',*colors[address])
 
     def read_log(self,cache=None):

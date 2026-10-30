@@ -4,7 +4,9 @@
   function select(items,filters={},currentClass=0){
     const f=filters, query=String(f.search||'').trim().toLowerCase(), classMask=f.class==='current'?currentClass:Number(f.class||0);
     const view=items.filter(i=>{
-      if(f.container&&i.container!==f.container||f.kind&&i.kind!==f.kind)return false;
+      const minion=i.is_minion_equipment===true||i.slot==='Minion'||i.equip_slot===12;
+      if(f.container&&i.container!==f.container)return false;
+      if(f.kind&&(f.kind==='minion_equipment'?!minion:f.kind==='equipment'?i.kind!=='equipment'||minion:i.kind!==f.kind))return false;
       if(f.tradable&&i.market_eligible!==true)return false;
       if(Array.isArray(f.containers)&&!f.containers.includes(i.container))return false;
       if(Array.isArray(f.locks)&&(!i.is_equipment||!f.locks.some(v=>v==='locked'?i.locked===true:i.locked===false)))return false;

@@ -59,7 +59,7 @@ class ReconnectRuntime:
             self.actions.dispatcher.verify()
         read = _Read(self.reader, self.profile)
         manager = read.singleton('GameManager')
-        game_state = read.integer(manager + 168)
+        game_state = read.integer(manager + 176)
         popup = read.singleton('PopupPanel')
         popup_visible = self._active(read, read.ptr(popup + 32))
         text = self._popup_text(read, read.ptr(popup + 40)) if popup_visible else ''

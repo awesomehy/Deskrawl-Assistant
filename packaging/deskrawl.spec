@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import ssl
 from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
 
 root = Path(SPECPATH).parent
@@ -29,6 +30,16 @@ datas.append((str(root / 'deskrawl_assistant' / 'web'), 'deskrawl_assistant/web'
 datas.append((str(root / 'deskrawl_assistant' / 'update_replace.ps1'), 'deskrawl_assistant'))
 datas += collect_data_files('webview', subdir='js')
 
+# Some Python distributions load an auxiliary public trust policy from ssl.py.
+# Keep that dependency beside the frozen module; do not copy user certificates
+# or change certificate verification to work around missing runtime files.
+ssl_source = Path(ssl.__file__)
+if 'codex-rejected-cas.pem' in ssl_source.read_text(encoding='utf-8'):
+    ssl_policy = ssl_source.with_name('codex-rejected-cas.pem')
+    if not ssl_policy.is_file():
+        raise RuntimeError('Python SSL runtime policy file is missing.')
+    datas.append((str(ssl_policy), '.'))
+
 a = Analysis(
     [str(root / 'run_assistant.pyw')],
     pathex=[str(root)],
@@ -49,7 +60,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='Deskrawl装备助手-v1.4.6',
+    name='Deskrawl装备助手-v1.5.0',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

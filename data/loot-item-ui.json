@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "metadata_sha256": "93f914c1e0119b82c98ca0647542c3afe0fade976d456f2212b03d699e6813de",
-  "resources_sha256": "aac3f4d0e4502ec8e58b7a592cdb83ef641cddb7b24ed8e244e913212ddcb9c1",
+  "metadata_sha256": "26de344c09a88a59d19b81053c62f0612cc748206799e9f28297db4d72ad33d5",
+  "resources_sha256": "2ae84fe8a3873a2ebb2bef42497c89ee4323c59153cf38b2931b5252c5e732fc",
   "source": "All shipped ItemData/GemData/RuneData assets; IDs are asset names, not inferred drop probabilities.",
   "rarity_colors": {
     "common": "#e8e8e8",
@@ -34,7 +34,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59974
+      "source_path_id": 61686
     },
     "AttackSpeedPotion1": {
       "name": "迅捷合剂",
@@ -57,7 +57,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59975
+      "source_path_id": 61687
     },
     "AttackSpeedPotion2": {
       "name": "高级迅捷合剂",
@@ -80,7 +80,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59976
+      "source_path_id": 61688
     },
     "BeachCrabBossMat": {
       "name": "怒潮巨螯",
@@ -103,7 +103,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60077
+      "source_path_id": 61797
     },
     "BigTreantMat": {
       "name": "古橡树皮",
@@ -126,7 +126,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60078
+      "source_path_id": 61798
     },
     "CinderbloodPotion": {
       "name": "高级活力合剂",
@@ -149,7 +149,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59977
+      "source_path_id": 61689
     },
     "CommonAxe1": {
       "name": "樵夫小斧",
@@ -164,7 +164,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60013
+      "source_path_id": 61733
     },
     "CommonBelt1": {
       "name": "破旧铁扣腰带",
@@ -179,7 +179,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4930
+      "source_path_id": 4960
     },
     "CommonBelt2": {
       "name": "磨损皮革带",
@@ -194,7 +194,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4931
+      "source_path_id": 4961
     },
     "CommonBelt3": {
       "name": "简单皮带",
@@ -209,7 +209,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4932
+      "source_path_id": 4962
     },
     "CommonBelt4": {
       "name": "打结布腰带",
@@ -224,7 +224,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4933
+      "source_path_id": 4963
     },
     "CommonBoots1": {
       "name": "破旧旅行靴",
@@ -239,7 +239,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4944
+      "source_path_id": 4974
     },
     "CommonBoots2": {
       "name": "农夫脚布",
@@ -254,7 +254,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4945
+      "source_path_id": 4975
     },
     "CommonBoots3": {
       "name": "皮革骑行靴",
@@ -269,7 +269,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4946
+      "source_path_id": 4976
     },
     "CommonBoots4": {
       "name": "破旧皮凉鞋",
@@ -284,7 +284,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4947
+      "source_path_id": 4977
     },
     "CommonBow1": {
       "name": "简易木弓",
@@ -299,7 +299,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60014
+      "source_path_id": 61734
     },
     "CommonChestArmor1": {
       "name": "农夫短衫",
@@ -314,7 +314,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4960
+      "source_path_id": 4990
     },
     "CommonChestArmor2": {
       "name": "破旧连帽皮甲",
@@ -329,7 +329,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4961
+      "source_path_id": 4991
     },
     "CommonChestArmor3": {
       "name": "填充袄子",
@@ -344,7 +344,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4962
+      "source_path_id": 4992
     },
     "CommonChestArmor4": {
       "name": "乡野束腰背心",
@@ -359,7 +359,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4963
+      "source_path_id": 4993
     },
     "CommonFish1": {
       "name": "白骨鱼骸",
@@ -382,7 +382,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60017
+      "source_path_id": 61737
     },
     "CommonFish2": {
       "name": "条纹文蛤",
@@ -405,7 +405,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60018
+      "source_path_id": 61738
     },
     "CommonFish3": {
       "name": "霜蚀鱼骨",
@@ -428,7 +428,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60019
+      "source_path_id": 61739
     },
     "CommonGloves1": {
       "name": "破旧皮革手套",
@@ -443,7 +443,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4981
+      "source_path_id": 5011
     },
     "CommonGloves2": {
       "name": "铆钉兽皮手套",
@@ -458,7 +458,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4982
+      "source_path_id": 5012
     },
     "CommonGloves3": {
       "name": "素布手套",
@@ -473,7 +473,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4983
+      "source_path_id": 5013
     },
     "CommonGloves4": {
       "name": "露指劳作手套",
@@ -488,7 +488,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4984
+      "source_path_id": 5014
     },
     "CommonHelm1": {
       "name": "流浪者宽边帽",
@@ -503,7 +503,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5000
+      "source_path_id": 5030
     },
     "CommonHelm2": {
       "name": "破旧皮革头巾",
@@ -518,7 +518,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5001
+      "source_path_id": 5031
     },
     "CommonHelm3": {
       "name": "填充皮革头盔",
@@ -533,7 +533,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5002
+      "source_path_id": 5032
     },
     "CommonHelm4": {
       "name": "素布软帽",
@@ -548,7 +548,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5003
+      "source_path_id": 5033
     },
     "CommonMace1": {
       "name": "铁刺锤",
@@ -563,7 +563,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5101
+      "source_path_id": 5135
     },
     "CommonNeck1": {
       "name": "黑玉泪滴吊坠",
@@ -578,7 +578,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5024
+      "source_path_id": 5058
     },
     "CommonNeck2": {
       "name": "铁链项链",
@@ -593,7 +593,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5025
+      "source_path_id": 5059
     },
     "CommonNeck3": {
       "name": "简单银吊坠",
@@ -608,7 +608,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5026
+      "source_path_id": 5060
     },
     "CommonNeck4": {
       "name": "朝圣者十字坠",
@@ -623,7 +623,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5027
+      "source_path_id": 5061
     },
     "CommonPant1": {
       "name": "亚麻马裤",
@@ -638,7 +638,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5042
+      "source_path_id": 5076
     },
     "CommonPant2": {
       "name": "补丁长裤",
@@ -653,7 +653,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5043
+      "source_path_id": 5077
     },
     "CommonPant3": {
       "name": "黑色布裤",
@@ -668,7 +668,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5044
+      "source_path_id": 5078
     },
     "CommonPant4": {
       "name": "帆布短裤",
@@ -683,7 +683,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5045
+      "source_path_id": 5079
     },
     "CommonRing1": {
       "name": "朴素铁环",
@@ -698,7 +698,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5061
+      "source_path_id": 5095
     },
     "CommonRing2": {
       "name": "铜环",
@@ -713,7 +713,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5062
+      "source_path_id": 5096
     },
     "CommonRing3": {
       "name": "锤制银戒指",
@@ -728,7 +728,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5063
+      "source_path_id": 5097
     },
     "CommonRing4": {
       "name": "青铜指环",
@@ -743,7 +743,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5064
+      "source_path_id": 5098
     },
     "CommonShoulder1": {
       "name": "皮革肩甲",
@@ -758,7 +758,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5081
+      "source_path_id": 5115
     },
     "CommonShoulder2": {
       "name": "破旧护肩",
@@ -773,7 +773,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5082
+      "source_path_id": 5116
     },
     "CommonShoulder3": {
       "name": "填充护肩",
@@ -788,7 +788,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5083
+      "source_path_id": 5117
     },
     "CommonShoulder4": {
       "name": "搭扣皮革肩甲",
@@ -803,7 +803,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5084
+      "source_path_id": 5118
     },
     "CommonStaff1": {
       "name": "带钩青铜法杖",
@@ -818,7 +818,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60015
+      "source_path_id": 61735
     },
     "CommonStaff2": {
       "name": "缠皮长棍",
@@ -833,7 +833,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60016
+      "source_path_id": 61736
     },
     "CommonSword1": {
       "name": "铁制武装剑",
@@ -848,7 +848,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5102
+      "source_path_id": 5136
     },
     "CrimsonHuntPotion": {
       "name": "高级杀戮合剂",
@@ -871,7 +871,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59978
+      "source_path_id": 61690
     },
     "CritPotion1": {
       "name": "残酷合剂",
@@ -894,7 +894,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59979
+      "source_path_id": 61691
     },
     "CritPotion2": {
       "name": "高级残酷合剂",
@@ -917,7 +917,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59980
+      "source_path_id": 61692
     },
     "DefiledKeepDragonMat": {
       "name": "污秽古龙鳞",
@@ -940,7 +940,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60079
+      "source_path_id": 61799
     },
     "DesertManticoraBossMat": {
       "name": "蝎狮毒囊",
@@ -963,7 +963,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60080
+      "source_path_id": 61800
     },
     "DivineBack1": {
       "name": "圣光之翼",
@@ -978,7 +978,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4923
+      "source_path_id": 4951
     },
     "DivineBack2": {
       "name": "灰烬领主之翼",
@@ -993,7 +993,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59991
+      "source_path_id": 61707
     },
     "DivineBow1": {
       "name": "紫霄之弓",
@@ -1018,7 +1018,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5103
+      "source_path_id": 5137
     },
     "DivineHelm1": {
       "name": "荣耀角斗士头盔",
@@ -1043,7 +1043,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5004
+      "source_path_id": 5034
     },
     "DivineHelm2": {
       "name": "不朽者的面容",
@@ -1068,7 +1068,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5005,
+      "source_path_id": 5035,
       "comparison_effects": [
         {
           "id": "DivineHelm2_DamageReduction",
@@ -1108,7 +1108,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5006
+      "source_path_id": 5036
     },
     "DivineMace1": {
       "name": "祖母之锤",
@@ -1133,7 +1133,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5104,
+      "source_path_id": 5138,
       "comparison_effects": [
         {
           "id": "DivineMace1_Crit",
@@ -1176,7 +1176,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5065
+      "source_path_id": 5099
     },
     "DivineRing2": {
       "name": "薛定谔之戒",
@@ -1201,7 +1201,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5066
+      "source_path_id": 5100
     },
     "DivineSword1": {
       "name": "裂魂之刃",
@@ -1234,7 +1234,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5105
+      "source_path_id": 5139
     },
     "DodgePotion1": {
       "name": "疾风合剂",
@@ -1257,7 +1257,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59981
+      "source_path_id": 61693
     },
     "ExpPotion1": {
       "name": "经验药水",
@@ -1280,7 +1280,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59982
+      "source_path_id": 61694
     },
     "FrostmindPotion": {
       "name": "高级专注合剂",
@@ -1303,7 +1303,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59983
+      "source_path_id": 61695
     },
     "GemAmethyst1": {
       "name": "粗糙的紫水晶球",
@@ -1361,7 +1361,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60032
+      "source_path_id": 61752
     },
     "GemAmethyst2": {
       "name": "碎裂的紫水晶泪滴",
@@ -1419,7 +1419,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60033
+      "source_path_id": 61753
     },
     "GemAmethyst3": {
       "name": "粗砺的紫水晶方块",
@@ -1477,7 +1477,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60034
+      "source_path_id": 61754
     },
     "GemAmethyst4": {
       "name": "抛光的紫水晶菱形",
@@ -1535,7 +1535,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60035
+      "source_path_id": 61755
     },
     "GemAmethyst5": {
       "name": "无瑕的紫水晶六边形",
@@ -1593,7 +1593,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60036
+      "source_path_id": 61756
     },
     "GemAmethyst6": {
       "name": "璀璨的紫水晶八边形",
@@ -1651,7 +1651,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60037
+      "source_path_id": 61757
     },
     "GemDiamond1": {
       "name": "粗糙的钻石球",
@@ -1709,7 +1709,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60038
+      "source_path_id": 61758
     },
     "GemDiamond2": {
       "name": "碎裂的钻石泪滴",
@@ -1767,7 +1767,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60039
+      "source_path_id": 61759
     },
     "GemDiamond3": {
       "name": "粗砺的钻石方块",
@@ -1825,7 +1825,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60040
+      "source_path_id": 61760
     },
     "GemDiamond4": {
       "name": "抛光的钻石菱形",
@@ -1883,7 +1883,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60041
+      "source_path_id": 61761
     },
     "GemDiamond5": {
       "name": "无瑕的钻石六边形",
@@ -1941,7 +1941,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60042
+      "source_path_id": 61762
     },
     "GemDiamond6": {
       "name": "璀璨的钻石八边形",
@@ -1999,7 +1999,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60043
+      "source_path_id": 61763
     },
     "GemEmerald1": {
       "name": "粗糙的祖母绿球",
@@ -2057,7 +2057,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60044
+      "source_path_id": 61764
     },
     "GemEmerald2": {
       "name": "碎裂的祖母绿泪滴",
@@ -2115,7 +2115,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60045
+      "source_path_id": 61765
     },
     "GemEmerald3": {
       "name": "粗砺的祖母绿方块",
@@ -2173,7 +2173,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60046
+      "source_path_id": 61766
     },
     "GemEmerald4": {
       "name": "抛光的祖母绿菱形",
@@ -2231,7 +2231,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60047
+      "source_path_id": 61767
     },
     "GemEmerald5": {
       "name": "无瑕的祖母绿六边形",
@@ -2289,7 +2289,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60048
+      "source_path_id": 61768
     },
     "GemEmerald6": {
       "name": "璀璨的祖母绿八边形",
@@ -2347,7 +2347,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60049
+      "source_path_id": 61769
     },
     "GemRuby1": {
       "name": "粗糙的红宝石球",
@@ -2405,7 +2405,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60050
+      "source_path_id": 61770
     },
     "GemRuby2": {
       "name": "碎裂的红宝石泪滴",
@@ -2463,7 +2463,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60051
+      "source_path_id": 61771
     },
     "GemRuby3": {
       "name": "粗砺的红宝石方块",
@@ -2521,7 +2521,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60052
+      "source_path_id": 61772
     },
     "GemRuby4": {
       "name": "抛光的红宝石菱形",
@@ -2579,7 +2579,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60053
+      "source_path_id": 61773
     },
     "GemRuby5": {
       "name": "无瑕的红宝石六边形",
@@ -2637,7 +2637,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60054
+      "source_path_id": 61774
     },
     "GemRuby6": {
       "name": "璀璨的红宝石八边形",
@@ -2695,7 +2695,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60055
+      "source_path_id": 61775
     },
     "GemSapphire1": {
       "name": "粗糙的蓝宝石球",
@@ -2753,7 +2753,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60056
+      "source_path_id": 61776
     },
     "GemSapphire2": {
       "name": "碎裂的蓝宝石泪滴",
@@ -2811,7 +2811,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60057
+      "source_path_id": 61777
     },
     "GemSapphire3": {
       "name": "粗砺的蓝宝石方块",
@@ -2869,7 +2869,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60058
+      "source_path_id": 61778
     },
     "GemSapphire4": {
       "name": "抛光的蓝宝石菱形",
@@ -2927,7 +2927,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60059
+      "source_path_id": 61779
     },
     "GemSapphire5": {
       "name": "无瑕的蓝宝石六边形",
@@ -2985,7 +2985,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60060
+      "source_path_id": 61780
     },
     "GemSapphire6": {
       "name": "璀璨的蓝宝石八边形",
@@ -3043,7 +3043,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60061
+      "source_path_id": 61781
     },
     "GemTopaz1": {
       "name": "粗糙的黄玉球",
@@ -3101,7 +3101,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60062
+      "source_path_id": 61782
     },
     "GemTopaz2": {
       "name": "碎裂的黄玉泪滴",
@@ -3159,7 +3159,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60063
+      "source_path_id": 61783
     },
     "GemTopaz3": {
       "name": "粗砺的黄玉方块",
@@ -3217,7 +3217,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60064
+      "source_path_id": 61784
     },
     "GemTopaz4": {
       "name": "抛光的黄玉菱形",
@@ -3275,7 +3275,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60065
+      "source_path_id": 61785
     },
     "GemTopaz5": {
       "name": "无瑕的黄玉六边形",
@@ -3333,7 +3333,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60066
+      "source_path_id": 61786
     },
     "GemTopaz6": {
       "name": "璀璨的黄玉八边形",
@@ -3391,7 +3391,7 @@
       "source_effect_ids": [],
       "source_class": "GemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60067
+      "source_path_id": 61787
     },
     "GoldBar": {
       "name": "金条",
@@ -3414,7 +3414,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59972
+      "source_path_id": 61684
     },
     "GoldPotion1": {
       "name": "黄金药水",
@@ -3437,7 +3437,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59984
+      "source_path_id": 61696
     },
     "HunterSetRune1_1": {
       "name": "设阱者的传承 I",
@@ -3477,7 +3477,7 @@
           "title": "4 件套效果",
           "values": [],
           "texts": [
-            "被你的陷阱命中的敌人获得你的死亡印记，持续3.5秒，使你对其暴击几率提高30%。"
+            "被你的陷阱命中的敌人获得你的死亡印记，持续3.5秒，使你对其暴击几率提高30%、暴击伤害提高120%。"
           ]
         },
         {
@@ -3492,7 +3492,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5132
+      "source_path_id": 5166
     },
     "HunterSetRune1_2": {
       "name": "设阱者的传承 II",
@@ -3532,7 +3532,7 @@
           "title": "4 件套效果",
           "values": [],
           "texts": [
-            "被你的陷阱命中的敌人获得你的死亡印记，持续3.5秒，使你对其暴击几率提高30%。"
+            "被你的陷阱命中的敌人获得你的死亡印记，持续3.5秒，使你对其暴击几率提高30%、暴击伤害提高120%。"
           ]
         },
         {
@@ -3547,7 +3547,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5133
+      "source_path_id": 5167
     },
     "HunterSetRune1_3": {
       "name": "设阱者的传承 III",
@@ -3592,7 +3592,7 @@
           "title": "4 件套效果",
           "values": [],
           "texts": [
-            "被你的陷阱命中的敌人获得你的死亡印记，持续3.5秒，使你对其暴击几率提高30%。"
+            "被你的陷阱命中的敌人获得你的死亡印记，持续3.5秒，使你对其暴击几率提高30%、暴击伤害提高120%。"
           ]
         },
         {
@@ -3607,7 +3607,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5134
+      "source_path_id": 5168
     },
     "HunterSetRune1_4": {
       "name": "设阱者的传承 IV",
@@ -3652,7 +3652,7 @@
           "title": "4 件套效果",
           "values": [],
           "texts": [
-            "被你的陷阱命中的敌人获得你的死亡印记，持续3.5秒，使你对其暴击几率提高30%。"
+            "被你的陷阱命中的敌人获得你的死亡印记，持续3.5秒，使你对其暴击几率提高30%、暴击伤害提高120%。"
           ]
         },
         {
@@ -3667,7 +3667,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5135
+      "source_path_id": 5169
     },
     "HunterSetRune1_5": {
       "name": "设阱者的传承 V",
@@ -3712,7 +3712,7 @@
           "title": "4 件套效果",
           "values": [],
           "texts": [
-            "被你的陷阱命中的敌人获得你的死亡印记，持续3.5秒，使你对其暴击几率提高30%。"
+            "被你的陷阱命中的敌人获得你的死亡印记，持续3.5秒，使你对其暴击几率提高30%、暴击伤害提高120%。"
           ]
         },
         {
@@ -3727,7 +3727,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5136
+      "source_path_id": 5170
     },
     "HunterSetRune1_6": {
       "name": "设阱者的传承 VI",
@@ -3772,7 +3772,7 @@
           "title": "4 件套效果",
           "values": [],
           "texts": [
-            "被你的陷阱命中的敌人获得你的死亡印记，持续3.5秒，使你对其暴击几率提高30%。"
+            "被你的陷阱命中的敌人获得你的死亡印记，持续3.5秒，使你对其暴击几率提高30%、暴击伤害提高120%。"
           ]
         },
         {
@@ -3787,7 +3787,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5137
+      "source_path_id": 5171
     },
     "HunterSetRune2_1": {
       "name": "神射手的决心 I",
@@ -3842,7 +3842,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5138
+      "source_path_id": 5172
     },
     "HunterSetRune2_2": {
       "name": "神射手的决心 II",
@@ -3902,7 +3902,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5139
+      "source_path_id": 5173
     },
     "HunterSetRune2_3": {
       "name": "神射手的决心 III",
@@ -3962,7 +3962,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5140
+      "source_path_id": 5174
     },
     "HunterSetRune2_4": {
       "name": "神射手的决心 IV",
@@ -4022,7 +4022,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5141
+      "source_path_id": 5175
     },
     "HunterSetRune2_5": {
       "name": "神射手的决心 V",
@@ -4082,7 +4082,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5142
+      "source_path_id": 5176
     },
     "HunterSetRune2_6": {
       "name": "神射手的决心 VI",
@@ -4142,7 +4142,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5143
+      "source_path_id": 5177
     },
     "HunterSetRune3_1": {
       "name": "毒牙 I",
@@ -4182,7 +4182,7 @@
           "title": "4 件套效果",
           "values": [],
           "texts": [
-            "施加中毒时，使目标的移动速度降低25%，攻击速度降低20%，持续5秒。再次施加中毒会刷新减速持续时间。"
+            "施加中毒时，使目标的移动速度降低25%，攻击速度降低20%，持续5秒。 你施加的[中毒]生效频率提高 100%。"
           ]
         },
         {
@@ -4197,7 +4197,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5144
+      "source_path_id": 5178
     },
     "HunterSetRune3_2": {
       "name": "毒牙 II",
@@ -4237,7 +4237,7 @@
           "title": "4 件套效果",
           "values": [],
           "texts": [
-            "施加中毒时，使目标的移动速度降低25%，攻击速度降低20%，持续5秒。再次施加中毒会刷新减速持续时间。"
+            "施加中毒时，使目标的移动速度降低25%，攻击速度降低20%，持续5秒。 你施加的[中毒]生效频率提高 100%。"
           ]
         },
         {
@@ -4252,7 +4252,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5145
+      "source_path_id": 5179
     },
     "HunterSetRune3_3": {
       "name": "毒牙 III",
@@ -4297,7 +4297,7 @@
           "title": "4 件套效果",
           "values": [],
           "texts": [
-            "施加中毒时，使目标的移动速度降低25%，攻击速度降低20%，持续5秒。再次施加中毒会刷新减速持续时间。"
+            "施加中毒时，使目标的移动速度降低25%，攻击速度降低20%，持续5秒。 你施加的[中毒]生效频率提高 100%。"
           ]
         },
         {
@@ -4312,7 +4312,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5146
+      "source_path_id": 5180
     },
     "HunterSetRune3_4": {
       "name": "毒牙 IV",
@@ -4357,7 +4357,7 @@
           "title": "4 件套效果",
           "values": [],
           "texts": [
-            "施加中毒时，使目标的移动速度降低25%，攻击速度降低20%，持续5秒。再次施加中毒会刷新减速持续时间。"
+            "施加中毒时，使目标的移动速度降低25%，攻击速度降低20%，持续5秒。 你施加的[中毒]生效频率提高 100%。"
           ]
         },
         {
@@ -4372,7 +4372,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5147
+      "source_path_id": 5181
     },
     "HunterSetRune3_5": {
       "name": "毒牙 V",
@@ -4417,7 +4417,7 @@
           "title": "4 件套效果",
           "values": [],
           "texts": [
-            "施加中毒时，使目标的移动速度降低25%，攻击速度降低20%，持续5秒。再次施加中毒会刷新减速持续时间。"
+            "施加中毒时，使目标的移动速度降低25%，攻击速度降低20%，持续5秒。 你施加的[中毒]生效频率提高 100%。"
           ]
         },
         {
@@ -4432,7 +4432,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5148
+      "source_path_id": 5182
     },
     "HunterSetRune3_6": {
       "name": "毒牙 VI",
@@ -4477,7 +4477,7 @@
           "title": "4 件套效果",
           "values": [],
           "texts": [
-            "施加中毒时，使目标的移动速度降低25%，攻击速度降低20%，持续5秒。再次施加中毒会刷新减速持续时间。"
+            "施加中毒时，使目标的移动速度降低25%，攻击速度降低20%，持续5秒。 你施加的[中毒]生效频率提高 100%。"
           ]
         },
         {
@@ -4492,7 +4492,37 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5149
+      "source_path_id": 5183
+    },
+    "LeaderboardReward1": {
+      "name": "荣耀之翼",
+      "label_key": "LeaderboardReward1",
+      "kind": "equipment",
+      "item_type": 3,
+      "rarity": 3,
+      "icon": "/icons/LeaderboardReward1.png",
+      "description": "",
+      "effect_groups": [],
+      "effect_note": "此装备没有固定特殊效果，基础属性与随机词条见下方。",
+      "source_effect_ids": [],
+      "source_class": "ItemData",
+      "source_file": "resources.assets",
+      "source_path_id": 4952
+    },
+    "LeaderboardReward2": {
+      "name": "凯旋之翼",
+      "label_key": "LeaderboardReward2",
+      "kind": "equipment",
+      "item_type": 3,
+      "rarity": 3,
+      "icon": "/icons/LeaderboardReward2.png",
+      "description": "",
+      "effect_groups": [],
+      "effect_note": "此装备没有固定特殊效果，基础属性与随机词条见下方。",
+      "source_effect_ids": [],
+      "source_class": "ItemData",
+      "source_file": "resources.assets",
+      "source_path_id": 4953
     },
     "LegendaryAxe1": {
       "name": "北方巨人巨斧",
@@ -4518,7 +4548,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5106
+      "source_path_id": 5140
     },
     "LegendaryBack1": {
       "name": "霜晶殓袍",
@@ -4533,7 +4563,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4924
+      "source_path_id": 4954
     },
     "LegendaryBack2": {
       "name": "烬暮披风",
@@ -4548,7 +4578,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4925
+      "source_path_id": 4955
     },
     "LegendaryBack3": {
       "name": "雪裘披风",
@@ -4563,7 +4593,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4926
+      "source_path_id": 4956
     },
     "LegendaryBack4": {
       "name": "暮羽之翼",
@@ -4578,7 +4608,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59992
+      "source_path_id": 61708
     },
     "LegendaryBelt1": {
       "name": "无底药带",
@@ -4603,7 +4633,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59993,
+      "source_path_id": 61709,
       "comparison_effects": [
         {
           "id": "LegendaryBelt1",
@@ -4643,7 +4673,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59994
+      "source_path_id": 61710
     },
     "LegendaryBelt3": {
       "name": "战饮腰带",
@@ -4668,7 +4698,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4934
+      "source_path_id": 4964
     },
     "LegendaryBelt4": {
       "name": "铁棘战带",
@@ -4693,7 +4723,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4935
+      "source_path_id": 4965
     },
     "LegendaryBoots1": {
       "name": "唤风者之靴",
@@ -4718,7 +4748,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4948
+      "source_path_id": 4978
     },
     "LegendaryBoots2": {
       "name": "落叶行者靴",
@@ -4743,7 +4773,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4949,
+      "source_path_id": 4979,
       "comparison_effects": [
         {
           "id": "LegendaryBoots2",
@@ -4783,7 +4813,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59995
+      "source_path_id": 61711
     },
     "LegendaryBoots4": {
       "name": "炼血者之履",
@@ -4808,7 +4838,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4950
+      "source_path_id": 4980
     },
     "LegendaryBoots5": {
       "name": "霜卫之履",
@@ -4833,7 +4863,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4951
+      "source_path_id": 4981
     },
     "LegendaryBow1": {
       "name": "唤雨之弓",
@@ -4858,7 +4888,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5107
+      "source_path_id": 5141
     },
     "LegendaryBow2": {
       "name": "黑鸦反曲弓",
@@ -4883,7 +4913,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5108
+      "source_path_id": 5142
     },
     "LegendaryBow3": {
       "name": "神射手的豪赌",
@@ -4909,7 +4939,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5109
+      "source_path_id": 5143
     },
     "LegendaryChestArmor1": {
       "name": "暴怒壁垒",
@@ -4934,7 +4964,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4964
+      "source_path_id": 4994
     },
     "LegendaryChestArmor2": {
       "name": "荆棘之心护胸甲",
@@ -4960,7 +4990,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4965,
+      "source_path_id": 4995,
       "comparison_effects": [
         {
           "id": "LegendaryChestArmor2_ThornIncrease",
@@ -5020,7 +5050,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4966
+      "source_path_id": 4996
     },
     "LegendaryChestArmor4": {
       "name": "无尽涌流之器",
@@ -5045,7 +5075,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4967
+      "source_path_id": 4997
     },
     "LegendaryChestArmor5": {
       "name": "不屈胸甲",
@@ -5070,7 +5100,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59996
+      "source_path_id": 61712
     },
     "LegendaryChestArmor6": {
       "name": "灵巧胸甲",
@@ -5095,7 +5125,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4968,
+      "source_path_id": 4998,
       "comparison_effects": [
         {
           "id": "LegendaryChestArmor6",
@@ -5129,7 +5159,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4985
+      "source_path_id": 5015
     },
     "LegendaryGloves2": {
       "name": "势不可挡护手",
@@ -5154,7 +5184,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59997
+      "source_path_id": 61713
     },
     "LegendaryGloves3": {
       "name": "唤雷护手",
@@ -5179,7 +5209,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4986
+      "source_path_id": 5016
     },
     "LegendaryGloves4": {
       "name": "卸力缠手",
@@ -5204,7 +5234,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4987
+      "source_path_id": 5017
     },
     "LegendaryGloves5": {
       "name": "穿心护手",
@@ -5230,7 +5260,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4988
+      "source_path_id": 5018
     },
     "LegendaryGloves6": {
       "name": "溃烂护手",
@@ -5255,7 +5285,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4989,
+      "source_path_id": 5019,
       "comparison_effects": [
         {
           "id": "LegendaryGloves6",
@@ -5295,7 +5325,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4990
+      "source_path_id": 5020
     },
     "LegendaryGloves8": {
       "name": "行者护手",
@@ -5304,24 +5334,24 @@
       "item_type": 3,
       "rarity": 3,
       "icon": "/icons/LegendaryGloves8.png",
-      "description": "冲锋每命中一个敌人，获得一层增益，持续{duration}。每层使造成的伤害额外提高{damage}，最多{stacks}层。",
+      "description": "施放冲锋时获得一层增益，持续{duration}。每层使造成的伤害额外提高{damage}，最多{stacks}层。",
       "effect_groups": [
         {
           "title": "物品效果",
           "values": [],
           "texts": [
-            "冲锋每命中一个敌人，获得一层增益，持续{duration}。每层使造成的伤害额外提高{damage}，最多{stacks}层。"
+            "施放冲锋时获得一层增益，持续{duration}。每层使造成的伤害额外提高{damage}，最多{stacks}层。"
           ]
         }
       ],
       "effect_note": "",
       "source_effect_ids": [
-        "LegendaryGloves8_OnHit",
+        "LegendaryGloves8_OnCast",
         "LegendaryGloves8_Damage"
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4991
+      "source_path_id": 5021
     },
     "LegendaryHelm1": {
       "name": "堕落王冠",
@@ -5346,7 +5376,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5007
+      "source_path_id": 5037
     },
     "LegendaryHelm2": {
       "name": "绯红风暴之兜",
@@ -5371,7 +5401,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5008
+      "source_path_id": 5038
     },
     "LegendaryHelm3": {
       "name": "游风之冠",
@@ -5398,7 +5428,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5009
+      "source_path_id": 5039
     },
     "LegendaryHelm4": {
       "name": "专注头箍",
@@ -5424,7 +5454,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5010
+      "source_path_id": 5040
     },
     "LegendaryHelm5": {
       "name": "幻影面具",
@@ -5449,7 +5479,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5011,
+      "source_path_id": 5041,
       "comparison_effects": [
         {
           "id": "LegendaryHelm5",
@@ -5494,7 +5524,22 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5110
+      "source_path_id": 5144
+    },
+    "LegendaryMinionGear1": {
+      "name": "黄金可汗之鞍",
+      "label_key": "LegendaryMinionGear1",
+      "kind": "equipment",
+      "item_type": 3,
+      "rarity": 3,
+      "icon": "/icons/LegendaryMinionGear1.png",
+      "description": "",
+      "effect_groups": [],
+      "effect_note": "此装备没有固定特殊效果，基础属性与随机词条见下方。",
+      "source_effect_ids": [],
+      "source_class": "ItemData",
+      "source_file": "resources.assets",
+      "source_path_id": 5054
     },
     "LegendaryNeck1": {
       "name": "涌动心智吊坠",
@@ -5519,7 +5564,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59998
+      "source_path_id": 61714
     },
     "LegendaryNeck2": {
       "name": "裂创怒吼吊坠",
@@ -5544,7 +5589,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5028
+      "source_path_id": 5062
     },
     "LegendaryNeck3": {
       "name": "火焰领主项链",
@@ -5569,7 +5614,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5029
+      "source_path_id": 5063
     },
     "LegendaryNeck4": {
       "name": "风暴守护项链",
@@ -5594,7 +5639,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5030
+      "source_path_id": 5064
     },
     "LegendaryNeck5": {
       "name": "精力吊坠",
@@ -5619,7 +5664,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5031,
+      "source_path_id": 5065,
       "comparison_effects": [
         {
           "id": "LegendaryNeck5",
@@ -5659,7 +5704,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5032
+      "source_path_id": 5066
     },
     "LegendaryNeck7": {
       "name": "碎骨吊坠",
@@ -5684,7 +5729,32 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5033
+      "source_path_id": 5067
+    },
+    "LegendaryNeck8": {
+      "name": "棱彩之心",
+      "label_key": "LegendaryNeck8",
+      "kind": "equipment",
+      "item_type": 3,
+      "rarity": 3,
+      "icon": "/icons/LegendaryNeck8.png",
+      "description": "你最高的元素伤害加成提高{bonus}。",
+      "effect_groups": [
+        {
+          "title": "物品效果",
+          "values": [],
+          "texts": [
+            "你最高的元素伤害加成提高{bonus}。"
+          ]
+        }
+      ],
+      "effect_note": "",
+      "source_effect_ids": [
+        "LegendaryNeck8_Elemental"
+      ],
+      "source_class": "ItemData",
+      "source_file": "sharedassets0.assets",
+      "source_path_id": 61715
     },
     "LegendaryPants1": {
       "name": "奥术之刃护胫",
@@ -5711,7 +5781,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5046
+      "source_path_id": 5080
     },
     "LegendaryPants2": {
       "name": "坚毅药剂护胫",
@@ -5736,7 +5806,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59999
+      "source_path_id": 61716
     },
     "LegendaryPants3": {
       "name": "魔能护腿",
@@ -5761,7 +5831,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5047
+      "source_path_id": 5081
     },
     "LegendaryPants4": {
       "name": "磐石护腿",
@@ -5786,7 +5856,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5048,
+      "source_path_id": 5082,
       "comparison_effects": [
         {
           "id": "LegendaryPants4",
@@ -5826,7 +5896,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5067
+      "source_path_id": 5101
     },
     "LegendaryRing2": {
       "name": "展露之戒",
@@ -5851,7 +5921,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5068
+      "source_path_id": 5102
     },
     "LegendaryRing3": {
       "name": "天目指环",
@@ -5876,7 +5946,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5069
+      "source_path_id": 5103
     },
     "LegendaryRing4": {
       "name": "第四火焰之戒",
@@ -5901,7 +5971,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5070
+      "source_path_id": 5104
     },
     "LegendaryRing5": {
       "name": "充能指环",
@@ -5926,7 +5996,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60010
+      "source_path_id": 61729
     },
     "LegendaryRing6": {
       "name": "奥术精准之戒",
@@ -5951,7 +6021,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5071
+      "source_path_id": 5105
     },
     "LegendaryRing7": {
       "name": "屠龙戒",
@@ -5976,7 +6046,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60011,
+      "source_path_id": 61730,
       "comparison_effects": [
         {
           "id": "LegendaryRing7",
@@ -6024,7 +6094,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5072
+      "source_path_id": 5106
     },
     "LegendaryRune_HunterBasicAttack1": {
       "name": "毒箭符文 (宏伟)",
@@ -6067,7 +6137,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5150
+      "source_path_id": 5184
     },
     "LegendaryRune_HunterBasicAttack2": {
       "name": "奥术炸弹符文 (宏伟)",
@@ -6110,7 +6180,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5151
+      "source_path_id": 5185
     },
     "LegendaryRune_HunterBasicAttack3": {
       "name": "飞刀连击符文 (宏伟)",
@@ -6153,7 +6223,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5152
+      "source_path_id": 5186
     },
     "LegendaryRune_HunterBasicAttack4": {
       "name": "二连矢符文 (宏伟)",
@@ -6196,7 +6266,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5153
+      "source_path_id": 5187
     },
     "LegendaryRune_HunterHeavyAttack1": {
       "name": "稳固射击符文 (宏伟)",
@@ -6239,7 +6309,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5154
+      "source_path_id": 5188
     },
     "LegendaryRune_HunterHeavyAttack2": {
       "name": "多重射击符文 (宏伟)",
@@ -6282,7 +6352,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5155
+      "source_path_id": 5189
     },
     "LegendaryRune_HunterHeavyAttack3": {
       "name": "急速射击符文 (宏伟)",
@@ -6325,7 +6395,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5156
+      "source_path_id": 5190
     },
     "LegendaryRune_HunterHeavyAttack4": {
       "name": "剧毒弹符文 (宏伟)",
@@ -6368,7 +6438,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5157
+      "source_path_id": 5191
     },
     "LegendaryRune_HunterSpecial1": {
       "name": "毒陷阱符文 (宏伟)",
@@ -6411,7 +6481,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5158
+      "source_path_id": 5192
     },
     "LegendaryRune_HunterSpecial2": {
       "name": "冲击波符文 (宏伟)",
@@ -6454,7 +6524,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5159
+      "source_path_id": 5193
     },
     "LegendaryRune_HunterSpecial3": {
       "name": "奥术陷阱符文 (宏伟)",
@@ -6497,7 +6567,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5160
+      "source_path_id": 5194
     },
     "LegendaryRune_HunterSpecial4": {
       "name": "奥术箭雨符文 (宏伟)",
@@ -6540,7 +6610,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5161
+      "source_path_id": 5195
     },
     "LegendaryRune_HunterSpecial5": {
       "name": "幻影形态符文 (宏伟)",
@@ -6583,7 +6653,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5162
+      "source_path_id": 5196
     },
     "LegendaryRune_HunterSpecial6": {
       "name": "照明弹符文 (宏伟)",
@@ -6626,7 +6696,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5163
+      "source_path_id": 5197
     },
     "LegendaryRune_MonkBasicAttack1": {
       "name": "三重击符文 (宏伟)",
@@ -6669,7 +6739,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5164
+      "source_path_id": 5198
     },
     "LegendaryRune_MonkBasicAttack2": {
       "name": "怒拳符文 (宏伟)",
@@ -6712,7 +6782,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5165
+      "source_path_id": 5199
     },
     "LegendaryRune_MonkBasicAttack3": {
       "name": "震地击符文 (宏伟)",
@@ -6755,7 +6825,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5166
+      "source_path_id": 5200
     },
     "LegendaryRune_MonkBasicAttack4": {
       "name": "气弹符文 (宏伟)",
@@ -6798,7 +6868,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5167
+      "source_path_id": 5201
     },
     "LegendaryRune_MonkHeavyAttack1": {
       "name": "圣裁之击符文 (宏伟)",
@@ -6841,7 +6911,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5168
+      "source_path_id": 5202
     },
     "LegendaryRune_MonkHeavyAttack2": {
       "name": "穿刺突进符文 (宏伟)",
@@ -6884,7 +6954,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5169
+      "source_path_id": 5203
     },
     "LegendaryRune_MonkHeavyAttack3": {
       "name": "旋风棍式符文 (宏伟)",
@@ -6927,7 +6997,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5170
+      "source_path_id": 5204
     },
     "LegendaryRune_MonkHeavyAttack4": {
       "name": "双金掌符文 (宏伟)",
@@ -6970,7 +7040,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5171
+      "source_path_id": 5205
     },
     "LegendaryRune_MonkSpecial1": {
       "name": "神圣法球符文 (宏伟)",
@@ -7013,7 +7083,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5172
+      "source_path_id": 5206
     },
     "LegendaryRune_MonkSpecial2": {
       "name": "灵气涌流符文 (宏伟)",
@@ -7056,7 +7126,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5173
+      "source_path_id": 5207
     },
     "LegendaryRune_MonkSpecial3": {
       "name": "冲锋符文 (宏伟)",
@@ -7099,7 +7169,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5174
+      "source_path_id": 5208
     },
     "LegendaryRune_MonkSpecial4": {
       "name": "灵体分身符文 (宏伟)",
@@ -7142,7 +7212,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5175
+      "source_path_id": 5209
     },
     "LegendaryRune_MonkSpecial5": {
       "name": "踏风步符文 (宏伟)",
@@ -7185,7 +7255,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5176
+      "source_path_id": 5210
     },
     "LegendaryRune_MonkSpecial6": {
       "name": "神圣雷霆符文 (宏伟)",
@@ -7228,7 +7298,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5177
+      "source_path_id": 5211
     },
     "LegendaryRune_SorcererBasicAttack1": {
       "name": "火球符文 (宏伟)",
@@ -7271,7 +7341,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5178
+      "source_path_id": 5212
     },
     "LegendaryRune_SorcererBasicAttack2": {
       "name": "冰碎片符文 (宏伟)",
@@ -7314,7 +7384,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5179
+      "source_path_id": 5213
     },
     "LegendaryRune_SorcererBasicAttack3": {
       "name": "电击符文 (宏伟)",
@@ -7357,7 +7427,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5180
+      "source_path_id": 5214
     },
     "LegendaryRune_SorcererBasicAttack4": {
       "name": "烈焰雷电符文 (宏伟)",
@@ -7400,7 +7470,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5181
+      "source_path_id": 5215
     },
     "LegendaryRune_SorcererSpecial1": {
       "name": "冰霜新星符文 (宏伟)",
@@ -7443,7 +7513,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5182
+      "source_path_id": 5216
     },
     "LegendaryRune_SorcererSpecial2": {
       "name": "火元素符文 (宏伟)",
@@ -7486,7 +7556,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5183
+      "source_path_id": 5217
     },
     "LegendaryRune_SorcererSpecial3": {
       "name": "寒冰屏障符文 (宏伟)",
@@ -7529,7 +7599,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5184
+      "source_path_id": 5218
     },
     "LegendaryRune_SorcererSpecial4": {
       "name": "火陨石符文 (宏伟)",
@@ -7572,7 +7642,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5185
+      "source_path_id": 5219
     },
     "LegendaryRune_SorcererSpecial5": {
       "name": "烈焰光环符文 (宏伟)",
@@ -7615,7 +7685,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5186
+      "source_path_id": 5220
     },
     "LegendaryRune_SorcererSpecial6": {
       "name": "雷云符文 (宏伟)",
@@ -7658,7 +7728,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5187
+      "source_path_id": 5221
     },
     "LegendaryRune_SorcererStrongAttack1": {
       "name": "烈焰吐息符文 (宏伟)",
@@ -7701,7 +7771,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5188
+      "source_path_id": 5222
     },
     "LegendaryRune_SorcererStrongAttack2": {
       "name": "冰陨石符文 (宏伟)",
@@ -7744,7 +7814,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5189
+      "source_path_id": 5223
     },
     "LegendaryRune_SorcererStrongAttack3": {
       "name": "闪电风暴符文 (宏伟)",
@@ -7787,7 +7857,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5190
+      "source_path_id": 5224
     },
     "LegendaryRune_SorcererStrongAttack4": {
       "name": "冰霜光束符文 (宏伟)",
@@ -7830,7 +7900,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5191
+      "source_path_id": 5225
     },
     "LegendaryRune_WarriorBasicAttack": {
       "name": "英勇打击符文 (宏伟)",
@@ -7873,7 +7943,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5192
+      "source_path_id": 5226
     },
     "LegendaryRune_WarriorBasicAttack2": {
       "name": "横扫符文 (宏伟)",
@@ -7916,7 +7986,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5193
+      "source_path_id": 5227
     },
     "LegendaryRune_WarriorBasicAttack3": {
       "name": "血刃打击符文 (宏伟)",
@@ -7959,7 +8029,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5194
+      "source_path_id": 5228
     },
     "LegendaryRune_WarriorBasicAttack4": {
       "name": "稳固打击符文 (宏伟)",
@@ -8002,7 +8072,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5195
+      "source_path_id": 5229
     },
     "LegendaryRune_WarriorHeavyAttack1": {
       "name": "烈焰打击符文 (宏伟)",
@@ -8045,7 +8115,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5196
+      "source_path_id": 5230
     },
     "LegendaryRune_WarriorHeavyAttack2": {
       "name": "半月斩符文 (宏伟)",
@@ -8088,7 +8158,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5197
+      "source_path_id": 5231
     },
     "LegendaryRune_WarriorHeavyAttack3": {
       "name": "旋风斩符文 (宏伟)",
@@ -8131,7 +8201,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5198
+      "source_path_id": 5232
     },
     "LegendaryRune_WarriorHeavyAttack4": {
       "name": "裂血连击符文 (宏伟)",
@@ -8174,7 +8244,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5199
+      "source_path_id": 5233
     },
     "LegendaryRune_WarriorRageShield": {
       "name": "狂怒护盾符文 (宏伟)",
@@ -8217,7 +8287,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5200
+      "source_path_id": 5234
     },
     "LegendaryRune_WarriorRageShout": {
       "name": "怒吼符文 (宏伟)",
@@ -8260,7 +8330,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5201
+      "source_path_id": 5235
     },
     "LegendaryRune_WarriorSpecial3": {
       "name": "夺命钩爪符文 (宏伟)",
@@ -8303,7 +8373,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5202
+      "source_path_id": 5236
     },
     "LegendaryRune_WarriorSpecial4": {
       "name": "裂地击符文 (宏伟)",
@@ -8346,7 +8416,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5203
+      "source_path_id": 5237
     },
     "LegendaryRune_WarriorSpecial5": {
       "name": "铁棘符文 (宏伟)",
@@ -8389,7 +8459,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5204
+      "source_path_id": 5238
     },
     "LegendaryRune_WarriorSpecial6": {
       "name": "熔铸之力符文 (宏伟)",
@@ -8432,7 +8502,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5205
+      "source_path_id": 5239
     },
     "LegendaryShoulder1": {
       "name": "甲壳尖刺护肩",
@@ -8457,7 +8527,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5085,
+      "source_path_id": 5119,
       "comparison_effects": [
         {
           "id": "LegendaryShoulder1",
@@ -8491,7 +8561,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5086
+      "source_path_id": 5120
     },
     "LegendaryShoulder3": {
       "name": "收割者护肩",
@@ -8500,13 +8570,13 @@
       "item_type": 3,
       "rarity": 3,
       "icon": "/icons/LegendaryShoulder3.png",
-      "description": "直接伤害命中有10%几率触发你的击杀效果。",
+      "description": "直接伤害命中有10%几率触发你的击杀效果。每秒最多触发5次。",
       "effect_groups": [
         {
           "title": "物品效果",
           "values": [],
           "texts": [
-            "直接伤害命中有10%几率触发你的击杀效果。"
+            "直接伤害命中有10%几率触发你的击杀效果。每秒最多触发5次。"
           ]
         }
       ],
@@ -8516,7 +8586,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60012
+      "source_path_id": 61731
     },
     "LegendaryShoulder4": {
       "name": "霜毒肩甲",
@@ -8542,7 +8612,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5087
+      "source_path_id": 5121
     },
     "LegendaryShoulder5": {
       "name": "缚灵肩甲",
@@ -8567,7 +8637,32 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5088
+      "source_path_id": 5122
+    },
+    "LegendaryShoulder6": {
+      "name": "噬魂肩甲",
+      "label_key": "LegendaryShoulder6",
+      "kind": "equipment",
+      "item_type": 3,
+      "rarity": 3,
+      "icon": "/icons/LegendaryShoulder6.png",
+      "description": "每个近处敌人使你造成的伤害额外提高{damage}。首领按{bossWeight}个敌人计算。",
+      "effect_groups": [
+        {
+          "title": "物品效果",
+          "values": [],
+          "texts": [
+            "每个近处敌人使你造成的伤害额外提高{damage}。首领按{bossWeight}个敌人计算。"
+          ]
+        }
+      ],
+      "effect_note": "",
+      "source_effect_ids": [
+        "LegendaryShoulder6_Damage"
+      ],
+      "source_class": "ItemData",
+      "source_file": "sharedassets0.assets",
+      "source_path_id": 61732
     },
     "LegendaryStaff1": {
       "name": "霜龙法杖",
@@ -8592,7 +8687,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5111
+      "source_path_id": 5145
     },
     "LegendaryStaff2": {
       "name": "琥珀骷髅权杖",
@@ -8618,7 +8713,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5112
+      "source_path_id": 5146
     },
     "LegendarySword1": {
       "name": "苦痛锯齿巨剑",
@@ -8643,7 +8738,7 @@
       ],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5113
+      "source_path_id": 5147
     },
     "MonkSetRune1_1": {
       "name": "百手符文 (I)",
@@ -8698,7 +8793,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5206
+      "source_path_id": 5240
     },
     "MonkSetRune1_2": {
       "name": "百手符文 (II)",
@@ -8769,7 +8864,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5207
+      "source_path_id": 5241
     },
     "MonkSetRune1_3": {
       "name": "百手符文 (III)",
@@ -8829,7 +8924,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5208
+      "source_path_id": 5242
     },
     "MonkSetRune1_4": {
       "name": "百手符文 (IV)",
@@ -8889,7 +8984,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5209
+      "source_path_id": 5243
     },
     "MonkSetRune1_5": {
       "name": "百手符文 (V)",
@@ -8949,7 +9044,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5210
+      "source_path_id": 5244
     },
     "MonkSetRune1_6": {
       "name": "百手符文 (VI)",
@@ -9009,7 +9104,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5211
+      "source_path_id": 5245
     },
     "MonkSetRune2_1": {
       "name": "九天轮符文 (I)",
@@ -9064,7 +9159,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5212
+      "source_path_id": 5246
     },
     "MonkSetRune2_2": {
       "name": "九天轮符文 (II)",
@@ -9135,7 +9230,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5213
+      "source_path_id": 5247
     },
     "MonkSetRune2_3": {
       "name": "九天轮符文 (III)",
@@ -9195,7 +9290,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5214
+      "source_path_id": 5248
     },
     "MonkSetRune2_4": {
       "name": "九天轮符文 (IV)",
@@ -9255,7 +9350,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5215
+      "source_path_id": 5249
     },
     "MonkSetRune2_5": {
       "name": "九天轮符文 (V)",
@@ -9315,7 +9410,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5216
+      "source_path_id": 5250
     },
     "MonkSetRune2_6": {
       "name": "九天轮符文 (VI)",
@@ -9375,7 +9470,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5217
+      "source_path_id": 5251
     },
     "MonkSetRune3_1": {
       "name": "蛇信符文 (I)",
@@ -9422,7 +9517,7 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "穿刺突进的气流会贯穿目标身后的敌人，并施加[易伤]。每次施放还会使一个随机[特殊]技能的剩余冷却时间减少 1 秒。"
+            "穿刺突进的气流会贯穿目标身后的敌人，并施加[易伤]。每次施放还会使一个随机[特殊]技能的剩余冷却时间减少 0.5 秒。"
           ]
         }
       ],
@@ -9430,7 +9525,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5218
+      "source_path_id": 5252
     },
     "MonkSetRune3_2": {
       "name": "蛇信符文 (II)",
@@ -9493,7 +9588,7 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "穿刺突进的气流会贯穿目标身后的敌人，并施加[易伤]。每次施放还会使一个随机[特殊]技能的剩余冷却时间减少 1 秒。"
+            "穿刺突进的气流会贯穿目标身后的敌人，并施加[易伤]。每次施放还会使一个随机[特殊]技能的剩余冷却时间减少 0.5 秒。"
           ]
         }
       ],
@@ -9501,7 +9596,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5219
+      "source_path_id": 5253
     },
     "MonkSetRune3_3": {
       "name": "蛇信符文 (III)",
@@ -9553,7 +9648,7 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "穿刺突进的气流会贯穿目标身后的敌人，并施加[易伤]。每次施放还会使一个随机[特殊]技能的剩余冷却时间减少 1 秒。"
+            "穿刺突进的气流会贯穿目标身后的敌人，并施加[易伤]。每次施放还会使一个随机[特殊]技能的剩余冷却时间减少 0.5 秒。"
           ]
         }
       ],
@@ -9561,7 +9656,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5220
+      "source_path_id": 5254
     },
     "MonkSetRune3_4": {
       "name": "蛇信符文 (IV)",
@@ -9613,7 +9708,7 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "穿刺突进的气流会贯穿目标身后的敌人，并施加[易伤]。每次施放还会使一个随机[特殊]技能的剩余冷却时间减少 1 秒。"
+            "穿刺突进的气流会贯穿目标身后的敌人，并施加[易伤]。每次施放还会使一个随机[特殊]技能的剩余冷却时间减少 0.5 秒。"
           ]
         }
       ],
@@ -9621,7 +9716,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5221
+      "source_path_id": 5255
     },
     "MonkSetRune3_5": {
       "name": "蛇信符文 (V)",
@@ -9673,7 +9768,7 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "穿刺突进的气流会贯穿目标身后的敌人，并施加[易伤]。每次施放还会使一个随机[特殊]技能的剩余冷却时间减少 1 秒。"
+            "穿刺突进的气流会贯穿目标身后的敌人，并施加[易伤]。每次施放还会使一个随机[特殊]技能的剩余冷却时间减少 0.5 秒。"
           ]
         }
       ],
@@ -9681,7 +9776,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5222
+      "source_path_id": 5256
     },
     "MonkSetRune3_6": {
       "name": "蛇信符文 (VI)",
@@ -9733,7 +9828,7 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "穿刺突进的气流会贯穿目标身后的敌人，并施加[易伤]。每次施放还会使一个随机[特殊]技能的剩余冷却时间减少 1 秒。"
+            "穿刺突进的气流会贯穿目标身后的敌人，并施加[易伤]。每次施放还会使一个随机[特殊]技能的剩余冷却时间减少 0.5 秒。"
           ]
         }
       ],
@@ -9741,7 +9836,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5223
+      "source_path_id": 5257
     },
     "MovementPotion1": {
       "name": "速度药水",
@@ -9764,7 +9859,30 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59985
+      "source_path_id": 61697
+    },
+    "MythicToken": {
+      "name": "神话代币",
+      "label_key": "MythicToken",
+      "kind": "material",
+      "item_type": 1,
+      "rarity": 3,
+      "icon": "/icons/MythicToken.png",
+      "description": "征服神话裂隙的证明。可在勇者纪念碑处兑换稀有装备。",
+      "effect_groups": [
+        {
+          "title": "物品说明",
+          "values": [],
+          "texts": [
+            "征服神话裂隙的证明。可在勇者纪念碑处兑换稀有装备。"
+          ]
+        }
+      ],
+      "effect_note": "",
+      "source_effect_ids": [],
+      "source_class": "ItemData",
+      "source_file": "sharedassets0.assets",
+      "source_path_id": 61801
     },
     "OgreBossMat": {
       "name": "食人魔之心",
@@ -9787,7 +9905,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60081
+      "source_path_id": 61802
     },
     "PotionFish1": {
       "name": "青斑鱼",
@@ -9810,7 +9928,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60020
+      "source_path_id": 61740
     },
     "PotionFish2": {
       "name": "翡翠墨鱿",
@@ -9833,7 +9951,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60021
+      "source_path_id": 61741
     },
     "PotionFish3": {
       "name": "霜光水母",
@@ -9856,7 +9974,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60022
+      "source_path_id": 61742
     },
     "PotionFish4": {
       "name": "烬壳蟹",
@@ -9879,7 +9997,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60023
+      "source_path_id": 61743
     },
     "RareAxe1": {
       "name": "镀金裂颅斧",
@@ -9894,7 +10012,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5114
+      "source_path_id": 5148
     },
     "RareAxe2": {
       "name": "黑钢战斧",
@@ -9909,7 +10027,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5115
+      "source_path_id": 5149
     },
     "RareBack1": {
       "name": "棕色冒险者披风",
@@ -9924,7 +10042,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4927
+      "source_path_id": 4957
     },
     "RareBack2": {
       "name": "红色冒险者披风",
@@ -9939,7 +10057,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4928
+      "source_path_id": 4958
     },
     "RareBack3": {
       "name": "灰色冒险者披风",
@@ -9954,7 +10072,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4929
+      "source_path_id": 4959
     },
     "RareBelt1": {
       "name": "翠绿鹰爪腰带",
@@ -9969,7 +10087,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4936
+      "source_path_id": 4966
     },
     "RareBelt2": {
       "name": "阳石腰带",
@@ -9984,7 +10102,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4937
+      "source_path_id": 4967
     },
     "RareBelt3": {
       "name": "紫晶暗影腰带",
@@ -9999,7 +10117,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4938
+      "source_path_id": 4968
     },
     "RareBelt4": {
       "name": "琥珀符印腰带",
@@ -10014,7 +10132,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4939
+      "source_path_id": 4969
     },
     "RareBoots1": {
       "name": "铁甲战靴",
@@ -10029,7 +10147,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4952
+      "source_path_id": 4982
     },
     "RareBoots2": {
       "name": "蓝宝石奥术靴",
@@ -10044,7 +10162,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4953
+      "source_path_id": 4983
     },
     "RareBoots3": {
       "name": "红宝石镀金靴",
@@ -10059,7 +10177,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4954
+      "source_path_id": 4984
     },
     "RareBoots4": {
       "name": "青铜护筒靴",
@@ -10074,7 +10192,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4955
+      "source_path_id": 4985
     },
     "RareBow1": {
       "name": "钢刃战弓",
@@ -10089,7 +10207,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5116
+      "source_path_id": 5150
     },
     "RareBow2": {
       "name": "镀金反曲弓",
@@ -10104,7 +10222,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5117
+      "source_path_id": 5151
     },
     "RareBow3": {
       "name": "铁箍猎弓",
@@ -10119,7 +10237,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5118
+      "source_path_id": 5152
     },
     "RareChestArmor1": {
       "name": "金钉布甲",
@@ -10134,7 +10252,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4969
+      "source_path_id": 4999
     },
     "RareChestArmor2": {
       "name": "印章护胸甲",
@@ -10149,7 +10267,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4970
+      "source_path_id": 5000
     },
     "RareChestArmor3": {
       "name": "银骑士板甲",
@@ -10164,7 +10282,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4971
+      "source_path_id": 5001
     },
     "RareChestArmor4": {
       "name": "鎏金哨卫胸甲",
@@ -10179,7 +10297,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4972
+      "source_path_id": 5002
     },
     "RareChestArmor5": {
       "name": "织曦法衣",
@@ -10194,7 +10312,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4973
+      "source_path_id": 5003
     },
     "RareChestArmor6": {
       "name": "贤者冥想服",
@@ -10209,7 +10327,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4974
+      "source_path_id": 5004
     },
     "RareChestArmor7": {
       "name": "湛蓝仪式长袍",
@@ -10224,7 +10342,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4975
+      "source_path_id": 5005
     },
     "RareChestArmor8": {
       "name": "紫暮长袍",
@@ -10239,7 +10357,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4976
+      "source_path_id": 5006
     },
     "RareFish1": {
       "name": "辉鳍神仙鱼",
@@ -10262,7 +10380,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60024
+      "source_path_id": 61744
     },
     "RareFish2": {
       "name": "珊瑚绯鱼",
@@ -10285,7 +10403,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60025
+      "source_path_id": 61745
     },
     "RareFish3": {
       "name": "碧蓝帆鳍鱼",
@@ -10308,7 +10426,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60026
+      "source_path_id": 61746
     },
     "RareFish4": {
       "name": "烬纹螺壳",
@@ -10331,7 +10449,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60027
+      "source_path_id": 61747
     },
     "RareGloves1": {
       "name": "死颅护手",
@@ -10346,7 +10464,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4992
+      "source_path_id": 5022
     },
     "RareGloves2": {
       "name": "深红爪护手",
@@ -10361,7 +10479,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4993
+      "source_path_id": 5023
     },
     "RareGloves3": {
       "name": "铭文护手",
@@ -10376,7 +10494,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4994
+      "source_path_id": 5024
     },
     "RareGloves4": {
       "name": "鎏金守护者护手",
@@ -10391,7 +10509,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4995
+      "source_path_id": 5025
     },
     "RareHelm1": {
       "name": "圣战者大头盔",
@@ -10406,7 +10524,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5012
+      "source_path_id": 5042
     },
     "RareHelm2": {
       "name": "阳铸战盔",
@@ -10421,7 +10539,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5013
+      "source_path_id": 5043
     },
     "RareHelm3": {
       "name": "厄运角盔",
@@ -10436,7 +10554,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5014
+      "source_path_id": 5044
     },
     "RareHelm4": {
       "name": "黑钢头盔",
@@ -10451,7 +10569,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5015
+      "source_path_id": 5045
     },
     "RareHelm5": {
       "name": "琥珀先知头巾",
@@ -10466,7 +10584,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5016
+      "source_path_id": 5046
     },
     "RareHelm6": {
       "name": "碧玉灵冠",
@@ -10481,7 +10599,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5017
+      "source_path_id": 5047
     },
     "RareHelm7": {
       "name": "贤者羽饰帽",
@@ -10496,7 +10614,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5018
+      "source_path_id": 5048
     },
     "RareHelm8": {
       "name": "织暮兜帽",
@@ -10511,7 +10629,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5019
+      "source_path_id": 5049
     },
     "RareMace1": {
       "name": "阳爆权杖锤",
@@ -10526,7 +10644,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5119
+      "source_path_id": 5153
     },
     "RareMace2": {
       "name": "镀金战锤",
@@ -10541,7 +10659,52 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5120
+      "source_path_id": 5154
+    },
+    "RareMinionGear1": {
+      "name": "精良马鞍",
+      "label_key": "RareMinionGear1",
+      "kind": "equipment",
+      "item_type": 3,
+      "rarity": 2,
+      "icon": "/icons/RareMinionGear1.png",
+      "description": "",
+      "effect_groups": [],
+      "effect_note": "此装备没有固定特殊效果，基础属性与随机词条见下方。",
+      "source_effect_ids": [],
+      "source_class": "ItemData",
+      "source_file": "resources.assets",
+      "source_path_id": 5055
+    },
+    "RareMinionGear2": {
+      "name": "黄金马蹄铁",
+      "label_key": "RareMinionGear2",
+      "kind": "equipment",
+      "item_type": 3,
+      "rarity": 2,
+      "icon": "/icons/RareMinionGear2.png",
+      "description": "",
+      "effect_groups": [],
+      "effect_note": "此装备没有固定特殊效果，基础属性与随机词条见下方。",
+      "source_effect_ids": [],
+      "source_class": "ItemData",
+      "source_file": "resources.assets",
+      "source_path_id": 5056
+    },
+    "RareMinionGear3": {
+      "name": "铁马铠",
+      "label_key": "RareMinionGear3",
+      "kind": "equipment",
+      "item_type": 3,
+      "rarity": 2,
+      "icon": "/icons/RareMinionGear3.png",
+      "description": "",
+      "effect_groups": [],
+      "effect_note": "此装备没有固定特殊效果，基础属性与随机词条见下方。",
+      "source_effect_ids": [],
+      "source_class": "ItemData",
+      "source_file": "resources.assets",
+      "source_path_id": 5057
     },
     "RareNeck1": {
       "name": "紫晶黄金护符",
@@ -10556,7 +10719,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5034
+      "source_path_id": 5068
     },
     "RareNeck2": {
       "name": "绿松石之眼护符",
@@ -10571,7 +10734,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5035
+      "source_path_id": 5069
     },
     "RareNeck3": {
       "name": "蓝宝石碎片护符",
@@ -10586,7 +10749,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5036
+      "source_path_id": 5070
     },
     "RareNeck4": {
       "name": "琥珀叶护符",
@@ -10601,7 +10764,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5037
+      "source_path_id": 5071
     },
     "RarePant1": {
       "name": "青钢护腿",
@@ -10616,7 +10779,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5049
+      "source_path_id": 5083
     },
     "RarePant2": {
       "name": "岩浆裂纹长裤",
@@ -10631,7 +10794,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5050
+      "source_path_id": 5084
     },
     "RarePant3": {
       "name": "镀金丝绸护腿",
@@ -10646,7 +10809,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5051
+      "source_path_id": 5085
     },
     "RarePant4": {
       "name": "暮影追猎者护腿",
@@ -10661,7 +10824,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5052
+      "source_path_id": 5086
     },
     "RarePant5": {
       "name": "绯红仪式战裙",
@@ -10676,7 +10839,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5053
+      "source_path_id": 5087
     },
     "RarePant6": {
       "name": "贤者符文裙",
@@ -10691,7 +10854,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5054
+      "source_path_id": 5088
     },
     "RarePant7": {
       "name": "翠玉门徒战裙",
@@ -10706,7 +10869,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5055
+      "source_path_id": 5089
     },
     "RarePant8": {
       "name": "余烬符印长裤",
@@ -10721,7 +10884,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5056
+      "source_path_id": 5090
     },
     "RareRing1": {
       "name": "阳石印戒",
@@ -10736,7 +10899,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5073
+      "source_path_id": 5107
     },
     "RareRing2": {
       "name": "魔女爪戒指",
@@ -10751,7 +10914,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5074
+      "source_path_id": 5108
     },
     "RareRing3": {
       "name": "炭火焰环",
@@ -10766,7 +10929,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5075
+      "source_path_id": 5109
     },
     "RareRing4": {
       "name": "金爪戒指",
@@ -10781,7 +10944,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5076
+      "source_path_id": 5110
     },
     "RareRune_HunterBasicAttack1": {
       "name": "毒箭符文",
@@ -10824,7 +10987,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5224
+      "source_path_id": 5258
     },
     "RareRune_HunterBasicAttack2": {
       "name": "奥术炸弹符文",
@@ -10867,7 +11030,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5225
+      "source_path_id": 5259
     },
     "RareRune_HunterBasicAttack3": {
       "name": "飞刀连击符文",
@@ -10910,7 +11073,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5226
+      "source_path_id": 5260
     },
     "RareRune_HunterBasicAttack4": {
       "name": "二连矢符文",
@@ -10953,7 +11116,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5227
+      "source_path_id": 5261
     },
     "RareRune_HunterHeavyAttack1": {
       "name": "稳固射击符文",
@@ -10996,7 +11159,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5228
+      "source_path_id": 5262
     },
     "RareRune_HunterHeavyAttack2": {
       "name": "多重射击符文",
@@ -11039,7 +11202,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5229
+      "source_path_id": 5263
     },
     "RareRune_HunterHeavyAttack3": {
       "name": "急速射击符文",
@@ -11082,7 +11245,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5230
+      "source_path_id": 5264
     },
     "RareRune_HunterHeavyAttack4": {
       "name": "剧毒弹符文",
@@ -11125,7 +11288,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5231
+      "source_path_id": 5265
     },
     "RareRune_HunterSpecial1": {
       "name": "毒陷阱符文",
@@ -11168,7 +11331,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5232
+      "source_path_id": 5266
     },
     "RareRune_HunterSpecial2": {
       "name": "冲击波符文",
@@ -11211,7 +11374,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5233
+      "source_path_id": 5267
     },
     "RareRune_HunterSpecial3": {
       "name": "奥术陷阱符文",
@@ -11254,7 +11417,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5234
+      "source_path_id": 5268
     },
     "RareRune_HunterSpecial4": {
       "name": "奥术箭雨符文",
@@ -11297,7 +11460,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5235
+      "source_path_id": 5269
     },
     "RareRune_HunterSpecial5": {
       "name": "幻影形态符文",
@@ -11340,7 +11503,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5236
+      "source_path_id": 5270
     },
     "RareRune_HunterSpecial6": {
       "name": "照明弹符文",
@@ -11383,7 +11546,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5237
+      "source_path_id": 5271
     },
     "RareRune_MonkBasicAttack1": {
       "name": "三重击符文",
@@ -11426,7 +11589,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5238
+      "source_path_id": 5272
     },
     "RareRune_MonkBasicAttack2": {
       "name": "怒拳符文",
@@ -11469,7 +11632,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5239
+      "source_path_id": 5273
     },
     "RareRune_MonkBasicAttack3": {
       "name": "震地击符文",
@@ -11512,7 +11675,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5240
+      "source_path_id": 5274
     },
     "RareRune_MonkBasicAttack4": {
       "name": "气弹符文",
@@ -11555,7 +11718,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5241
+      "source_path_id": 5275
     },
     "RareRune_MonkHeavyAttack1": {
       "name": "圣裁之击符文",
@@ -11598,7 +11761,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5242
+      "source_path_id": 5276
     },
     "RareRune_MonkHeavyAttack2": {
       "name": "穿刺突进符文",
@@ -11641,7 +11804,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5243
+      "source_path_id": 5277
     },
     "RareRune_MonkHeavyAttack3": {
       "name": "旋风棍式符文",
@@ -11684,7 +11847,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5244
+      "source_path_id": 5278
     },
     "RareRune_MonkHeavyAttack4": {
       "name": "双金掌符文",
@@ -11727,7 +11890,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5245
+      "source_path_id": 5279
     },
     "RareRune_MonkSpecial1": {
       "name": "神圣法球符文",
@@ -11770,7 +11933,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5246
+      "source_path_id": 5280
     },
     "RareRune_MonkSpecial2": {
       "name": "灵气涌流符文",
@@ -11813,7 +11976,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5247
+      "source_path_id": 5281
     },
     "RareRune_MonkSpecial3": {
       "name": "冲锋符文",
@@ -11856,7 +12019,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5248
+      "source_path_id": 5282
     },
     "RareRune_MonkSpecial4": {
       "name": "灵体分身符文",
@@ -11899,7 +12062,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5249
+      "source_path_id": 5283
     },
     "RareRune_MonkSpecial5": {
       "name": "踏风步符文",
@@ -11942,7 +12105,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5250
+      "source_path_id": 5284
     },
     "RareRune_MonkSpecial6": {
       "name": "神圣雷霆符文",
@@ -11985,7 +12148,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5251
+      "source_path_id": 5285
     },
     "RareRune_SorcererBasicAttack1": {
       "name": "火球符文",
@@ -12028,7 +12191,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5252
+      "source_path_id": 5286
     },
     "RareRune_SorcererBasicAttack2": {
       "name": "冰碎片符文",
@@ -12071,7 +12234,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5253
+      "source_path_id": 5287
     },
     "RareRune_SorcererBasicAttack3": {
       "name": "电击符文",
@@ -12114,7 +12277,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5254
+      "source_path_id": 5288
     },
     "RareRune_SorcererBasicAttack4": {
       "name": "烈焰雷电符文",
@@ -12157,7 +12320,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5255
+      "source_path_id": 5289
     },
     "RareRune_SorcererSpecial1": {
       "name": "冰霜新星符文",
@@ -12200,7 +12363,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5256
+      "source_path_id": 5290
     },
     "RareRune_SorcererSpecial2": {
       "name": "火元素符文",
@@ -12243,7 +12406,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5257
+      "source_path_id": 5291
     },
     "RareRune_SorcererSpecial3": {
       "name": "寒冰屏障符文",
@@ -12286,7 +12449,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5258
+      "source_path_id": 5292
     },
     "RareRune_SorcererSpecial4": {
       "name": "火陨石符文",
@@ -12329,7 +12492,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5259
+      "source_path_id": 5293
     },
     "RareRune_SorcererSpecial5": {
       "name": "烈焰光环符文",
@@ -12372,7 +12535,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5260
+      "source_path_id": 5294
     },
     "RareRune_SorcererSpecial6": {
       "name": "雷云符文",
@@ -12415,7 +12578,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5261
+      "source_path_id": 5295
     },
     "RareRune_SorcererStrongAttack1": {
       "name": "烈焰吐息符文",
@@ -12458,7 +12621,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5262
+      "source_path_id": 5296
     },
     "RareRune_SorcererStrongAttack2": {
       "name": "冰陨石符文",
@@ -12501,7 +12664,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5263
+      "source_path_id": 5297
     },
     "RareRune_SorcererStrongAttack3": {
       "name": "闪电风暴符文",
@@ -12544,7 +12707,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5264
+      "source_path_id": 5298
     },
     "RareRune_SorcererStrongAttack4": {
       "name": "冰霜光束符文",
@@ -12587,7 +12750,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5265
+      "source_path_id": 5299
     },
     "RareRune_WarriorBasicAttack": {
       "name": "英勇打击符文",
@@ -12630,7 +12793,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5266
+      "source_path_id": 5300
     },
     "RareRune_WarriorBasicAttack2": {
       "name": "横扫符文",
@@ -12673,7 +12836,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5267
+      "source_path_id": 5301
     },
     "RareRune_WarriorBasicAttack3": {
       "name": "血刃打击符文",
@@ -12716,7 +12879,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5268
+      "source_path_id": 5302
     },
     "RareRune_WarriorBasicAttack4": {
       "name": "稳固打击符文",
@@ -12759,7 +12922,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5269
+      "source_path_id": 5303
     },
     "RareRune_WarriorHeavyAttack1": {
       "name": "烈焰打击符文",
@@ -12802,7 +12965,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5270
+      "source_path_id": 5304
     },
     "RareRune_WarriorHeavyAttack2": {
       "name": "半月斩符文",
@@ -12845,7 +13008,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5271
+      "source_path_id": 5305
     },
     "RareRune_WarriorHeavyAttack3": {
       "name": "旋风斩符文",
@@ -12888,7 +13051,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5272
+      "source_path_id": 5306
     },
     "RareRune_WarriorHeavyAttack4": {
       "name": "裂血连击符文",
@@ -12931,7 +13094,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5273
+      "source_path_id": 5307
     },
     "RareRune_WarriorRageShield": {
       "name": "狂怒护盾符文",
@@ -12974,7 +13137,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5274
+      "source_path_id": 5308
     },
     "RareRune_WarriorRageShout": {
       "name": "怒吼符文",
@@ -13017,7 +13180,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5275
+      "source_path_id": 5309
     },
     "RareRune_WarriorSpecial3": {
       "name": "夺命钩爪符文",
@@ -13060,7 +13223,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5276
+      "source_path_id": 5310
     },
     "RareRune_WarriorSpecial4": {
       "name": "裂地击符文",
@@ -13103,7 +13266,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5277
+      "source_path_id": 5311
     },
     "RareRune_WarriorSpecial5": {
       "name": "铁棘符文",
@@ -13146,7 +13309,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5278
+      "source_path_id": 5312
     },
     "RareRune_WarriorSpecial6": {
       "name": "熔铸之力符文",
@@ -13189,7 +13352,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5279
+      "source_path_id": 5313
     },
     "RareShoulder1": {
       "name": "深红卫士护肩",
@@ -13204,7 +13367,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5089
+      "source_path_id": 5123
     },
     "RareShoulder2": {
       "name": "死颅护肩",
@@ -13219,7 +13382,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5090
+      "source_path_id": 5124
     },
     "RareShoulder3": {
       "name": "阳刺护肩",
@@ -13234,7 +13397,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5091
+      "source_path_id": 5125
     },
     "RareShoulder4": {
       "name": "鎏金札甲肩铠",
@@ -13249,7 +13412,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5092
+      "source_path_id": 5126
     },
     "RareShoulder5": {
       "name": "紫罗兰侍僧肩饰",
@@ -13264,7 +13427,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5093
+      "source_path_id": 5127
     },
     "RareShoulder6": {
       "name": "象牙白符印肩饰",
@@ -13279,7 +13442,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5094
+      "source_path_id": 5128
     },
     "RareShoulder7": {
       "name": "蔚蓝仪仗肩章",
@@ -13294,7 +13457,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5095
+      "source_path_id": 5129
     },
     "RareShoulder8": {
       "name": "月羽肩饰",
@@ -13309,7 +13472,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5096
+      "source_path_id": 5130
     },
     "RareStaff1": {
       "name": "新月法杖",
@@ -13324,7 +13487,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5121
+      "source_path_id": 5155
     },
     "RareStaff2": {
       "name": "铁箍战杖",
@@ -13339,7 +13502,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5122
+      "source_path_id": 5156
     },
     "RareSword1": {
       "name": "黄金弯刀",
@@ -13354,7 +13517,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5123
+      "source_path_id": 5157
     },
     "RareSword2": {
       "name": "银牙巨剑",
@@ -13369,7 +13532,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5124
+      "source_path_id": 5158
     },
     "RedDesertAirWarlordMat": {
       "name": "红岩碎块",
@@ -13392,7 +13555,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60082
+      "source_path_id": 61803
     },
     "RedForestDragonMat": {
       "name": "绯红龙眼",
@@ -13415,7 +13578,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60083
+      "source_path_id": 61804
     },
     "Rein_BeachCrabBoss": {
       "name": "怒潮蟹王",
@@ -13438,7 +13601,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60107
+      "source_path_id": 61828
     },
     "Rein_BeachHermitCrab": {
       "name": "漂壳寄居蟹",
@@ -13461,7 +13624,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60108
+      "source_path_id": 61829
     },
     "Rein_BeachNaga": {
       "name": "浅滩娜迦",
@@ -13484,7 +13647,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60109
+      "source_path_id": 61830
     },
     "Rein_BeachSerpent": {
       "name": "咸鳞海蛇",
@@ -13507,7 +13670,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60110
+      "source_path_id": 61831
     },
     "Rein_BeachSquid": {
       "name": "礁岩鱿鱼",
@@ -13530,7 +13693,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60111
+      "source_path_id": 61832
     },
     "Rein_BeachTurtleBoss": {
       "name": "远古守甲巨龟",
@@ -13553,7 +13716,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60112
+      "source_path_id": 61833
     },
     "Rein_BigTreant": {
       "name": "远古橡树树人",
@@ -13576,7 +13739,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60113
+      "source_path_id": 61834
     },
     "Rein_BlackHorse": {
       "name": "黑马",
@@ -13599,7 +13762,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60114
+      "source_path_id": 61835
     },
     "Rein_BlueMammoth": {
       "name": "蓝色猛犸象",
@@ -13622,7 +13785,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60115
+      "source_path_id": 61836
     },
     "Rein_Boar": {
       "name": "野猪",
@@ -13645,7 +13808,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60116
+      "source_path_id": 61837
     },
     "Rein_BrownPony": {
       "name": "栗色小马",
@@ -13668,7 +13831,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60117
+      "source_path_id": 61838
     },
     "Rein_Bull": {
       "name": "橡背驮牛",
@@ -13691,7 +13854,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5130
+      "source_path_id": 5164
     },
     "Rein_DarkElfMage": {
       "name": "黑暗精灵法师",
@@ -13714,7 +13877,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60118
+      "source_path_id": 61839
     },
     "Rein_DefiledKeepAxemaster": {
       "name": "不死斧师",
@@ -13737,7 +13900,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60119
+      "source_path_id": 61840
     },
     "Rein_DefiledKeepDragon": {
       "name": "污秽古龙",
@@ -13760,7 +13923,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60120
+      "source_path_id": 61841
     },
     "Rein_DefiledKeepOoze": {
       "name": "污秽黏怪",
@@ -13783,7 +13946,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60121
+      "source_path_id": 61842
     },
     "Rein_DefiledKeepReaper": {
       "name": "白骨死神",
@@ -13806,7 +13969,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60122
+      "source_path_id": 61843
     },
     "Rein_DefiledKeepScarab": {
       "name": "腐尸圣甲虫",
@@ -13829,7 +13992,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60123
+      "source_path_id": 61844
     },
     "Rein_DefiledKeepSuccubus": {
       "name": "要塞魅魔",
@@ -13852,7 +14015,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60124
+      "source_path_id": 61845
     },
     "Rein_DesertEagle": {
       "name": "沙丘之鹰",
@@ -13875,7 +14038,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60125
+      "source_path_id": 61846
     },
     "Rein_DesertHarpy": {
       "name": "沙暴鹰身女妖女王",
@@ -13898,7 +14061,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60126
+      "source_path_id": 61847
     },
     "Rein_DesertKoboldThief": {
       "name": "沙漠狗头人盗贼",
@@ -13921,7 +14084,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60127
+      "source_path_id": 61848
     },
     "Rein_DesertKoboldWarrior": {
       "name": "沙漠狗头人战士",
@@ -13944,7 +14107,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60128
+      "source_path_id": 61849
     },
     "Rein_DesertManticoraBoss": {
       "name": "恐怖沙漠蝎狮",
@@ -13967,7 +14130,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60129
+      "source_path_id": 61850
     },
     "Rein_DesertWasp": {
       "name": "沙漠黄蜂",
@@ -13990,7 +14153,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60130
+      "source_path_id": 61851
     },
     "Rein_Dragon": {
       "name": "血月狼人",
@@ -14013,7 +14176,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5131
+      "source_path_id": 5165
     },
     "Rein_FishingWaterDragon": {
       "name": "飞鱼王",
@@ -14036,7 +14199,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60131
+      "source_path_id": 61852
     },
     "Rein_ForestSpiderKing": {
       "name": "剧毒女王",
@@ -14059,7 +14222,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60132
+      "source_path_id": 61853
     },
     "Rein_GoblinWarrior": {
       "name": "哥布林战士",
@@ -14082,7 +14245,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60133
+      "source_path_id": 61854
     },
     "Rein_Ogre": {
       "name": "食人魔",
@@ -14105,7 +14268,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60134
+      "source_path_id": 61855
     },
     "Rein_OrcWarrior": {
       "name": "兽人斗士",
@@ -14128,7 +14291,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60135
+      "source_path_id": 61856
     },
     "Rein_PoisonSpider": {
       "name": "毒液蜘蛛",
@@ -14151,7 +14314,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60136
+      "source_path_id": 61857
     },
     "Rein_Raptor": {
       "name": "迅猛龙",
@@ -14174,7 +14337,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60137
+      "source_path_id": 61858
     },
     "Rein_RedDesertAirWarlord": {
       "name": "红岩领主",
@@ -14197,7 +14360,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60138
+      "source_path_id": 61859
     },
     "Rein_RedDesertCrocodile": {
       "name": "荒原鳄鱼",
@@ -14220,7 +14383,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60139
+      "source_path_id": 61860
     },
     "Rein_RedDesertImp": {
       "name": "焦土小恶魔",
@@ -14243,7 +14406,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60140
+      "source_path_id": 61861
     },
     "Rein_RedDesertRockGolem": {
       "name": "红岩魔像",
@@ -14266,7 +14429,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60141
+      "source_path_id": 61862
     },
     "Rein_RedDesertSatyr": {
       "name": "荒原萨特",
@@ -14289,7 +14452,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60142
+      "source_path_id": 61863
     },
     "Rein_RedDesertSerparmat": {
       "name": "吞噬者瑟帕玛特",
@@ -14312,7 +14475,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60143
+      "source_path_id": 61864
     },
     "Rein_RedForestBear": {
       "name": "灰熊",
@@ -14335,7 +14498,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60144
+      "source_path_id": 61865
     },
     "Rein_RedForestDragon": {
       "name": "绯红谷之主",
@@ -14358,7 +14521,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60145
+      "source_path_id": 61866
     },
     "Rein_RedForestFaeDragon": {
       "name": "精灵龙",
@@ -14381,7 +14544,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60146
+      "source_path_id": 61867
     },
     "Rein_RedForestGiant": {
       "name": "绯红守护者",
@@ -14404,7 +14567,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60147
+      "source_path_id": 61868
     },
     "Rein_RedForestHobgoblin": {
       "name": "哥布林巨人",
@@ -14427,7 +14590,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60148
+      "source_path_id": 61869
     },
     "Rein_RedForestTiger": {
       "name": "山虎",
@@ -14450,7 +14613,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60149
+      "source_path_id": 61870
     },
     "Rein_SkeletonArcher": {
       "name": "骷髅弓箭手",
@@ -14473,7 +14636,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60150
+      "source_path_id": 61871
     },
     "Rein_SkeletonWarrior": {
       "name": "骷髅战士",
@@ -14496,7 +14659,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60151
+      "source_path_id": 61872
     },
     "Rein_SnowHillFrostDragon": {
       "name": "冰霜巨龙",
@@ -14519,7 +14682,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60152
+      "source_path_id": 61873
     },
     "Rein_SnowHillIceHound": {
       "name": "冰霜猎犬",
@@ -14542,7 +14705,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60153
+      "source_path_id": 61874
     },
     "Rein_SnowHillRockElemental": {
       "name": "冰岩元素",
@@ -14565,7 +14728,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60154
+      "source_path_id": 61875
     },
     "Rein_SnowHillSlime": {
       "name": "冰霜史莱姆",
@@ -14588,7 +14751,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60155
+      "source_path_id": 61876
     },
     "Rein_SnowHillWhelp": {
       "name": "冰霜幼龙",
@@ -14611,7 +14774,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60156
+      "source_path_id": 61877
     },
     "Rein_SnowHillZombieWarrior": {
       "name": "冰封僵尸战士",
@@ -14634,7 +14797,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60157
+      "source_path_id": 61878
     },
     "Rein_Spider": {
       "name": "黑蜘蛛",
@@ -14657,7 +14820,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60158
+      "source_path_id": 61879
     },
     "Rein_Stumplin": {
       "name": "树桩怪",
@@ -14680,7 +14843,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60159
+      "source_path_id": 61880
     },
     "Rein_TazanCamel": {
       "name": "塔赞骆驼",
@@ -14703,7 +14866,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60160
+      "source_path_id": 61881
     },
     "Rein_VolcanoCinderlash": {
       "name": "焰鞭魔",
@@ -14726,7 +14889,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60161
+      "source_path_id": 61882
     },
     "Rein_VolcanoDemonLord": {
       "name": "灰烬之主",
@@ -14749,7 +14912,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60162
+      "source_path_id": 61883
     },
     "Rein_VolcanoDragon": {
       "name": "焰牙",
@@ -14772,7 +14935,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60163
+      "source_path_id": 61884
     },
     "Rein_VolcanoEmberBat": {
       "name": "余烬蝠",
@@ -14795,7 +14958,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60164
+      "source_path_id": 61885
     },
     "Rein_VolcanoHellguard": {
       "name": "炼狱卫士",
@@ -14818,7 +14981,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60165
+      "source_path_id": 61886
     },
     "Rein_VolcanoMagmaGolem": {
       "name": "熔岩魔像",
@@ -14841,7 +15004,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60166
+      "source_path_id": 61887
     },
     "Rein_Werewolf": {
       "name": "血月狼人",
@@ -14864,7 +15027,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60167
+      "source_path_id": 61888
     },
     "Rein_WhiteHorse": {
       "name": "白马",
@@ -14887,7 +15050,37 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60168
+      "source_path_id": 61889
+    },
+    "Rein_WorldBossPumpkin": {
+      "name": "南瓜王",
+      "label_key": "WorldBossPumpkin",
+      "kind": "material",
+      "item_type": 2,
+      "rarity": 3,
+      "icon": "/icons/Rein_WorldBossPumpkin.png",
+      "description": "挑战世界首领南瓜王，他用诅咒南瓜与邪恶烈焰收割灵魂。",
+      "effect_groups": [
+        {
+          "title": "物品说明",
+          "values": [],
+          "texts": [
+            "挑战世界首领南瓜王，他用诅咒南瓜与邪恶烈焰收割灵魂。"
+          ]
+        },
+        {
+          "title": "物品效果",
+          "values": [],
+          "texts": [
+            "使用后解锁仆人：南瓜王。"
+          ]
+        }
+      ],
+      "effect_note": "",
+      "source_effect_ids": [],
+      "source_class": "ItemData",
+      "source_file": "sharedassets0.assets",
+      "source_path_id": 61890
     },
     "Rein_ZombieWolf": {
       "name": "变异之狼",
@@ -14910,7 +15103,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60169
+      "source_path_id": 61891
     },
     "Rein_wolf": {
       "name": "灰森林狼",
@@ -14933,7 +15126,30 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60170
+      "source_path_id": 61892
+    },
+    "RoyalTreasureChest": {
+      "name": "皇室宝箱",
+      "label_key": "RoyalTreasureChest",
+      "kind": "chest",
+      "item_type": 2,
+      "rarity": 2,
+      "icon": "/icons/RoyalTreasureChest.png",
+      "description": "一个满载金币与珍宝的皇室宝箱。打开后释放大量物品，有机会获得高稀有度的掉落物。",
+      "effect_groups": [
+        {
+          "title": "物品说明",
+          "values": [],
+          "texts": [
+            "一个满载金币与珍宝的皇室宝箱。打开后释放大量物品，有机会获得高稀有度的掉落物。"
+          ]
+        }
+      ],
+      "effect_note": "",
+      "source_effect_ids": [],
+      "source_class": "ItemData",
+      "source_file": "sharedassets0.assets",
+      "source_path_id": 61698
     },
     "Skull": {
       "name": "恶魔头骨",
@@ -14956,7 +15172,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60084
+      "source_path_id": 61805
     },
     "SkullInferno": {
       "name": "炼狱头骨",
@@ -14979,7 +15195,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60085
+      "source_path_id": 61806
     },
     "SkullNightmare": {
       "name": "噩梦头骨",
@@ -15002,7 +15218,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60086
+      "source_path_id": 61807
     },
     "SnowHillFrostDragonMat": {
       "name": "霜心结晶",
@@ -15025,7 +15241,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60087
+      "source_path_id": 61808
     },
     "SorcererSetRune1_1": {
       "name": "炼狱盟约符文 (I)",
@@ -15058,7 +15274,7 @@
           "title": "2 件套效果",
           "values": [],
           "texts": [
-            "对灼烧敌人的伤害 +65%。"
+            "对灼烧敌人的伤害 +90%。"
           ]
         },
         {
@@ -15080,7 +15296,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5326
+      "source_path_id": 5362
     },
     "SorcererSetRune1_2": {
       "name": "炼狱盟约符文 (II)",
@@ -15113,7 +15329,7 @@
           "title": "2 件套效果",
           "values": [],
           "texts": [
-            "对灼烧敌人的伤害 +65%。"
+            "对灼烧敌人的伤害 +90%。"
           ]
         },
         {
@@ -15135,7 +15351,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5327
+      "source_path_id": 5363
     },
     "SorcererSetRune1_3": {
       "name": "炼狱盟约符文 (III)",
@@ -15173,7 +15389,7 @@
           "title": "2 件套效果",
           "values": [],
           "texts": [
-            "对灼烧敌人的伤害 +65%。"
+            "对灼烧敌人的伤害 +90%。"
           ]
         },
         {
@@ -15195,7 +15411,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5328
+      "source_path_id": 5364
     },
     "SorcererSetRune1_4": {
       "name": "炼狱盟约符文 (IV)",
@@ -15233,7 +15449,7 @@
           "title": "2 件套效果",
           "values": [],
           "texts": [
-            "对灼烧敌人的伤害 +65%。"
+            "对灼烧敌人的伤害 +90%。"
           ]
         },
         {
@@ -15255,7 +15471,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5329
+      "source_path_id": 5365
     },
     "SorcererSetRune1_5": {
       "name": "炼狱盟约符文 (V)",
@@ -15293,7 +15509,7 @@
           "title": "2 件套效果",
           "values": [],
           "texts": [
-            "对灼烧敌人的伤害 +65%。"
+            "对灼烧敌人的伤害 +90%。"
           ]
         },
         {
@@ -15315,7 +15531,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5330
+      "source_path_id": 5366
     },
     "SorcererSetRune1_6": {
       "name": "炼狱盟约符文 (VI)",
@@ -15353,7 +15569,7 @@
           "title": "2 件套效果",
           "values": [],
           "texts": [
-            "对灼烧敌人的伤害 +65%。"
+            "对灼烧敌人的伤害 +90%。"
           ]
         },
         {
@@ -15375,7 +15591,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5331
+      "source_path_id": 5367
     },
     "SorcererSetRune2_1": {
       "name": "冰封弹幕符文 (I)",
@@ -15430,7 +15646,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5332
+      "source_path_id": 5368
     },
     "SorcererSetRune2_2": {
       "name": "冰封弹幕符文 (II)",
@@ -15485,7 +15701,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5333
+      "source_path_id": 5369
     },
     "SorcererSetRune2_3": {
       "name": "冰封弹幕符文 (III)",
@@ -15545,7 +15761,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5334
+      "source_path_id": 5370
     },
     "SorcererSetRune2_4": {
       "name": "冰封弹幕符文 (IV)",
@@ -15605,7 +15821,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5335
+      "source_path_id": 5371
     },
     "SorcererSetRune2_5": {
       "name": "冰封弹幕符文 (V)",
@@ -15665,7 +15881,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5336
+      "source_path_id": 5372
     },
     "SorcererSetRune2_6": {
       "name": "冰封弹幕符文 (VI)",
@@ -15725,7 +15941,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5337
+      "source_path_id": 5373
     },
     "SorcererSetRune3_1": {
       "name": "唤雷者符文 (I)",
@@ -15772,7 +15988,7 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "闪电风暴的每次雷击都会生成一个闪电球，每0.75秒脉冲一次，共3次，每次在小范围内造成相当于75%武器伤害的闪电伤害。"
+            "闪电风暴的每次雷击都会生成一个闪电球，脉冲3次，每次在小范围内造成相当于50%武器伤害的闪电伤害。"
           ]
         }
       ],
@@ -15780,7 +15996,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5338
+      "source_path_id": 5374
     },
     "SorcererSetRune3_2": {
       "name": "唤雷者符文 (II)",
@@ -15827,7 +16043,7 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "闪电风暴的每次雷击都会生成一个闪电球，每0.75秒脉冲一次，共3次，每次在小范围内造成相当于75%武器伤害的闪电伤害。"
+            "闪电风暴的每次雷击都会生成一个闪电球，脉冲3次，每次在小范围内造成相当于50%武器伤害的闪电伤害。"
           ]
         }
       ],
@@ -15835,7 +16051,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5339
+      "source_path_id": 5375
     },
     "SorcererSetRune3_3": {
       "name": "唤雷者符文 (III)",
@@ -15887,7 +16103,7 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "闪电风暴的每次雷击都会生成一个闪电球，每0.75秒脉冲一次，共3次，每次在小范围内造成相当于75%武器伤害的闪电伤害。"
+            "闪电风暴的每次雷击都会生成一个闪电球，脉冲3次，每次在小范围内造成相当于50%武器伤害的闪电伤害。"
           ]
         }
       ],
@@ -15895,7 +16111,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5340
+      "source_path_id": 5376
     },
     "SorcererSetRune3_4": {
       "name": "唤雷者符文 (IV)",
@@ -15947,7 +16163,7 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "闪电风暴的每次雷击都会生成一个闪电球，每0.75秒脉冲一次，共3次，每次在小范围内造成相当于75%武器伤害的闪电伤害。"
+            "闪电风暴的每次雷击都会生成一个闪电球，脉冲3次，每次在小范围内造成相当于50%武器伤害的闪电伤害。"
           ]
         }
       ],
@@ -15955,7 +16171,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5341
+      "source_path_id": 5377
     },
     "SorcererSetRune3_5": {
       "name": "唤雷者符文 (V)",
@@ -16007,7 +16223,7 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "闪电风暴的每次雷击都会生成一个闪电球，每0.75秒脉冲一次，共3次，每次在小范围内造成相当于75%武器伤害的闪电伤害。"
+            "闪电风暴的每次雷击都会生成一个闪电球，脉冲3次，每次在小范围内造成相当于50%武器伤害的闪电伤害。"
           ]
         }
       ],
@@ -16015,7 +16231,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5342
+      "source_path_id": 5378
     },
     "SorcererSetRune3_6": {
       "name": "唤雷者符文 (VI)",
@@ -16067,7 +16283,7 @@
           "title": "6 件套效果",
           "values": [],
           "texts": [
-            "闪电风暴的每次雷击都会生成一个闪电球，每0.75秒脉冲一次，共3次，每次在小范围内造成相当于75%武器伤害的闪电伤害。"
+            "闪电风暴的每次雷击都会生成一个闪电球，脉冲3次，每次在小范围内造成相当于50%武器伤害的闪电伤害。"
           ]
         }
       ],
@@ -16075,7 +16291,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5343
+      "source_path_id": 5379
     },
     "SoulShard": {
       "name": "灵魂碎片",
@@ -16098,7 +16314,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60088
+      "source_path_id": 61809
     },
     "StormheartPotion": {
       "name": "高级高效合剂",
@@ -16121,7 +16337,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59986
+      "source_path_id": 61699
     },
     "TreasureChest1": {
       "name": "银色宝箱",
@@ -16144,7 +16360,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59987
+      "source_path_id": 61700
     },
     "TreasureChest2": {
       "name": "黄金宝箱",
@@ -16167,7 +16383,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59988
+      "source_path_id": 61701
     },
     "TreasureChest3": {
       "name": "神话宝箱",
@@ -16190,7 +16406,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59989
+      "source_path_id": 61702
     },
     "TreasureMapKey": {
       "name": "白银宝藏钥匙",
@@ -16213,7 +16429,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60089
+      "source_path_id": 61810
     },
     "TreasureMapKeyInferno": {
       "name": "皇家宝藏钥匙",
@@ -16236,7 +16452,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60090
+      "source_path_id": 61811
     },
     "TreasureMapKeyNightmare": {
       "name": "黄金宝藏钥匙",
@@ -16259,7 +16475,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60091
+      "source_path_id": 61812
     },
     "UnCommonAxe1": {
       "name": "风化战斧",
@@ -16274,7 +16490,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5125
+      "source_path_id": 5159
     },
     "UnCommonFish1": {
       "name": "锈钳螯虾",
@@ -16297,7 +16513,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60028
+      "source_path_id": 61748
     },
     "UnCommonFish2": {
       "name": "月鳞鲦",
@@ -16320,7 +16536,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60029
+      "source_path_id": 61749
     },
     "UnCommonFish3": {
       "name": "霜纹螺壳",
@@ -16343,7 +16559,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60030
+      "source_path_id": 61750
     },
     "UnCommonFish4": {
       "name": "硫磺泥鳅",
@@ -16366,7 +16582,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60031
+      "source_path_id": 61751
     },
     "UncommonBelt1": {
       "name": "坚固扣环腰带",
@@ -16381,7 +16597,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4940
+      "source_path_id": 4970
     },
     "UncommonBelt2": {
       "name": "环扣腰带",
@@ -16396,7 +16612,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4941
+      "source_path_id": 4971
     },
     "UncommonBelt3": {
       "name": "旅者缠腰带",
@@ -16411,7 +16627,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4942
+      "source_path_id": 4972
     },
     "UncommonBelt4": {
       "name": "钢箍腰带",
@@ -16426,7 +16642,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4943
+      "source_path_id": 4973
     },
     "UncommonBoots1": {
       "name": "荆棘步靴",
@@ -16441,7 +16657,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4956
+      "source_path_id": 4986
     },
     "UncommonBoots2": {
       "name": "毛皮内衬远足靴",
@@ -16456,7 +16672,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4957
+      "source_path_id": 4987
     },
     "UncommonBoots3": {
       "name": "流浪者之靴",
@@ -16471,7 +16687,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4958
+      "source_path_id": 4988
     },
     "UncommonBoots4": {
       "name": "扣带旅行靴",
@@ -16486,7 +16702,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4959
+      "source_path_id": 4989
     },
     "UncommonBow1": {
       "name": "红木猎弓",
@@ -16501,7 +16717,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5126
+      "source_path_id": 5160
     },
     "UncommonChestArmor1": {
       "name": "铆钉锁甲背心",
@@ -16516,7 +16732,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4977
+      "source_path_id": 5007
     },
     "UncommonChestArmor2": {
       "name": "翠绿连帽外袍",
@@ -16531,7 +16747,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4978
+      "source_path_id": 5008
     },
     "UncommonChestArmor3": {
       "name": "蓝哨岗袄子",
@@ -16546,7 +16762,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4979
+      "source_path_id": 5009
     },
     "UncommonChestArmor4": {
       "name": "交叉束带皮背心",
@@ -16561,7 +16777,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4980
+      "source_path_id": 5010
     },
     "UncommonGloves1": {
       "name": "钢板护手",
@@ -16576,7 +16792,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4996
+      "source_path_id": 5026
     },
     "UncommonGloves2": {
       "name": "翠绿皮革手套",
@@ -16591,7 +16807,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4997
+      "source_path_id": 5027
     },
     "UncommonGloves3": {
       "name": "水手手套",
@@ -16606,7 +16822,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4998
+      "source_path_id": 5028
     },
     "UncommonGloves4": {
       "name": "黑色符印手套",
@@ -16621,7 +16837,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 4999
+      "source_path_id": 5029
     },
     "UncommonHelm1": {
       "name": "铁鼻盔",
@@ -16636,7 +16852,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5020
+      "source_path_id": 5050
     },
     "UncommonHelm2": {
       "name": "钢锅盔",
@@ -16651,7 +16867,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5021
+      "source_path_id": 5051
     },
     "UncommonHelm3": {
       "name": "卫兵头盔",
@@ -16666,7 +16882,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5022
+      "source_path_id": 5052
     },
     "UncommonHelm4": {
       "name": "旅者羽饰帽",
@@ -16681,7 +16897,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5023
+      "source_path_id": 5053
     },
     "UncommonMace1": {
       "name": "锻造战锤",
@@ -16696,7 +16912,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5127
+      "source_path_id": 5161
     },
     "UncommonNeck1": {
       "name": "红宝石泪滴吊坠",
@@ -16711,7 +16927,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5038
+      "source_path_id": 5072
     },
     "UncommonNeck2": {
       "name": "棱晶四重护符",
@@ -16726,7 +16942,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5039
+      "source_path_id": 5073
     },
     "UncommonNeck3": {
       "name": "黑曜叶片吊坠",
@@ -16741,7 +16957,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5040
+      "source_path_id": 5074
     },
     "UncommonNeck4": {
       "name": "精制金项链",
@@ -16756,7 +16972,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5041
+      "source_path_id": 5075
     },
     "UncommonPant1": {
       "name": "加固兽皮护腿",
@@ -16771,7 +16987,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5057
+      "source_path_id": 5091
     },
     "UncommonPant2": {
       "name": "荆棘护卫护腿",
@@ -16786,7 +17002,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5058
+      "source_path_id": 5092
     },
     "UncommonPant3": {
       "name": "林者马裤",
@@ -16801,7 +17017,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5059
+      "source_path_id": 5093
     },
     "UncommonPant4": {
       "name": "绗缝皮革护腿",
@@ -16816,7 +17032,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5060
+      "source_path_id": 5094
     },
     "UncommonRing1": {
       "name": "龙脊戒指",
@@ -16831,7 +17047,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5077
+      "source_path_id": 5111
     },
     "UncommonRing2": {
       "name": "石榴石环",
@@ -16846,7 +17062,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5078
+      "source_path_id": 5112
     },
     "UncommonRing3": {
       "name": "尖刺铁环",
@@ -16861,7 +17077,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5079
+      "source_path_id": 5113
     },
     "UncommonRing4": {
       "name": "发黑钢环",
@@ -16876,7 +17092,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5080
+      "source_path_id": 5114
     },
     "UncommonRune_DamageVsBleeding": {
       "name": "放血",
@@ -16908,7 +17124,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5344
+      "source_path_id": 5380
     },
     "UncommonRune_DamageVsDistant": {
       "name": "远射",
@@ -16940,7 +17156,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5345
+      "source_path_id": 5381
     },
     "UncommonRune_DamageVsElite": {
       "name": "巨人杀手",
@@ -16972,7 +17188,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5346
+      "source_path_id": 5382
     },
     "UncommonRune_DamageVsHealthy": {
       "name": "伏击",
@@ -17004,7 +17220,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5347
+      "source_path_id": 5383
     },
     "UncommonRune_DamageVsInjured": {
       "name": "处决",
@@ -17036,7 +17252,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5348
+      "source_path_id": 5384
     },
     "UncommonRune_DamageVsPoisoned": {
       "name": "疫病",
@@ -17068,7 +17284,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5349
+      "source_path_id": 5385
     },
     "UncommonRune_DamageVsSlowed": {
       "name": "罗网",
@@ -17100,7 +17316,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5350
+      "source_path_id": 5386
     },
     "UncommonRune_DamageVsStunned": {
       "name": "恍惚",
@@ -17132,7 +17348,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5351
+      "source_path_id": 5387
     },
     "UncommonRune_VulnerableDamage": {
       "name": "脆弱",
@@ -17164,7 +17380,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5352
+      "source_path_id": 5388
     },
     "UncommonShoulder1": {
       "name": "层叠铁护肩",
@@ -17179,7 +17395,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5097
+      "source_path_id": 5131
     },
     "UncommonShoulder2": {
       "name": "铁肩板",
@@ -17194,7 +17410,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5098
+      "source_path_id": 5132
     },
     "UncommonShoulder3": {
       "name": "铆钉钢肩甲",
@@ -17209,7 +17425,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5099
+      "source_path_id": 5133
     },
     "UncommonShoulder4": {
       "name": "铆钉青铜肩甲",
@@ -17224,7 +17440,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5100
+      "source_path_id": 5134
     },
     "UncommonStaff1": {
       "name": "红宝石冠权杖",
@@ -17239,7 +17455,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5128
+      "source_path_id": 5162
     },
     "UncommonSword1": {
       "name": "蛇舌刃",
@@ -17254,7 +17470,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "resources.assets",
-      "source_path_id": 5129
+      "source_path_id": 5163
     },
     "UpgradeCommodity1": {
       "name": "开光石",
@@ -17277,7 +17493,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59973
+      "source_path_id": 61685
     },
     "VolcanoDemonLordMat": {
       "name": "灰烬领主之角",
@@ -17300,7 +17516,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60092
+      "source_path_id": 61813
     },
     "WarriorSetRune1_1": {
       "name": "阿瑟隆之盾符文 (I)",
@@ -17355,7 +17571,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5353
+      "source_path_id": 5389
     },
     "WarriorSetRune1_2": {
       "name": "阿瑟隆之盾符文 (II)",
@@ -17425,7 +17641,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5354
+      "source_path_id": 5390
     },
     "WarriorSetRune1_3": {
       "name": "阿瑟隆之盾符文 (III)",
@@ -17496,7 +17712,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5355
+      "source_path_id": 5391
     },
     "WarriorSetRune1_4": {
       "name": "阿瑟隆之盾符文 (IV)",
@@ -17566,7 +17782,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5356
+      "source_path_id": 5392
     },
     "WarriorSetRune1_5": {
       "name": "阿瑟隆之盾符文 (V)",
@@ -17626,7 +17842,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5357
+      "source_path_id": 5393
     },
     "WarriorSetRune1_6": {
       "name": "阿瑟隆之盾符文 (VI)",
@@ -17686,7 +17902,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5358
+      "source_path_id": 5394
     },
     "WarriorSetRune2_1": {
       "name": "风暴之眼符文 (I)",
@@ -17741,7 +17957,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5359
+      "source_path_id": 5395
     },
     "WarriorSetRune2_2": {
       "name": "风暴之眼符文 (II)",
@@ -17812,7 +18028,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5360
+      "source_path_id": 5396
     },
     "WarriorSetRune2_3": {
       "name": "风暴之眼符文 (III)",
@@ -17872,7 +18088,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5361
+      "source_path_id": 5397
     },
     "WarriorSetRune2_4": {
       "name": "风暴之眼符文 (IV)",
@@ -17932,7 +18148,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5362
+      "source_path_id": 5398
     },
     "WarriorSetRune2_5": {
       "name": "风暴之眼符文 (V)",
@@ -17992,7 +18208,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5363
+      "source_path_id": 5399
     },
     "WarriorSetRune2_6": {
       "name": "风暴之眼符文 (VI)",
@@ -18052,7 +18268,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5364
+      "source_path_id": 5400
     },
     "WarriorSetRune3_1": {
       "name": "山岳之重符文 (I)",
@@ -18107,7 +18323,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5365
+      "source_path_id": 5401
     },
     "WarriorSetRune3_2": {
       "name": "山岳之重符文 (II)",
@@ -18178,7 +18394,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5366
+      "source_path_id": 5402
     },
     "WarriorSetRune3_3": {
       "name": "山岳之重符文 (III)",
@@ -18238,7 +18454,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5367
+      "source_path_id": 5403
     },
     "WarriorSetRune3_4": {
       "name": "山岳之重符文 (IV)",
@@ -18298,7 +18514,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5368
+      "source_path_id": 5404
     },
     "WarriorSetRune3_5": {
       "name": "山岳之重符文 (V)",
@@ -18358,7 +18574,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5369
+      "source_path_id": 5405
     },
     "WarriorSetRune3_6": {
       "name": "山岳之重符文 (VI)",
@@ -18418,7 +18634,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5370
+      "source_path_id": 5406
     },
     "WarriorSetRune4_1": {
       "name": "秋收之月符文 (I)",
@@ -18473,7 +18689,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5371
+      "source_path_id": 5407
     },
     "WarriorSetRune4_2": {
       "name": "秋收之月符文 (II)",
@@ -18544,7 +18760,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5372
+      "source_path_id": 5408
     },
     "WarriorSetRune4_3": {
       "name": "秋收之月符文 (III)",
@@ -18604,7 +18820,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5373
+      "source_path_id": 5409
     },
     "WarriorSetRune4_4": {
       "name": "秋收之月符文 (IV)",
@@ -18664,7 +18880,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5374
+      "source_path_id": 5410
     },
     "WarriorSetRune4_5": {
       "name": "秋收之月符文 (V)",
@@ -18724,7 +18940,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5375
+      "source_path_id": 5411
     },
     "WarriorSetRune4_6": {
       "name": "秋收之月符文 (VI)",
@@ -18784,7 +19000,7 @@
       "source_effect_ids": [],
       "source_class": "RuneData",
       "source_file": "resources.assets",
-      "source_path_id": 5376
+      "source_path_id": 5412
     },
     "WerewolfMat": {
       "name": "狼人毛皮",
@@ -18807,7 +19023,76 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60093
+      "source_path_id": 61814
+    },
+    "WorldBossPumpkinChest1Inferno": {
+      "name": "南瓜王宝箱 (炼狱)",
+      "label_key": "WorldBossPumpkinChest1Inferno",
+      "kind": "chest",
+      "item_type": 2,
+      "rarity": 3,
+      "icon": "/icons/WorldBossPumpkinChest1Inferno.png",
+      "description": "击败南瓜王获得的战利品。打开可获得金币和物品。",
+      "effect_groups": [
+        {
+          "title": "物品说明",
+          "values": [],
+          "texts": [
+            "击败南瓜王获得的战利品。打开可获得金币和物品。"
+          ]
+        }
+      ],
+      "effect_note": "",
+      "source_effect_ids": [],
+      "source_class": "ItemData",
+      "source_file": "sharedassets0.assets",
+      "source_path_id": 61703
+    },
+    "WorldBossPumpkinChest1Nightmare": {
+      "name": "南瓜王宝箱 (噩梦)",
+      "label_key": "WorldBossPumpkinChest1Nightmare",
+      "kind": "chest",
+      "item_type": 2,
+      "rarity": 2,
+      "icon": "/icons/WorldBossPumpkinChest1Nightmare.png",
+      "description": "击败南瓜王获得的战利品。打开可获得金币和物品。",
+      "effect_groups": [
+        {
+          "title": "物品说明",
+          "values": [],
+          "texts": [
+            "击败南瓜王获得的战利品。打开可获得金币和物品。"
+          ]
+        }
+      ],
+      "effect_note": "",
+      "source_effect_ids": [],
+      "source_class": "ItemData",
+      "source_file": "sharedassets0.assets",
+      "source_path_id": 61704
+    },
+    "WorldBossPumpkinChest1Normal": {
+      "name": "南瓜王宝箱 (普通)",
+      "label_key": "WorldBossPumpkinChest1Normal",
+      "kind": "chest",
+      "item_type": 2,
+      "rarity": 1,
+      "icon": "/icons/WorldBossPumpkinChest1Normal.png",
+      "description": "击败南瓜王获得的战利品。打开可获得金币和物品。",
+      "effect_groups": [
+        {
+          "title": "物品说明",
+          "values": [],
+          "texts": [
+            "击败南瓜王获得的战利品。打开可获得金币和物品。"
+          ]
+        }
+      ],
+      "effect_note": "",
+      "source_effect_ids": [],
+      "source_class": "ItemData",
+      "source_file": "sharedassets0.assets",
+      "source_path_id": 61705
     },
     "WyrmwardPotion": {
       "name": "高级抗性合剂",
@@ -18830,7 +19115,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 59990
+      "source_path_id": 61706
     },
     "ore1": {
       "name": "铁矿石",
@@ -18853,7 +19138,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60094
+      "source_path_id": 61815
     },
     "ore2": {
       "name": "金矿石",
@@ -18876,7 +19161,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60095
+      "source_path_id": 61816
     },
     "ore3": {
       "name": "大地精华",
@@ -18899,7 +19184,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60096
+      "source_path_id": 61817
     },
     "plant1": {
       "name": "蘑菇",
@@ -18922,7 +19207,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60097
+      "source_path_id": 61818
     },
     "plant2": {
       "name": "星叶草",
@@ -18945,7 +19230,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60098
+      "source_path_id": 61819
     },
     "plant3": {
       "name": "橡树叶",
@@ -18968,7 +19253,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60099
+      "source_path_id": 61820
     },
     "plant4": {
       "name": "沙漠玫瑰",
@@ -18991,7 +19276,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60100
+      "source_path_id": 61821
     },
     "plant5": {
       "name": "潮丝海带",
@@ -19014,7 +19299,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60101
+      "source_path_id": 61822
     },
     "plant6": {
       "name": "绯红珊瑚",
@@ -19037,7 +19322,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60102
+      "source_path_id": 61823
     },
     "plant7": {
       "name": "焰绽花",
@@ -19060,7 +19345,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60103
+      "source_path_id": 61824
     },
     "plant8": {
       "name": "瘮刺草",
@@ -19083,7 +19368,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60104
+      "source_path_id": 61825
     },
     "plant_snow1": {
       "name": "霜花",
@@ -19106,7 +19391,7 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60105
+      "source_path_id": 61826
     },
     "plant_snow2": {
       "name": "雪叶草",
@@ -19129,9 +19414,9 @@
       "source_effect_ids": [],
       "source_class": "ItemData",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 60106
+      "source_path_id": 61827
     }
   },
   "comparison_effects_schema": 1,
-  "comparison_game_assembly_sha256": "f23ae23f8714fa5a49b9ab4b8ae767c33f7e50afad47284d81121354d1677a46"
+  "comparison_game_assembly_sha256": "72c9bd3a42790516c18c4728a25d6eff481bf8232288a2bfe60f550f7bfdbe26"
 }

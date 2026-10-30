@@ -1,6 +1,7 @@
 """Synthesis safety/receipt checks with copied fakes; no game process attached."""
 from copy import deepcopy
 from types import SimpleNamespace
+import struct
 import unittest
 from unittest.mock import Mock, patch
 
@@ -117,6 +118,46 @@ class SnapshotAndReceiptTests(unittest.TestCase):
         state = runtime.snapshot(gems=True, runes=False)
         self.assertNotIn('runes', state)
 
+    def test_110_online_and_local_recipes_read_gold_and_ignore_equipment_exchange(self):
+        cases = [(online, source, target, source_kind, target_kind, highest, cost)
+                 for online in (False, True)
+                 for source, target, source_kind, target_kind, highest, cost in (
+                     ('Uncommon', 'Rare', 0, 1, 0, 100000),
+                     ('Legendary', 'RuneSet', 2, 3, 1, 500000),
+                     ('Legendary', 'RuneSet', 2, 3, 2, 500000))]
+        for online, source, target, source_kind, target_kind, highest, cost in cases:
+            with self.subTest(online=online, source=source, highest=highest):
+                runtime, actions = self.runtime()
+                actions.reader.module = {'base':0}
+                runtime._singleton = Mock(side_effect=lambda copy,name: {'CloudClient':2000,'RuneManager':7000}[name])
+                runtime._gold = Mock(return_value=1000000)
+                copy = Mock(); copy.verify.side_effect = lambda obj,name: obj
+                copy.klass.side_effect = lambda obj,name: obj
+                pointers = {132:1000, 1080:6000, 2048:0, 2448:3000, 3016:12000,
+                    3032:13000, 1040:13000, 7056:14000,
+                    actions.profile['statics']['ey']:8000, 8184:9000,
+                    4016:15000,4024:16000,5016:17000,5024:18000}
+                copy.ptr.side_effect = pointers.__getitem__
+                integers = {232:int(online),3024:39,9004:highest,6160:2,
+                    4016:source_kind,4020:9,4024:target_kind,4032:cost,4036:9,4040:cost,
+                    5016:4,5020:1,5024:5,5032:500000,5036:1,5040:500000}
+                copy.integer.side_effect = integers.__getitem__
+                copy.number.side_effect = {4028:1.,4032:1.,5028:1.,5032:1.}.__getitem__
+                copy.array.side_effect = lambda obj,*a,**k: [struct.pack('<Q',p) for p in (4000,5000)] if obj==13000 else []
+                actions.reader.string.side_effect = {12000:'rules-110',15000:source,16000:target,
+                    17000:'BlackMist',18000:'Divine'}.__getitem__
+                snapshot = runtime._runes(copy,100,200)
+                self.assertEqual(snapshot['gold'],1000000)
+                self.assertEqual(len(snapshot['recipes']),1)
+                self.assertEqual(snapshot['recipes'][0]['gold_cost'],cost)
+                self.assertEqual(snapshot['recipes'][0]['available'],target != 'RuneSet' or highest >= 2)
+                self.assertEqual(snapshot['online'],online)
+                self.assertNotIn('_recipe_objects', snapshot)
+                execution = runtime._runes(copy,100,200,include_objects=True)
+                self.assertEqual(execution['_recipe_objects'],{
+                    'cube:uncommon:rare' if source_kind == 0 else 'cube:grand:set':4000 if online else None})
+                actions.reader.memory.write.assert_not_called()
+
     def test_gem_snapshot_exposes_real_output_stack_capacity_without_writes(self):
         runtime, actions = self.runtime()
         recipe = next(r for r in gem_recipes() if r['recipe_id'] == 'GemUpgradeRuby2')
@@ -130,7 +171,7 @@ class SnapshotAndReceiptTests(unittest.TestCase):
         with patch('deskrawl_assistant.synthesis_runtime.gem_recipes', return_value=[recipe]):
             state = runtime._gems(copy, 300)
         self.assertEqual(state['recipes'][0]['output_max_stack'], 99)
-        copy.integer.assert_called_with(336)
+        copy.integer.assert_called_with(352)
         actions.reader.memory.write.assert_not_called()
         self.assertNotIn('output_max_stack', recipe)
 
@@ -151,13 +192,13 @@ class SnapshotAndReceiptTests(unittest.TestCase):
     def test_online_rune_failure_is_confirmed_only_with_sequence_and_new_uid(self):
         runtime, _ = self.runtime()
         before = [rune(i) for i in range(9)]
-        recipe = {'recipe_id': 'cube:uncommon:rare', 'input_quality': 'uncommon', 'output_quality': 'rare'}
+        recipe = {'recipe_id': 'cube:uncommon:rare', 'input_quality': 'uncommon', 'output_quality': 'rare', 'gold_cost': 100}
         output = rune(12, rune_level=1, rune_xp=0)
         runtime._context = Mock(return_value=(Mock(), 1, 2)); runtime._copy = Mock(return_value=Mock())
         runtime._bag = Mock(return_value=([output], {}, 100, 40))
-        runtime._runes = Mock(return_value={'sequence': 11})
+        runtime._runes = Mock(return_value={'sequence': 11, 'gold': 900})
         receipt = runtime._confirm('synthesize_runes', before, [dict(r, quantity=1) for r in before], recipe, 1,
-                                   {'online': True, 'sequence': 10}, {'sequence': 1})
+                                   {'online': True, 'sequence': 10, 'gold': 1000}, {'sequence': 1})
         self.assertEqual(receipt['sequence'], 11)
         self.assertEqual(receipt['outputs'][0]['item_uid'], 'rune-12')
 
@@ -219,7 +260,7 @@ class SnapshotAndReceiptTests(unittest.TestCase):
         runtime, actions = self.runtime()
         before = [rune(i) for i in range(9)]
         recipe = {'recipe_id':'cube:uncommon:rare', 'input_quality':'uncommon',
-                  'output_quality':'rare', 'available':True}
+                  'output_quality':'rare', 'available':True, 'gold_cost':100}
         read = Mock(); read.ptr.return_value = 0; read.boolean.return_value = False
         read.singleton.return_value = 700
         read.pointers.return_value = list(range(1000,1009))
@@ -231,7 +272,8 @@ class SnapshotAndReceiptTests(unittest.TestCase):
         runtime._bag = Mock(return_value=(before,{},300,40))
         runtime._guard_bag_identities = Mock(); runtime._guard_inputs = Mock()
         runtime._runes = Mock(return_value={'recipes':[recipe], 'online':True,
-            'sequence':10, 'equipped_uids':[]})
+            'sequence':10, 'gold':1000, '_recipe_objects':{recipe['recipe_id']:900}, 'equipped_uids':[]})
+        runtime._gold = Mock(return_value=900)
         runtime._invoke = Mock(return_value={'sequence':1})
         selected = [dict(row,quantity=1) for row in before]
         payload = {'recipe_id':recipe['recipe_id'], 'input_uids':[r['item_uid'] for r in before],
@@ -239,6 +281,22 @@ class SnapshotAndReceiptTests(unittest.TestCase):
         receipt = {'inputs':selected, 'outputs':[dict(rune(12),quantity=1)],
             'recipe_id':recipe['recipe_id'], 'receipt_id':'test-receipt', 'quantity':1}
         return runtime, payload, receipt
+
+    def test_insufficient_rune_gold_never_selects_materials_or_submits(self):
+        runtime, payload, _ = self.rune_execution()
+        runtime._runes.return_value['gold'] = 99
+        with self.assertRaisesRegex(NativeActionError,'金币不足'):
+            runtime.execute('synthesize_runes', payload)
+        runtime._invoke.assert_not_called()
+
+    def test_rune_material_delta_without_exact_gold_fee_is_not_a_receipt(self):
+        runtime, _, _ = self.rune_execution()
+        before = [rune(i) for i in range(9)]
+        runtime._bag.return_value = ([rune(12)],{},300,40)
+        runtime._runes.return_value = {'sequence':11,'gold':950}
+        recipe = {'recipe_id':'cube:uncommon:rare','input_quality':'uncommon','output_quality':'rare','gold_cost':100}
+        self.assertIsNone(runtime._receipt('synthesize_runes', before, [dict(r,quantity=1) for r in before],
+            recipe,1,{'online':True,'sequence':10,'gold':1000},{'sequence':1}))
 
     def cube_state(self, runtime, *, visible=False, animating=False, selections=()):
         """Mutable native UI fake: consumed materials may still occupy UI slots."""
@@ -277,7 +335,7 @@ class SnapshotAndReceiptTests(unittest.TestCase):
         # Reconcile uses the real material/sequence validator, including a
         # same-quality output (an unsuccessful probabilistic upgrade).
         runtime._bag.return_value = ([rune(12)],{},300,40)
-        runtime._runes.return_value = {'sequence':11}
+        runtime._runes.return_value = {'sequence':11, 'gold':900}
         runtime._cleanup_cube = Mock(return_value=True)
         result = runtime.reconcile('role-a')
         self.assertTrue(result['effect_confirmed'])
@@ -292,13 +350,13 @@ class SnapshotAndReceiptTests(unittest.TestCase):
         with patch('deskrawl_assistant.synthesis_runtime.time.monotonic',return_value=100):
             runtime.execute('synthesize_runes',payload)
         runtime._bag.return_value = ([rune(12)],{},300,40)
-        runtime._runes.return_value = {'sequence':12}
+        runtime._runes.return_value = {'sequence':12, 'gold':900}
         with patch('deskrawl_assistant.synthesis_runtime.time.monotonic',return_value=221):
             result = runtime.reconcile('role-a')
         self.assertTrue(result['synthesis_pending']); self.assertTrue(result['timed_out'])
         self.assertEqual(runtime._invoke.call_count,1)
         self.assertIsNotNone(runtime._pending)
-        runtime._runes.return_value = {'sequence':11}
+        runtime._runes.return_value = {'sequence':11, 'gold':900}
         runtime._cleanup_cube = Mock(return_value=True)
         self.assertTrue(runtime.reconcile('role-a')['effect_confirmed'])
 

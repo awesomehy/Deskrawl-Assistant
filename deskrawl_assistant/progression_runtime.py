@@ -87,7 +87,7 @@ class ProgressionRuntime:
         with copy.copied_only():copy.klass(klass,'fe')
         static=copy.ptr(klass+184)
         if not static:return {}
-        stocks=copy.dictionary(copy.ptr(static),'pointer')
+        stocks=copy.dictionary(copy.ptr(static),'pointer','object')
         names={r['slot']:name for r,name in zip(catalog()['shop'],
                     ('weapon','helm','chest','pants','boots','belt','ring','necklace','gloves','shoulder'))}
         quotes={}
@@ -113,7 +113,14 @@ class ProgressionRuntime:
             return {'price':prices[0],'prices':prices,'level':copy.integer(obj+16),
                 'difficulty':self.reader.string(copy.ptr(obj+24)),
                 'instance_id':ids[0]}
-        for slot,obj in stocks.items():
+        slot_ids={name:slot for slot,name in names.items()}
+        for key,obj in stocks.items():
+            # RandomEquipment.clp now returns EquipSlotType.ToString() or a
+            # CubeItemKind name for the new token exchanges (slot == None).
+            name=self.reader.string(key)
+            if name in ('BlackMist','Divine'):
+                continue
+            slot=slot_ids.get(name.casefold() if isinstance(name,str) else None)
             # Verify every read at finish(), but unrelated shop slots cannot
             # affect this purchase and do not belong in its native predicates.
             with copy.copied_only() if guard_slot is not None and slot!=guard_slot else nullcontext():
@@ -223,10 +230,11 @@ class ProgressionRuntime:
         if self.reader.asset_name(soul) != 'SoulShard': raise MemoryReadError('灵魂碎片资源身份未确认。')
         amounts = copy.dictionary(copy.ptr(inventory + 64), 'int', 'object')
         bonuses = copy.dictionary(copy.ptr(player + 664), 'int', 'object')
-        capacity = copy.integer(soul + 140) + bonuses.get(soul, 0)
+        capacity = copy.integer(soul + 156) + bonuses.get(soul, 0)
         expected_capacity = data['soul_maximum'] + sum(n['soul_capacity_per_rank'] * life.get(n['id'], 0) for n in data['life_skills'])
         balance = amounts.get(soul, 0)
-        if capacity != expected_capacity or not data['soul_maximum'] <= capacity <= 3000 or not 0 <= balance <= capacity:
+        maximum_capacity = data['soul_maximum'] + sum(n['soul_capacity_per_rank'] * n['max_points'] for n in data['life_skills'])
+        if capacity != expected_capacity or not data['soul_maximum'] <= capacity <= maximum_capacity or not 0 <= balance <= capacity:
             raise MemoryReadError('灵魂碎片容量与生活技能加成不一致，暂不消费。')
         shop = {'available': False, 'open': False, 'stock': [], 'preview': [], 'reason': '回城后读取神秘商人。'}
         if merchant:
@@ -257,7 +265,7 @@ class ProgressionRuntime:
                 for entry in data['shop']:
                     obj = item_map.get(entry['id'])
                     copy.verify(obj, 'RandomEquipment')
-                    if self.reader.asset_name(obj) != entry['id'] or copy.integer(obj + 216) != entry['slot']:
+                    if self.reader.asset_name(obj) != entry['id'] or copy.integer(obj + 232) != entry['slot']:
                         raise MemoryReadError('商人随机装备部位未确认。')
             rows,preview=merchant_prices(data['shop'],stocks,level,difficulty,online)
             shop.update(available=scene==1,stock=rows if scene==1 else [],preview=preview,
@@ -488,7 +496,7 @@ class ProgressionRuntime:
                 before_uids = {r.get('item_uid') for r in bag['slots'] if r.get('item_uid')}
                 item = before['_item_map'][quote['id']]
                 copy.verify(item, 'RandomEquipment')
-                if copy.integer(item+216)!=quote['slot']:
+                if copy.integer(item+232)!=quote['slot']:
                     raise SnapshotChangedError('购买装备部位已变化。')
                 # Random equipment ignores gzr's quantity argument. Invoke the
                 # original one-item purchase repeatedly on the same main-thread

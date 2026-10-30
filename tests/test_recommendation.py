@@ -80,9 +80,9 @@ class RewardFormulaTests(unittest.TestCase):
 
 class ShippedCatalogTests(unittest.TestCase):
     def test_catalog_integrity_and_actual_localization(self):
-        self.assertEqual(len(CATALOG['maps']), 76)
+        self.assertEqual(len(CATALOG['maps']), 77)
         self.assertEqual(sum(m['supported'] for m in CATALOG['maps']), 71)
-        self.assertEqual(len(CATALOG['enemies']), 65)
+        self.assertEqual(len(CATALOG['enemies']), 66)
         self.assertEqual([d['label'] for d in CATALOG['difficulty_options']], ['普通', '噩梦', '炼狱'])
         for stage in CATALOG['maps']:
             if stage['supported']:

@@ -17,11 +17,11 @@ import UnityPy
 
 
 EXPECTED_UNITYPY = "1.25.2"
-TABLE_NAMES = ("Stats", "Equipments", "Items", "Abilities", "Talents", "Slaves", "Lifeskills")
+TABLE_NAMES = ("Stats", "Equipments", "Items", "Abilities", "Talents", "Slaves", "Lifeskills", "World")
 REQUIRED_COLUMNS = ("Key", "English", "Chinese (Simplified)")
 EQUIPMENT_NAME = re.compile(
     r"^(Common|Uncommon|UnCommon|Rare|Legendary|Divine)"
-    r"(Belt|Boots|ChestArmor|Helm|Neck|Pant|Pants|Ring|Shoulder|Axe|Bow|Mace|Sword|Staff|Gloves|Back)"
+    r"(Belt|Boots|ChestArmor|Helm|Neck|Pant|Pants|Ring|Shoulder|Axe|Bow|Mace|Sword|Staff|Gloves|Back|MinionGear)"
     r"(\d+)$"
 )
 SET_ROOT = r"(?:Warrior|Monk|Sorcerer|Hunter)SetRune\d+"

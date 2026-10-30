@@ -1,7 +1,7 @@
 {
-  "game_version": "1.0.3",
-  "build": 25973417,
-  "source": "sharedassets0.assets GemUpgradeRecipeBook (60396), RecipeData 60397..60426; runtime fields must agree before execution",
+  "game_version": "1.1.0",
+  "build": 26310087,
+  "source": "Reviewed sharedassets0.assets RecipeData; runtime fields must agree before execution",
   "gems": [
     {
       "recipe_id": "GemUpgradeAmethyst2",

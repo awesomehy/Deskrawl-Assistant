@@ -1,14 +1,35 @@
 """Read existing game loot accounting; no hooks, invocations or memory writes.
 
-WaveManager.ess records all equipment pickups in nry, but nsa retains detailed
-CarriageRarityAction receipts only for rarity >= Legendary. Low-grade outcomes
-therefore cannot be presented as confirmed receipts.
+The cumulative counters cover all equipment. The bounded queue retains only
+the latest 100 detailed CarriageRarityAction receipts for rarity >= Legendary.
+Low-grade outcomes therefore cannot be presented as confirmed receipts.
 """
 import hashlib
 import struct
 
 from .native_memory import MemoryReadError
 from .recommendation_reader import _Copy
+
+
+def _receipt_cursor(previous, source, counts, size, version):
+    """Assign stable indices despite the game's dequeue/enqueue rotation.
+
+    Enqueue and dequeue each increment Queue._version. Together with the size
+    delta this gives the number of enqueues since the previous guarded read.
+    Counters decreasing or an impossible delta means the ledger was cleared.
+    """
+    end = size
+    if previous and previous['source'] == source:
+        delta = (version - previous['version']) & 0xffffffff
+        change = size - previous['size']
+        numerator = delta + change
+        if (all(a >= b for a, b in zip(counts, previous['counts']))
+                and numerator >= 0 and not numerator % 2
+                and 0 <= numerator // 2 <= 20000000
+                and numerator // 2 >= max(change, 0)):
+            end = previous['end'] + numerator // 2
+    return {'source': source, 'counts': tuple(counts), 'size': size,
+            'version': version, 'end': end}
 
 
 def read_loot_ledger(reader, action_read, manager):
@@ -32,7 +53,12 @@ def read_loot_ledger(reader, action_read, manager):
         expected = {'Item1':16, 'Item2':24, 'Item3':28, 'Item4':29}
         if {f['name']:f['offset'] for f in reader.fields(tuple_type)} != expected:
             raise MemoryReadError('马车处置记录字段布局未确认。')
-    for index, raw in enumerate(copy.list(receipt_list, 16, 'ValueTuple`4', limit=16384)):
+    records = copy.queue(receipt_list, 16, 'ValueTuple`4', limit=100)
+    version = struct.unpack('<I', copy.read(receipt_list + 36, 4))[0] if receipt_list else 0
+    source = f'{reader.session_id}:{wave}:{counter_array}:{receipt_list}'
+    cursor = _receipt_cursor(reader.__dict__.get('_loot_receipt_cursor'), source,
+                             counts, len(records), version)
+    for index, raw in enumerate(records, cursor['end'] - len(records)):
         item, action, ancient, mist = struct.unpack('<QiBB2x', raw)
         if action not in (0, 1, 2) or ancient not in (0, 1) or mist not in (0, 1):
             raise MemoryReadError('马车处置记录格式未确认。')
@@ -61,9 +87,10 @@ def read_loot_ledger(reader, action_read, manager):
     if any(key not in range(6) or value not in (0, 1, 2) for key, value in policy.items()):
         raise MemoryReadError('马车自动处理策略未确认。')
     copy.finish()
+    # A rejected snapshot must never consume receipt indices.
+    reader._loot_receipt_cursor = cursor
     # Built-in repeat creates a new RunPlan GUID while preserving these
     # cumulative counters/list. A round GUID is not an accounting reset.
-    source = f'{reader.session_id}:{wave}:{counter_array}:{receipt_list}'
     return {'available': True, 'complete': True, 'id': hashlib.sha256(source.encode()).hexdigest(),
             'run_id':hashlib.sha256(raw_id.encode()).hexdigest(),
             'counts': {str(n):count for n,count in enumerate(counts)},

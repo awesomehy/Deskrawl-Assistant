@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
   "scope": "Static shipped affix pool configuration only; eligible pool membership is not player affix provenance.",
-  "metadataSha256": "93f914c1e0119b82c98ca0647542c3afe0fade976d456f2212b03d699e6813de",
+  "metadataSha256": "26de344c09a88a59d19b81053c62f0612cc748206799e9f28297db4d72ad33d5",
   "unitypyVersion": "1.25.2",
   "source": {
     "path": "G:\\SteamLibrary\\steamapps\\common\\Deskrawl\\Deskrawl_Data\\sharedassets0.assets",
-    "sha256": "6fd77bbdbbc0aa08aa79e37f401e17dd6ed3120d16deb0ead4810e0c524ebc80",
-    "configPathId": 59971,
-    "configByteLength": 1056,
-    "configObjectSha256": "6490cafdefd2fe4fb5cb7dfd4e2b5b73f812ff589beeeb28427a3e8352aa342d",
+    "sha256": "e012b4b1cf6ae22c4c2bb30a792c782edd5cc78894636111380b80d840597a9d",
+    "configPathId": 61683,
+    "configByteLength": 1300,
+    "configObjectSha256": "d921118f089364d955781cd9e33559d37c3e5f900d5a3db01e51f073a471b972",
     "scriptFile": "G:\\SteamLibrary\\steamapps\\common\\Deskrawl\\Deskrawl_Data\\globalgamemanagers.assets",
-    "scriptPathId": 375,
+    "scriptPathId": 376,
     "class": "ItemizationConfig",
     "assembly": "Assembly-CSharp"
   },
@@ -19,536 +19,536 @@
       {
         "name": "Strength",
         "value": 0,
-        "fieldIndex": 23069,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23076,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94310,
         "compressedBytesHex": "00"
       },
       {
         "name": "Dexterity",
         "value": 1,
-        "fieldIndex": 23070,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23077,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94311,
         "compressedBytesHex": "02"
       },
       {
         "name": "Intelligence",
         "value": 2,
-        "fieldIndex": 23071,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23078,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94312,
         "compressedBytesHex": "04"
       },
       {
         "name": "Damage",
         "value": 3,
-        "fieldIndex": 23072,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23079,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94313,
         "compressedBytesHex": "06"
       },
       {
         "name": "CritChance",
         "value": 4,
-        "fieldIndex": 23073,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23080,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94314,
         "compressedBytesHex": "08"
       },
       {
         "name": "CritDamage",
         "value": 5,
-        "fieldIndex": 23074,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23081,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94315,
         "compressedBytesHex": "0a"
       },
       {
         "name": "AttackSpeed",
         "value": 6,
-        "fieldIndex": 23075,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23082,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94316,
         "compressedBytesHex": "0c"
       },
       {
         "name": "MaxHealth",
         "value": 7,
-        "fieldIndex": 23076,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23083,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94317,
         "compressedBytesHex": "0e"
       },
       {
         "name": "MaxHealthPercent",
         "value": 42,
-        "fieldIndex": 23077,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23084,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94318,
         "compressedBytesHex": "54"
       },
       {
         "name": "Armor",
         "value": 8,
-        "fieldIndex": 23078,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23085,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94319,
         "compressedBytesHex": "10"
       },
       {
         "name": "ArmorPercent",
         "value": 44,
-        "fieldIndex": 23079,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23086,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94320,
         "compressedBytesHex": "58"
       },
       {
         "name": "MagicResist",
         "value": 9,
-        "fieldIndex": 23080,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23087,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94321,
         "compressedBytesHex": "12"
       },
       {
         "name": "MagicResistPercent",
         "value": 59,
-        "fieldIndex": 23081,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23088,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94322,
         "compressedBytesHex": "76"
       },
       {
         "name": "Dodge",
         "value": 22,
-        "fieldIndex": 23082,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23089,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94323,
         "compressedBytesHex": "2c"
       },
       {
         "name": "CritDamageReduction",
         "value": 60,
-        "fieldIndex": 23083,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23090,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94324,
         "compressedBytesHex": "78"
       },
       {
         "name": "DamageReduction",
         "value": 64,
-        "fieldIndex": 23084,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23091,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94325,
         "compressedBytesHex": "8080"
       },
       {
         "name": "FinalDamageReduction",
         "value": 66,
-        "fieldIndex": 23085,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23092,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94327,
         "compressedBytesHex": "8084"
       },
       {
         "name": "PoisonDamageReduction",
         "value": 49,
-        "fieldIndex": 23086,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23093,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94329,
         "compressedBytesHex": "62"
       },
       {
         "name": "PhysicalDamageReduction",
         "value": 51,
-        "fieldIndex": 23087,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23094,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94330,
         "compressedBytesHex": "66"
       },
       {
         "name": "FireDamageReduction",
         "value": 52,
-        "fieldIndex": 23088,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23095,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94331,
         "compressedBytesHex": "68"
       },
       {
         "name": "ColdDamageReduction",
         "value": 53,
-        "fieldIndex": 23089,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23096,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94332,
         "compressedBytesHex": "6a"
       },
       {
         "name": "LightningDamageReduction",
         "value": 54,
-        "fieldIndex": 23090,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23097,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94333,
         "compressedBytesHex": "6c"
       },
       {
         "name": "ArcaneDamageReduction",
         "value": 55,
-        "fieldIndex": 23091,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23098,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94334,
         "compressedBytesHex": "6e"
       },
       {
         "name": "MoveSpeed",
         "value": 10,
-        "fieldIndex": 23092,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23099,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94335,
         "compressedBytesHex": "14"
       },
       {
         "name": "MoveSpeedPercent",
         "value": 57,
-        "fieldIndex": 23093,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23100,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94336,
         "compressedBytesHex": "72"
       },
       {
         "name": "LifeOnHit",
         "value": 11,
-        "fieldIndex": 23094,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23101,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94337,
         "compressedBytesHex": "16"
       },
       {
         "name": "LifeOnKill",
         "value": 12,
-        "fieldIndex": 23095,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23102,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94338,
         "compressedBytesHex": "18"
       },
       {
         "name": "CooldownReduction",
         "value": 13,
-        "fieldIndex": 23096,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23103,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94339,
         "compressedBytesHex": "1a"
       },
       {
         "name": "MaxMana",
         "value": 14,
-        "fieldIndex": 23097,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23104,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94340,
         "compressedBytesHex": "1c"
       },
       {
         "name": "GoldFind",
         "value": 15,
-        "fieldIndex": 23098,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23105,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94341,
         "compressedBytesHex": "1e"
       },
       {
         "name": "MagicFind",
         "value": 16,
-        "fieldIndex": 23099,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23106,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94342,
         "compressedBytesHex": "20"
       },
       {
         "name": "HpPotionFind",
         "value": 17,
-        "fieldIndex": 23100,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23107,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94343,
         "compressedBytesHex": "22"
       },
       {
         "name": "Capacity",
         "value": 18,
-        "fieldIndex": 23101,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23108,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94344,
         "compressedBytesHex": "24"
       },
       {
         "name": "MaterialFind",
         "value": 19,
-        "fieldIndex": 23102,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23109,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94345,
         "compressedBytesHex": "26"
       },
       {
         "name": "WeaponDamage",
         "value": 20,
-        "fieldIndex": 23103,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23110,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94346,
         "compressedBytesHex": "28"
       },
       {
         "name": "WeaponSpeed",
         "value": 21,
-        "fieldIndex": 23104,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23111,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94347,
         "compressedBytesHex": "2a"
       },
       {
         "name": "DamagePhysical",
         "value": 23,
-        "fieldIndex": 23105,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23112,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94348,
         "compressedBytesHex": "2e"
       },
       {
         "name": "DamageFire",
         "value": 24,
-        "fieldIndex": 23106,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23113,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94349,
         "compressedBytesHex": "30"
       },
       {
         "name": "DamageCold",
         "value": 25,
-        "fieldIndex": 23107,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23114,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94350,
         "compressedBytesHex": "32"
       },
       {
         "name": "DamageLightning",
         "value": 26,
-        "fieldIndex": 23108,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23115,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94351,
         "compressedBytesHex": "34"
       },
       {
         "name": "DamagePoison",
         "value": 27,
-        "fieldIndex": 23109,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23116,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94352,
         "compressedBytesHex": "36"
       },
       {
         "name": "DamageArcane",
         "value": 28,
-        "fieldIndex": 23110,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23117,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94353,
         "compressedBytesHex": "38"
       },
       {
         "name": "DamagePercent",
         "value": 65,
-        "fieldIndex": 23111,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23118,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94354,
         "compressedBytesHex": "8082"
       },
       {
         "name": "DamageVsHealthy",
         "value": 29,
-        "fieldIndex": 23112,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23119,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94356,
         "compressedBytesHex": "3a"
       },
       {
         "name": "DamageVsInjured",
         "value": 30,
-        "fieldIndex": 23113,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23120,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94357,
         "compressedBytesHex": "3c"
       },
       {
         "name": "DamageVsSlowed",
         "value": 31,
-        "fieldIndex": 23114,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23121,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94358,
         "compressedBytesHex": "3e"
       },
       {
         "name": "DamageVsElite",
         "value": 32,
-        "fieldIndex": 23115,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23122,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94359,
         "compressedBytesHex": "40"
       },
       {
         "name": "VulnerableDamage",
         "value": 40,
-        "fieldIndex": 23116,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23123,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94360,
         "compressedBytesHex": "50"
       },
       {
         "name": "DamageVsImmobilized",
         "value": 43,
-        "fieldIndex": 23117,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23124,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94361,
         "compressedBytesHex": "56"
       },
       {
         "name": "DamageVsBleeding",
         "value": 45,
-        "fieldIndex": 23118,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23125,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94362,
         "compressedBytesHex": "5a"
       },
       {
         "name": "DamageVsPoisoned",
         "value": 46,
-        "fieldIndex": 23119,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23126,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94363,
         "compressedBytesHex": "5c"
       },
       {
         "name": "DamageVsDistant",
         "value": 58,
-        "fieldIndex": 23120,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23127,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94364,
         "compressedBytesHex": "74"
       },
       {
         "name": "BasicAttackDamage",
         "value": 33,
-        "fieldIndex": 23121,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23128,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94365,
         "compressedBytesHex": "42"
       },
       {
         "name": "StrongAttackDamage",
         "value": 34,
-        "fieldIndex": 23122,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23129,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94366,
         "compressedBytesHex": "44"
       },
       {
         "name": "SpecialAbilityDamage",
         "value": 61,
-        "fieldIndex": 23123,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23130,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94367,
         "compressedBytesHex": "7a"
       },
       {
         "name": "DamageOverTime",
         "value": 62,
-        "fieldIndex": 23124,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23131,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94368,
         "compressedBytesHex": "7c"
       },
       {
         "name": "DamageVsBurned",
         "value": 63,
-        "fieldIndex": 23125,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23132,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94369,
         "compressedBytesHex": "7e"
       },
       {
         "name": "ManaOnKill",
         "value": 35,
-        "fieldIndex": 23126,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23133,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94370,
         "compressedBytesHex": "46"
       },
       {
         "name": "LifeRegen",
         "value": 36,
-        "fieldIndex": 23127,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23134,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94371,
         "compressedBytesHex": "48"
       },
       {
         "name": "HealingReceivedBonus",
         "value": 56,
-        "fieldIndex": 23128,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23135,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94372,
         "compressedBytesHex": "70"
       },
       {
         "name": "ManaRegen",
         "value": 47,
-        "fieldIndex": 23129,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23136,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94373,
         "compressedBytesHex": "5e"
       },
       {
         "name": "ManaCostReduction",
         "value": 37,
-        "fieldIndex": 23130,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23137,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94374,
         "compressedBytesHex": "4a"
       },
       {
         "name": "PotionCharges",
         "value": 38,
-        "fieldIndex": 23131,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23138,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94375,
         "compressedBytesHex": "4c"
       },
       {
         "name": "Thorns",
         "value": 39,
-        "fieldIndex": 23132,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23139,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94376,
         "compressedBytesHex": "4e"
       },
       {
         "name": "XPGain",
         "value": 41,
-        "fieldIndex": 23133,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23140,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94377,
         "compressedBytesHex": "52"
       },
       {
         "name": "ThornsDamagePercent",
         "value": 48,
-        "fieldIndex": 23134,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23141,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94378,
         "compressedBytesHex": "60"
       },
       {
         "name": "GemSlots",
         "value": 50,
-        "fieldIndex": 23135,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23142,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94379,
         "compressedBytesHex": "64"
       }
@@ -557,24 +557,24 @@
       {
         "name": "Primary",
         "value": 0,
-        "fieldIndex": 23141,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23148,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94383,
         "compressedBytesHex": "00"
       },
       {
         "name": "Secondary",
         "value": 1,
-        "fieldIndex": 23142,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23149,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94384,
         "compressedBytesHex": "02"
       },
       {
         "name": "Legendary",
         "value": 2,
-        "fieldIndex": 23143,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23150,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94385,
         "compressedBytesHex": "04"
       }
@@ -583,24 +583,24 @@
       {
         "name": "Flat",
         "value": 0,
-        "fieldIndex": 23149,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23156,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94389,
         "compressedBytesHex": "00"
       },
       {
         "name": "PercentAdd",
         "value": 1,
-        "fieldIndex": 23150,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23157,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94390,
         "compressedBytesHex": "02"
       },
       {
         "name": "PercentMult",
         "value": 2,
-        "fieldIndex": 23151,
-        "defaultTypeIndex": 24078,
+        "fieldIndex": 23158,
+        "defaultTypeIndex": 24191,
         "defaultDataIndex": 94391,
         "compressedBytesHex": "04"
       }
@@ -609,98 +609,106 @@
       {
         "name": "None",
         "value": 0,
-        "fieldIndex": 24543,
-        "defaultTypeIndex": 24078,
-        "defaultDataIndex": 95085,
+        "fieldIndex": 24598,
+        "defaultTypeIndex": 24191,
+        "defaultDataIndex": 95101,
         "compressedBytesHex": "00"
       },
       {
         "name": "Weapon",
         "value": 1,
-        "fieldIndex": 24544,
-        "defaultTypeIndex": 24078,
-        "defaultDataIndex": 95086,
+        "fieldIndex": 24599,
+        "defaultTypeIndex": 24191,
+        "defaultDataIndex": 95102,
         "compressedBytesHex": "02"
       },
       {
         "name": "Helm",
         "value": 2,
-        "fieldIndex": 24545,
-        "defaultTypeIndex": 24078,
-        "defaultDataIndex": 95087,
+        "fieldIndex": 24600,
+        "defaultTypeIndex": 24191,
+        "defaultDataIndex": 95103,
         "compressedBytesHex": "04"
       },
       {
         "name": "Chest",
         "value": 3,
-        "fieldIndex": 24546,
-        "defaultTypeIndex": 24078,
-        "defaultDataIndex": 95088,
+        "fieldIndex": 24601,
+        "defaultTypeIndex": 24191,
+        "defaultDataIndex": 95104,
         "compressedBytesHex": "06"
       },
       {
         "name": "Pants",
         "value": 4,
-        "fieldIndex": 24547,
-        "defaultTypeIndex": 24078,
-        "defaultDataIndex": 95089,
+        "fieldIndex": 24602,
+        "defaultTypeIndex": 24191,
+        "defaultDataIndex": 95105,
         "compressedBytesHex": "08"
       },
       {
         "name": "Boots",
         "value": 5,
-        "fieldIndex": 24548,
-        "defaultTypeIndex": 24078,
-        "defaultDataIndex": 95090,
+        "fieldIndex": 24603,
+        "defaultTypeIndex": 24191,
+        "defaultDataIndex": 95106,
         "compressedBytesHex": "0a"
       },
       {
         "name": "Belt",
         "value": 6,
-        "fieldIndex": 24549,
-        "defaultTypeIndex": 24078,
-        "defaultDataIndex": 95091,
+        "fieldIndex": 24604,
+        "defaultTypeIndex": 24191,
+        "defaultDataIndex": 95107,
         "compressedBytesHex": "0c"
       },
       {
         "name": "Ring",
         "value": 7,
-        "fieldIndex": 24550,
-        "defaultTypeIndex": 24078,
-        "defaultDataIndex": 95092,
+        "fieldIndex": 24605,
+        "defaultTypeIndex": 24191,
+        "defaultDataIndex": 95108,
         "compressedBytesHex": "0e"
       },
       {
         "name": "Necklace",
         "value": 8,
-        "fieldIndex": 24551,
-        "defaultTypeIndex": 24078,
-        "defaultDataIndex": 95093,
+        "fieldIndex": 24606,
+        "defaultTypeIndex": 24191,
+        "defaultDataIndex": 95109,
         "compressedBytesHex": "10"
       },
       {
         "name": "Gloves",
         "value": 9,
-        "fieldIndex": 24552,
-        "defaultTypeIndex": 24078,
-        "defaultDataIndex": 95094,
+        "fieldIndex": 24607,
+        "defaultTypeIndex": 24191,
+        "defaultDataIndex": 95110,
         "compressedBytesHex": "12"
       },
       {
         "name": "Shoulder",
         "value": 10,
-        "fieldIndex": 24553,
-        "defaultTypeIndex": 24078,
-        "defaultDataIndex": 95095,
+        "fieldIndex": 24608,
+        "defaultTypeIndex": 24191,
+        "defaultDataIndex": 95111,
         "compressedBytesHex": "14"
       },
       {
         "name": "Back",
         "value": 11,
-        "fieldIndex": 24554,
-        "defaultTypeIndex": 24078,
-        "defaultDataIndex": 95096,
+        "fieldIndex": 24609,
+        "defaultTypeIndex": 24191,
+        "defaultDataIndex": 95112,
         "compressedBytesHex": "16"
+      },
+      {
+        "name": "Minion",
+        "value": 12,
+        "fieldIndex": 24610,
+        "defaultTypeIndex": 24191,
+        "defaultDataIndex": 95113,
+        "compressedBytesHex": "18"
       }
     ]
   },
@@ -1085,7 +1093,8 @@
         32,
         40,
         44,
-        65
+        65,
+        46
       ],
       "primary": [
         "Stats.Strength",
@@ -1110,7 +1119,8 @@
         "Stats.DamageVsElite",
         "Stats.VulnerableDamage",
         "Stats.ArmorPercent",
-        "Stats.DamagePercent"
+        "Stats.DamagePercent",
+        "Stats.DamageVsPoisoned"
       ],
       "secondaryValues": [
         57,
@@ -1218,6 +1228,128 @@
       "primary": [],
       "secondaryValues": [],
       "secondary": []
+    },
+    {
+      "slotValue": 12,
+      "slot": "Minion",
+      "primaryValues": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        6,
+        33,
+        34,
+        61,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        43,
+        32,
+        45,
+        58,
+        46,
+        62,
+        63,
+        40,
+        7,
+        14,
+        13,
+        8,
+        9,
+        22,
+        44,
+        54,
+        55,
+        39,
+        42,
+        51,
+        53,
+        49,
+        37,
+        52,
+        60,
+        38,
+        4,
+        65
+      ],
+      "primary": [
+        "Stats.Strength",
+        "Stats.Dexterity",
+        "Stats.Intelligence",
+        "Stats.Damage",
+        "Stats.CritDamage",
+        "Stats.AttackSpeed",
+        "Stats.BasicAttackDamage",
+        "Stats.StrongAttackDamage",
+        "Stats.SpecialAbilityDamage",
+        "Stats.DamagePhysical",
+        "Stats.DamageFire",
+        "Stats.DamageCold",
+        "Stats.DamageLightning",
+        "Stats.DamagePoison",
+        "Stats.DamageArcane",
+        "Stats.DamageVsHealthy",
+        "Stats.DamageVsInjured",
+        "Stats.DamageVsSlowed",
+        "Stats.DamageVsImmobilized",
+        "Stats.DamageVsElite",
+        "Stats.DamageVsBleeding",
+        "Stats.DamageVsDistant",
+        "Stats.DamageVsPoisoned",
+        "Stats.DamageOverTime",
+        "Stats.DamageVsBurned",
+        "Stats.VulnerableDamage",
+        "Stats.MaxHealth",
+        "Stats.MaxMana",
+        "Stats.CooldownReduction",
+        "Stats.Armor",
+        "Stats.MagicResist",
+        "Stats.Dodge",
+        "Stats.ArmorPercent",
+        "Stats.LightningDamageReduction",
+        "Stats.ArcaneDamageReduction",
+        "Stats.Thorns",
+        "Stats.MaxHealthPercent",
+        "Stats.PhysicalDamageReduction",
+        "Stats.ColdDamageReduction",
+        "Stats.PoisonDamageReduction",
+        "Stats.ManaCostReduction",
+        "Stats.FireDamageReduction",
+        "Stats.CritDamageReduction",
+        "Stats.PotionCharges",
+        "Stats.CritChance",
+        "Stats.DamagePercent"
+      ],
+      "secondaryValues": [
+        11,
+        12,
+        35,
+        36,
+        16,
+        15,
+        17,
+        41,
+        57
+      ],
+      "secondary": [
+        "Stats.LifeOnHit",
+        "Stats.LifeOnKill",
+        "Stats.ManaOnKill",
+        "Stats.LifeRegen",
+        "Stats.MagicFind",
+        "Stats.GoldFind",
+        "Stats.HpPotionFind",
+        "Stats.XPGain",
+        "Stats.MoveSpeedPercent"
+      ]
     }
   ],
   "gemSocketsBySlot": [
@@ -1275,6 +1407,11 @@
       "slotValue": 11,
       "maxSockets": 0,
       "slot": "Back"
+    },
+    {
+      "slotValue": 12,
+      "maxSockets": 0,
+      "slot": "Minion"
     }
   ],
   "minLevelForSockets": 30,

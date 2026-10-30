@@ -1,7 +1,7 @@
 'use strict';
 (function(root){
   const priceRules={lowest_sell:'最低在售价',highest_buy:'最高求购价'};
-  const categoryNames={divine_equipment:'神圣装备',black_mist_equipment:'黑雾装备',set_rune:'符文套装',grand_rune:'宏伟符文',legendary_rein:'传说缰绳',consecration_stone:'开光石',gold_bar:'金条'};
+  const categoryNames={minion_equipment:'仆从装备（可交易）',divine_equipment:'神圣装备',black_mist_equipment:'黑雾装备',set_rune:'符文套装',grand_rune:'宏伟符文',legendary_rein:'传说缰绳',consecration_stone:'开光石',gold_bar:'金条'};
   const kindNames={equipment:'装备',rune:'符文',material:'材料',commodity:'材料',rein:'缰绳',consumable:'缰绳'};
   const qualityNames={divine:'神圣',black_mist:'黑雾传说',legendary:'传说',grand:'宏伟',set:'符文套装'};
   const cleanKeys=values=>[...new Set((Array.isArray(values)?values:[]).filter(key=>typeof key==='string'&&key.trim()).map(key=>key.trim()))].sort();
@@ -17,6 +17,7 @@
   function enabled(value){const config=normalize(value);return config.upload_enabled||config.sell_enabled;}
   function category(row){
     const key=String(row.key??row.internal_name??row.name_key??'');
+    if(row.is_minion_equipment===true||row.equip_slot===12||row.slot==='Minion'||/^(Normal|Uncommon|Rare|Legendary|Divine)MinionGear\d+$/.test(key))return 'minion_equipment';
     if(row.is_black_mist===true||row.variant==='black_mist'||row.quality==='black_mist')return 'black_mist_equipment';
     if(key.startsWith('Divine'))return 'divine_equipment';
     if(key.includes('SetRune'))return 'set_rune';
@@ -37,7 +38,7 @@
     for(const row of rows){
       if(!row||typeof row.key!=='string'||!row.key.trim())continue;
       const key=row.key.trim(),q=quality({...row,key});
-      all.set(key,{...row,key,name:row.name||key,quality:q,quality_name:row.quality_name||qualityNames[q],kind_name:key.startsWith('Rein_')?'缰绳':kindNames[row.kind]||'道具',
+      all.set(key,{...row,key,name:row.name||key,quality:q,quality_name:row.quality_name||qualityNames[q],kind_name:category({...row,key})==='minion_equipment'?'仆从装备':key.startsWith('Rein_')?'缰绳':kindNames[row.kind]||'道具',
         icon:typeof row.icon==='string'&&row.icon.startsWith('/icons/')?row.icon:''});
     }
     for(const key of cleanKeys(selected))if(!all.has(key))all.set(key,{key,name:key,quality:'legendary',quality_name:'暂未收录',kind_name:'待核验',icon:'',unknown:true});

@@ -223,7 +223,7 @@ test('category toggles save independently from exact retained items and remove h
   assert.deepEqual(saved.auction.item_keys,[]);assert.equal(saved.auction.upload_enabled,false);assert.equal(saved.auction.sell_enabled,false);
   assert.deepEqual(saved.auction.excluded_keys,['HunterSetRune2']);
   const fresh=page();assert.equal(fresh.elements.has('auction-legacy-choices'),false);assert.equal(fresh.elements.has('auction-item-options'),false);
-  assert.equal(fresh.node('auction-category-options').choices.length,7);
+  assert.equal(fresh.node('auction-category-options').choices.length,8);
   assert.equal(fresh.node('auction-category-options').choices.every(row=>!row.checked),true);
 });
 

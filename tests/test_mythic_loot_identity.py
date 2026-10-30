@@ -13,10 +13,10 @@ def mythic_fixture(floor=20, difficulty='Inferno1'):
     f = Fixture()
     native = struct.unpack('<Q', f.memory.read(f.map + 16, 8))[0]
     f.memory.write_fixture(native + 56, b'MythicDungeon\0' + bytes(18))
-    f.text(f.plan + 24, 'MythicDungeon')
-    f.text(f.plan + 48, difficulty)
+    f.text(f.plan + 32, 'MythicDungeon')
+    f.text(f.plan + 56, difficulty)
     f.integer(f.map + 32, 1)
-    f.integer(f.plan + 64, floor)
+    f.integer(f.plan + 72, floor)
     f.integer(f.wave_manager + 304, floor)
     return f
 

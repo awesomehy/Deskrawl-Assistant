@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "appid": 4623570,
-  "resources_sha256": "aac3f4d0e4502ec8e58b7a592cdb83ef641cddb7b24ed8e244e913212ddcb9c1",
+  "resources_sha256": "2ae84fe8a3873a2ebb2bef42497c89ee4323c59153cf38b2931b5252c5e732fc",
   "source": "Shipped ItemData SteamItemDefId/BlackMistSteamItemDefId and English localization; names remain candidates until exact Steam market description validation.",
   "items": {
     "DivineBack1": {
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 4923,
+      "source_path_id": 4951,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -20,7 +20,7 @@
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 59991,
+      "source_path_id": 61707,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -32,7 +32,7 @@
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 5103,
+      "source_path_id": 5137,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -44,7 +44,7 @@
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 5004,
+      "source_path_id": 5034,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -56,7 +56,7 @@
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 5005,
+      "source_path_id": 5035,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -68,7 +68,7 @@
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 5006,
+      "source_path_id": 5036,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -80,7 +80,7 @@
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 5104,
+      "source_path_id": 5138,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -92,7 +92,7 @@
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 5065,
+      "source_path_id": 5099,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -104,7 +104,7 @@
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 5066,
+      "source_path_id": 5100,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -116,7 +116,7 @@
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 5105,
+      "source_path_id": 5139,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -128,7 +128,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 59972,
+      "source_path_id": 61684,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -140,7 +140,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5132,
+      "source_path_id": 5166,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -152,7 +152,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5133,
+      "source_path_id": 5167,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -164,7 +164,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5134,
+      "source_path_id": 5168,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -176,7 +176,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5135,
+      "source_path_id": 5169,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -188,7 +188,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5136,
+      "source_path_id": 5170,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -200,7 +200,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5137,
+      "source_path_id": 5171,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -212,7 +212,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5138,
+      "source_path_id": 5172,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -224,7 +224,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5139,
+      "source_path_id": 5173,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -236,7 +236,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5140,
+      "source_path_id": 5174,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -248,7 +248,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5141,
+      "source_path_id": 5175,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -260,7 +260,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5142,
+      "source_path_id": 5176,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -272,7 +272,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5143,
+      "source_path_id": 5177,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -284,7 +284,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5144,
+      "source_path_id": 5178,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -296,7 +296,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5145,
+      "source_path_id": 5179,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -308,7 +308,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5146,
+      "source_path_id": 5180,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -320,7 +320,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5147,
+      "source_path_id": 5181,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -332,7 +332,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5148,
+      "source_path_id": 5182,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -344,7 +344,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5149,
+      "source_path_id": 5183,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -356,7 +356,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5106,
+      "source_path_id": 5140,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -368,7 +368,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 59993,
+      "source_path_id": 61709,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -380,7 +380,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 59994,
+      "source_path_id": 61710,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -392,7 +392,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4934,
+      "source_path_id": 4964,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -404,7 +404,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4935,
+      "source_path_id": 4965,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -416,7 +416,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4948,
+      "source_path_id": 4978,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -428,7 +428,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4949,
+      "source_path_id": 4979,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -440,7 +440,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 59995,
+      "source_path_id": 61711,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -452,7 +452,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4950,
+      "source_path_id": 4980,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -464,7 +464,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4951,
+      "source_path_id": 4981,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -476,7 +476,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5107,
+      "source_path_id": 5141,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -488,7 +488,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5108,
+      "source_path_id": 5142,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -500,7 +500,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5109,
+      "source_path_id": 5143,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -512,7 +512,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4964,
+      "source_path_id": 4994,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -524,7 +524,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4965,
+      "source_path_id": 4995,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -536,7 +536,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4966,
+      "source_path_id": 4996,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -548,7 +548,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4967,
+      "source_path_id": 4997,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -560,7 +560,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 59996,
+      "source_path_id": 61712,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -572,7 +572,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4968,
+      "source_path_id": 4998,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -584,7 +584,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4985,
+      "source_path_id": 5015,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -596,7 +596,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 59997,
+      "source_path_id": 61713,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -608,7 +608,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4986,
+      "source_path_id": 5016,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -620,7 +620,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4987,
+      "source_path_id": 5017,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -632,7 +632,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4988,
+      "source_path_id": 5018,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -644,7 +644,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4989,
+      "source_path_id": 5019,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -656,7 +656,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4990,
+      "source_path_id": 5020,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -668,7 +668,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4991,
+      "source_path_id": 5021,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -680,7 +680,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5007,
+      "source_path_id": 5037,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -692,7 +692,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5008,
+      "source_path_id": 5038,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -704,7 +704,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5009,
+      "source_path_id": 5039,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -716,7 +716,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5010,
+      "source_path_id": 5040,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -728,7 +728,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5011,
+      "source_path_id": 5041,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -740,7 +740,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5110,
+      "source_path_id": 5144,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -748,11 +748,23 @@
         "market_hash_name": "Hellstorm Mace (Black Mist)"
       }
     },
+    "LegendaryMinionGear1": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5054,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3060,
+        "market_hash_name": "Saddle of the Golden Khan (Black Mist)"
+      }
+    },
     "LegendaryNeck1": {
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 59998,
+      "source_path_id": 61714,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -764,7 +776,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5028,
+      "source_path_id": 5062,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -776,7 +788,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5029,
+      "source_path_id": 5063,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -788,7 +800,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5030,
+      "source_path_id": 5064,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -800,7 +812,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5031,
+      "source_path_id": 5065,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -812,7 +824,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5032,
+      "source_path_id": 5066,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -824,7 +836,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5033,
+      "source_path_id": 5067,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -832,11 +844,23 @@
         "market_hash_name": "Bonebreaker Pendant (Black Mist)"
       }
     },
+    "LegendaryNeck8": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 61715,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3062,
+        "market_hash_name": "Prismatic Heart (Black Mist)"
+      }
+    },
     "LegendaryPants1": {
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5046,
+      "source_path_id": 5080,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -848,7 +872,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 59999,
+      "source_path_id": 61716,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -860,7 +884,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5047,
+      "source_path_id": 5081,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -872,7 +896,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5048,
+      "source_path_id": 5082,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -884,7 +908,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5067,
+      "source_path_id": 5101,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -896,7 +920,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5068,
+      "source_path_id": 5102,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -908,7 +932,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5069,
+      "source_path_id": 5103,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -920,7 +944,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5070,
+      "source_path_id": 5104,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -932,7 +956,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60010,
+      "source_path_id": 61729,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -944,7 +968,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5071,
+      "source_path_id": 5105,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -956,7 +980,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60011,
+      "source_path_id": 61730,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -968,7 +992,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5072,
+      "source_path_id": 5106,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -980,7 +1004,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5150,
+      "source_path_id": 5184,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -992,7 +1016,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5151,
+      "source_path_id": 5185,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1004,7 +1028,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5152,
+      "source_path_id": 5186,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1016,7 +1040,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5153,
+      "source_path_id": 5187,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1028,7 +1052,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5154,
+      "source_path_id": 5188,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1040,7 +1064,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5155,
+      "source_path_id": 5189,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1052,7 +1076,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5156,
+      "source_path_id": 5190,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1064,7 +1088,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5157,
+      "source_path_id": 5191,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1076,7 +1100,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5158,
+      "source_path_id": 5192,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1088,7 +1112,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5159,
+      "source_path_id": 5193,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1100,7 +1124,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5160,
+      "source_path_id": 5194,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1112,7 +1136,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5161,
+      "source_path_id": 5195,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1124,7 +1148,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5162,
+      "source_path_id": 5196,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1136,7 +1160,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5163,
+      "source_path_id": 5197,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1148,7 +1172,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5164,
+      "source_path_id": 5198,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1160,7 +1184,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5165,
+      "source_path_id": 5199,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1172,7 +1196,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5166,
+      "source_path_id": 5200,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1184,7 +1208,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5167,
+      "source_path_id": 5201,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1196,7 +1220,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5168,
+      "source_path_id": 5202,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1208,7 +1232,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5169,
+      "source_path_id": 5203,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1220,7 +1244,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5170,
+      "source_path_id": 5204,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1232,7 +1256,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5171,
+      "source_path_id": 5205,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1244,7 +1268,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5172,
+      "source_path_id": 5206,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1256,7 +1280,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5173,
+      "source_path_id": 5207,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1268,7 +1292,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5174,
+      "source_path_id": 5208,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1280,7 +1304,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5175,
+      "source_path_id": 5209,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1292,7 +1316,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5176,
+      "source_path_id": 5210,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1304,7 +1328,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5177,
+      "source_path_id": 5211,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1316,7 +1340,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5178,
+      "source_path_id": 5212,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1328,7 +1352,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5179,
+      "source_path_id": 5213,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1340,7 +1364,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5180,
+      "source_path_id": 5214,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1352,7 +1376,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5181,
+      "source_path_id": 5215,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1364,7 +1388,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5182,
+      "source_path_id": 5216,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1376,7 +1400,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5183,
+      "source_path_id": 5217,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1388,7 +1412,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5184,
+      "source_path_id": 5218,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1400,7 +1424,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5185,
+      "source_path_id": 5219,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1412,7 +1436,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5186,
+      "source_path_id": 5220,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1424,7 +1448,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5187,
+      "source_path_id": 5221,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1436,7 +1460,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5188,
+      "source_path_id": 5222,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1448,7 +1472,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5189,
+      "source_path_id": 5223,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1460,7 +1484,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5190,
+      "source_path_id": 5224,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1472,7 +1496,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5191,
+      "source_path_id": 5225,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1484,7 +1508,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5192,
+      "source_path_id": 5226,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1496,7 +1520,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5193,
+      "source_path_id": 5227,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1508,7 +1532,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5194,
+      "source_path_id": 5228,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1520,7 +1544,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5195,
+      "source_path_id": 5229,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1532,7 +1556,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5196,
+      "source_path_id": 5230,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1544,7 +1568,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5197,
+      "source_path_id": 5231,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1556,7 +1580,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5198,
+      "source_path_id": 5232,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1568,7 +1592,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5199,
+      "source_path_id": 5233,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1580,7 +1604,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5200,
+      "source_path_id": 5234,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1592,7 +1616,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5201,
+      "source_path_id": 5235,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1604,7 +1628,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5202,
+      "source_path_id": 5236,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1616,7 +1640,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5203,
+      "source_path_id": 5237,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1628,7 +1652,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5204,
+      "source_path_id": 5238,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1640,7 +1664,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5205,
+      "source_path_id": 5239,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1652,7 +1676,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5085,
+      "source_path_id": 5119,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -1664,7 +1688,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5086,
+      "source_path_id": 5120,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -1676,7 +1700,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60012,
+      "source_path_id": 61731,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -1688,7 +1712,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5087,
+      "source_path_id": 5121,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -1700,7 +1724,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5088,
+      "source_path_id": 5122,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -1708,11 +1732,23 @@
         "market_hash_name": "Spiritbound Pauldron (Black Mist)"
       }
     },
+    "LegendaryShoulder6": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 61732,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3061,
+        "market_hash_name": "Soulfeast Pauldron (Black Mist)"
+      }
+    },
     "LegendaryStaff1": {
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5111,
+      "source_path_id": 5145,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -1724,7 +1760,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5112,
+      "source_path_id": 5146,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -1736,7 +1772,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5113,
+      "source_path_id": 5147,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -1748,7 +1784,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5206,
+      "source_path_id": 5240,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1760,7 +1796,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5207,
+      "source_path_id": 5241,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1772,7 +1808,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5208,
+      "source_path_id": 5242,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1784,7 +1820,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5209,
+      "source_path_id": 5243,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1796,7 +1832,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5210,
+      "source_path_id": 5244,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1808,7 +1844,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5211,
+      "source_path_id": 5245,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1820,7 +1856,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5212,
+      "source_path_id": 5246,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1832,7 +1868,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5213,
+      "source_path_id": 5247,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1844,7 +1880,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5214,
+      "source_path_id": 5248,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1856,7 +1892,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5215,
+      "source_path_id": 5249,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1868,7 +1904,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5216,
+      "source_path_id": 5250,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1880,7 +1916,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5217,
+      "source_path_id": 5251,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1892,7 +1928,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5218,
+      "source_path_id": 5252,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1904,7 +1940,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5219,
+      "source_path_id": 5253,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1916,7 +1952,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5220,
+      "source_path_id": 5254,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1928,7 +1964,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5221,
+      "source_path_id": 5255,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1940,7 +1976,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5222,
+      "source_path_id": 5256,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1952,7 +1988,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5223,
+      "source_path_id": 5257,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1964,7 +2000,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60107,
+      "source_path_id": 61828,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -1976,7 +2012,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60112,
+      "source_path_id": 61833,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -1988,7 +2024,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60113,
+      "source_path_id": 61834,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2000,7 +2036,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60115,
+      "source_path_id": 61836,
       "source_file": "sharedassets0.assets",
       "retired": true,
       "normal": {
@@ -2012,7 +2048,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60118,
+      "source_path_id": 61839,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2024,7 +2060,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60120,
+      "source_path_id": 61841,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2036,7 +2072,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60122,
+      "source_path_id": 61843,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2048,7 +2084,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60126,
+      "source_path_id": 61847,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2060,7 +2096,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60129,
+      "source_path_id": 61850,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2072,7 +2108,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5131,
+      "source_path_id": 5165,
       "source_file": "resources.assets",
       "retired": true,
       "normal": {
@@ -2084,7 +2120,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60131,
+      "source_path_id": 61852,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2096,7 +2132,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60132,
+      "source_path_id": 61853,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2108,7 +2144,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60134,
+      "source_path_id": 61855,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2120,7 +2156,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60137,
+      "source_path_id": 61858,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2132,7 +2168,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60138,
+      "source_path_id": 61859,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2144,7 +2180,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60143,
+      "source_path_id": 61864,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2156,7 +2192,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60145,
+      "source_path_id": 61866,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2168,7 +2204,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60148,
+      "source_path_id": 61869,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2180,7 +2216,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60152,
+      "source_path_id": 61873,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2192,7 +2228,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60153,
+      "source_path_id": 61874,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2204,7 +2240,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60162,
+      "source_path_id": 61883,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2216,7 +2252,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60163,
+      "source_path_id": 61884,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2228,7 +2264,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 60167,
+      "source_path_id": 61888,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2236,11 +2272,23 @@
         "market_hash_name": "Rein of the Bloodmoon Werewolf"
       }
     },
+    "Rein_WorldBossPumpkin": {
+      "kind": "material",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 61890,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 2023,
+        "market_hash_name": "Rein of the Pumpkin King"
+      }
+    },
     "SorcererSetRune1_1": {
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5326,
+      "source_path_id": 5362,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2252,7 +2300,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5327,
+      "source_path_id": 5363,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2264,7 +2312,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5328,
+      "source_path_id": 5364,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2276,7 +2324,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5329,
+      "source_path_id": 5365,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2288,7 +2336,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5330,
+      "source_path_id": 5366,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2300,7 +2348,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5331,
+      "source_path_id": 5367,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2312,7 +2360,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5332,
+      "source_path_id": 5368,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2324,7 +2372,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5333,
+      "source_path_id": 5369,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2336,7 +2384,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5334,
+      "source_path_id": 5370,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2348,7 +2396,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5335,
+      "source_path_id": 5371,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2360,7 +2408,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5336,
+      "source_path_id": 5372,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2372,7 +2420,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5337,
+      "source_path_id": 5373,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2384,7 +2432,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5338,
+      "source_path_id": 5374,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2396,7 +2444,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5339,
+      "source_path_id": 5375,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2408,7 +2456,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5340,
+      "source_path_id": 5376,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2420,7 +2468,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5341,
+      "source_path_id": 5377,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2432,7 +2480,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5342,
+      "source_path_id": 5378,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2444,7 +2492,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5343,
+      "source_path_id": 5379,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2456,7 +2504,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 59973,
+      "source_path_id": 61685,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2468,7 +2516,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5353,
+      "source_path_id": 5389,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2480,7 +2528,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5354,
+      "source_path_id": 5390,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2492,7 +2540,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5355,
+      "source_path_id": 5391,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2504,7 +2552,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5356,
+      "source_path_id": 5392,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2516,7 +2564,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5357,
+      "source_path_id": 5393,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2528,7 +2576,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5358,
+      "source_path_id": 5394,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2540,7 +2588,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5359,
+      "source_path_id": 5395,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2552,7 +2600,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5360,
+      "source_path_id": 5396,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2564,7 +2612,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5361,
+      "source_path_id": 5397,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2576,7 +2624,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5362,
+      "source_path_id": 5398,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2588,7 +2636,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5363,
+      "source_path_id": 5399,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2600,7 +2648,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5364,
+      "source_path_id": 5400,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2612,7 +2660,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5365,
+      "source_path_id": 5401,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2624,7 +2672,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5366,
+      "source_path_id": 5402,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2636,7 +2684,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5367,
+      "source_path_id": 5403,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2648,7 +2696,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5368,
+      "source_path_id": 5404,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2660,7 +2708,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5369,
+      "source_path_id": 5405,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2672,7 +2720,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5370,
+      "source_path_id": 5406,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2684,7 +2732,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5371,
+      "source_path_id": 5407,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2696,7 +2744,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5372,
+      "source_path_id": 5408,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2708,7 +2756,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5373,
+      "source_path_id": 5409,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2720,7 +2768,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5374,
+      "source_path_id": 5410,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2732,7 +2780,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5375,
+      "source_path_id": 5411,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2744,7 +2792,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5376,
+      "source_path_id": 5412,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {

@@ -30,7 +30,7 @@ class TownCampaignCopy:
             asset_name=lambda obj:{0xB000:'Forest2',0xE000:'Ticket'}[obj])
         self.pointers = {0x1000+32:0x4000,0x1000+120:0,0x1000+112:0,0x2000+40:0x8000,
             DIFFICULTY_RVA:0x6000,0x6000+184:0x7000,0x5000+64:0x9000}
-        self.integers = {0x1000+168:1,0x7000:0,0x7004:1,0x4000+216:2,0xB000+32:0}
+        self.integers = {0x1000+176:1,0x7000:0,0x7004:1,0x4000+208:2,0xB000+32:0}
         self.flags = {0x4000+48:False}
         self.finished = False
     def singleton(self, rva, name): return {'GameManager':0x1000,'PlayerData':0x2000}[name]
@@ -76,8 +76,8 @@ class CampaignReadTests(unittest.TestCase):
     def test_combat_completion_keeps_verified_wave_evidence_without_dps(self):
         copy=TownCampaignCopy()
         copy.pointers.update({0x1000+120:0xA000,0x1000+112:0xB000,0x1000+104:0xC000,
-            0xC000+88:0xA000,0xA000+16:0xD000,0xA000+24:0xD100,0xA000+48:0xD200,
-            0xA000+88:0xF000,0x1000+192:0xF300})
+            0xC000+88:0xA000,0xA000+16:0xD000,0xA000+32:0xD100,0xA000+56:0xD200,
+            0xA000+104:0xF000,0x1000+200:0xF300})
         copy.integers.update({0xC000+48:2,0xC000+152:1})
         copy.flags.update({0xC000+64:False,0xC000+248:True,0xC000+249:False,0xF200+296:True})
         result=self.read_fixture(copy)

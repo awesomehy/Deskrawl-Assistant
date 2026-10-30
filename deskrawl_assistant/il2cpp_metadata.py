@@ -89,10 +89,26 @@ class PE:
         rva,size=self.directories[3]
         if not rva or size%12:raise ValueError('Invalid x64 unwind directory')
         at=self.raw(self.base+rva,size)
-        result={}
-        for start,end,_ in struct.iter_unpack('<III',self.data[at:at+size]):
+        result={};chains={}
+        for start,end,unwind in struct.iter_unpack('<III',self.data[at:at+size]):
             if not 0<start<end<=self.image_size:raise ValueError('Invalid native function range')
             result[self.base+start]=self.base+end
+            version_flags,_,count,_=self.unpack('<4B',self.base+unwind)
+            if version_flags>>3&4:
+                parent,parent_end,_=self.unpack('<III',self.base+unwind+4+((count+1)//2)*4)
+                if not 0<parent<parent_end<=self.image_size:raise ValueError('Invalid chained native range')
+                chains[self.base+start]=self.base+parent
+        # MSVC splits one method into chained unwind regions. The first region
+        # can end in the middle of a basic block; hashing it alone omits native
+        # mutations and validation in the remaining regions.
+        for fragment in chains:
+            root=fragment;seen=set()
+            while root in chains:
+                if root in seen:raise ValueError('Cyclic native unwind chain')
+                seen.add(root);root=chains[root]
+            if root not in result or not root<=fragment<root+128000:
+                raise ValueError('Unsupported native unwind chain')
+            result[root]=max(result[root],result[fragment])
         return result
 
     def imports(self):

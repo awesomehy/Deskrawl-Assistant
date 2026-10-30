@@ -144,33 +144,43 @@ class SynthesisRuntime:
             asset = copy.verify(item_map.get(recipe['output_key']), 'GemData')
             if self.reader.asset_name(asset) != recipe['output_key']:
                 raise MemoryReadError('宝石产物资源身份未确认。')
-            maximum = copy.integer(asset + 136)
+            maximum = copy.integer(asset + 152)
             if type(maximum) is not int or not 1 <= maximum <= 2**31-1:
                 raise MemoryReadError('宝石产物堆叠上限读取无效。')
             recipe['output_max_stack'] = maximum
         return {'available': True, 'recipes': recipes, 'gold': self._gold(copy)}
 
-    def _runes(self, copy, manager, save):
+    def _runes(self, copy, manager, save, *, include_objects=False):
         config = copy.verify(copy.ptr(manager + 32), 'GameConfig')
         mode = copy.integer(save + 32)
         entries, sequence, version = [], 0, 'local'
         if mode == 1:
             cloud = self._singleton(copy, 'CloudClient')
-            state = copy.verify(copy.ptr(cloud + 424), 'CubeState')
+            state = copy.verify(copy.ptr(cloud + 448), 'CubeState')
             version = self.reader.string(copy.ptr(state + 16))
-            sequence, amount = copy.integer(state + 24), copy.integer(state + 28)
-            if not version or amount != 9 or sequence < 0:
+            sequence = copy.integer(state + 24)
+            if not version or sequence < 0:
                 raise MemoryReadError('在线魔盒规则尚未同步完整，暂不合成。')
             for raw in copy.array(copy.ptr(state + 32), 8, 'CubeRecipe', limit=32):
                 obj = copy.verify(struct.unpack('<Q', raw)[0], 'CubeRecipe')
-                source = _quality(self.reader.string(copy.ptr(obj + 16)))
-                target = _quality(self.reader.string(copy.ptr(obj + 24)))
+                source_name = self.reader.string(copy.ptr(obj + 16))
+                target_name = self.reader.string(copy.ptr(obj + 24))
+                # 1.1.0 adds equipment recipes to this same array. They are
+                # deliberately outside automatic rune synthesis.
+                if source_name in ('BlackMist', 'Divine') and target_name in ('BlackMist', 'Divine'):
+                    continue
+                source, target = _quality(source_name), _quality(target_name)
                 chance = copy.number(obj + 32)
-                entries.append((source, target, chance))
+                entries.append((source, target, chance, copy.integer(obj + 36), copy.integer(obj + 40), obj))
         elif mode == 0:
             for raw in copy.array(copy.ptr(config + 40), 8, 'CubeRecipeConfig', limit=32):
                 obj = copy.verify(struct.unpack('<Q', raw)[0], 'CubeRecipeConfig')
-                entries.append((_quality(copy.integer(obj + 16)), _quality(copy.integer(obj + 20)), copy.number(obj + 24)))
+                source_kind, target_kind = copy.integer(obj + 16), copy.integer(obj + 24)
+                if source_kind in (4, 5) and target_kind in (4, 5):
+                    continue
+                qualities = {0: 'uncommon', 1: 'rare', 2: 'grand', 3: 'set'}
+                entries.append((qualities.get(source_kind), qualities.get(target_kind),
+                                copy.number(obj + 28), copy.integer(obj + 20), copy.integer(obj + 32), None))
         else:
             raise MemoryReadError('当前角色模式不支持合成。')
         if not entries:
@@ -181,9 +191,10 @@ class SynthesisRuntime:
         threshold = copy.integer(loot + 160)
         if highest not in (0, 1, 2) or threshold not in (0, 1, 2):
             raise MemoryReadError('符文合成解锁难度读取无效。')
-        recipes = []
-        for source, target, chance in entries:
-            if source not in RUNE_QUALITIES or target not in RUNE_QUALITIES or not 0 <= chance <= 1:
+        recipes, objects = [], {}
+        for source, target, chance, amount, cost, obj in entries:
+            if (source not in RUNE_QUALITIES or target not in RUNE_QUALITIES
+                    or not 0 <= chance <= 1 or amount != 9 or not 0 <= cost <= 2**31-1):
                 raise MemoryReadError('符文在线配方存在未适配的品质或概率。')
             if RUNE_QUALITIES.index(target) <= RUNE_QUALITIES.index(source):
                 continue  # Never expose the set-to-set reroll to auto synthesis.
@@ -191,7 +202,12 @@ class SynthesisRuntime:
                 raise MemoryReadError('符文升级配方与已核验的品质阶梯不一致。')
             recipes.append({'recipe_id': f'cube:{source}:{target}', 'input_quality': source,
                             'output_quality': target, 'input_count': 9, 'output_count': 1,
-                            'chance': chance, 'available': source != 'grand' or highest >= threshold})
+                            'gold_cost': cost, 'chance': chance,
+                            # 1.1.0 checks the required difficulty of both the
+                            # input and output kind. Among rune qualities only
+                            # RuneSet is gated (LootConfig.MinSetDifficulty).
+                            'available': 'set' not in (source, target) or highest >= threshold})
+            objects[recipes[-1]['recipe_id']] = obj
         if len({r['recipe_id'] for r in recipes}) != len(recipes):
             raise MemoryReadError('符文在线配方重复，暂不合成。')
         rune_manager = self._singleton(copy, 'RuneManager')
@@ -199,9 +215,13 @@ class SynthesisRuntime:
                     for raw in copy.array(copy.ptr(rune_manager + 56), 8, 'String', limit=16)]
         if any(not isinstance(uid, str) for uid in equipped):
             raise MemoryReadError('已穿戴符文 UID 尚未完整读取。')
-        return {'available': True, 'recipes': recipes, 'sequence': sequence, 'unlocked': True,
+        result = {'available': True, 'recipes': recipes, 'sequence': sequence, 'unlocked': True,
                 'rules_version': version, 'online': mode == 1,
+                'gold': self._gold(copy),
                 'equipped_uids': [uid for uid in equipped if uid]}
+        if include_objects:
+            result['_recipe_objects'] = objects
+        return result
 
     def snapshot(self, *, gems=True, runes=True):
         result = {}
@@ -316,7 +336,7 @@ class SynthesisRuntime:
         # RecipeData is not in SaveSystem's ItemData dictionary. Locate the
         # original loaded Unity asset by its verified class, never fabricate it.
         config = read.verify(read.ptr(manager + 32), 'GameConfig')
-        anchor = read.verify(read.ptr(config + 104), 'RecipeData')
+        anchor = read.verify(read.ptr(config + 112), 'RecipeData')
         klass = read.ptr(anchor)
         signature = (klass, anchor)
         if signature != self._scan_key:
@@ -410,7 +430,7 @@ class SynthesisRuntime:
                 raise NativeActionError('宝石合成金币或产物空格不足，重新规划。')
             pointer = self._find_recipe(read, manager, recipe, cancel_event, validate)
             output_asset = read.ptr(pointer + 32)
-            maximum_stack = read.integer(output_asset + 136)
+            maximum_stack = read.integer(output_asset + 152)
             room = ((capacity - len(rows)) * maximum_stack
                     + sum(maximum_stack - r['count'] for r in rows if item_key(r) == recipe['output_key']))
             if maximum_stack < 1 or count > room:
@@ -421,18 +441,21 @@ class SynthesisRuntime:
                      Invocation('et.dbn', arguments=(Argument.reference(pointer), Argument.integer(count)), require_true=True)]
             before_state = {'gold': gold}
         else:
-            state = self._runes(copy, manager, save)
+            state = dict(self._runes(copy, manager, save, include_objects=True))
+            recipe_objects = state.pop('_recipe_objects')
             recipe = next((r for r in state['recipes'] if r['recipe_id'] == payload.get('recipe_id')), None)
             if recipe is None or recipe.get('available') is not True or payload.get('count') != 1:
                 raise NativeActionError('符文配方尚未解锁或已变化。')
+            if state['gold'] < recipe['gold_cost']:
+                raise NativeActionError('符文合成金币不足，结束本轮符文合成。')
             selected = rune_inputs(rows, payload.get('input_uids'), recipe, payload.get('max_quality'),
                                    set(payload.get('excluded_keys', [])), state['equipped_uids'])
             self._guard_inputs(read, selected, registry, array)
-            if read.ptr(manager + 120) or read.boolean(manager + 260):
+            if read.ptr(manager + 120) or read.boolean(manager + 276):
                 raise GameBusyError('等待上一局奖励同步完成后合成符文。')
             if state['online']:
                 cloud = self._singleton(copy, 'CloudClient')
-                if copy.boolean(cloud + 281) or copy.boolean(cloud + 282):
+                if copy.boolean(cloud + 289) or copy.boolean(cloud + 290):
                     raise GameBusyError('等待在线角色请求结束后合成符文。')
             ui = read.singleton('CubePanelUI')
             opened = not read.boolean(ui + 40)
@@ -451,9 +474,12 @@ class SynthesisRuntime:
                     raise GameBusyError('魔盒中已有玩家选择的材料，请先完成或清空该操作。')
                 for obj, _ in selections:
                     read.verify(obj, 'RuneData')
-            calls = [Invocation('SaveSystem.ekf', instance=save, require_true=True),
-                     Invocation('SaveSystem.eke', instance=save,
-                                arguments=(Argument.integer({'uncommon': 1, 'rare': 2, 'grand': 3}[recipe['input_quality']]),), require_true=True)]
+            calls = [Invocation('SaveSystem.ekf', instance=save, require_true=True)]
+            if state['online']:
+                # The new preflight is static and accepts the live CubeRecipe,
+                # not a SaveSystem instance and ItemRarity enum.
+                calls.append(Invocation('SaveSystem.eke',
+                    arguments=(Argument.reference(recipe_objects[recipe['recipe_id']]),), require_true=True))
             if opened:
                 calls.append(Invocation('CubePanelUI.Open', instance=ui))
             calls.append(Invocation('CubePanelUI.gba', instance=ui, require_true=True))
@@ -617,6 +643,7 @@ class SynthesisRuntime:
             confirmed = (not any(r.get('item_uid') in consumed for r in rows)
                          and len(new_rows) == 1 and new_rows[0].get('item_class') == 'RuneData'
                          and rune_quality(new_rows[0]) in (recipe['input_quality'], recipe['output_quality'])
+                         and state['gold'] - after['gold'] == recipe['gold_cost']
                          and (not state['online'] or after['sequence'] == state['sequence'] + 1))
             outputs = [dict(deepcopy(r), quantity=1) for r in new_rows]
             sequence = after['sequence'] if state['online'] else invocation.get('sequence')

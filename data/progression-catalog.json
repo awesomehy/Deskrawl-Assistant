@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "build": "Deskrawl 1.0.3 / Steam 25973417",
+  "build": "Deskrawl 1.1.0 / Steam 26310087",
   "sha256": {
-    "GameAssembly.dll": "f23ae23f8714fa5a49b9ab4b8ae767c33f7e50afad47284d81121354d1677a46",
+    "GameAssembly.dll": "72c9bd3a42790516c18c4728a25d6eff481bf8232288a2bfe60f550f7bfdbe26",
     "UnityPlayer.dll": "9feedb4527a30fae4762bff45d204f8e85b90851b2c8ae8d24f436f7d474667b",
-    "Deskrawl_Data/il2cpp_data/Metadata/global-metadata.dat": "93f914c1e0119b82c98ca0647542c3afe0fade976d456f2212b03d699e6813de"
+    "Deskrawl_Data/il2cpp_data/Metadata/global-metadata.dat": "26de344c09a88a59d19b81053c62f0612cc748206799e9f28297db4d72ad33d5"
   },
   "soul_maximum": 2000,
   "shop": [
@@ -113,7 +113,9 @@
               "per_rank": 5.0,
               "name": "value",
               "format": "0.#",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/WarriorTalent0.png",
@@ -136,14 +138,18 @@
               "per_rank": 50.0,
               "name": "value",
               "format": "0.#",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             },
             "regen": {
               "base": 3.0,
               "per_rank": 3.0,
               "name": "regen",
               "format": "0.#",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/WarriorTalent1.png",
@@ -166,14 +172,18 @@
               "per_rank": 40.0,
               "name": "value1",
               "format": "0.#",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             },
             "value2": {
               "base": 40.0,
               "per_rank": 40.0,
               "name": "value2",
               "format": "0.#",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/WarriorTalent2.png",
@@ -196,7 +206,9 @@
               "per_rank": 0.019999999552965164,
               "name": "value",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/WarriorTalent4.png",
@@ -219,7 +231,9 @@
               "per_rank": 8.0,
               "name": "value",
               "format": "0.#",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/WarriorTalent6.png",
@@ -242,7 +256,9 @@
               "per_rank": 0.10000000149011612,
               "name": "value",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/WarriorTalent5.png",
@@ -310,7 +326,9 @@
               "per_rank": 0.10000000149011612,
               "name": "value",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/WarriorTalent13.png",
@@ -378,7 +396,9 @@
               "per_rank": 0.05000000074505806,
               "name": "value",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/WarriorTalent20.png",
@@ -521,7 +541,9 @@
               "per_rank": 0.10000000149011612,
               "name": "value",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/WarriorTalent9.png",
@@ -817,7 +839,7 @@
         {
           "id": "WarriorTalent47",
           "name": "内焰熔炉",
-          "description": "每秒消耗 {mana} 最大法力，获得[强力攻击]伤害 +{damage}，技能法力消耗降低 {costReduction}。",
+          "description": "每秒消耗 {mana} 最大法力，使[强力攻击]造成的伤害额外提高 {damage}，技能法力消耗降低 {costReduction}。",
           "max_points": 1,
           "point_requirement": 60,
           "prerequisite": null,
@@ -1068,7 +1090,7 @@
         {
           "id": "WarriorSpecial5",
           "name": "铁棘",
-          "description": "以铁棘护体{duration}。荆棘提升{thorns}，并每秒向周围的敌人造成相当于荆棘值{pulse}的物理伤害。",
+          "description": "以铁棘护体{duration}。荆棘提升{thorns}，并每秒向周围的敌人造成相当于荆棘值{pulse}的物理伤害。脉冲伤害享受荆棘伤害加成。",
           "tags": [
             2,
             7,
@@ -1121,7 +1143,9 @@
               "per_rank": 5.0,
               "name": "value",
               "format": "0.#",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/HunterTalent0.png",
@@ -1132,7 +1156,7 @@
         {
           "id": "HunterTalent2",
           "name": "攻击速度",
-          "description": "+{value1} 攻击速度，+{value2} 伤害。",
+          "description": "+{value1} 攻击速度，+{value2} 武器伤害。",
           "max_points": 10,
           "point_requirement": 0,
           "prerequisite": null,
@@ -1144,14 +1168,18 @@
               "per_rank": 0.02500000037252903,
               "name": "value1",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             },
             "value2": {
-              "base": 0.5,
-              "per_rank": 0.5,
+              "base": 0.009999999776482582,
+              "per_rank": 0.009999999776482582,
               "name": "value2",
-              "format": "0.#",
-              "suffix": ""
+              "format": "0%",
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/HunterTalent2.png",
@@ -1174,7 +1202,9 @@
               "per_rank": 0.15000000596046448,
               "name": "value",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/HunterTalent3.png",
@@ -1197,7 +1227,9 @@
               "per_rank": 0.014999999664723873,
               "name": "value",
               "format": "0.#%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/HunterTalent1.png",
@@ -1220,7 +1252,9 @@
               "per_rank": 0.03999999910593033,
               "name": "value",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/HunterTalent4.png",
@@ -1273,14 +1307,18 @@
               "per_rank": 0.05000000074505806,
               "name": "value1",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             },
             "value2": {
               "base": 0.019999999552965164,
               "per_rank": 0.019999999552965164,
               "name": "value2",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/HunterTalent13.png",
@@ -1303,14 +1341,18 @@
               "per_rank": 0.07999999821186066,
               "name": "value1",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             },
             "value2": {
               "base": 0.019999999552965164,
               "per_rank": 0.019999999552965164,
               "name": "value2",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/HunterTalent7.png",
@@ -1486,13 +1528,23 @@
         {
           "id": "HunterTalent26",
           "name": "强化毒箭",
-          "description": "毒箭施加[中毒]的几率提高 {chance}。",
+          "description": "毒箭施加[中毒]的几率提高 {chance}。持续伤害提高 {dot}。",
           "max_points": 6,
           "point_requirement": 20,
           "prerequisite": null,
           "exclusive_group": "",
           "demo_locked": false,
-          "description_tokens": {},
+          "description_tokens": {
+            "dot": {
+              "base": 0.07999999821186066,
+              "per_rank": 0.07999999821186066,
+              "name": "dot",
+              "format": "0%",
+              "suffix": "",
+              "highlight": true,
+              "floor": false
+            }
+          },
           "icon": "/progression-icons/HunterTalent26.png",
           "selectable": true,
           "x": 0.0,
@@ -1544,6 +1596,21 @@
           "y": 375.6
         },
         {
+          "id": "HunterTalent44",
+          "name": "弱点打击",
+          "description": "[物理]技能对[易伤]敌人造成的伤害提高 {value}。",
+          "max_points": 1,
+          "point_requirement": 30,
+          "prerequisite": null,
+          "exclusive_group": "Capstone30",
+          "demo_locked": false,
+          "description_tokens": {},
+          "icon": "/progression-icons/HunterTalent44.png",
+          "selectable": true,
+          "x": -120.0,
+          "y": 375.6
+        },
+        {
           "id": "HunterTalent43",
           "name": "奥术充能",
           "description": "施放[奥术]技能获得[奥术充能]，持续 {duration}，每层提高 {value} 奥术伤害（最多 50 层）。",
@@ -1555,13 +1622,13 @@
           "description_tokens": {},
           "icon": "/progression-icons/HunterTalent43.png",
           "selectable": true,
-          "x": 0.0,
+          "x": 120.0,
           "y": 375.6
         },
         {
           "id": "HunterTalent36",
           "name": "毒液汲取",
-          "description": "[中毒]每次生效有 {chance} 几率触发命中恢复生命。",
+          "description": "[中毒]每次生效有 {chance} 几率触发命中恢复生命。 你施加的[中毒]生效频率提高 {tickSpeed}。",
           "max_points": 1,
           "point_requirement": 30,
           "prerequisite": null,
@@ -1576,7 +1643,7 @@
         {
           "id": "HunterTalent37",
           "name": "持续火力",
-          "description": "[急速射击]的引导持续时间延长 {value}。",
+          "description": "[急速射击]的引导持续时间延长 {value}。 获得相当于攻击速度加成 {attackSpeedConversion} 的物理伤害加成。",
           "max_points": 8,
           "point_requirement": 40,
           "prerequisite": null,
@@ -1618,7 +1685,9 @@
               "per_rank": 0.05999999865889549,
               "name": "value",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/HunterTalent8.png",
@@ -1644,13 +1713,23 @@
         {
           "id": "HunterTalent28",
           "name": "死亡标记",
-          "description": "你施加的[易伤]持续时间延长 {duration}。",
+          "description": "你施加的[易伤]持续时间延长 {duration}。 对[易伤]敌人造成的伤害提高 {damage}。",
           "max_points": 6,
           "point_requirement": 40,
           "prerequisite": null,
           "exclusive_group": "",
           "demo_locked": false,
-          "description_tokens": {},
+          "description_tokens": {
+            "damage": {
+              "base": 0.07999999821186066,
+              "per_rank": 0.07999999821186066,
+              "name": "damage",
+              "format": "0%",
+              "suffix": "",
+              "highlight": true,
+              "floor": false
+            }
+          },
           "icon": "/progression-icons/HunterTalent28.png",
           "selectable": true,
           "x": 360.0,
@@ -1689,7 +1768,7 @@
         {
           "id": "HunterTalent29",
           "name": "致命陷阱",
-          "description": "对[陷阱]技能 +{value} 暴击几率",
+          "description": "对[陷阱]技能 +{value} 暴击几率. 陷阱对精英和首领的伤害提高{eliteDamage}。",
           "max_points": 8,
           "point_requirement": 50,
           "prerequisite": null,
@@ -1734,7 +1813,7 @@
         {
           "id": "HunterTalent20",
           "name": "独行猎手",
-          "description": "周围没有敌人时，获得 {attackSpeed} 攻击速度、{damage} 全伤害加成，以及 {strongAttack} [强力攻击]伤害。",
+          "description": "周围没有敌人时，获得 {attackSpeed} 攻击速度、{physicalDamage} 物理伤害加成，以及 {strongAttack} [强力攻击]伤害。",
           "max_points": 1,
           "point_requirement": 60,
           "prerequisite": null,
@@ -1764,7 +1843,7 @@
         {
           "id": "HunterTalent38",
           "name": "暴击注毒",
-          "description": "[毒素]技能暴击时有 {chance} 几率额外施加 3 层[中毒]。",
+          "description": "[毒素]技能暴击时额外施加 3 层[中毒]。 将[中毒]的最大层数提高至 {maxStacks}。",
           "max_points": 1,
           "point_requirement": 60,
           "prerequisite": null,
@@ -2032,7 +2111,9 @@
               "per_rank": 5.0,
               "name": "value",
               "format": "0.#",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/SorcererTalent0.png",
@@ -2070,14 +2151,18 @@
               "per_rank": 35.0,
               "name": "value",
               "format": "0.#",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             },
             "armor": {
               "base": 0.029999999329447746,
               "per_rank": 0.029999999329447746,
               "name": "armor",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/SorcererTalent2.png",
@@ -2115,7 +2200,9 @@
               "per_rank": 4.0,
               "name": "value",
               "format": "0.#",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/SorcererTalent1.png",
@@ -2138,14 +2225,18 @@
               "per_rank": 0.03999999910593033,
               "name": "magicResist",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             },
             "fire": {
               "base": 0.05000000074505806,
               "per_rank": 0.05000000074505806,
               "name": "fire",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/SorcererTalent21.png",
@@ -2183,7 +2274,9 @@
               "per_rank": 0.07000000029802322,
               "name": "value",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/SorcererTalent9.png",
@@ -2206,14 +2299,18 @@
               "per_rank": 0.029999999329447746,
               "name": "elite",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             },
             "lightning": {
               "base": 0.03999999910593033,
               "per_rank": 0.03999999910593033,
               "name": "lightning",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/SorcererTalent20.png",
@@ -2236,7 +2333,9 @@
               "per_rank": 1.0,
               "name": "value",
               "format": "0.#",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/SorcererTalent11.png",
@@ -2277,19 +2376,21 @@
         {
           "id": "SorcererTalent6",
           "name": "冰寒惩戒",
-          "description": "获得 {armor} 护甲加成。近战攻击者有 {value} 几率陷入 [冰寒]，持续 {duration}。",
+          "description": "受到的伤害降低 {reduction}。近战攻击者有 {value} 几率陷入 [冰寒]，持续 {duration}。",
           "max_points": 1,
           "point_requirement": 10,
           "prerequisite": null,
           "exclusive_group": "Capstone10",
           "demo_locked": false,
           "description_tokens": {
-            "armor": {
+            "reduction": {
               "base": 0.10000000149011612,
               "per_rank": 0.0,
-              "name": "armor",
+              "name": "reduction",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/SorcererTalent6.png",
@@ -2387,7 +2488,9 @@
               "per_rank": 0.019999999552965164,
               "name": "armor",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/SorcererTalent19.png",
@@ -2470,7 +2573,9 @@
               "per_rank": 0.029999999329447746,
               "name": "resistance",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/SorcererTalent42.png",
@@ -2688,7 +2793,9 @@
               "per_rank": 0.0,
               "name": "damage",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/SorcererTalent38.png",
@@ -2699,7 +2806,7 @@
         {
           "id": "SorcererTalent15",
           "name": "爆燃",
-          "description": "击杀处于[灼烧]状态的敌人时，有 {chance} 几率引发烈焰爆炸，对附近敌人造成 {damage} 武器伤害。",
+          "description": "技能命中处于[灼烧]状态的敌人时，有 {chance} 几率引发烈焰爆炸，对附近敌人造成 {damage} 武器伤害。",
           "max_points": 1,
           "point_requirement": 60,
           "prerequisite": null,
@@ -2729,7 +2836,7 @@
         {
           "id": "SorcererTalent26",
           "name": "风暴导体",
-          "description": "[电击] 和 [烈焰雷电] 每次命中都有 {chance} 几率同时施放 [闪电风暴]。",
+          "description": "[电击] 和 [烈焰雷电] 每次命中都有 {chance} 几率同时施放 [闪电风暴]。 [闪电风暴]的伤害提高 {damage}。",
           "max_points": 1,
           "point_requirement": 60,
           "prerequisite": null,
@@ -2981,7 +3088,9 @@
               "per_rank": 0.014999999664723873,
               "name": "value",
               "format": "0.#%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/MonkTalent1.png",
@@ -3004,7 +3113,9 @@
               "per_rank": 75.0,
               "name": "value",
               "format": "0.#",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/MonkTalent3.png",
@@ -3027,7 +3138,9 @@
               "per_rank": 5.0,
               "name": "value",
               "format": "0.#",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/MonkTalent0.png",
@@ -3050,7 +3163,9 @@
               "per_rank": 0.07999999821186066,
               "name": "value",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/MonkTalent6.png",
@@ -3073,7 +3188,9 @@
               "per_rank": 6.0,
               "name": "value",
               "format": "0.#",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/MonkTalent4.png",
@@ -3096,7 +3213,9 @@
               "per_rank": 0.05000000074505806,
               "name": "value",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/MonkTalent2.png",
@@ -3119,14 +3238,18 @@
               "per_rank": 0.05000000074505806,
               "name": "value",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             },
             "resistance": {
               "base": 40.0,
               "per_rank": 40.0,
               "name": "resistance",
               "format": "0.#",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/MonkTalent7.png",
@@ -3149,7 +3272,9 @@
               "per_rank": 0.03999999910593033,
               "name": "value",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/MonkTalent5.png",
@@ -3172,7 +3297,9 @@
               "per_rank": 2.0,
               "name": "value",
               "format": "0.#",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/MonkTalent8.png",
@@ -3195,7 +3322,9 @@
               "per_rank": 0.07999999821186066,
               "name": "value",
               "format": "0%",
-              "suffix": ""
+              "suffix": "",
+              "highlight": true,
+              "floor": false
             }
           },
           "icon": "/progression-icons/MonkTalent11.png",
@@ -3919,7 +4048,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 1.png",
@@ -3947,7 +4078,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 10.png",
@@ -4035,7 +4168,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 14.png",
@@ -4063,7 +4198,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 15.png",
@@ -4091,7 +4228,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 16.png",
@@ -4119,7 +4258,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 17.png",
@@ -4147,7 +4288,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 18.png",
@@ -4175,7 +4318,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 19.png",
@@ -4203,7 +4348,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 2.png",
@@ -4231,7 +4378,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 20.png",
@@ -4259,7 +4408,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 21.png",
@@ -4287,7 +4438,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0.#",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 22.png",
@@ -4315,7 +4468,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 23.png",
@@ -4343,7 +4498,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 24.png",
@@ -4371,7 +4528,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0.#",
-          "suffix": "s"
+          "suffix": "s",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 25.png",
@@ -4399,7 +4558,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 26.png",
@@ -4427,7 +4588,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 27.png",
@@ -4455,7 +4618,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 28.png",
@@ -4483,7 +4648,9 @@
           "per_rank": 0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 29.png",
@@ -4511,7 +4678,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0.#",
-          "suffix": "s"
+          "suffix": "s",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 3.png",
@@ -4539,7 +4708,9 @@
           "per_rank": 0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 30.png",
@@ -4587,7 +4758,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 32.png",
@@ -4615,7 +4788,9 @@
           "per_rank": 0,
           "name": "value",
           "format": "0.#",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 33.png",
@@ -4643,7 +4818,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 34.png",
@@ -4691,7 +4868,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 36.png",
@@ -4719,7 +4898,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0.#",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 37.png",
@@ -4747,7 +4928,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0.#",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 38.png",
@@ -4775,7 +4958,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 39.png",
@@ -4803,7 +4988,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 4.png",
@@ -4831,7 +5018,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 40.png",
@@ -4859,7 +5048,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 41.png",
@@ -4887,7 +5078,9 @@
           "per_rank": 0,
           "name": "value",
           "format": "0.#",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 42.png",
@@ -4915,7 +5108,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 43.png",
@@ -4963,7 +5158,9 @@
           "per_rank": 0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 45.png",
@@ -4991,7 +5188,9 @@
           "per_rank": 0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 46.png",
@@ -5019,7 +5218,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0.#",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 47.png",
@@ -5047,7 +5248,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 48.png",
@@ -5075,7 +5278,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 49.png",
@@ -5123,7 +5328,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0.#",
-          "suffix": "s"
+          "suffix": "s",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 50.png",
@@ -5151,7 +5358,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 51.png",
@@ -5179,7 +5388,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 52.png",
@@ -5207,7 +5418,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 53.png",
@@ -5235,7 +5448,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 54.png",
@@ -5263,7 +5478,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 55.png",
@@ -5291,7 +5508,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0.#",
-          "suffix": "s"
+          "suffix": "s",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 56.png",
@@ -5319,7 +5538,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 57.png",
@@ -5367,7 +5588,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 59.png",
@@ -5395,7 +5618,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0.#",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 6.png",
@@ -5423,7 +5648,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 60.png",
@@ -5451,7 +5678,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 61.png",
@@ -5479,7 +5708,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 62.png",
@@ -5507,7 +5738,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 63.png",
@@ -5535,7 +5768,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 64.png",
@@ -5563,7 +5798,9 @@
           "per_rank": 0,
           "name": "value",
           "format": "0.#",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 65.png",
@@ -5611,7 +5848,9 @@
           "per_rank": 0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 67.png",
@@ -5639,7 +5878,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 68.png",
@@ -5667,7 +5908,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 69.png",
@@ -5695,7 +5938,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0.#",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 7.png",
@@ -5723,7 +5968,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 70.png",
@@ -5751,7 +5998,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 71.png",
@@ -5779,7 +6028,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 72.png",
@@ -5827,7 +6078,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 74.png",
@@ -5855,7 +6108,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 75.png",
@@ -5903,7 +6158,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 77.png",
@@ -5991,7 +6248,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 80.png",
@@ -6019,7 +6278,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 81.png",
@@ -6047,7 +6308,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 82.png",
@@ -6075,7 +6338,9 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 83.png",
@@ -6103,12 +6368,54 @@
           "per_rank": 0.0,
           "name": "value",
           "format": "0%",
-          "suffix": ""
+          "suffix": "",
+          "highlight": true,
+          "floor": false
         }
       },
       "icon": "/progression-icons/LifeSkill 84.png",
       "x": -536.89,
       "y": 1022.63
+    },
+    {
+      "id": "LifeSkill 85",
+      "name": "灵魂圣匣 V",
+      "description": "灵魂碎片携带上限提升 500。",
+      "max_points": 1,
+      "gold_costs": [
+        500000
+      ],
+      "prerequisite": "LifeSkill 66",
+      "demo_locked": true,
+      "notable": false,
+      "effect_ids": [
+        "IncreaseSoulCap5"
+      ],
+      "soul_capacity_per_rank": 500,
+      "description_tokens": {},
+      "icon": "/progression-icons/LifeSkill 85.png",
+      "x": 236.0,
+      "y": -961.0
+    },
+    {
+      "id": "LifeSkill 86",
+      "name": "灵魂圣匣 VI",
+      "description": "灵魂碎片携带上限提升 500。",
+      "max_points": 1,
+      "gold_costs": [
+        800000
+      ],
+      "prerequisite": "LifeSkill 85",
+      "demo_locked": true,
+      "notable": true,
+      "effect_ids": [
+        "IncreaseSoulCap6"
+      ],
+      "soul_capacity_per_rank": 500,
+      "description_tokens": {},
+      "icon": "/progression-icons/LifeSkill 86.png",
+      "x": 275.0,
+      "y": -1121.0
     },
     {
       "id": "LifeSkill 9",

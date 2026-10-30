@@ -75,12 +75,12 @@ test('icon selection retains numeric budgets and does not overwrite other class 
   saved.merchant.enabled=false;current.merchant.unlocked=true;ui.render(saved,data,current,false,changed,true);
   assert.equal(node('managed-merchant').disabled,false);
   const talentNodes=node('managed-talent-tree').querySelectorAll('[data-talent-node]');
-  assert.equal(talentNodes.length,40);
+  assert.equal(talentNodes.length,41);
   assert.equal(node('managed-talent-tree.growth-tree-canvas').style.height,'899px');
-  assert.equal(new Set(talentNodes.map(n=>n.style.left+','+n.style.top)).size,40);
+  assert.equal(new Set(talentNodes.map(n=>n.style.left+','+n.style.top)).size,41);
   const lifeNodes=node('managed-life-nodes').querySelectorAll('[data-life-node]');
-  assert.equal(lifeNodes.length,85);
-  assert.equal(new Set(lifeNodes.map(n=>n.style.left+','+n.style.top)).size,85);
+  assert.equal(lifeNodes.length,87);
+  assert.equal(new Set(lifeNodes.map(n=>n.style.left+','+n.style.top)).size,87);
   assert.ok(parseFloat(node('managed-life-nodes.growth-life-canvas').style.width)>1000);
   assert.equal(node('managed-life-nodes.growth-life-canvas').style.transform,'scale(0.42)');
   // Only a new actual character snapshot can select another class.
@@ -123,8 +123,8 @@ test('unloaded skill controller preserves live growth data and editable presets 
   assert.match(node('managed-talent-total').textContent,/当前已投入 3 · 可用 7 点/);
   assert.match(node('growth-life-summary').innerHTML,/已学习 <b>1<\/b>/);
   assert.match(node('growth-life-summary').innerHTML,/当前金币 <b>12,345<\/b>/);
-  assert.equal(node('managed-talent-tree').querySelectorAll('[data-talent-node]').length,40);
-  assert.equal(node('managed-life-nodes').querySelectorAll('[data-life-node]').length,85);
+  assert.equal(node('managed-talent-tree').querySelectorAll('[data-talent-node]').length,41);
+  assert.equal(node('managed-life-nodes').querySelectorAll('[data-life-node]').length,87);
   assert.match(node('growth-skill-status').textContent,/猎人 · 当前 70 级 · 技能状态待读取/);
   assert.match(node('growth-skills-note').textContent,/PlayerAbilityController 尚未加载。/);
   assert.match(node('managed-skills').title,/技能栏读取完成后切换/);
@@ -228,7 +228,7 @@ test('reducing early talents trims targets that no longer satisfy the spend gate
 });
 
 test('shipped layout coordinates and localized effect values are used in previews',()=>{
-  assert.equal(new Set(data.life_skills.map(n=>n.id)).size,85);
+  assert.equal(new Set(data.life_skills.map(n=>n.id)).size,87);
   for(const n of data.life_skills){assert.ok(Number.isFinite(n.x)&&Number.isFinite(n.y));assert.ok(!growth.description(n).includes('{'));}
   assert.equal(growth.description(data.heroes['4'].talents.find(n=>n.id==='HunterTalent0'),3),'+15 敏捷');
   const n=data.life_skills.find(n=>n.id==='LifeSkill 1');assert.match(growth.description(n),/10%/);
@@ -294,9 +294,9 @@ test('merchant defaults are zero and saved explicit ratios survive normalization
 });
 
 test('catalog exposes current tree nodes with resolvable icons and actual shard bonuses',()=>{
-  assert.deepEqual(Object.values(data.heroes).map(h=>h.talents.filter(n=>n.selectable!==false).length).sort(),[40,40,41,41]);
+  assert.deepEqual(Object.values(data.heroes).map(h=>h.talents.filter(n=>n.selectable!==false).length).sort(),[40,41,41,41]);
   const capNodes=data.life_skills.filter(n=>n.soul_capacity_per_rank);
-  assert.equal(data.soul_maximum+capNodes.reduce((sum,n)=>sum+n.soul_capacity_per_rank*n.max_points,0),3000);
+  assert.equal(data.soul_maximum+capNodes.reduce((sum,n)=>sum+n.soul_capacity_per_rank*n.max_points,0),4000);
   assert.ok(capNodes.every(n=>!n.description.includes('{value}')));
   for(const h of Object.values(data.heroes))for(const row of [...h.talents,...h.abilities])
     assert.ok(fs.existsSync(require('node:path').join(__dirname,'../deskrawl_assistant/web',row.icon)));

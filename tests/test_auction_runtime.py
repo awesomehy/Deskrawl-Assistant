@@ -414,7 +414,7 @@ class IdentitySnapshotTests(unittest.TestCase):
         singleton = patch('deskrawl_assistant.game_actions._Read.singleton',
                           side_effect=lambda name: self.singletons[name])
         self.singleton = singleton.start(); self.addCleanup(singleton.stop)
-        self.put(1168, struct.pack('<i', 1))  # entered character
+        self.put(1176, struct.pack('<i', 1))  # entered character
         self.put(2120, struct.pack('<i', 0))  # combat, not main city
         self.put(3032, struct.pack('<ii', 1, 2))  # online / character slot
         self.put(3193, b'\x01')  # item-save busy is allowed for readonly identity
@@ -463,7 +463,7 @@ class IdentitySnapshotTests(unittest.TestCase):
     def test_character_scene_account_and_session_changes_during_read_fail_closed(self):
         cases = ((3036, struct.pack('<i', 3)), (6128, struct.pack('<Q', 9000)),
                  (5040, struct.pack('<Q', 9000)), (2176, b'\x01'),
-                 (4076, b'\x01'), (1168, struct.pack('<i', 0)),
+                 (4076, b'\x01'), (1176, struct.pack('<i', 0)),
                  (2120, struct.pack('<i', 1)), (None, None))
         for address, raw in cases:
             with self.subTest(address=address):
@@ -484,7 +484,7 @@ class IdentitySnapshotTests(unittest.TestCase):
         self.memory.write.assert_not_called(); self.actions.dispatcher.invoke.assert_not_called()
 
     def test_not_entered_offline_invalid_slot_or_transition_is_unavailable(self):
-        cases = ((1168, struct.pack('<i', 0)), (3032, struct.pack('<ii', 0, 2)),
+        cases = ((1176, struct.pack('<i', 0)), (3032, struct.pack('<ii', 0, 2)),
                  (3032, struct.pack('<ii', 1, -1)), (3032, struct.pack('<ii', 1, 100)),
                  (4076, b'\x01'), (2176, b'\x01'), (2120, struct.pack('<i', 3)))
         for address, raw in cases:

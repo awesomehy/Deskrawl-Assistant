@@ -73,7 +73,7 @@ class WebServiceTests(unittest.TestCase):
     def test_catalog_has_all_64_legendary_icons_and_real_class_masks(self):
         catalog=self.service.catalog_payload()
         legendaries=[i for i in catalog['equipment'] if i['legendary']]
-        self.assertEqual(len(legendaries),64)
+        self.assertEqual(len(legendaries),67)
         for i in legendaries:
             self.assertTrue((BASE/'deskrawl_assistant/web'/i['icon'].lstrip('/')).is_file())
         values={c['key']:c['value'] for c in catalog['classes']}
@@ -90,6 +90,17 @@ class WebServiceTests(unittest.TestCase):
         self.service._publish(self.client.snapshot())
         row = self.service.state()['items'][0]
         self.assertIn(entry['description'], [t for g in row['effect_groups'] for t in g['texts']])
+
+    def test_minion_gear_has_a_separate_localized_slot_and_verified_catalog(self):
+        catalog = self.service.catalog_payload()
+        entry = next(row for row in catalog['equipment'] if row['key'] == 'LegendaryMinionGear1')
+        self.assertEqual(entry['slot'], 'Minion')
+        self.assertEqual(entry['slot_label'], '仆从装备')
+        # The shipped saddle has no special-effect asset or .Desc entry.
+        # Do not invent one merely because the item is legendary.
+        self.assertEqual(entry['description'], '')
+        self.assertTrue((BASE/'deskrawl_assistant/web'/entry['icon'].lstrip('/')).is_file())
+        self.assertIn({'key':'Minion','name':'仆从装备'}, catalog['slots'])
 
     def publish_physical_items(self):
         gear = item(1,locked=True)

@@ -34,10 +34,10 @@ class EquipmentEffectTextTests(unittest.TestCase):
         for kind,key,chance,prefix in (
                 ('EquipmentEffect_BeingHitTriggerAbility','LegendaryNeck4_Retaliation.Desc',.3,struct.pack('<iq',2,59941)),
                 ('EquipmentEffect_TriggerKillEffectsOnHit','LegendaryShoulder3_KillEffects.Desc',.1,b'')):
-            raw = prefix + struct.pack('<fi',chance,len(key)) + key.encode()
+            raw = prefix + struct.pack('<f',chance) + (struct.pack('<f',.2) if kind == 'EquipmentEffect_TriggerKillEffectsOnHit' else b'') + struct.pack('<i',len(key)) + key.encode()
             raw += bytes(-len(raw) % 4)
             value = render_equipment_effect(kind, raw, self.text)
-            self.assertEqual(value, self.text(key).replace('{chance}', '30%' if chance == .3 else '10%'))
+            self.assertEqual(value, self.text(key).replace('{chance}', '30%' if chance == .3 else '10%').replace('{maxTriggers}', '5'))
 
     def test_unverified_values_layouts_and_templates_are_rejected(self):
         for raw in (struct.pack('<ff',-1,1),struct.pack('<ff',.1,float('nan'))):

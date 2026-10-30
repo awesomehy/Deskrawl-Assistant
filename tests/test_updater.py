@@ -75,6 +75,12 @@ class Response(io.BytesIO):
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_146_can_directly_select_150_public_asset_across_minor_version(self):
+        release = parse_release(payload('1.5.0'))
+        self.assertGreater(version_tuple(release.version), version_tuple('1.4.6'))
+        self.assertEqual(release.release_url, REPOSITORY_URL + '/releases/tag/v1.5.0')
+        self.assertEqual(release.asset_url, API_ROOT + '/releases/assets/42')
+
     def test_versions_use_numeric_order_and_reject_prereleases(self):
         self.assertGreater(version_tuple('v1.1.10'),version_tuple('1.1.9'))
         for value in ('1.1','1.1.6-beta','v01.1.6','../1.1.6',None):

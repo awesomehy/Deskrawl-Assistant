@@ -38,7 +38,7 @@ class CarriageDropIdentityTests(unittest.TestCase):
                 pointer(base,classes['GameManager']); pointer(classes['GameManager']+184,static)
                 pointer(static,manager); pointer(manager,classes['GameManager'])
                 pointer(manager+88,carriage); pointer(carriage,classes['HorseCarriage'])
-                pointer(carriage+152,0xa000); pointer(manager+216,0xb000)
+                pointer(carriage+152,0xa000); pointer(manager+224,0xb000)
                 for root,array,count in ((0xa000,0xc000,0),(0xb000,0xd000,1)):
                     pointer(root,classes['List`1'])
                     memory.put(root+16,struct.pack('<Qii',array,count,0)); pointer(array+32,drop)

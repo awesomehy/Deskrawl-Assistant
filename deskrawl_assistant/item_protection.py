@@ -11,6 +11,15 @@ def is_rune(row):
             or any(name.startswith('LegendaryRune_') or re.search(r'SetRune\d',name) for name in _names(row)))
 
 
+def is_minion_equipment(row):
+    """The native slot or shipped ItemData family identifies servant gear."""
+    return (row.get('equip_slot') == 12 or row.get('slot') == 'Minion'
+            or row.get('is_minion_equipment') is True
+            or any(re.fullmatch(r'(?:Normal|Uncommon|Rare|Legendary|Divine)MinionGear\d+', name)
+                   for key in ('internal_name', 'name_key', 'key')
+                   if isinstance(name := row.get(key), str)))
+
+
 def divine_equipment(row):
     return (row.get('is_divine') is True or
             (row.get('is_equipment') is True or row.get('kind') == 'equipment')

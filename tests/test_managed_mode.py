@@ -227,7 +227,7 @@ class SettingsTests(unittest.TestCase):
 
     def test_page_numbers_do_not_assume_five_pages(self):
         raw = settings()
-        for name in ('equipment_pages', 'rune_pages', 'gem_pages', 'gold_bar_pages', 'legendary_rein_pages'):
+        for name in ('equipment_pages', 'minion_equipment_pages', 'rune_pages', 'gem_pages', 'gold_bar_pages', 'legendary_rein_pages'):
             raw['cleanup'][name] = [8]
         validate_settings(raw, available_pages={8, 10})
         with self.assertRaisesRegex(ValidationError, '已解锁'):

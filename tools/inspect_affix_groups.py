@@ -26,11 +26,11 @@ import UnityPy
 from extract_catalog import sha256_file
 
 
-METADATA_HASH = "93f914c1e0119b82c98ca0647542c3afe0fade976d456f2212b03d699e6813de"
-CONFIG_PATH_ID = 59971
-SCRIPT_PATH_ID = 375
-CONFIG_BYTES = 1056
-ENUM_DEFAULT_TYPE_INDEX = 24078
+METADATA_HASH = "26de344c09a88a59d19b81053c62f0612cc748206799e9f28297db4d72ad33d5"
+CONFIG_PATH_ID = 61683
+SCRIPT_PATH_ID = 376
+CONFIG_BYTES = 1300
+ENUM_DEFAULT_TYPE_INDEX = 24191
 
 
 def compressed_integer(data: bytes, offset: int) -> tuple[int, bytes]:
@@ -169,8 +169,8 @@ def extract(game_data: Path) -> dict:
         return [integer() for _ in range(count)]
 
     count = integer()
-    if count != 11:
-        raise ValueError("Expected exactly 11 slot pools.")
+    if count != 12:
+        raise ValueError("Expected exactly 12 slot pools.")
     pools = []
     for _ in range(count):
         slot = integer()
@@ -185,8 +185,8 @@ def extract(game_data: Path) -> dict:
     if len({row["slotValue"] for row in pools}) != len(pools):
         raise ValueError("Duplicate slot pools.")
     socket_count = integer()
-    if socket_count != 11:
-        raise ValueError("Expected exactly 11 socket entries.")
+    if socket_count != 12:
+        raise ValueError("Expected exactly 12 socket entries.")
     sockets = [{"slotValue": integer(), "maxSockets": integer()} for _ in range(socket_count)]
     for row in sockets:
         if row["slotValue"] not in slots or not 0 <= row["maxSockets"] <= 10:

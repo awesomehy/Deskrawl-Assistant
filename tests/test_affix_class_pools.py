@@ -1,4 +1,4 @@
-"""Legendary candidates mirror 1.0.3's native primary-only class filter."""
+"""Legendary candidates mirror 1.1.0's native primary-only class filter."""
 import json
 from pathlib import Path
 import tempfile

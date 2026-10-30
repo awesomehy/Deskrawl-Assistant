@@ -65,14 +65,14 @@ class FakeReader:
             p.put(static, struct.pack('<Q', self.objects[name]))
         manager, player = self.objects['GameManager'], self.objects['PlayerData']
         p.put(manager + 32, struct.pack('<Q', self.objects['GameConfig']))
-        p.put(manager + 168, struct.pack('<i', 1))
+        p.put(manager + 176, struct.pack('<i', 1))
         p.put(player + 40, struct.pack('<Q', 0x40000000))
         p.put(player + 64, obscured(47, 32) + obscured(123456, 64))
         p.put(self.objects['SaveSystem'] + 32, struct.pack('<ii', 1, 0))
-        p.put(self.objects['GameConfig'] + 244, struct.pack('<iiiiiiff', *CONFIG.values()))
+        p.put(self.objects['GameConfig'] + 236, struct.pack('<iiiiiiff', *CONFIG.values()))
         p.put(manager + 112, struct.pack('<QQ', self.objects['MapData'], self.objects['RunPlan']))
         p.put(self.objects['RunPlan'] + 16,
-              struct.pack('<QQQiiQ', 0x40001000, 0x40002000, 0, 47, 0, 0x40003000))
+              struct.pack('<QQQQiiQ', 0x40001000, 0, 0x40002000, 0, 47, 0, 0x40003000))
         self.strings = {0x40000000: 'Test hero', 0x40001000: 'private-run-token',
                         0x40002000: 'RedForest4', 0x40003000: 'Normal'}
     def singleton(self, name):
@@ -174,7 +174,7 @@ class ExperienceReaderTests(unittest.TestCase):
 
     def test_main_menu_is_unavailable(self):
         reader = FakeReader()
-        reader.memory.put(reader.objects['GameManager'] + 168, struct.pack('<i', 0))
+        reader.memory.put(reader.objects['GameManager'] + 176, struct.pack('<i', 0))
         self.assertFalse(read_experience(reader)['available'])
 
     def test_game_version_rejected(self):

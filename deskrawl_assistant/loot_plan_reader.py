@@ -28,7 +28,7 @@ MAX_MODIFIERS = 64
 MAX_QUANTITY = 1_000_000
 SLOT_LABELS = {'Weapon': '武器', 'Helm': '头盔', 'Chest': '胸甲', 'Pants': '裤子',
                'Boots': '靴子', 'Belt': '腰带', 'Ring': '戒指', 'Necklace': '项链',
-               'Gloves': '手套', 'Shoulder': '护肩', 'Back': '披风'}
+               'Gloves': '手套', 'Shoulder': '护肩', 'Back': '披风', 'Minion': '仆从装备'}
 RARITY_LABELS = {0: '普通', 1: '优秀', 2: '稀有', 3: '传说', 4: '神圣', 5: '符文套装'}
 DIFFICULTY_LABELS = {'Normal': '普通', 'Nightmare': '噩梦', 'Inferno': '炼狱', 'Inferno1': '炼狱'}
 PLAN_NOTE = '波次掉落计划；实际获得以通关结算为准。宝箱内容和寻宝、采集收益不计入波次合计。'
@@ -240,7 +240,7 @@ def _plan_item(copy, obj):
 def _snapshot(reader, raw_sink=None):
     copy = _LootCopy(reader)
     manager = copy.singleton(0x3A17CD8, 'GameManager')
-    if copy.integer(manager + 168) != 1:
+    if copy.integer(manager + 176) != 1:
         copy.finish()
         return empty_preview(reason='进入角色后可显示本次在线关卡掉落计划。')
     area = copy.singleton(0x3A1BAA0, 'GameAreaManager')
@@ -265,19 +265,19 @@ def _snapshot(reader, raw_sink=None):
         raise SnapshotChangedError('关卡身份正在切换，等待下次稳定读取。')
     copy.verify(plan, 'RunPlan')
     copy.verify(active_map, 'MapData')
-    run_id, map_id, difficulty = copy.text(plan, 16), copy.text(plan, 24), copy.text(plan, 48)
+    run_id, map_id, difficulty = copy.text(plan, 16), copy.text(plan, 32), copy.text(plan, 56)
     if not run_id or not map_id or copy.asset_name(active_map) != map_id:
         raise SnapshotChangedError('本次掉落计划与活动关卡尚未一致。')
     raw_map_id = map_id
     world_difficulty = 'Inferno' if difficulty == 'Inferno1' else difficulty
     mythic_floor = None
     if copy.integer(active_map + 32) == 1:
-        mythic_floor = copy.integer(plan + 64)
+        mythic_floor = copy.integer(plan + 72)
         if map_id != MYTHIC_MAP or mythic_floor != copy.integer(wave_manager + 304):
             raise SnapshotChangedError('神话裂隙掉落计划与当前层数尚未一致。')
         map_id = floor_id(mythic_floor)
     current_wave = copy.integer(wave_manager + 48)
-    wave_objects = copy.array(copy.ptr(plan + 88), 8, 'RunWave', limit=MAX_WAVES)
+    wave_objects = copy.array(copy.ptr(plan + 104), 8, 'RunWave', limit=MAX_WAVES)
     if not wave_objects or not 0 <= current_wave <= len(wave_objects):
         raise MemoryReadError('本次掉落计划波次数无效。')
     finished = copy.boolean(wave_manager + 248)
@@ -289,9 +289,9 @@ def _snapshot(reader, raw_sink=None):
     raw_run = None
     if raw_sink is not None:
         raw_run = {'runId':run_id, 'mapId':raw_map_id, 'difficulty':difficulty,
-            'dataVersion':copy.text(plan,32), 'playerLevel':copy.integer(plan+40),
-            'mythicTier':copy.integer(plan+64), 'waves':raw_waves}
-        for name, offset in (('enemyHealthMultiplier',72), ('enemyDamageMultiplier',80)):
+            'dataVersion':copy.text(plan,40), 'playerLevel':copy.integer(plan+48),
+            'mythicTier':copy.integer(plan+72), 'waves':raw_waves}
+        for name, offset in (('enemyHealthMultiplier',80), ('enemyDamageMultiplier',88)):
             value = struct.unpack('<d',copy.read(plan+offset,8))[0]
             if not math.isfinite(value): raise MemoryReadError('掉落计划环境数值无效。')
             raw_run[name] = value

@@ -31,7 +31,7 @@ def _conditional(copy, player, manager, status_obj, hp, maximum, warnings, fixed
         nonlocal alive_enemies
         if alive_enemies is None:
             alive_enemies = []
-            for raw in copy.list(copy.ptr(manager + 192), element='Enemy', limit=2048):
+            for raw in copy.list(copy.ptr(manager + 200), element='Enemy', limit=2048):
                 obj = struct.unpack('<Q', raw)[0]
                 if obj:
                     copy.verify(obj, 'Enemy')
@@ -79,26 +79,26 @@ def _conditional(copy, player, manager, status_obj, hp, maximum, warnings, fixed
             raise MemoryReadError('条件属性参数无效。')
         layers[kind][stat] = layers[kind].get(stat, 0) + value
 
-    for off in (792, 848):
+    for off in (792, 864):
         for raw in copy.list(copy.ptr(player + off), 24, 'ValueTuple`4'):
             source, target, coef, status = struct.unpack('<iidQ', raw)
             if source not in range(67) or target not in range(67) or not math.isfinite(coef):
                 raise MemoryReadError('角色转换参数无效。')
             if not status or status in active:
                 conversions.append((source, target, coef))
-    for raw in copy.list(copy.ptr(player + 856), 24, 'ValueTuple`3'):
+    for raw in copy.list(copy.ptr(player + 872), 24, 'ValueTuple`3'):
         status, stat, coef = struct.unpack('<Qi4xd', raw)
         add(stat, 0, coef * stacks.get(status, 0))
-    for raw in copy.list(copy.ptr(player + 928), 24, 'ValueTuple`4'):
+    for raw in copy.list(copy.ptr(player + 944), 24, 'ValueTuple`4'):
         status, stat, kind, coef = struct.unpack('<Qiid', raw)
         add(stat, kind, coef * stacks.get(status, 0))
-    for raw in copy.list(copy.ptr(player + 904), 32, 'ValueTuple`6'):
+    for raw in copy.list(copy.ptr(player + 920), 32, 'ValueTuple`6'):
         cond, radius, stat, kind, value, ability = struct.unpack('<ifiidQ', raw)
         if ability and fixed_distance is None:
             warnings.append('施放指定技能时的条件属性未计入，相关属性为参考值。')
         elif not ability and condition(cond, radius):
             add(stat, kind, value)
-    for raw in copy.list(copy.ptr(player + 912), 32, 'ValueTuple`5'):
+    for raw in copy.list(copy.ptr(player + 928), 32, 'ValueTuple`5'):
         cond, status, stat, kind, value = struct.unpack('<i4xQiid', raw)
         if (not status or status in active) and condition(cond, 6):
             add(stat, kind, value)
@@ -109,7 +109,7 @@ def _snapshot(reader):
     reader.check_game_files()
     copy = _Copy(reader)
     manager = copy.singleton(0x3A17CD8, 'GameManager')
-    if copy.integer(manager + 168) != 1:
+    if copy.integer(manager + 176) != 1:
         raise MemoryReadError('进入角色后可读取当前属性与装备。')
     data = copy.singleton(0x3A1BA98, 'PlayerData')
     combat = copy.verify(copy.ptr(manager + 64), 'PlayerCombatController')
@@ -126,7 +126,7 @@ def _snapshot(reader):
     # the separately persisted PlayerData level during a level-up transition.
     level = decode_obscured_int(copy.read(player + 32, 16))
     config = copy.verify(copy.ptr(manager + 32), 'GameConfig')
-    max_level = copy.integer(config + 264)
+    max_level = copy.integer(config + 256)
     if mode not in (0, 1) or not 0 <= slot < 100 or not 1 <= level <= 200:
         raise MemoryReadError('角色标识或等级无效。')
     if not 1 <= level <= max_level <= 200:
@@ -150,11 +150,11 @@ def _snapshot(reader):
     uids = copy.dictionary(copy.ptr(equipment_manager + 48), 'pointer')
     reader.snapshot_stamps = []
     registry, stamp = reader.registry()
-    equipment = []
+    equipment, minion_equipment = [], []
     for position, obj in sorted(equipped.items()):
         if not obj:
             continue
-        if position not in range(12):
+        if position not in range(13):
             raise MemoryReadError('穿戴部位尚未适配。')
         copy.verify(obj, 'ItemData')
         uid = reader.string(uids.get(position, 0))
@@ -162,7 +162,7 @@ def _snapshot(reader):
             raise MemoryReadError('穿戴装备未在注册表中找到。')
         row = {**reader.base_item(obj), **reader.generated(registry[uid]),
                'item_uid': uid, 'equipped_slot': position, 'container': 'equipped', 'slot_index': position, 'count': 1}
-        equipment.append(row)
+        (minion_equipment if position == 12 else equipment).append(row)
     model = {'base': base, 'caches': caches, 'status': status,
              'conditional': conditional, 'conversions': conversions}
     stats = final_stats(model)
@@ -181,7 +181,7 @@ def _snapshot(reader):
     return {'available': True, 'session': reader.session_id, 'character_id': f'{mode}:{slot}:{label}',
         'name': label, 'level': level, 'max_level': max_level, 'class_mask': class_mask, 'primary': primary,
         'health': hp, 'health_max': hp_max, 'stats': stats, 'attack': panel_attack(comparison_stats, primary),
-        'equipment': equipment, 'model': model, 'comparison_model': comparison_model,
+        'equipment': equipment, 'minion_equipment': minion_equipment, 'model': model, 'comparison_model': comparison_model,
         'comparison_stats': comparison_stats, 'comparison_distance': distance, 'comparison_note': PREVIEW_NOTE,
         'warnings': list(dict.fromkeys(warnings)),
         'captured_at': datetime.now(timezone.utc).isoformat(), 'source': 'verified_game_memory'}

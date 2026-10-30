@@ -12,6 +12,7 @@ import sys
 import UnityPy
 from UnityPy.classes import PPtr
 from extract_item_ui import Cursor, payload
+from item_asset_layout import item_layout
 from equipment_effect_text import render_equipment_effect
 
 BASE = Path(__file__).resolve().parents[1]
@@ -45,7 +46,8 @@ def main():
         cls = classes.get(script_id) if script_file == 1 else None
         if cls == 'GraphicsConfig':
             _, data = payload(obj)
-            c = Cursor(data, 9*12+16+3*12)
+            # 1.1.0 adds MythicTimeLimitKillVFXPrefab before the colour fields.
+            c = Cursor(data, 10*12+16+3*12)
             for _ in range(c.count()): c.take('iq')
             for _ in range(8): c.take('iq')
             for label in ('common','uncommon','rare','legendary','divine','rune_set','black_mist'):
@@ -65,18 +67,20 @@ def main():
         # Resolve the serialized SlaveToUnlock reference rather than guessing
         # by prefix: legacy asset names can differ from the referenced servant.
         if not text(key) and item_type == 2:
-            file_id, path_id = struct.unpack_from('<iq', data, 36)
+            file_id, path_id = struct.unpack_from('<iq', data, item_layout(data)['slave'])
             slave = PPtr(m_FileID=file_id, m_PathID=path_id, assetsfile=obj.assets_file).deref() if path_id else None
             if slave: label_key = payload(slave)[0]
         name = text(label_key)
         if not name: raise ValueError('Missing localisation: '+key)
+        item_effect = struct.unpack_from('<i', data, item_layout(data)['effect'])[0]
+        if item_effect not in range(4): raise ValueError('Unverified ItemEffect: '+key)
         kind = ('equipment' if item_type == 3 else 'gem' if cls == 'GemData' else
-                'rune' if cls == 'RuneData' else 'chest' if key.startswith('TreasureChest') else 'material')
+                'rune' if cls == 'RuneData' else 'chest' if item_effect == 2 else 'material')
         groups = list(other.get(key, {}).get('effect_groups', []))
         description = text(label_key+'.Desc')
         effect_ids = []
         if cls == 'ItemData':
-            cursor = Cursor(data, 168)
+            cursor = Cursor(data, item_layout(data)['effects'])
             for _ in range(cursor.count()):
                 file_id, path_id = cursor.take('iq')
                 effect = PPtr(m_FileID=file_id, m_PathID=path_id, assetsfile=obj.assets_file).deref() if path_id else None
@@ -87,7 +91,8 @@ def main():
                 if not effect_text:
                     script_file, script_id = struct.unpack_from('<iq', effect.get_raw_data(), 16)
                     effect_class = classes.get(script_id) if script_file == 1 else None
-                    effect_text = render_equipment_effect(effect_class, effect_data, text)
+                    try:effect_text = render_equipment_effect(effect_class, effect_data, text)
+                    except ValueError as exc:raise ValueError(f'{key}: {effect_key} ({effect_class}): {effect_data.hex()}') from exc
                 # Some passive implementation assets have no individual text;
                 # their equipment description is the game's user-facing text.
                 if effect_text:
@@ -97,11 +102,10 @@ def main():
         if kind == 'equipment' and not description:
             description = '\n'.join(t for g in groups for t in g.get('texts', []))
         note = other.get(key, {}).get('effect_note','')
+        if item_type == 2 and item_effect == 1:
+            groups.append({'title':'物品效果', 'values':[], 'texts':['使用后解锁仆人：'+name+'。']})
         if not groups:
-            if label_key != key and item_type == 2:
-                if struct.unpack_from('<i', data, 32)[0] != 1: raise ValueError('Unverified servant effect')
-                groups = [{'title':'物品效果', 'values':[], 'texts':['使用后解锁仆人：'+name+'。']}]
-            elif kind == 'equipment' and not effect_ids:
+            if kind == 'equipment' and not effect_ids:
                 note = '此装备没有固定特殊效果，基础属性与随机词条见下方。'
             else:
                 note = '游戏资源未提供独立效果说明。'

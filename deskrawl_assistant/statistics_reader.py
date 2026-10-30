@@ -183,7 +183,7 @@ def read_gold_ledger(reader, character_id):
 def _snapshot(reader, layout):
     copy = _Copy(reader)
     manager = copy.singleton(0x3A17CD8, 'GameManager')
-    if copy.integer(manager + 168) != 1:
+    if copy.integer(manager + 176) != 1:
         raise MemoryReadError('进入角色后才能读取游戏累计统计。')
     data = copy.singleton(0x3A1BA98, 'PlayerData')
     hero = copy.verify(copy.ptr(manager + 56), 'HeroData')

@@ -9,6 +9,7 @@ import sys
 import UnityPy
 from UnityPy.classes import PPtr
 from extract_item_ui import Cursor, payload
+from item_asset_layout import item_layout
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -58,7 +59,7 @@ def main():
         if script_file != 1 or classes.get(script_id) != 'ItemData': continue
         name, data = payload(obj)
         if struct.unpack_from('<i', data, 12)[0] != 3: continue
-        cursor = Cursor(data, 168)
+        cursor = Cursor(data, item_layout(data)['effects'])
         effects = []
         for _ in range(cursor.count()):
             file_id, path_id = cursor.take('iq')

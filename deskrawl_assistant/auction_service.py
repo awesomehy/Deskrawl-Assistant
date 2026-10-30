@@ -344,6 +344,7 @@ class AuctionServiceMixin:
         return self._auction_service().observe(native)
 
     def _auction_catalog_payload(self):
+        from .item_protection import is_minion_equipment
         catalog = self._market_catalog()
         if not catalog:
             return []
@@ -357,6 +358,7 @@ class AuctionServiceMixin:
                 or localized.get('Chinese (Simplified)') or meta.get('name') or name,
                 'icon': meta.get('icon') or self.ui['equipment'].get(name, {}).get('icon'),
                 'kind': entry.get('kind'), 'rarity': entry.get('rarity'),
+                'is_minion_equipment': is_minion_equipment({'internal_name': name}),
                 'quality': ('black_mist' if entry.get('black_mist') and not entry.get('normal')
                     else 'divine' if entry.get('kind') == 'equipment' else 'set' if entry.get('rarity') == 5
                     else 'grand' if entry.get('kind') == 'rune' else 'legendary'),

@@ -23,7 +23,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.4.6'
+NAME = 'Deskrawl装备助手-v1.5.0'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -44,13 +44,21 @@ def main():
     normalized = {n.replace('\\','/'):n for n in names}
     icons = {n for n in normalized if n.startswith('deskrawl_assistant/web/icons/')}
     loot_items = json.loads(archive.extract(normalized['data/loot-item-ui.json']))['items']
-    assert len(icons) == len(loot_items) == 588
+    assert len(icons) == len(loot_items) == 602
+    import ssl
+    if 'codex-rejected-cas.pem' in Path(ssl.__file__).read_text(encoding='utf-8'):
+        assert 'codex-rejected-cas.pem' in names
+    assert all(loot_items['WorldBossPumpkinChest1' + difficulty]['kind'] == 'chest'
+               for difficulty in ('Normal', 'Nightmare', 'Inferno'))
+    assert loot_items['LegendaryMinionGear1']['name'] == '黄金可汗之鞍'
     assert loot_items['WerewolfMat']['name'] == '狼人毛皮'
     assert '10%' in loot_items['LegendaryBoots4']['description']
     assert all(loot_items[key]['description'] for key in ('DivineHelm1', 'DivineHelm3', 'DivineRing2', 'LegendaryNeck4', 'LegendaryShoulder3'))
     assert all('deskrawl_assistant/web'+i['icon'] in icons for i in loot_items.values())
     item_ui = json.loads(archive.extract(normalized['data/item-ui.json']))
     assert len(item_ui['items']) == 235
+    assert all(item_ui['collectibles']['WorldBossPumpkinChest1' + difficulty]['kind'] == 'chest'
+               for difficulty in ('Normal', 'Nightmare', 'Inferno'))
     assert all('deskrawl_assistant/web'+i['icon'] in icons for i in item_ui['items'].values())
     assert all(i['effect_groups'] for i in item_ui['items'].values())
     assert not any('lock-rules.json' in n or 'latest-snapshot.json' in n or 'assistant-actions.jsonl' in n for n in names)
@@ -75,7 +83,7 @@ def main():
     assert 'data/affix-class-filters.json' in normalized
     assert 'deskrawl_assistant.community_stats' in bundled_modules.toc
     assert 'deskrawl_assistant.statistics_reader' in bundled_modules.toc
-    for module in ('combat_rewards', 'game_lifecycle', 'mythic'):
+    for module in ('combat_rewards', 'game_lifecycle', 'mythic', 'minion_reader', 'world_boss', 'chests'):
         assert 'deskrawl_assistant.' + module in bundled_modules.toc
     for module in ('synthesis', 'synthesis_runtime', 'steam_market', 'market_currency'):
         assert 'deskrawl_assistant.' + module in bundled_modules.toc
@@ -102,7 +110,7 @@ def main():
     assert set(actions_profile['enabled_kinds']) == {'learn_life_skill', 'set_skill'}
     assert set(growth['heroes']) == {'1','2','4','8'}
     growth_icons = {n for n in normalized if n.startswith('deskrawl_assistant/web/progression-icons/')}
-    assert len(growth_icons) == 333
+    assert len(growth_icons) == 336
     assert all('deskrawl_assistant/web'+node['icon'] in growth_icons for hero in growth['heroes'].values()
         for node in hero['talents'] + hero['abilities'])
     assert all('deskrawl_assistant/web'+node['icon'] in growth_icons for node in growth['life_skills'] + growth['shop'])
@@ -126,7 +134,7 @@ def main():
                 result = {'schema': 1, 'client_id': payload['client_id'], 'token': 'a' * 64}
             elif self.path == '/v1/report':
                 assert self.headers.get('Authorization') == 'Bearer ' + 'a' * 64
-                assert payload['version'] == '1.4.6'
+                assert payload['version'] == '1.5.0'
                 result = {'accepted': True, 'report_id': payload['report_id'],
                           'sequence': payload['sequence'], 'accepted_at': datetime.now(timezone.utc).isoformat()}
             else:
@@ -194,7 +202,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.4.6'
+                assert request('/api/state')['app_version'] == '1.5.0'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -281,6 +289,8 @@ def main():
         assert [cleanup[k+'_pages'] for k in ('equipment','rune','gem')] == [[1,2,3],[4],[5]]
         assert [cleanup[k+'_pages'] for k in ('gold_bar', 'legendary_rein')] == [[5], [5]]
         assert all(cleanup[k+'_action'] == 'store' for k in ('gold_bar', 'legendary_rein'))
+        assert cleanup['minion_equipment_action'] == 'store'
+        assert cleanup['minion_equipment_pages'] == [1, 2, 3]
         auto = request('/api/state')['automation']['settings']
         assert [auto[k]['pages'] for k in ('pressure','runes','gems')] == [[1,2,3],[4],[5]]
         assert not managed['warehouse_ready']
@@ -294,7 +304,7 @@ def main():
         assert not any(managed['settings']['merchant']['weights'].values())
         assert request('/managed-growth.js')
         assert managed['progression_catalog'] == growth
-        report['checks'].append('四职业成长字典及319张天赋、技能、生活技能和商人图标及14张界面纹理内置；新用户85%触发、保留0%、购买件数全0')
+        report['checks'].append('四职业成长字典及322张天赋、技能、生活技能和商人图标及14张界面纹理内置；新用户85%触发、保留0%、购买件数全0')
         report['checks'].append('空规则、监控默认关闭；独立 exe 在中文和空格路径正常启动')
         assert '__SESSION_TOKEN__' not in request('/').decode('utf-8')
         assert b'async function api' in request('/app.js')
@@ -344,14 +354,16 @@ def main():
         check_reporting_disabled()
         report['checks'].append('停用的报告接口返回410，不创建经验或推荐数据库')
         catalog = request('/api/catalog')
-        assert len(catalog['equipment']) == 223
+        assert len(catalog['equipment']) == 229
         assert set(catalog['class_pools']) == {'1', '2', '4', '8'}
         assert [len(catalog['class_pools'][c]['Weapon']['primary']) for c in ('1','2','4','8')] == [17,19,19,15]
         report['checks'].append('四职业传说随机词条池配置与模块已内置，打包版接口返回对应候选')
-        assert sum(i['legendary'] for i in catalog['equipment']) == 64
+        assert sum(i['legendary'] for i in catalog['equipment']) == 67
+        assert {i['key'] for i in catalog['equipment'] if i['slot'] == 'Minion'} == {
+            'LegendaryMinionGear1', 'RareMinionGear1', 'RareMinionGear2', 'RareMinionGear3'}
         for item in catalog['equipment']:
             assert request(item['icon']).startswith(b'\x89PNG')
-        report['checks'].append('页面脚本、样式、223 张装备图标与 64 件传说装备词典正常读取')
+        report['checks'].append('页面脚本、样式、229 张装备图标与 67 件传说装备词典正常读取，含四种仆从装备')
         for item in item_ui['items'].values():
             assert request(item['icon']).startswith(b'\x89PNG')
         report['checks'].append('36 张宝石、199 张符文图标及效果说明全部内置并可读取')

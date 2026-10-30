@@ -8,7 +8,7 @@ DEFAULT_STORAGE_PAGES = {'equipment': (1, 2, 3), 'rune': (4,), 'gem': (5,)}
 
 SHARED_STORAGE_GROUPS = (('rune', 'runes'), ('gem', 'gems'))
 MANDATORY_STORAGE_GROUPS = (('equipment', '装备'), ('rune', '符文'), ('gem', '宝石'),
-                            ('gold_bar', '金条'), ('legendary_rein', '传说缰绳'))
+                            ('gold_bar', '金条'), ('legendary_rein', '传说缰绳'), ('minion_equipment', '仆从装备'))
 
 
 def available_storage_pages(snapshot, connected):

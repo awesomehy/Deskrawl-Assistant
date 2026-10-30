@@ -1,4 +1,5 @@
 """Extract four hero talent layouts, abilities and gamble stock from files only."""
+from item_asset_layout import item_layout
 from pathlib import Path
 import hashlib, json, struct, sys
 
@@ -48,13 +49,15 @@ def extract(game):
         def obscured(self):
             sys.path.insert(0,str(ROOT))
             from deskrawl_assistant.native_reader import decode_obscured_float
-            value=decode_obscured_float(self.data[self.pos:self.pos+20])
+            try:value=decode_obscured_float(self.data[self.pos:self.pos+20])
+            except RuntimeError as exc:raise ValueError(f'{self.key} float at {self.pos}: {self.data[self.pos:self.pos+28].hex()}') from exc
             if self.data[self.pos+20:self.pos+28] != b'\0'*8:raise ValueError('Unexpected serialized float')
             self.pos+=28;return value
         def leveled(self):return {'base':self.obscured(),'per_rank':self.obscured()}
         def token(self):
             value={'name':self.string(),'format':self.string(),'suffix':self.string()}
-            self.take('?');self.align();return value
+            value['highlight']=self.take('?');self.align()
+            value['floor']=self.take('?');self.align();return value
         def modifiers(self):
             result={}
             for _ in range(self.count()):
@@ -120,12 +123,14 @@ def extract(game):
             'talents':nodes,'abilities':skills}
     shop=[]
     for obj in grouped['RandomEquipment']:
-        key,b=payload(obj);slot=struct.unpack_from('<i',b,192)[0];price=struct.unpack_from('<i',b,20)[0]
+        key,b=payload(obj);slot=struct.unpack_from('<i',b,len(b)-8)[0]
+        if not 1 <= slot <= 10:continue  # Token exchanges are not legacy gamble slots.
+        price=struct.unpack_from('<i',b,20)[0]
         sprite=Cursor(obj).ptr()
         shop.append({'id':key,'slot':slot,'name':text(key).removeprefix('神秘'),
             'base_price':price,'icon':icon(sprite,'shop-'+key)})
     soul=next(o for o in grouped['ItemData'] if payload(o)[0]=='SoulShard')
-    maximum=struct.unpack_from('<i',payload(soul)[1],128)[0]
+    maximum=struct.unpack_from('<i',payload(soul)[1],item_layout(payload(soul)[1])['max_carry'])[0]
     unlocks=[]
     for obj in grouped['UnlockableObject']:
         fid,pid=struct.unpack_from('<iq',obj.get_raw_data())
@@ -181,8 +186,16 @@ def extract(game):
             'talent-milestone':(5581,'lil_roundframe_ready')}
     ui_assets={}
     for name,(pid,expected) in ui_ids.items():
-        sprite=shared.objects[pid]
-        if sprite.type.name!='Sprite' or sprite.read().m_Name!=expected:raise ValueError('Unknown growth UI sprite: '+name)
+        matches=[o for o in shared.objects.values() if o.type.name=='Sprite' and o.read().m_Name==expected]
+        if not matches:raise ValueError('Missing growth UI sprite: '+name)
+        images=[o.read().image for o in matches]
+        if any((v.size,v.mode,v.tobytes())!=(images[0].size,images[0].mode,images[0].tobytes()) for v in images[1:]):
+            from PIL import Image
+            with Image.open(icons/('ui-'+name+'.png')) as prior:
+                matching=[o for o,v in zip(matches,images) if (v.size,v.convert('RGBA').tobytes())==(prior.size,prior.convert('RGBA').tobytes())]
+            if not matching:raise ValueError('Ambiguous growth UI sprite: '+name)
+            matches=matching
+        sprite=matches[0]
         ui_assets[name]=icon(sprite,'ui-'+name)
     ui_assets['soul-shard']=icon(Cursor(soul).ptr(),'ui-soul-shard')
     return {'schema_version':1,'build':profile['build'],'sha256':profile['sha256'],'soul_maximum':maximum,

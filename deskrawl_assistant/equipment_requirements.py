@@ -34,6 +34,8 @@ def equip_eligibility(row, character, *, target_slot=None):
     result = {'available': False, 'can_equip': False, 'required_level': None,
               'character_level': None, 'reason': ''}
     try:
+        if isinstance(row, dict) and row.get('equip_slot') == 12:
+            raise ValueError('仆从装备不参与角色自动换装，请在游戏仆从页穿戴。')
         if not isinstance(character, dict) or character.get('available') is not True:
             raise ValueError('角色等级尚未完整读取，暂不能自动穿戴。')
         level = _integer(character.get('level'), 1, 10000, '角色等级')

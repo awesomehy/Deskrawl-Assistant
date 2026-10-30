@@ -129,9 +129,9 @@ test('failed login does not remain busy and another attempt uses no client-suppl
 });
 
 
-test('category selection covers seven families and specific retention always wins',()=>{
+test('category selection covers all supported families and specific retention always wins',()=>{
   const config=auction.normalize({categories:Object.keys(auction.categoryNames),excluded_keys:['HunterSetRune1_1']});
-  assert.equal(config.categories.length,7);
+  assert.equal(config.categories.length,8);
   for(const [key,row] of [['DivineBow1',{}],['LegendaryBoots1',{quality:'black_mist'}],['HunterSetRune2',{}],['LegendaryRune_HunterSpecial1',{}],['Rein_VolcanoDragon',{rarity:3}],['UpgradeCommodity1',{}],['GoldBar',{}]])assert.equal(auction.policyAllows(config,key,row),true,key);
   assert.equal(auction.policyAllows(config,'HunterSetRune1_1'),false);
   assert.equal(auction.policyAllows(config,'MovementPotion1'),false);

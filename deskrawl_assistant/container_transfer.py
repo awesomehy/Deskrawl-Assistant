@@ -161,10 +161,10 @@ def access_state(reader):
     if mode not in (0,1): raise MemoryReadError('当前角色模式未适配搬运')
     if mode == 1:
         cloud = singleton(native_rva(reader,'cloud_client_rva',CLOUD_CLIENT_RVA),'CloudClient')
-        dlc = pointer(cloud+416)
+        dlc = pointer(cloud+432)
         owned = observe(verify(dlc,'DlcState')+16,1) if dlc else b'\0'
     else:
-        dlc = pointer(save+216)
+        dlc = pointer(save+232)
         owned = observe(verify(dlc,'LocalDlcEntitlement')+28,1) if dlc else b'\0'
     if owned not in (b'\0',b'\1'): raise MemoryReadError('仓库扩展页状态异常')
     allowed = list(range((pages+1)*50))
@@ -349,8 +349,8 @@ def move_items(reader,expected,target,validate=lambda:True,on_commit=None,*,targ
             raise SnapshotChangedError('来源物品发生变化，请刷新后重试')
         stackable = row.get('item_type')==6 and row.get('item_class')=='GemData' and not row.get('item_uid') and not row.get('is_equipment')
         item = struct.unpack_from('<Q',head,16)[0]
-        maximum = p.i32(item+136) if stackable else 1
-        if stackable: guards.append((item+136,struct.pack('<i',maximum)))
+        maximum = p.i32(item+152) if stackable else 1
+        if stackable: guards.append((item+152,struct.pack('<i',maximum)))
         sources.append({'address':source,'header':head,'name':row['internal_name'],
                         'slot_index':row['slot_index'],'identity':row.get('item_uid') or row.get('instance_id') or '',
                         'stackable':stackable,'max_stack':maximum,'has_unique_uid':bool(row.get('item_uid'))})

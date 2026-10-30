@@ -180,13 +180,13 @@ class GrowthPolicyTests(unittest.TestCase):
 
     def test_catalog_has_four_complete_distinct_pages_and_all_icons(self):
         data=catalog();self.assertEqual(set(data['heroes']),{'1','2','4','8'})
-        self.assertEqual(sum(len(h['talents']) for h in data['heroes'].values()),168)
-        self.assertEqual(len(data['life_skills']),85)
+        self.assertEqual(sum(len(h['talents']) for h in data['heroes'].values()),169)
+        self.assertEqual(len(data['life_skills']),87)
         rows = data['life_skills']+[r for h in data['heroes'].values() for group in ('talents','abilities') for r in h[group]]
         for row in rows:
             icon=Path(__file__).resolve().parents[1]/'deskrawl_assistant/web'/row['icon'].lstrip('/')
             self.assertTrue(icon.is_file(),row['id']);self.assertTrue(row['name'])
-        self.assertEqual(data['soul_maximum']+sum(n['soul_capacity_per_rank']*n['max_points'] for n in data['life_skills']),3000)
+        self.assertEqual(data['soul_maximum']+sum(n['soul_capacity_per_rank']*n['max_points'] for n in data['life_skills']),4000)
         for h in data['heroes'].values(): self.assertEqual(len(h['abilities']),14)
 
     def test_priority_life_node_includes_its_whole_prerequisite_chain(self):
@@ -207,12 +207,12 @@ class GrowthPolicyTests(unittest.TestCase):
 
     def test_life_plan_eventually_learns_every_node_without_refunds(self):
         cfg=deepcopy(DEFAULT_SETTINGS);cfg['life_skills']['enabled']=True;current=state(gold=100000000)
-        for _ in range(86):
+        for _ in range(sum(node['max_points'] for node in catalog()['life_skills'])):
             action,_=growth_action(cfg,current)
             if not action:break
             current['life_skills']['ranks'][action['node_id']]=action['expected_rank']+1
             current['gold']-=action['gold_cost']
-        self.assertEqual(len(current['life_skills']['ranks']),85)
+        self.assertEqual(len(current['life_skills']['ranks']),87)
 
     def test_busy_game_never_allocates_or_submits_another_purchase(self):
         cfg=settings();cfg['life_skills']['enabled']=True;cfg['merchant']['enabled']=True

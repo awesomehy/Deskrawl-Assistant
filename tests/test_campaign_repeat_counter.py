@@ -21,10 +21,10 @@ class CampaignCopy(_Copy):
         self.map_name = 'MapA'
         for address, pointer in ((self.manager+120,self.plan), (self.manager+112,self.active_map),
                 (self.manager+104,self.wave), (self.wave+88,self.plan),
-                (self.plan+16,0x9000), (self.plan+24,0x9100), (self.plan+48,0x9200),
-                (self.plan+88,0x6000), (self.manager+192,0)):
+                (self.plan+16,0x9000), (self.plan+32,0x9100), (self.plan+56,0x9200),
+                (self.plan+104,0x6000), (self.manager+200,0)):
             self.values[address] = struct.pack('<Q',pointer)
-        for address, value in ((self.active_map+32,0), (self.plan+64,1),
+        for address, value in ((self.active_map+32,0), (self.plan+72,1),
                 (self.wave+304,1), (self.wave+48,1), (self.wave+152,4)):
             self.integer_value(address,value)
         for address in (self.wave+64,self.wave+248,self.wave+249):
@@ -103,7 +103,7 @@ class CampaignRepeatCounterTests(unittest.TestCase):
         copy.integer_value(copy.active_map+32,1)
         first=copy.run()
         self.assertEqual((first['map_id'],first['difficulty']),('MythicDungeon::mythic::1','Mythic'))
-        copy.integer_value(copy.plan+64,2);copy.integer_value(copy.wave+304,2)
+        copy.integer_value(copy.plan+72,2);copy.integer_value(copy.wave+304,2)
         second=copy.run()
         self.assertNotEqual(first['completion_counter']['id'],second['completion_counter']['id'])
         copy.strings[0x9200]='Inferno1'

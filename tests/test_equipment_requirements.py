@@ -246,9 +246,9 @@ class GuardedLevelCopy:
             self.player_class+88:struct.pack('<Q',5000),
             self.manager+32:struct.pack('<Q',self.config),
             self.player+32:struct.pack('<i',level)+bytes(12),
-            self.config+264:struct.pack('<i',maximum),
+            self.config+256:struct.pack('<i',maximum),
             self.item+36:struct.pack('<i',3),
-            self.item+144:struct.pack('<i',6),
+            self.item+160:struct.pack('<i',6),
             8000+40:struct.pack('<Q',9000),
             8000+48:struct.pack('<Q',9100),
         }
@@ -331,9 +331,9 @@ class EquipmentNativeLevelBoundaryTests(unittest.TestCase):
         self.assertEqual(result['required_level'],5)
         self.assertTrue(self.copies[0].finished)
         self.assertIn((3032,struct.pack('<i',5)+bytes(12)),self.read.guards)
-        self.assertIn((6264,struct.pack('<i',200)),self.read.guards)
+        self.assertIn((6256,struct.pack('<i',200)),self.read.guards)
         self.assertIn((7036,struct.pack('<i',3)),self.read.guards)
-        self.assertIn((7144,struct.pack('<i',6)),self.read.guards)
+        self.assertIn((7160,struct.pack('<i',6)),self.read.guards)
         self.assertIn((123,b'original guard'),self.read.guards)
 
     def test_valid_native_equip_passes_fresh_level_guards_to_dispatcher(self):
@@ -344,7 +344,7 @@ class EquipmentNativeLevelBoundaryTests(unittest.TestCase):
         calls,guards = self.dispatcher.invoke.call_args.args[:2]
         self.assertIn('EquipmentManager.ddt',[call.method for call in calls])
         self.assertIn((3032,struct.pack('<i',5)+bytes(12)),guards)
-        self.assertIn((6264,struct.pack('<i',200)),guards)
+        self.assertIn((6256,struct.pack('<i',200)),guards)
 
 
 if __name__ == '__main__':

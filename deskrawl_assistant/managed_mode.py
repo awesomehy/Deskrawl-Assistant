@@ -12,10 +12,12 @@ import math
 
 from .models import ValidationError
 from .game_panel_log import DisposalLogCursor
-from .item_protection import divine_equipment, mandatory_storage, disposal_protection, is_rune, town_rewards_clear
+from .item_protection import divine_equipment, mandatory_storage, disposal_protection, is_rune, is_minion_equipment, town_rewards_clear
 from .storage_preferences import DEFAULT_STORAGE_PAGES, validate_available_storage_pages
 from .mythic import MYTHIC, floor_number
+from .world_boss import target_blocked as boss_target_blocked
 from .equipment_requirements import equip_eligibility
+from .chests import is_chest
 from .stargazing import DEFAULT_STARGAZING, validate_stargazing, enabled as stargazing_enabled, decide as stargazing_decide, combat_rewards_clear, combat_rewards_known
 from .combat_rewards import CompletionRewards
 from .synthesis import (DEFAULT_SYNTHESIS, enabled as synthesis_enabled,
@@ -38,6 +40,7 @@ DEFAULT_SETTINGS = {
     'farming': {'enabled': False, 'mode': 'repeat', 'dungeon_id': None, 'difficulty':'current',
                 'progression': [], 'repeat_maps': [], 'free_threshold': 4, 'stargazing': deepcopy(DEFAULT_STARGAZING)},
     'cleanup': {'equipment_action': 'store', 'equipment_fallback': 'sell', 'equipment_policies': {},
+                'minion_equipment_action': 'store', 'minion_equipment_pages': list(DEFAULT_STORAGE_PAGES['equipment']),
                 'equipment_pages': list(DEFAULT_STORAGE_PAGES['equipment']), 'rune_action': 'store', 'rune_pages': list(DEFAULT_STORAGE_PAGES['rune']),
                 'gem_action': 'store', 'gem_pages': list(DEFAULT_STORAGE_PAGES['gem']),
                 'gold_bar_action': 'store', 'gold_bar_pages': list(DEFAULT_STORAGE_PAGES['gem']),
@@ -98,6 +101,8 @@ def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_e
         raw['auto_equip'].setdefault('disabled_slots',[])
     if isinstance(raw.get('cleanup'),dict):
         raw['cleanup'].setdefault('equipment_policies',{})
+        raw['cleanup'].setdefault('minion_equipment_action', 'store')
+        raw['cleanup'].setdefault('minion_equipment_pages', deepcopy(raw['cleanup'].get('equipment_pages', DEFAULT_STORAGE_PAGES['equipment'])))
         for kind in STORAGE_MATERIALS:
             raw['cleanup'].setdefault(kind+'_action', 'store')
             raw['cleanup'].setdefault(kind+'_pages', deepcopy(DEFAULT_SETTINGS['cleanup'][kind+'_pages']))
@@ -161,6 +166,8 @@ def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_e
         raise ValidationError('请先选择托管关卡。')
     if c['equipment_action'] not in ('sell', 'salvage', 'store') or c['equipment_fallback'] not in ('sell', 'salvage'):
         raise ValidationError('未命中装备处理方式无效。')
+    if c['minion_equipment_action'] not in ('store', 'sell', 'salvage'):
+        raise ValidationError('仆从装备处理方式无效。')
     policies = c['equipment_policies']
     if not isinstance(policies,dict) or not set(policies) <= set(DISPOSABLE_BUCKETS):
         raise ValidationError('装备品质处理配置无效；神圣和黑雾装备固定保留。')
@@ -179,13 +186,13 @@ def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_e
         if c[kind+'_action'] not in ('store', 'keep'):
             raise ValidationError(label+'处理方式仅支持放入仓库或留在背包。')
         c[kind+'_action'] = 'store'
-    for name in ('equipment_pages', 'rune_pages', 'gem_pages', *(kind+'_pages' for kind in STORAGE_MATERIALS)):
+    for name in ('equipment_pages', 'minion_equipment_pages', 'rune_pages', 'gem_pages', *(kind+'_pages' for kind in STORAGE_MATERIALS)):
         pages = c[name]
         if (not isinstance(pages, list) or len(pages) > 256 or any(type(n) is not int or n < 1 for n in pages)
                 or len(set(pages)) != len(pages)):
             raise ValidationError('托管仓库页选择无效：' + name)
         if not pages and not allow_empty_storage_pages and not (name=='rune_pages' and allow_empty_rune_pages) and (
-                name in ('equipment_pages','rune_pages') or c[name.replace('_pages', '_action')] == 'store'):
+                name in ('equipment_pages','minion_equipment_pages','rune_pages') or c[name.replace('_pages', '_action')] == 'store'):
             raise ValidationError('请勾选用于存放物品的仓库页。')
     validate_available_storage_pages(c, available_pages)
     validate_growth(result)
@@ -201,7 +208,7 @@ def item_kind(row):
     name = row.get('internal_name', row.get('name_key', ''))
     if row.get('item_class') == 'RuneData': return 'rune'
     if row.get('item_class') == 'GemData' or name.startswith('Gem'): return 'gem'
-    if name.startswith('TreasureChest'): return 'chest'
+    if is_chest(row): return 'chest'
     return 'material'
 
 
@@ -302,6 +309,8 @@ def equipment_bucket(row):
 
 
 def equipment_policy(cleanup, row, *, fallback=False):
+    if is_minion_equipment(row):
+        return cleanup.get('minion_equipment_action', 'store')
     bucket = equipment_bucket(row)
     if bucket not in DISPOSABLE_BUCKETS:
         raise ValidationError('当前装备品质不能按垃圾策略处理。')
@@ -311,7 +320,7 @@ def equipment_policy(cleanup, row, *, fallback=False):
 
 
 def equipment_actions(cleanup):
-    return {equipment_policy(cleanup,{'rarity':rarity,'is_ancient':ancient},fallback=fallback)
+    return {cleanup.get('minion_equipment_action', 'store')} | {equipment_policy(cleanup,{'rarity':rarity,'is_ancient':ancient},fallback=fallback)
         for rarity,ancient in ((0,False),(1,False),(2,False),(3,False),(3,True)) for fallback in (False,True)}
 
 
@@ -336,6 +345,10 @@ def _metric_key(row):
     if name in ('GoldDrop', 'HealthPotionDrop') or kind not in ('equipment', 'rune', 'gem') and 'Potion' in name:
         return None
     if kind == 'equipment' and equipment_bucket(row) in EQUIPMENT_BUCKETS:
+        if is_minion_equipment(row):
+            # Native disposal receipts have no instance level. Group by item
+            # and quality so those receipts join the observed pickup row.
+            return 'minion_equipment', name, equipment_bucket(row), None
         return kind, equipment_bucket(row)
     # Native fungible stacks expose base_rarity; the managed view decorates
     # the same value as rarity. Receipts and observations must share one key.
@@ -366,7 +379,8 @@ def observation_items(observation):
             token = (container, row.get('slot_index'), identity(row))
             if token not in known:
                 result.append(row); known.add(token)
-    for row in observation.get('character', {}).get('equipment', []):
+    character = observation.get('character', {})
+    for row in character.get('equipment', []) + character.get('minion_equipment', []):
         row = dict(deepcopy(row), container='equipped')
         token = ('equipped', row.get('equipped_slot'), identity(row))
         if token not in known:
@@ -735,19 +749,29 @@ class ManagedMetrics:
     def state(self):
         equipment = {bucket: {'name': BUCKET_LABELS[bucket], 'count': 0, 'sold': 0, 'salvaged': 0, 'stored': 0}
                      for bucket in EQUIPMENT_BUCKETS}
-        runes, gems, others = [], [], []
-        groups = {'rune': runes, 'gem': gems, 'other': others}
+        runes, gems, others, minions = [], [], [], []
+        groups = {'rune': runes, 'gem': gems, 'other': others, 'minion_equipment': minions}
         for key, totals in sorted(self.totals.items(), key=lambda p: str(p[0])):
             row = self.rows[key]
             if key[0] == 'equipment':
                 if key[1] in equipment: equipment[key[1]].update(totals)
             else:
                 value = {'name_key': key[1], 'name': row.get('name', key[1]), 'rarity': key[2], 'level': key[3], **totals}
+                if key[0] == 'minion_equipment':
+                    value.update(rarity=row.get('rarity', row.get('base_rarity')), bucket=key[2],
+                                 quality_name=BUCKET_LABELS[key[2]], icon=row.get('icon'))
                 groups[key[0]].append(value)
+        # The game aggregates servant and character pickups in the same rarity
+        # counters. Remove servant contributions before applying that fallback;
+        # the pending ground/carriage counts include the same known identities.
+        minion_counts = Counter()
+        for row in minions:
+            row['count'] = max(row['count'], row['sold'] + row['salvaged'])
+            minion_counts[row['bucket']] += row['count']
         for (bucket, field), quantity in self.native_estimates.items():
             equipment[bucket]['estimated_' + field] = quantity
         for bucket, totals in equipment.items():
-            totals['count'] = max(totals['count'], self.native_counts[bucket] + self.native_pending[bucket],
+            totals['count'] = max(totals['count'], self.native_counts[bucket] + self.native_pending[bucket] - minion_counts[bucket],
                                   totals['sold'] + totals['salvaged'])
         note = '已出售／分解包含助手处置与游戏马车自动处理。'
         if self.panel_enabled:
@@ -758,7 +782,7 @@ class ManagedMetrics:
             if self.panel_unparsed: note += f'另有 {self.panel_unparsed} 条处置日志格式未确认，未计入。'
         if self.native_estimates or not self.panel_enabled:
             note += '带 ≈ 的低品质数量按稳定马车策略估算，策略变化区间不估算。'
-        return {'equipment': equipment, 'runes': runes, 'gems': gems, 'others': others, 'note':note,
+        return {'equipment': equipment, 'minion_equipment': minions, 'runes': runes, 'gems': gems, 'others': others, 'note':note,
                 'gold': {'count': self.gold, 'available': self.gold_available, 'reason': self.gold_reason},
                 'game_log':{'enabled':self.panel_enabled, 'available':self.panel_cursor.available,
                     'incomplete':self.panel_cursor.incomplete or bool(self.panel_unparsed),
@@ -966,6 +990,8 @@ class ManagedMode:
 
     @staticmethod
     def _review(row):
+        if is_minion_equipment(row):
+            return bool(row.get('issues'))
         if row.get('issues') or row.get('rule_status') in ('review', 'unknown'): return True
         if row.get('rule_status') == 'no_rule' and row.get('rules_known') is True: return False
         return row.get('review') is not False
@@ -983,6 +1009,7 @@ class ManagedMode:
         # and positive retention evidence suffice to lock/store it; never turn
         # a missing affix read into a disposal decision or a batch-wide wait.
         if mandatory_storage(row) or row.get('locked') is True: return False
+        if is_minion_equipment(row): return not cls._quality_known(row)
         return (cls._review(row) or not cls._quality_known(row)
                 or type(row.get('matches')) is not bool)
 
@@ -1200,26 +1227,29 @@ class ManagedMode:
     def _storage_transfer(self, observation, row, pages, all_items, mandatory=False):
         targets = self._targets(observation, pages)
         material = storage_material_kind(row)
-        label = STORAGE_MATERIALS.get(material) or {'equipment':'装备','rune':'符文','gem':'宝石'}.get(item_kind(row),'物品')
+        label = '仆从装备' if is_minion_equipment(row) else STORAGE_MATERIALS.get(material) or {'equipment':'装备','rune':'符文','gem':'宝石'}.get(item_kind(row),'物品')
         if not targets:
             return self._pause('所选'+label+'仓库页尚未解锁或没有开放格位，物品保留；请解锁仓库页或修改存放分区。')
         if self._room(row, targets, all_items):
             return self._action('transfer', row, target='storage', target_indices=targets,
                                 **({'storage_group': material} if material else {}),
                                 reason='将奖励存入指定仓库页。')
-        if item_kind(row) != 'equipment':
+        if item_kind(row) != 'equipment' or is_minion_equipment(row):
             return self._pause('容量不足：所选'+label+'仓库页没有可用空格或堆叠容量，物品留在背包；请腾出空格或修改存放分区后继续。')
         cleanup = self.settings['cleanup']
         if not mandatory:
             return self._action(equipment_policy(cleanup,row,fallback=True), row,
                 reason_code='equipment_fallback', reason='装备专用仓库页已满，按品质配置处置未命中装备。')
         if self._bag_free(observation) == 0:
-            disposable = next((r for r in all_items if r.get('container') == 'inventory' and self._disposable(r)), None)
+            disposable = next((r for r in all_items if r.get('container') == 'inventory'
+                               and (not is_minion_equipment(r) or equipment_policy(cleanup, r) in ('sell', 'salvage'))
+                               and self._disposable(r)), None)
             if disposable:
                 return self._action(equipment_policy(cleanup,disposable,fallback=True), disposable,
                     reason_code='equipment_fallback', reason='按品质处理背包垃圾，为保留装备腾出搬运空格。')
             return self._pause('容量不足：背包没有空格，无法取出仓库垃圾；黑雾、神圣和保留装备留在背包。')
-        junk = next((r for r in all_items if r.get('container') == 'storage' and r.get('slot_index') in targets and self._disposable(r)), None)
+        junk = next((r for r in all_items if r.get('container') == 'storage' and r.get('slot_index') in targets
+                     and not is_minion_equipment(r) and self._disposable(r)), None)
         if junk:
             return self._action('transfer', junk, target='inventory', reason_code='warehouse_eviction',
                                 reason='取出所选装备页中的未锁垃圾，随后按配置出售或分解。')
@@ -1256,7 +1286,7 @@ class ManagedMode:
                                 and free < min(pressure['target_free'], capacity))
         if self.pressure_active:
             for row in bag:
-                if (item_kind(row) == 'equipment' and (pressure['equipment_filter'] == 'all'
+                if (item_kind(row) == 'equipment' and not is_minion_equipment(row) and (pressure['equipment_filter'] == 'all'
                         or row['locked'] is (pressure['equipment_filter'] == 'locked'))):
                     action = store(row, 'pressure')
                     if action: return action
@@ -1418,7 +1448,18 @@ class ManagedMode:
                 return self._action(action['kind'], action.get('item'),
                     **{k: v for k, v in action.items() if k not in ('kind', 'item')})
         for row in protected:
-            return self._storage_transfer(observation, row, settings['equipment_pages'], all_items, mandatory=True)
+            return self._storage_transfer(observation, row,
+                settings['minion_equipment_pages' if is_minion_equipment(row) else 'equipment_pages'], all_items, mandatory=True)
+        # Servant equipment has its own disposition and never uses character
+        # affix rules or the character warehouse's junk-eviction fallback.
+        for row in bag:
+            if not is_minion_equipment(row): continue
+            if not self._safe(row) or self._protected(row):
+                return self._pause('仆从装备身份或品质尚未核验，保留物品并等待重新读取。')
+            handling = settings['minion_equipment_action']
+            if handling == 'store':
+                return self._storage_transfer(observation, row, settings['minion_equipment_pages'], all_items, mandatory=True)
+            return self._action(handling, row, reason='按仆从装备独立配置处理奖励。')
         # Free the crafting workspace only after the complete protection and
         # auto-equip stages. Storage materials remain available to the planner
         # until it has exhausted eligible recipes, even if their home is full.
@@ -1519,8 +1560,10 @@ class ManagedMode:
             return None
         if self._bag_free(observation) < self.settings['farming']['free_threshold']:
             return self._pause('整理后背包空格仍少于回城门槛，保留装备或材料占用较多，请先处理容量。')
-        self.phase = 'travel'
         scene = observation.get('scene',{})
+        if reason := boss_target_blocked(scene,self.target_dungeon,self.target_difficulty):
+            return self._pause(reason)
+        self.phase = 'travel'
         entry_difficulty = scene.get('mythic_entry_difficulty') if self.target_difficulty==MYTHIC else self.target_difficulty
         if self.target_difficulty==MYTHIC and entry_difficulty not in DIFFICULTIES:
             self.status = '等待读取神话裂隙的解锁难度。'; return None
@@ -1727,6 +1770,12 @@ class ManagedMode:
         self.phase = 'stargazing'
         alternate = (self.repeat_index + 1) % len(self.repeat_maps)
         target = self.repeat_maps[alternate]
+        if reason := boss_target_blocked(scene,target['dungeon_id'],target['difficulty']):
+            # Finish the paid current run rather than discard its rewards for
+            # a boss that cannot accept the next entry (including entry 100).
+            self.stargazing_seen.add(run_id)
+            self.stargazing_state.update(verdict='keep',reason='下一目标不可进入，保留当前局。'+reason)
+            return None
         # The native entry rejects the active map. A different configured map
         # can be tried in combat; difficulty changes always go through town.
         different = str(target['dungeon_id']) != str(scene.get('dungeon_id'))

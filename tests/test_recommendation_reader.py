@@ -84,18 +84,18 @@ class RecommendationReaderTests(unittest.TestCase):
             plan_difficulty='Normal'
             reader=SimpleNamespace(string=lambda value:value, asset_name=lambda obj:'Map')
             def ptr(self,address):
-                return {1120:3000,1112:4000,2088:3000,3016:'run',3024:'Map',3048:self.plan_difficulty,3056:5000,
-                        3088:9000,6024:'Normal',6040:9200,7024:'Boss',7040:9300,
-                        8016:'NormalMob',8116:'BossMob',8216:'Minion',1192:0}[address]
+                return {1120:3000,1112:4000,2088:3000,3016:'run',3032:'Map',3056:self.plan_difficulty,3064:5000,
+                        3104:9000,6024:'Normal',6040:9200,7024:'Boss',7040:9300,
+                        8016:'NormalMob',8116:'BossMob',8216:'Minion',1200:0}[address]
             def verify(self,obj,name):return obj
             def integer(self,address):
                 if address==2048:return self.wave_index
-                return {3040:10,6032:1,7032:1,8024:2,8124:1,8224:1}[address]
+                return {3048:10,6032:1,7032:1,8024:2,8124:1,8224:1}[address]
             def boolean(self,address):
                 return self.completed if address==2248 else self.final_kill if address==2249 else False
             def number(self,address):return 0.
             def read(self,address,size):
-                if address==3072:return struct.pack('<d',0.)
+                if address in (3080,3088):return struct.pack('<d',0.)
                 return struct.pack('<q',{8032:self.fallback_xp,8048:100,8132:14,8148:90,8232:10,8248:50}[address])
             def array(self,obj,*args,**kwargs):
                 return [struct.pack('<Q',pointer) for pointer in {9000:[6000,7000],9200:[8000],9300:[8100,8200]}[obj]]

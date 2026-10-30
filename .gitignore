@@ -52,6 +52,7 @@ tools/*
 !tools/extract_catalog.py
 !tools/extract_equipment_ui.py
 !tools/extract_item_ui.py
+!tools/item_asset_layout.py
 !tools/extract_loot_item_ui.py
 !tools/equipment_effect_text.py
 !tools/inspect_affix_groups.py
@@ -141,3 +142,7 @@ docs/*
 !docs/1.4.5验收说明.md
 
 !docs/1.4.6验收说明.md
+
+!docs/游戏1.1.0兼容性验证.md
+
+!docs/1.5.0验收说明.md

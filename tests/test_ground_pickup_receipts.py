@@ -186,7 +186,7 @@ class GroundCountTests(unittest.TestCase):
             base_item=lambda item:{'internal_name':name, 'item_type':item_type})
         game._enrich_drops = lambda read, rows:rows
         read = Mock()
-        read.ptr.side_effect = lambda address:{0x100+216:0x5000, 0x100+88:0}[address]
+        read.ptr.side_effect = lambda address:{0x100+224:0x5000, 0x100+88:0}[address]
         read.list.return_value = [0x3000]
         read.guards = []
         return game._ground(read, 0x100)

@@ -361,8 +361,8 @@ class NativeReader:
         out = {"item_class": self.class_name(klass), "internal_name": name,
             "name_key": name if name in self.catalog.equipment else None,
             "is_equipment": name in self.catalog.equipment, "item_type": p.i32(item + 32),
-            "equip_slot": p.i32(item + 144), "base_rarity": p.i32(item + 36),
-            "max_stack": p.i32(item + 136), "class_mask": p.i32(item + 152)}
+            "equip_slot": p.i32(item + 160), "base_rarity": p.i32(item + 36),
+            "max_stack": p.i32(item + 152), "class_mask": p.i32(item + 168)}
         self.item_cache[item] = out
         return out
 

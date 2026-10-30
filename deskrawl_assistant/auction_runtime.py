@@ -325,7 +325,7 @@ class AuctionRuntime:
         # cge reads immutable ItemData and mutable GeneratedItemData fields.
         read.read(generated, 128)
         row['identity_verified'] = True  # fresh slot + registry + generated read above
-        row.update(effect=read.integer(item + 52), steam_retired=read.boolean(item + 204))
+        row.update(effect=read.integer(item + 56), steam_retired=read.boolean(item + 220))
         copy = self._copy()
         equipment = copy.singleton(self.actions.profile['singletons']['EquipmentManager'], 'EquipmentManager')
         rune = copy.singleton(self.actions.profile['singletons']['RuneManager'], 'RuneManager')

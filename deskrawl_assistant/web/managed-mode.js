@@ -9,7 +9,7 @@
   const rarityNames=[['divine','神圣'],['black_mist','黑雾传说'],['ancient','远古传说'],['legendary','普通传说'],['rare','稀有'],['uncommon','优秀'],['normal','普通']];
   const disposalRarities=rarityNames.slice(2),dispositionNames={store:'放入仓库',sell:'出售',salvage:'分解',keep:'留在背包'};
   const storageMaterials=[['gold_bar','金条'],['legendary_rein','传说缰绳']];
-  const storageKinds=['equipment','rune','gem',...storageMaterials.map(([key])=>key)];
+  const storageKinds=['equipment','minion_equipment','rune','gem',...storageMaterials.map(([key])=>key)];
   const capabilityNames={transfer:'物品转移',lock:'装备保护',equip:'后台换装',travel:'回城 / 进入关卡',difficulty:'主城切换难度',sell:'出售',salvage:'分解',chests:'开启宝箱',ground_pickup:'地面拾取',merchant:'神秘商人消费',talents:'职业天赋加点',life_skills:'生活技能学习',skills:'技能切换',gem_synthesis:'宝石合成',rune_synthesis:'符文合成',auction_upload:'游戏拍卖行上传'};
   const gemQualities=['粗糙','碎裂','粗砺','抛光','无瑕','璀璨'];
   const runeQualities={uncommon:'优秀',rare:'稀有',grand:'宏伟',set:'符文套装'};
@@ -57,6 +57,7 @@
       farming:{enabled:!!farm.enabled,mode,dungeon_id:mode==='repeat'&&repeatMaps.length?repeatMaps[0].dungeon_id:farm.dungeon_id??null,difficulty:mode==='repeat'&&repeatMaps.length?repeatMaps[0].difficulty:oneOf(farm.difficulty,['current','Normal','Nightmare','Inferno','Mythic'],'current'),progression:Array.isArray(farm.progression)?clone(farm.progression):[],repeat_maps:repeatMaps,free_threshold:safeNumber(farm.free_threshold,4),stargazing:normalizeStargazing(farm.stargazing)},
       cleanup:{equipment_action:oneOf(cleanup.equipment_action,['store','sell','salvage'],'store'),equipment_fallback:oneOf(cleanup.equipment_fallback,['sell','salvage'],'sell'),
         equipment_policies:Object.fromEntries(disposalRarities.map(([key])=>{const p=cleanup.equipment_policies?.[key]||{};return [key,{action:oneOf(p.action,['store','sell','salvage'],oneOf(cleanup.equipment_action,['store','sell','salvage'],'store')),fallback:oneOf(p.fallback,['sell','salvage'],oneOf(cleanup.equipment_fallback,['sell','salvage'],'sell'))}];})),equipment_pages:pageIds(cleanup.equipment_pages??storageTools.defaultPages.equipment),
+        minion_equipment_action:oneOf(cleanup.minion_equipment_action,['store','sell','salvage'],'store'),minion_equipment_pages:pageIds(cleanup.minion_equipment_pages??cleanup.equipment_pages??storageTools.defaultPages.equipment),
         rune_action:'store',rune_pages:pageIds(cleanup.rune_pages??storageTools.defaultPages.rune),gem_action:'store',gem_pages:pageIds(cleanup.gem_pages??storageTools.defaultPages.gem),
         ...Object.fromEntries(storageMaterials.flatMap(([key])=>[[key+'_action','store'],[key+'_pages',pageIds(cleanup[key+'_pages']??storageTools.defaultPages.gem)]]))}};
   }
@@ -87,6 +88,7 @@
     if(new Set(f.repeat_maps.map(row=>`${row.difficulty}:${row.dungeon_id}`)).size!==f.repeat_maps.length)return '两张重复刷图关卡不能相同。';
     if(!Number.isInteger(f.free_threshold)||f.free_threshold<1||f.free_threshold>2048)return '回城阈值须为 1 至 2048 的整数。';
     if(!c.equipment_pages.length)return '请选择装备存放页，黑雾 / 神圣与符合规则的装备需要保留空间。';
+    if(!c.minion_equipment_pages.length)return '请至少勾选一个仆从装备存放页，用于保留黑雾或已锁定的仆从装备。';
     if(!c.rune_pages.length)return '请勾选符文存放页，所有符文必须收纳。';
     if(!c.gem_pages.length)return '请至少勾选一个宝石存放页，宝石必须收纳。';
     for(const [key,label] of storageMaterials){
@@ -95,7 +97,7 @@
     if(warehouse?.warehouse_ready===false)return '回城整理：仓库开放格位尚未读取完整，请刷新物品清单后再保存或启动。';
     if(warehouse?.warehouse_ready===true){
       const available=new Set((warehouse.warehouse_pages||[]).filter(row=>Number.isInteger(row.index)&&row.index>0&&Number.isInteger(row.capacity)&&row.capacity>0).map(row=>row.index));
-      const missing=[['equipment','装备'],['rune','符文'],['gem','宝石'],...storageMaterials].filter(([key])=>!c[key+'_pages'].some(page=>available.has(page))).map(([,label])=>label);
+      const missing=[['equipment','装备'],['rune','符文'],['gem','宝石'],...storageMaterials,['minion_equipment','仆从装备']].filter(([key])=>!c[key+'_pages'].some(page=>available.has(page))).map(([,label])=>label);
       if(missing.length)return '回城整理：'+missing.join('、')+'必须至少配置 1 个已解锁且有开放格位的仓库页；未解锁页只能作为额外预留。';
     }
     const {merchant:m,life_skills:l}=growthTools.normalize(settings);
@@ -120,7 +122,7 @@
     if(synthesis.runes.enabled)keys.push('rune_synthesis','transfer');
     if(settings.auction?.upload_enabled===true)keys.push('auction_upload','transfer');
     if(growth.merchant.enabled)keys.push('merchant','travel','transfer','lock','chests','ground_pickup');
-    const actions=cleanupEnabled?Object.values(normalizeSettings(settings).cleanup.equipment_policies).flatMap(p=>[p.action,p.fallback]):[];
+    const actions=cleanupEnabled?[normalizeSettings(settings).cleanup.minion_equipment_action,...Object.values(normalizeSettings(settings).cleanup.equipment_policies).flatMap(p=>[p.action,p.fallback])]:[];
     if(actions.includes('sell'))keys.push('sell');if(actions.includes('salvage'))keys.push('salvage');return [...new Set(keys)];
   }
   function controlState(packet,settings,connected,busy=false){
@@ -139,12 +141,20 @@
     const count=row=>Math.max(0,safeNumber(row?.count)),group=rows=>Array.isArray(rows)?rows:Object.entries(rows||{}).map(([name,row])=>typeof row==='object'?{name,...row}:{name,count:row});
     const equipment=rarityNames.map(([key,name])=>{const row=value.equipment?.[key]||(key==='black_mist'?value.equipment?.mist:null)||{};return {key,name,count:count(row),sold:Math.max(0,safeNumber(row.sold)),salvaged:Math.max(0,safeNumber(row.salvaged)),stored:Math.max(0,safeNumber(row.stored)),estimatedSold:Math.max(0,safeNumber(row.estimated_sold)),estimatedSalvaged:Math.max(0,safeNumber(row.estimated_salvaged))};});
     const runes=group(value.runes).map(row=>({...row,count:count(row)})),gems=group(value.gems).map(row=>({...row,count:count(row)})),others=group(value.others).map(row=>({...row,count:count(row)}));
-    const runeCount=runes.reduce((sum,row)=>sum+row.count,0),gemCount=gems.reduce((sum,row)=>sum+row.count,0),otherCount=others.reduce((sum,row)=>sum+row.count,0);
-    return {equipment,runes,gems,others,runeCount,gemCount,otherCount,gold:count(value.gold),goldAvailable:value.gold?.available===true,goldReason:value.gold?.reason||'',total:equipment.reduce((sum,row)=>sum+row.count,0)+runeCount+gemCount+otherCount};
+    const minions=group(value.minion_equipment).map(row=>({...row,count:count(row)}));
+    const runeCount=runes.reduce((sum,row)=>sum+row.count,0),gemCount=gems.reduce((sum,row)=>sum+row.count,0),otherCount=others.reduce((sum,row)=>sum+row.count,0),minionCount=minions.reduce((sum,row)=>sum+row.count,0);
+    return {equipment,runes,gems,others,minions,runeCount,gemCount,otherCount,minionCount,gold:count(value.gold),goldAvailable:value.gold?.available===true,goldReason:value.gold?.reason||'',total:equipment.reduce((sum,row)=>sum+row.count,0)+runeCount+gemCount+otherCount+minionCount};
   }
   function duration(seconds){const n=Math.max(0,Math.floor(safeNumber(seconds)));return [Math.floor(n/3600),Math.floor(n/60)%60,n%60].map(n=>String(n).padStart(2,'0')).join(':');}
   function selectedDifficulty(settings,packet){return settings.farming.difficulty==='current'?packet?.current_difficulty:settings.farming.difficulty;}
   function availableMaps(packet,settings,difficulty=settings.farming.difficulty){const tier=difficulty==='current'?packet?.current_difficulty:difficulty,rows=packet?.maps_by_difficulty?.[tier]||(tier==='Mythic'?[]:packet?.maps)||[];return tier==='Mythic'?rows.filter(row=>row.unlocked===true):rows.filter(row=>row.map_type!==1);}
+  function mapOptionLabel(row){
+    let text=row.name||row.label||'关卡 '+mapIdValue(row);
+    if(row.map_type===4){const boss=row.world_boss;text+=' · 世界首领';if(boss?.available===true)text+=` · 今日剩余 ${boss.remaining}/${boss.daily_limit} 次`;}
+    if(row.unlocked===false)text+=' · 未解锁';
+    else if(row.map_type===4&&row.can_enter===false)text+=' · '+(row.entry_reason||'暂不可进入');
+    return text;
+  }
   function characterClass(character){
     const mask=character?.class_mask;
     return character?.available===true&&[1,2,4,8].includes(mask)?mask:null;
@@ -193,7 +203,7 @@
       growth:state(growing.length>0,growing.length?growing.join(' / ')+'自动养成':'战斗天赋 / 生活技能 / 技能预设'),
       synthesis:state(synthesisEnabled(s),`宝石${s.synthesis.gems.enabled?' → '+gemQualities[s.synthesis.gems.max_quality-1]:'关闭'} · 符文${s.synthesis.runes.enabled?' → '+runeQualities[s.synthesis.runes.max_quality]:'关闭'} · 跳过 ${s.synthesis.runes.excluded_keys.length} 种符文`),
       auction:state(auctionTools.enabled(s.auction),`上传${s.auction.upload_enabled?'开':'关'} · 出售${s.auction.sell_enabled?'开':'关'} · 允许 ${s.auction.categories.length} 类 · 保留白名单 ${s.auction.excluded_keys.length} 种优先`),
-      cleanup:{enabled:true,status:'固定保护',summary:`装备 ${folders('equipment')} 页 · 符文 ${folders('rune')} 页 · 宝石 ${folders('gem')} 页 · `+storageMaterials.map(([key,label])=>`${label} ${folders(key)} 页`).join(' · ')},
+      cleanup:{enabled:true,status:'固定保护',summary:`角色装备 ${folders('equipment')} 页 · 仆从装备 ${dispositionNames[s.cleanup.minion_equipment_action]} / ${folders('minion_equipment')} 页 · 符文 ${folders('rune')} 页 · 宝石 ${folders('gem')} 页 · `+storageMaterials.map(([key,label])=>`${label} ${folders(key)} 页`).join(' · ')},
       talents:state(s.progression.talents_enabled,currentClass?`当前职业目标 ${points} / ${growthTools.talentPointLimit} 点`:'按职业保存 · 连接后显示当前预设'),
       life:state(s.life_skills.enabled,`最终点满 · ${s.life_skills.priorities.length} 个优先节点 · 保留 ${s.life_skills.gold_reserve.toLocaleString('zh-CN')} 金币`),
       skills:state(s.progression.skills_enabled,currentClass?`${growthTools.skillTargets(stages).filter(Boolean).length} 个预设技能 · 达到等级后切换`:'按职业保存 · 达到等级后切换')
@@ -222,7 +232,7 @@
       for(const element of elements){const key=element.dataset.managedFold;if(foldKeys.includes(key))set(element,key in preferences?preferences[key]:defaults[key]);}
     }};
   }
-  const helpers={normalizeSettings,normalizeStargazing,normalizeSynthesis,synthesisEnabled,synthesisRunes,updateRuneExclusions,runeQuality,gemQualities,runeQualities,validateSettings,pageIds,controlState,requiredCapabilities,statistics,duration,capabilityAvailable,selectedDifficulty,availableMaps,equipmentPreset,equipmentSummary,characterClass,slotEquipment,withSlotChoice,disabledChoice,foldKeys,foldStorageKey,normalizeFoldPreferences,defaultFolds,foldSummaries,createFoldState};
+  const helpers={normalizeSettings,normalizeStargazing,normalizeSynthesis,synthesisEnabled,synthesisRunes,updateRuneExclusions,runeQuality,gemQualities,runeQualities,validateSettings,pageIds,controlState,requiredCapabilities,statistics,duration,capabilityAvailable,selectedDifficulty,availableMaps,mapOptionLabel,equipmentPreset,equipmentSummary,characterClass,slotEquipment,withSlotChoice,disabledChoice,foldKeys,foldStorageKey,normalizeFoldPreferences,defaultFolds,foldSummaries,createFoldState};
   if(typeof module!=='undefined'&&module.exports)module.exports=helpers;
   if(!root.document)return;
   const $=id=>root.document.getElementById(id);
@@ -265,6 +275,7 @@
     if(f.mode==='push'&&f.repeat_maps.some(row=>row.dungeon_id===null||!Number.isInteger(row.runs)||row.runs<1||row.runs>10000))f.repeat_maps=[];
     if(f.mode==='repeat')f.progression=[]; // Only the backend declares the campaign route.
     for(const [key] of disposalRarities){const p=c.equipment_policies[key];for(const field of ['action','fallback'])p[field]=$(`managed-equipment-${key}-${field}`).value;}
+    c.minion_equipment_action=$('managed-minion-equipment-action').value;
     next.synthesis.gems={enabled:$('managed-synthesis-gems').checked,max_quality:Number($('managed-synthesis-gems-max').value)};
     next.synthesis.runes.enabled=$('managed-synthesis-runes').checked;next.synthesis.runes.max_quality=$('managed-synthesis-runes-max').value;
     next.synthesis.runes.excluded_keys=updateRuneExclusions(next.synthesis.runes.excluded_keys,[...root.document.querySelectorAll('[data-synthesis-rune-key]')].map(input=>({key:input.dataset.synthesisRuneKey,excluded:input.checked})));
@@ -386,7 +397,7 @@
     for(const [i,id] of [[0,'managed-map'],[1,'managed-map-two']]){
       const point=draft?.farming.repeat_maps[i],selected=point?.dungeon_id,rows=availableMaps(packet,draft,point?.difficulty||(i===0?draft.farming.difficulty:'current')),unknown=selected!==null&&selected!==undefined&&!rows.some(row=>String(mapId(row))===String(selected));
       $(i===0?'managed-map-label':'managed-map-label-two').textContent=point?.difficulty==='Mythic'?'层数':'关卡';
-      $(id).innerHTML='<option value="">'+(rows.length?(point?.difficulty==='Mythic'?'请选择层数':'请选择关卡'):point?.difficulty==='Mythic'&&connected?'暂无已解锁层数':!connected?'连接后读取关卡':packet?.control_error?'关卡暂不可读':'正在读取关卡…')+'</option>'+(unknown&&point?.difficulty!=='Mythic'?`<option value="${esc(selected)}" selected>关卡 ${esc(selected)} · 待读取</option>`:'')+rows.map(row=>`<option value="${esc(mapId(row))}" ${String(mapId(row))===String(selected)?'selected':''} ${row.automation_supported===false||row.unlocked===false?'disabled':''}>${esc(row.name||row.label||'关卡 '+mapId(row))}${row.unlocked===false?' · 未解锁':''}</option>`).join('');
+      $(id).innerHTML='<option value="">'+(rows.length?(point?.difficulty==='Mythic'?'请选择层数':'请选择关卡'):point?.difficulty==='Mythic'&&connected?'暂无已解锁层数':!connected?'连接后读取关卡':packet?.control_error?'关卡暂不可读':'正在读取关卡…')+'</option>'+(unknown&&point?.difficulty!=='Mythic'?`<option value="${esc(selected)}" selected>关卡 ${esc(selected)} · 待读取</option>`:'')+rows.map(row=>`<option value="${esc(mapId(row))}" ${String(mapId(row))===String(selected)?'selected':''} ${row.automation_supported===false||row.unlocked===false||(row.map_type===4&&row.can_enter===false)?'disabled':''}>${esc(mapOptionLabel(row))}</option>`).join('');
     }
   }
   function writeForm(){
@@ -404,6 +415,7 @@
     $('managed-synthesis-gems').checked=draft.synthesis.gems.enabled;$('managed-synthesis-gems-max').value=draft.synthesis.gems.max_quality;
     $('managed-synthesis-runes').checked=draft.synthesis.runes.enabled;$('managed-synthesis-runes-max').value=draft.synthesis.runes.max_quality;
     for(const [key] of disposalRarities)for(const field of ['action','fallback'])$(`managed-equipment-${key}-${field}`).value=draft.cleanup.equipment_policies[key][field];
+    $('managed-minion-equipment-action').value=draft.cleanup.minion_equipment_action;
     renderSlots();renderMaps();renderPages();renderDependencies();
   }
   function renderDependencies(){
@@ -459,9 +471,9 @@
     $('managed-gold-total').textContent=data.gold.toLocaleString('zh-CN');
     $('managed-gold-total').title=data.goldAvailable?'本次托管实际拾取的金币；不含出售收入，不受金币消费影响。':(data.goldReason||'等待读取游戏金币掉落统计。')+' 已累计的数量保留，读取恢复后继续累计。';
     $('managed-equipment-stats').innerHTML=data.equipment.map(row=>`<tr class="managed-rarity-${row.key}"><td>${esc(row.name)}</td><td>${row.count.toLocaleString('zh-CN')}</td><td title="${row.estimatedSold||row.estimatedSalvaged?'包含按稳定马车策略估算的低品质处置数量':'已核验的助手回执、游戏马车记录或系统日志'}"><span>${row.estimatedSold?'≈ ':''}${row.sold.toLocaleString('zh-CN')}</span><small> / </small><span>${row.estimatedSalvaged?'≈ ':''}${row.salvaged.toLocaleString('zh-CN')}</span></td></tr>`).join('');
-    for(const [kind,label,rows,count] of [['rune','符文',data.runes,data.runeCount],['gem','宝石',data.gems,data.gemCount],['other','其他物品',data.others,data.otherCount]]){
-      $('managed-'+kind+'-total').textContent=count.toLocaleString('zh-CN')+' 个';
-      $('managed-'+kind+'-stats').innerHTML=rows.length?rows.map(row=>`<div data-rarity="${kind!=='gem'&&Number.isInteger(row.rarity)?row.rarity:''}"><span title="${esc(row.name||row.name_key||row.key)}">${esc(row.name||row.name_key||row.key||'未命名物品')}${row.level?` <small>Lv.${esc(row.level)}</small>`:''}</span><strong>${row.count.toLocaleString('zh-CN')}</strong><small>已出售 ${Math.max(0,safeNumber(row.sold)).toLocaleString('zh-CN')} · 已存入 ${Math.max(0,safeNumber(row.stored)).toLocaleString('zh-CN')}</small></div>`).join(''):'<p class="managed-stat-empty">尚无'+label+'掉落</p>';
+    for(const [kind,label,rows,count] of [['minion','仆从装备',data.minions,data.minionCount],['rune','符文',data.runes,data.runeCount],['gem','宝石',data.gems,data.gemCount],['other','其他物品',data.others,data.otherCount]]){
+      $('managed-'+kind+'-total').textContent=count.toLocaleString('zh-CN')+(kind==='minion'?' 件':' 个');
+      $('managed-'+kind+'-stats').innerHTML=rows.length?rows.map(row=>`<div data-bucket="${esc(row.bucket||'')}" data-rarity="${kind!=='gem'&&Number.isInteger(row.rarity)?row.rarity:''}"><span title="${esc(row.name||row.name_key||row.key)}">${kind==='minion'&&row.icon?.startsWith('/icons/')?`<img class="managed-loot-icon" src="${esc(row.icon)}" alt="">`:''}${esc(row.name||row.name_key||row.key||'未命名物品')}${row.quality_name?` <small>${esc(row.quality_name)}</small>`:''}${row.level?` <small>Lv.${esc(row.level)}</small>`:''}</span><strong>${row.count.toLocaleString('zh-CN')}</strong><small>已出售 ${Math.max(0,safeNumber(row.sold)).toLocaleString('zh-CN')}${kind==='minion'?` · 已分解 ${Math.max(0,safeNumber(row.salvaged)).toLocaleString('zh-CN')}`:''} · 已存入 ${Math.max(0,safeNumber(row.stored)).toLocaleString('zh-CN')}</small></div>`).join(''):'<p class="managed-stat-empty">尚无'+label+'掉落</p>';
     }
     if(packet?.stats?.note)$('managed-stats-note').textContent=packet.stats.note;
   }

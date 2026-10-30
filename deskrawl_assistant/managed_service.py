@@ -16,7 +16,7 @@ from .paths import RESOURCE_ROOT
 from .stargazing import enabled as stargazing_enabled, decide as stargazing_decide, combat_rewards_clear, combat_rewards_known
 from .loot_preview import decorate_equipment
 from .reconnect import ReconnectFlow
-from .item_protection import disposal_protection, mandatory_storage
+from .item_protection import disposal_protection, mandatory_storage, is_minion_equipment
 from .action_log import record
 from .progression import catalog as growth_catalog, growth_action, next_purchase, NEW_ACTIONS, PURCHASE_BATCH_LIMIT, enabled as growth_enabled
 from .auction import next_action as auction_action, validate_settings as validate_auction
@@ -161,7 +161,7 @@ class ManagedServiceMixin:
                 self._validate_slot_locks(settings)
                 loaded = True
                 missing_pages = [label for group, label in (('equipment', '装备'), ('rune', '符文'), ('gem', '宝石'),
-                                 ('gold_bar', '金条'), ('legendary_rein', '传说缰绳'))
+                                 ('gold_bar', '金条'), ('legendary_rein', '传说缰绳'), ('minion_equipment', '仆从装备'))
                                  if not settings['cleanup'][group+'_pages']]
                 if missing_pages:
                     # Keep every old preference editable; never silently replace
@@ -229,7 +229,7 @@ class ManagedServiceMixin:
         scene.setdefault('dungeon_id',control.get('map_id'))
         scene.setdefault('difficulty',control.get('difficulty'))
         for key in ('world_difficulty','mythic_entry_difficulty','scene_changing','teleporting','dead','completion_visible','online_saving','online_pending_requests',
-                    'player_state','gathering','travel_blocked','travel_wait_reason'):
+                    'player_state','gathering','travel_blocked','travel_wait_reason','maps_by_difficulty'):
             scene.setdefault(key,control.get(key))
         run = deepcopy(run_record(scene.get('run',control.get('run'))))
         if run:
@@ -319,7 +319,9 @@ class ManagedServiceMixin:
                     item['issues'].append('装备实例读取不完整。')
                 known = identity_known and all(obs.groups_complete.get(g) is True for g in ('primary','secondary'))
                 active_rules = [r for r in self._rules() if r.enabled and item['name_key'] in r.equipment_keys]
-                if not known or not item['rules_known']:
+                if is_minion_equipment(item):
+                    item['matches'], item['review'], item['rule_status'] = False, bool(item['issues']), 'no_rule'
+                elif not known or not item['rules_known']:
                     item['review'] = True; item['rule_status'] = 'review'
                 elif not active_rules:
                     item['matches'] = False; item['review'] = False; item['rule_status'] = 'no_rule'
@@ -386,10 +388,12 @@ class ManagedServiceMixin:
             engine = self.managed.state()
             # Refresh labels even for statistics gathered before a mapping
             # was available; quantities and stored/sold receipts stay intact.
-            for row in engine['statistics']['others']:
+            for row in engine['statistics']['others'] + engine['statistics']['minion_equipment']:
                 name, _ = self._describe_item(row['name_key'])
                 if name and name != row['name_key']:
                     row['name'] = name
+                if row.get('bucket'):
+                    row['icon'] = self.ui['equipment'].get(row['name_key'], {}).get('icon')
             transfer = (self.snapshot or {}).get('transfer',{})
             capabilities = deepcopy(self.managed_capabilities)
             capabilities['transfer'] = transfer.get('available') is True
@@ -531,7 +535,7 @@ class ManagedServiceMixin:
                         selected_maps = refreshed['maps_by_difficulty'].get(difficulty,[] if difficulty=='Mythic' else refreshed['maps'])
                         selected = next((m for m in selected_maps if str(m['id'])==str(target_map)),None)
                         if selected is None or selected.get('unlocked') is not True or selected.get('can_enter') is False:
-                            raise ValidationError('目标关卡尚未解锁或入场材料不足。')
+                            raise ValidationError((selected or {}).get('entry_reason') or '目标关卡尚未解锁或入场材料不足。')
                 if self.managed_can_resume and hasattr(self.managed,'resume'):
                     self.managed_retry = None
                     self.managed_return_recovery = None
@@ -775,6 +779,8 @@ class ManagedServiceMixin:
                             or not self.managed._safe(item)):
                         return {'verified':False,'retryable':True,'reason':'金条或传说缰绳的身份、品质或收纳设置已变化，重新规划。'}
                     pages = self.managed.settings['cleanup'][group+'_pages']
+                elif is_minion_equipment(item):
+                    pages = self.managed.settings['cleanup']['minion_equipment_pages']
                 else:
                     pages = self.managed.settings['cleanup'][item['kind']+'_pages']
                 approved = set(self.managed._targets(observation,pages))

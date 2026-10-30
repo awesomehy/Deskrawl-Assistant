@@ -137,7 +137,7 @@ def _snapshot(reader):
         return verify(pointer(static), name)
 
     manager = singleton(native_rva(reader,'game_manager_rva',GAME_MANAGER_RVA), 'GameManager')
-    if struct.unpack('<i', read(manager + 168, 4))[0] != 1:
+    if struct.unpack('<i', read(manager + 176, 4))[0] != 1:
         raise MemoryReadError('游戏尚未进入角色，暂停读取经验。')
     player = singleton(native_rva(reader,'player_data_rva',PLAYER_DATA_RVA), 'PlayerData')
     config_obj = verify(pointer(manager + 32), 'GameConfig')
@@ -150,7 +150,7 @@ def _snapshot(reader):
     mode, slot = struct.unpack('<ii', read(save + 32, 8))
     if mode not in (0, 1) or not 0 <= slot < 100:
         raise MemoryReadError('角色槽位标识无效。')
-    config_raw = read(config_obj + 244, 32)
+    config_raw = read(config_obj + 236, 32)
     values = struct.unpack('<iiiiiiff', config_raw)
     names = ('MobsToLevelAtLevel1', 'MobsToLevelAtLevel5', 'MobsToLevelAtLevel15',
              'MobsToLevelAtLevel50', 'MobsToLevelAtMaxLevel', 'MaxPlayerLevel',
@@ -168,8 +168,8 @@ def _snapshot(reader):
     if active_map and plan:
         verify(active_map, 'MapData')
         verify(plan, 'RunPlan')
-        plan_header = read(plan + 16, 40)
-        run_pointer, stage_pointer, _, _, _, difficulty_pointer = struct.unpack('<QQQiiQ', plan_header)
+        plan_header = read(plan + 16, 48)
+        run_pointer, _, stage_pointer, _, _, _, difficulty_pointer = struct.unpack('<QQQQiiQ', plan_header)
         stage = reader.string(stage_pointer) or ''
         difficulty = reader.string(difficulty_pointer) or ''
         run_id = reader.string(run_pointer) or ''

@@ -2,14 +2,19 @@
   "schema_version": 1,
   "scope": "Legendary random primary affixes by generation HeroClass. Secondary affixes are not class filtered; divine fixed stats are excluded.",
   "source": {
-    "game_version": "1.0.3",
-    "gameAssemblySha256": "f23ae23f8714fa5a49b9ab4b8ae767c33f7e50afad47284d81121354d1677a46",
-    "metadataSha256": "93f914c1e0119b82c98ca0647542c3afe0fade976d456f2212b03d699e6813de",
-    "assetsSha256": "6fd77bbdbbc0aa08aa79e37f401e17dd6ed3120d16deb0ead4810e0c524ebc80",
-    "primary_filter": "gk.dqm @ RVA 0x793c80 -> gk.dqn @ RVA 0x793d40",
-    "secondary_sampling": "gk.dqb @ RVA 0x792628..0x792649 (no class filter)"
+    "game_version": "1.1.0",
+    "gameAssemblySha256": "72c9bd3a42790516c18c4728a25d6eff481bf8232288a2bfe60f550f7bfdbe26",
+    "metadataSha256": "26de344c09a88a59d19b81053c62f0612cc748206799e9f28297db4d72ad33d5",
+    "assetsSha256": "2ae84fe8a3873a2ebb2bef42497c89ee4323c59153cf38b2931b5252c5e732fc",
+    "primary_filter": "gn.dup @ RVA 0x7eac70 -> gn.duq @ RVA 0x7ead30",
+    "secondary_sampling": "gn.duc @ RVA 0x7e9070 (secondary array sampling; no class filter)"
   },
-  "classes": {"Barbarian": 1, "Mage": 2, "Hunter": 4, "Monk": 8},
+  "classes": {
+    "Barbarian": 1,
+    "Mage": 2,
+    "Hunter": 4,
+    "Monk": 8
+  },
   "primary_exclusion_masks": {
     "Stats.Strength": 14,
     "Stats.Dexterity": 3,

@@ -54,6 +54,7 @@ class Signatures:
         self.body_cache={}
         self.helpers={}
         self.bss={}
+        self.trap_stubs={}
 
     def full_name(self,index):
         d=self.i.defs[index]
@@ -157,6 +158,11 @@ class Signatures:
                 reachable[pc]=ins
                 if ins.mnemonic=='int3':break
                 if ins.mnemonic.startswith('ret'):break
+                # IL2CPP exception stubs end in INT3 after a nonreturning
+                # call. Chained unwind extents may include a following jump
+                # table, which must not be decoded as fall-through code.
+                if ins.mnemonic=='call' and ins.op_str.startswith('0x') and self.traps_without_return(int(ins.op_str,16)):
+                    break
                 if ins.mnemonic.startswith('j') and ins.op_str.startswith('0x'):
                     target=int(ins.op_str,16)
                     if pointer<=target<end:pending.append(target)
@@ -165,6 +171,19 @@ class Signatures:
         if not reachable:raise ValueError('No native code found')
         self.body_cache[pointer]=list(reachable[k] for k in sorted(reachable))
         return self.body_cache[pointer]
+
+    def traps_without_return(self,pointer):
+        """Recognize only straight-line native trap stubs, never guess by name."""
+        if pointer in self.trap_stubs:return self.trap_stubs[pointer]
+        result=False
+        end=self.ends.get(pointer)
+        if end is not None and pointer<end<=pointer+512:
+            at=self.pe.raw(pointer,end-pointer)
+            for ins in self.dis.disasm(self.pe.data[at:at+end-pointer],pointer):
+                if ins.mnemonic=='int3':result=True;break
+                if ins.mnemonic.startswith(('ret','j','loop')):break
+        self.trap_stubs[pointer]=result
+        return result
 
     def body(self,pointer):
         from capstone.x86 import X86_OP_MEM,X86_OP_IMM,X86_REG_RIP
@@ -246,7 +265,8 @@ class Signatures:
                 'gc_mode_rva':mode,'gc_bitmap_rva':bitmap}
         for name,key in (('PlayerData','player_data_rva'),('PlayerAbilityBook','ability_book_rva'),
                          ('EquipmentManager','equipment_manager_rva'),('RuneManager','rune_manager_rva'),
-                         ('PlayerTalentBook','talent_book_rva'),('GameAreaManager','game_area_manager_rva')):
+                         ('PlayerTalentBook','talent_book_rva'),('GameAreaManager','game_area_manager_rva'),
+                         ('SlaveManager','minion_manager_rva')):
             result[key]=self.singleton_rva(name)
         # A reused obfuscated name may now belong to an unrelated class.
         # Prefer the reviewed logical binding before an unchanged-name fallback.

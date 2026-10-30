@@ -119,7 +119,7 @@ def read_carriage(reader):
         if count: guards.append((array+32,block[:count*8]))
         return [struct.unpack('<Q',v)[0] for v in records[:count]]
     drops=objects(ptr(carriage+152),'LootDrop')
-    world=objects(ptr(manager+216),'LootDrop')
+    world=objects(ptr(manager+224),'LootDrop')
     rows=[]
     for index,address in enumerate(drops):
         if not address: continue

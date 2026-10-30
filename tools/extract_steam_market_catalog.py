@@ -15,6 +15,7 @@ import struct
 import UnityPy
 
 from extract_item_ui import Cursor, payload
+from item_asset_layout import item_layout
 
 BASE = Path(__file__).resolve().parents[1]
 
@@ -42,7 +43,7 @@ def extract(root: Path) -> dict:
         if cls not in ('ItemData', 'RuneData', 'GemData'):
             continue
         key, data = payload(obj)
-        c = Cursor(data, 168)
+        c = Cursor(data, item_layout(data)['effects'])
         # EquipmentEffects, AbilityLevels and FixedStats precede the Steam IDs.
         for stride in (12, 24, 36):
             count = c.count()

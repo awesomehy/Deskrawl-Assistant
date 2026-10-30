@@ -2,8 +2,10 @@
 from copy import deepcopy
 
 from .models import ValidationError
+from .item_protection import is_minion_equipment
 
 CATEGORIES = {
+    'minion_equipment': '仆从装备（可交易）',
     'divine_equipment': '神圣装备', 'black_mist_equipment': '黑雾装备',
     'set_rune': '符文套装', 'grand_rune': '宏伟符文',
     'legendary_rein': '传说缰绳', 'consecration_stone': '开光石', 'gold_bar': '金条',
@@ -64,6 +66,8 @@ def key(row):
 def category(row):
     """Classify only known tradable families; native eligibility is separate."""
     name = key(row) or row.get('key') or ''
+    if is_minion_equipment(row):
+        return 'minion_equipment'
     if row.get('is_black_mist') is True or row.get('variant') == 'black_mist' or row.get('quality') == 'black_mist':
         return 'black_mist_equipment'
     if name.startswith('Divine'):

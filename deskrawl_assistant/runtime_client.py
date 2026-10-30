@@ -149,6 +149,14 @@ class RuntimeClient:
                 raise RuntimeConnectionError('尚未连接游戏。')
             return read_player_statistics(self._reader)
 
+    def minion_snapshot(self):
+        """Read servant levels, skill ranks and inheritance; never upgrade them."""
+        from .minion_reader import read_minions
+        with self._guard:
+            if self._reader is None:
+                raise RuntimeConnectionError('尚未连接游戏。')
+            return read_minions(self._reader)
+
     def loot_preview_snapshot(self):
         from .loot_plan_reader import read_loot_plan
         with self._guard:

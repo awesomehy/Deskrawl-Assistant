@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 from deskrawl_assistant.game_actions import normalise_run
 from deskrawl_assistant.managed_mode import ManagedMode, run_entry_confirmed
 from deskrawl_assistant.mythic import MYTHIC, floor_id
+from deskrawl_assistant.world_boss import PUMPKIN
 from tests.test_managed_mode import settings, observation, verified, after_rewards, equipment
 from tests.test_run_receipts import campaign
 from tests import test_run_receipts as receipt_tests
@@ -155,6 +156,119 @@ class NativeSettlementTests(unittest.TestCase):
         self.assertFalse(result['available'])
         self.assertTrue(result['retryable'])
         self.assertEqual(self.game._run_receipts.snapshot()['receipts'], [])
+
+
+class ClearedWorldBossSettlementTests(unittest.TestCase):
+    setUp = NativeSettlementTests.setUp
+    settlement = NativeSettlementTests.settlement
+    read = NativeSettlementTests.read
+
+    def boss_settlement(self):
+        value = self.settlement()
+        run = {**value['run'], 'map_id': PUMPKIN, 'finished': True,
+               'final_kill_settled': False, 'enemy_count': 0}
+        value['run'] = None
+        value['profile']['completed_maps']['Normal'] = [PUMPKIN]
+        self.fixture.reader.asset_name.return_value = PUMPKIN
+        return value, run
+
+    def test_cleared_manager_plan_uses_guarded_wave_plan_and_counts_only_once(self):
+        value, run = self.boss_settlement()
+        with patch('deskrawl_assistant.recommendation_reader._campaign_run', return_value=run) as current:
+            first = self.read(value)
+            second = self.read(value)
+        self.assertTrue(first['available'], first['reason'])
+        self.assertEqual(first['run']['status'], 'success')
+        self.assertEqual(first['run']['map_id'], PUMPKIN)
+        self.assertEqual(first['run_history']['sequence'], 1)
+        self.assertEqual(first['run_history'], second['run_history'])
+        self.assertTrue(current.call_args.kwargs['allow_settled_world_boss'])
+
+    def test_cleared_boss_plan_still_needs_completed_map_evidence(self):
+        value, run = self.boss_settlement()
+        value['profile']['completed_maps']['Normal'] = []
+        with patch('deskrawl_assistant.recommendation_reader._campaign_run', return_value=run):
+            result = self.read(value)
+        self.assertTrue(result['available'], result['reason'])
+        self.assertNotEqual(result['run']['status'], 'success')
+        self.assertEqual(result['run_history']['receipts'], [])
+
+    def test_dead_character_cannot_turn_retained_boss_plan_into_a_win(self):
+        value, run = self.boss_settlement()
+        self.fixture.memory.put(self.fixture.objects['Player']+296, b'\1')
+        with patch('deskrawl_assistant.recommendation_reader._campaign_run', return_value=run):
+            result = self.read(value)
+        self.assertTrue(result['available'], result['reason'])
+        self.assertEqual(result['run']['status'], 'failed')
+        self.assertEqual(result['run_history']['receipts'], [])
+
+    def test_cleared_plan_recovery_requires_correct_visible_popup_and_stable_combat_scene(self):
+        for case in ('hidden', 'mythic_popup', 'town', 'teleporting', 'changing', 'ordinary_map'):
+            with self.subTest(case=case):
+                value, run = self.boss_settlement()
+                self.fixture.load_completion('MythicCompletionUI', visible=False)
+                mem, objs = self.fixture.memory, self.fixture.objects
+                mem.put(objs['GameAreaManager']+120, b'\0\0\0\0')
+                mem.put(objs['GameAreaManager']+176, b'\0')
+                mem.put(objs['TownPortalSystem']+76, b'\0')
+                if case in ('hidden', 'mythic_popup'):
+                    mem.put(self.fixture.statics['CombatMapCompletionUI'], b'\0')
+                    if case == 'mythic_popup':
+                        mem.put(self.fixture.statics['MythicCompletionUI']+8, b'\1')
+                elif case == 'town': mem.put(objs['GameAreaManager']+120, b'\1\0\0\0')
+                elif case == 'teleporting': mem.put(objs['TownPortalSystem']+76, b'\1')
+                elif case == 'changing': mem.put(objs['GameAreaManager']+176, b'\1')
+                elif case == 'ordinary_map': self.fixture.reader.asset_name.return_value = 'map-a'
+                with patch('deskrawl_assistant.recommendation_reader._campaign_run') as current:
+                    result = self.read(value)
+                current.assert_not_called()
+                self.assertTrue(result['available'], result['reason'])
+                self.assertIsNone(result['run'])
+                self.assertEqual(result['run_history']['receipts'], [])
+
+    def test_changed_wave_plan_or_popup_cannot_publish_a_win(self):
+        value, run = self.boss_settlement()
+        for changed in (None, {**run, 'map_id': 'map-a'}, {**run, 'difficulty': 'Inferno'}):
+            with self.subTest(changed=changed), patch(
+                    'deskrawl_assistant.recommendation_reader._campaign_run', return_value=changed):
+                result = self.read(value)
+                self.assertFalse(result['available'])
+                self.assertTrue(result['retryable'])
+                self.assertEqual(self.game._run_receipts.snapshot()['receipts'], [])
+        def race(copy, *_, **__):
+            self.fixture.memory.put(self.fixture.statics['CombatMapCompletionUI'], b'\0')
+            return run
+        with patch('deskrawl_assistant.recommendation_reader._campaign_run', side_effect=race):
+            result = self.read(value)
+        self.assertFalse(result['available'])
+        self.assertTrue(result['retryable'])
+        self.assertEqual(self.game._run_receipts.snapshot()['receipts'], [])
+
+    def test_recovered_last_boss_collects_rewards_before_returning_to_original_map(self):
+        from tests.test_campaign_repeat_counter import SettledWorldBossPlanTests
+        from tests.test_world_boss import BossManagedTests, options
+        copied = SettledWorldBossPlanTests().fixture()
+        engine, world = BossManagedTests().engine()
+        world['scene']['maps_by_difficulty'] = options(0)
+        world['scene'].update(completion_visible=popup(), run=normalise_run(
+            SettledWorldBossPlanTests().read(copied), {PUMPKIN}, completion_visible=popup()))
+        world['ground']['items'] = [equipment('last-boss-drop', container='ground')]
+        action = engine.next_action(world)
+        self.assertEqual(action['kind'], 'collect_ground')
+        verified(engine, action)
+        world['ground']['items'] = []
+        world['items'] = [equipment('last-boss-drop')]
+        action = after_rewards(engine, world)
+        self.assertEqual(action['kind'], 'return_town')
+        verified(engine, action)
+        town = observation([], town=True)
+        town['scene']['difficulty'] = 'Normal'
+        town['scene']['maps_by_difficulty'] = options(0)
+        action = engine.next_action(town)
+        self.assertEqual((action['kind'], action['dungeon_id']), ('enter_dungeon', 'a'))
+        self.assertEqual(engine.pumpkin_completed, 1)
+        self.assertEqual(engine.repeat_completed, 0)
+        self.assertTrue(engine.running, engine.status)
 
 
 class EntryConfirmationTests(unittest.TestCase):

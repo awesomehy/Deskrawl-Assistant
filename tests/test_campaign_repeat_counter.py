@@ -5,6 +5,7 @@ import unittest
 
 from deskrawl_assistant.native_memory import MemoryReadError, SnapshotChangedError
 from deskrawl_assistant.recommendation_reader import _Copy, _campaign_run
+from deskrawl_assistant.world_boss import PUMPKIN
 
 
 class CampaignCopy(_Copy):
@@ -127,6 +128,64 @@ class CampaignRepeatCounterTests(unittest.TestCase):
         reset=copy.run()
         self.assertEqual(reset['completion_counter']['id'],second['completion_counter']['id'])
         self.assertEqual(reset['completion_counter']['count'],0)
+
+
+class SettledWorldBossPlanTests(unittest.TestCase):
+    def fixture(self):
+        copy = CampaignCopy()
+        copy.map_name = copy.strings[0x9100] = PUMPKIN
+        copy.integer_value(copy.active_map+32, 4)
+        copy.values[copy.manager+120] = struct.pack('<Q', 0)
+        copy.values[copy.wave+40] = struct.pack('<Q', copy.active_map)
+        copy.values[copy.wave+248] = b'\1'
+        copy.integer_value(copy.wave+48, 2)
+        return copy
+
+    def read(self, copy):
+        return _campaign_run(copy, copy.manager, 'Normal', allow_settled_world_boss=True)
+
+    def test_finished_wave_plan_recovers_the_real_identity_without_campaign_plan(self):
+        copy = self.fixture()
+        self.assertIsNone(copy.run())
+        recovered = self.read(copy)
+        self.assertEqual(recovered['map_id'], PUMPKIN)
+        self.assertTrue(recovered['finished'])
+        copy.values[copy.manager+120] = struct.pack('<Q', copy.plan)
+        self.assertEqual(recovered, copy.run())
+
+    def test_missing_or_nonterminal_or_other_map_plan_is_not_recovered(self):
+        for change in ('ordinary', 'wrong_type', 'wave_map', 'running', 'active',
+                       'early_wave', 'no_plan', 'no_waves', 'enemy'):
+            with self.subTest(change=change):
+                copy = self.fixture()
+                if change == 'ordinary': copy.map_name = copy.strings[0x9100] = 'MapA'
+                elif change == 'wrong_type': copy.integer_value(copy.active_map+32, 0)
+                elif change == 'wave_map': copy.values[copy.wave+40] = struct.pack('<Q', 0x9876)
+                elif change == 'running': copy.values[copy.wave+248] = b'\0'
+                elif change == 'active': copy.values[copy.wave+64] = b'\1'
+                elif change == 'early_wave': copy.integer_value(copy.wave+48, 1)
+                elif change == 'no_plan': copy.values[copy.wave+88] = struct.pack('<Q', 0)
+                elif change == 'no_waves': copy.array = lambda *a, **k: []
+                elif change == 'enemy':
+                    copy.list = lambda *a, **k: [struct.pack('<Q', 0xA000)]
+                    copy.values[0xA000+296] = b'\0'
+                self.assertIsNone(self.read(copy))
+
+    def test_different_plan_map_or_difficulty_is_rejected(self):
+        for string, value in ((0x9100, 'OtherMap'), (0x9200, 'Inferno1'), (0x9000, '')):
+            with self.subTest(field=string):
+                copy = self.fixture(); copy.strings[string] = value
+                with self.assertRaises(SnapshotChangedError): self.read(copy)
+
+    def test_plan_and_terminal_state_changes_invalidate_the_guarded_read(self):
+        for address, raw in ((CampaignCopy.manager+120, struct.pack('<Q', CampaignCopy.plan)),
+                             (CampaignCopy.wave+88, struct.pack('<Q', 0)),
+                             (CampaignCopy.wave+40, struct.pack('<Q', 0)),
+                             (CampaignCopy.wave+248, b'\0'), (CampaignCopy.wave+64, b'\1')):
+            with self.subTest(address=address):
+                copy = self.fixture(); self.assertIsNotNone(self.read(copy)); copy.finish()
+                copy.values[address] = raw
+                with self.assertRaises(SnapshotChangedError): copy.finish()
 
 
 if __name__=='__main__':unittest.main()

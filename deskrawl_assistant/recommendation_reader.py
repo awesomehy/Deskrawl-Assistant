@@ -541,10 +541,27 @@ def _campaign_progress(copy, save, config_obj, catalog):
             'mythic_completed':[key for key in completed_keys if floor_number(key) is not None]}
 
 
-def _campaign_run(copy, manager, difficulty):
+def _campaign_run(copy, manager, difficulty, *, allow_settled_world_boss=False):
     """Only the identity and completion evidence needed by the serial planner."""
     plan,active_map = copy.ptr(manager+120),copy.ptr(manager+112)
-    if not plan or not active_map: return None
+    if not active_map: return None
+    settlement_plan = False
+    if not plan:
+        # World-boss settlement can clear GameManager's plan while leaving the
+        # finished round in WaveManager. Only the guarded, visible settlement
+        # reader may use it; ordinary campaign reads must not revive an old
+        # plan during travel.
+        if not allow_settled_world_boss: return None
+        from .world_boss import MAP_TYPE, is_world_boss
+        copy.verify(active_map, 'MapData')
+        if (copy.integer(active_map+32) != MAP_TYPE
+                or not is_world_boss(copy.reader.asset_name(active_map))): return None
+        wave = copy.verify(copy.ptr(manager+104), 'WaveManager')
+        if (copy.ptr(wave+40) != active_map or not copy.boolean(wave+248)
+                or copy.boolean(wave+64)): return None
+        plan = copy.ptr(wave+88)
+        if not plan: return None
+        settlement_plan = True
     copy.verify(plan,'RunPlan'); copy.verify(active_map,'MapData')
     wave = copy.verify(copy.ptr(manager+104),'WaveManager')
     if copy.ptr(wave+88)!=plan: raise SnapshotChangedError('当前关卡计划正在切换。')
@@ -565,6 +582,8 @@ def _campaign_run(copy, manager, difficulty):
     for raw in copy.list(copy.ptr(manager+200),element='Enemy',limit=4096):
         enemy = struct.unpack('<Q',raw)[0]
         if enemy and not copy.boolean(copy.verify(enemy,'Enemy')+296): alive += 1
+    wave_index = copy.integer(wave+48)
+    if settlement_plan and (not waves or wave_index < len(waves) or alive): return None
     # Native final-wave kills increment this before setting +249. Built-in
     # repeat replaces the RunPlan and clears completion flags, but preserves
     # this cumulative counter. Map entry/return can reset it, so consumers
@@ -574,7 +593,7 @@ def _campaign_run(copy, manager, difficulty):
         raise MemoryReadError('游戏累计通关计数无效。')
     counter_source = f'{copy.reader.session_id}:{wave}:{active_map}:{map_id}:{difficulty}:{world_difficulty}'
     return {'id':hashlib.sha256(raw_id.encode()).hexdigest(),'map_id':map_id,'difficulty':difficulty,'world_difficulty':world_difficulty,
-            'wave_index':copy.integer(wave+48),'wave_count':len(waves),'wave_active':copy.boolean(wave+64),
+            'wave_index':wave_index,'wave_count':len(waves),'wave_active':copy.boolean(wave+64),
             'enemy_count':alive,'finished':copy.boolean(wave+248),'final_kill_settled':copy.boolean(wave+249),
             'completion_counter':{'id':hashlib.sha256(counter_source.encode()).hexdigest(),'count':completions},
             'status_source':'verified_WaveManager_state'}

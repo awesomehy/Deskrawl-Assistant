@@ -646,14 +646,17 @@ class GameActions:
             campaign_run = recommendation.get('run')
             settlement = None
             if (scene == 0 and any(value is True for value in completion.values())
-                    and not scene_changing and not teleporting and campaign_run):
+                    and not scene_changing and not teleporting
+                    and (campaign_run or (world_boss.is_world_boss(map_id)
+                         and completion.get('CombatMapCompletionUI') is True))):
                 # Bind the dialog to the still-current native plan, retaining
                 # these guards through the full snapshot. A same-map restart
                 # or old dialog during travel cannot promote a stale campaign.
                 from .recommendation_reader import _campaign_run
                 copy = _Copy(self.reader)
-                current = _campaign_run(copy, manager, difficulty)
-                if (not current or current['id'] != campaign_run.get('id')
+                current = (_campaign_run(copy, manager, difficulty) if campaign_run else
+                           _campaign_run(copy, manager, difficulty, allow_settled_world_boss=True))
+                if (not current or (campaign_run and current['id'] != campaign_run.get('id'))
                         or current['map_id'] != map_id or current['difficulty'] != scene_difficulty):
                     raise SnapshotChangedError('结算界面与当前关卡计划正在切换，等待重新读取。')
                 read.guards.extend(copy.guards)

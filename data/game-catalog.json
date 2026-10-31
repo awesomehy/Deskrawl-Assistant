@@ -3,13 +3,13 @@
   "scope": "Static shipped localization only. No character, save, account or UI TextAsset data.",
   "source": {
     "path": "G:\\SteamLibrary\\steamapps\\common\\Deskrawl\\Deskrawl_Data\\resources.assets",
-    "size_bytes": 16194728,
-    "sha256": "2ae84fe8a3873a2ebb2bef42497c89ee4323c59153cf38b2931b5252c5e732fc",
+    "size_bytes": 16196552,
+    "sha256": "06e424d38d018a629559c04c78d8b396205b7ecc66926990481cbbe0ee89b0b5",
     "unity_version": "6000.3.6f1",
     "game_version": null,
     "game_version_note": "Not inferred from localization or Unity version; verify separately in the running client."
   },
-  "extracted_at_utc": "2026-10-30T01:35:10.216691+00:00",
+  "extracted_at_utc": "2026-10-31T14:41:49.470404+00:00",
   "extractor": {
     "name": "extract_catalog.py",
     "unitypy_version": "1.25.2"
@@ -2238,7 +2238,7 @@
       }
     },
     "Equipments": {
-      "source_path_id": 708,
+      "source_path_id": 709,
       "columns": [
         "Key",
         "English",
@@ -12004,7 +12004,7 @@
       }
     },
     "Items": {
-      "source_path_id": 707,
+      "source_path_id": 708,
       "columns": [
         "Key",
         "English",
@@ -19968,7 +19968,7 @@
       }
     },
     "Talents": {
-      "source_path_id": 706,
+      "source_path_id": 707,
       "columns": [
         "Key",
         "English",
@@ -30882,7 +30882,7 @@
       }
     },
     "World": {
-      "source_path_id": 709,
+      "source_path_id": 710,
       "columns": [
         "Key",
         "English",

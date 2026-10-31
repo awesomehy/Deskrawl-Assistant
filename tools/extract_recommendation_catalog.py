@@ -15,8 +15,8 @@ import struct
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-METADATA_HASH = '26de344c09a88a59d19b81053c62f0612cc748206799e9f28297db4d72ad33d5'
-ASSEMBLY_HASH = '72c9bd3a42790516c18c4728a25d6eff481bf8232288a2bfe60f550f7bfdbe26'
+METADATA_HASH = 'a011ecdbd6f41d3e34c47aa85acc05868268710779c6a008bf8a841ef0d57942'
+ASSEMBLY_HASH = '14a46e0a1bccd03fa1091f72d26f739f8502780689df79ed9ec2e9112180ca5c'
 CONFIG = {'XpPerBaseHealth': 1.0, 'XpPerLevelScale': 0.10000000149011612,
           'XpZeroUnderLevel': 6, 'MaxPlayerLevel': 70,
           'health_growth': [0.11999999731779099, 0.07999999821186066, 0.05999999865889549],

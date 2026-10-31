@@ -109,7 +109,7 @@ class AuctionRuntime:
         if read.boolean(read.singleton('TownPortalSystem') + 76) or read.boolean(area + 176):
             raise GameBusyError('等待场景切换结束后处理拍卖行。')
         if not after:
-            if read.boolean(save + 192):
+            if read.boolean(save + 193):
                 raise GameBusyError('等待物品操作完成后处理拍卖行。')
             self.actions._require_travel_ready(read)
         return read

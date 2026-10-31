@@ -8648,7 +8648,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61752
+      "source_path_id": 61760
     },
     "GemAmethyst2": {
       "name": "碎裂的紫水晶泪滴",
@@ -8700,7 +8700,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61753
+      "source_path_id": 61761
     },
     "GemAmethyst3": {
       "name": "粗砺的紫水晶方块",
@@ -8752,7 +8752,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61754
+      "source_path_id": 61762
     },
     "GemAmethyst4": {
       "name": "抛光的紫水晶菱形",
@@ -8804,7 +8804,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61755
+      "source_path_id": 61763
     },
     "GemAmethyst5": {
       "name": "无瑕的紫水晶六边形",
@@ -8856,7 +8856,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61756
+      "source_path_id": 61764
     },
     "GemAmethyst6": {
       "name": "璀璨的紫水晶八边形",
@@ -8908,7 +8908,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61757
+      "source_path_id": 61765
     },
     "GemDiamond1": {
       "name": "粗糙的钻石球",
@@ -8960,7 +8960,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61758
+      "source_path_id": 61766
     },
     "GemDiamond2": {
       "name": "碎裂的钻石泪滴",
@@ -9012,7 +9012,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61759
+      "source_path_id": 61767
     },
     "GemDiamond3": {
       "name": "粗砺的钻石方块",
@@ -9064,7 +9064,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61760
+      "source_path_id": 61768
     },
     "GemDiamond4": {
       "name": "抛光的钻石菱形",
@@ -9116,7 +9116,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61761
+      "source_path_id": 61769
     },
     "GemDiamond5": {
       "name": "无瑕的钻石六边形",
@@ -9168,7 +9168,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61762
+      "source_path_id": 61770
     },
     "GemDiamond6": {
       "name": "璀璨的钻石八边形",
@@ -9220,7 +9220,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61763
+      "source_path_id": 61771
     },
     "GemEmerald1": {
       "name": "粗糙的祖母绿球",
@@ -9272,7 +9272,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61764
+      "source_path_id": 61772
     },
     "GemEmerald2": {
       "name": "碎裂的祖母绿泪滴",
@@ -9324,7 +9324,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61765
+      "source_path_id": 61773
     },
     "GemEmerald3": {
       "name": "粗砺的祖母绿方块",
@@ -9376,7 +9376,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61766
+      "source_path_id": 61774
     },
     "GemEmerald4": {
       "name": "抛光的祖母绿菱形",
@@ -9428,7 +9428,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61767
+      "source_path_id": 61775
     },
     "GemEmerald5": {
       "name": "无瑕的祖母绿六边形",
@@ -9480,7 +9480,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61768
+      "source_path_id": 61776
     },
     "GemEmerald6": {
       "name": "璀璨的祖母绿八边形",
@@ -9532,7 +9532,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61769
+      "source_path_id": 61777
     },
     "GemRuby1": {
       "name": "粗糙的红宝石球",
@@ -9584,7 +9584,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61770
+      "source_path_id": 61778
     },
     "GemRuby2": {
       "name": "碎裂的红宝石泪滴",
@@ -9636,7 +9636,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61771
+      "source_path_id": 61779
     },
     "GemRuby3": {
       "name": "粗砺的红宝石方块",
@@ -9688,7 +9688,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61772
+      "source_path_id": 61780
     },
     "GemRuby4": {
       "name": "抛光的红宝石菱形",
@@ -9740,7 +9740,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61773
+      "source_path_id": 61781
     },
     "GemRuby5": {
       "name": "无瑕的红宝石六边形",
@@ -9792,7 +9792,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61774
+      "source_path_id": 61782
     },
     "GemRuby6": {
       "name": "璀璨的红宝石八边形",
@@ -9844,7 +9844,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61775
+      "source_path_id": 61783
     },
     "GemSapphire1": {
       "name": "粗糙的蓝宝石球",
@@ -9896,7 +9896,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61776
+      "source_path_id": 61784
     },
     "GemSapphire2": {
       "name": "碎裂的蓝宝石泪滴",
@@ -9948,7 +9948,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61777
+      "source_path_id": 61785
     },
     "GemSapphire3": {
       "name": "粗砺的蓝宝石方块",
@@ -10000,7 +10000,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61778
+      "source_path_id": 61786
     },
     "GemSapphire4": {
       "name": "抛光的蓝宝石菱形",
@@ -10052,7 +10052,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61779
+      "source_path_id": 61787
     },
     "GemSapphire5": {
       "name": "无瑕的蓝宝石六边形",
@@ -10104,7 +10104,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61780
+      "source_path_id": 61788
     },
     "GemSapphire6": {
       "name": "璀璨的蓝宝石八边形",
@@ -10156,7 +10156,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61781
+      "source_path_id": 61789
     },
     "GemTopaz1": {
       "name": "粗糙的黄玉球",
@@ -10208,7 +10208,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61782
+      "source_path_id": 61790
     },
     "GemTopaz2": {
       "name": "碎裂的黄玉泪滴",
@@ -10260,7 +10260,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61783
+      "source_path_id": 61791
     },
     "GemTopaz3": {
       "name": "粗砺的黄玉方块",
@@ -10312,7 +10312,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61784
+      "source_path_id": 61792
     },
     "GemTopaz4": {
       "name": "抛光的黄玉菱形",
@@ -10364,7 +10364,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61785
+      "source_path_id": 61793
     },
     "GemTopaz5": {
       "name": "无瑕的黄玉六边形",
@@ -10416,7 +10416,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61786
+      "source_path_id": 61794
     },
     "GemTopaz6": {
       "name": "璀璨的黄玉八边形",
@@ -10468,7 +10468,7 @@
       ],
       "effect_note": "",
       "source_file": "sharedassets0.assets",
-      "source_path_id": 61787
+      "source_path_id": 61795
     }
   },
   "collectibles": {
@@ -13502,5 +13502,5 @@
     "UncommonRune2"
   ],
   "source": "Shipped GemData and RuneData assets; verified stat units and protected float checksum.",
-  "resources_sha256": "2ae84fe8a3873a2ebb2bef42497c89ee4323c59153cf38b2931b5252c5e732fc"
+  "resources_sha256": "06e424d38d018a629559c04c78d8b396205b7ecc66926990481cbbe0ee89b0b5"
 }

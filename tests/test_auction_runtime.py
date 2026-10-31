@@ -417,7 +417,7 @@ class IdentitySnapshotTests(unittest.TestCase):
         self.put(1176, struct.pack('<i', 1))  # entered character
         self.put(2120, struct.pack('<i', 0))  # combat, not main city
         self.put(3032, struct.pack('<ii', 1, 2))  # online / character slot
-        self.put(3193, b'\x01')  # item-save busy is allowed for readonly identity
+        self.put(3194, b'\x01')  # item-save busy is allowed for readonly identity
         self.put(4076, b'\x00')  # teleport inactive
         self.put(2176, b'\x00')  # scene-changing inactive
         self.put(5040, struct.pack('<Q', 7000))

@@ -117,7 +117,7 @@ class TransactionTests(unittest.TestCase):
             struct.pack_into('<Q',header,offset,value)
         struct.pack_into('<i',header,168,1)
         p.put(drop,header)
-        p.put(tx.reader.singleton('SaveSystem')+193,b'\1')
+        p.put(tx.reader.singleton('SaveSystem')+194,b'\1')
         tx.reader.classes['LootDrop']=0x800000
         collector=object.__new__(FrozenCarriageTransaction)
         collector.reader=tx.reader;collector.handle=123;collector.write=p.put

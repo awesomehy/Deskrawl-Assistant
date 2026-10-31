@@ -61,7 +61,7 @@ class TransferTests(unittest.TestCase):
 
     def test_game_item_gate_rejects_transfer_without_any_write(self):
         pair=self.pair()
-        self.p.put(self.save+193,b'\1')
+        self.p.put(self.save+194,b'\1')
         with self.assertRaisesRegex(GameBusyError,'暂时禁止'):
             self.tx.move_many([pair],[])
         src,dst,full,empty=pair

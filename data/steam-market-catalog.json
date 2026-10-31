@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "appid": 4623570,
-  "resources_sha256": "2ae84fe8a3873a2ebb2bef42497c89ee4323c59153cf38b2931b5252c5e732fc",
+  "resources_sha256": "06e424d38d018a629559c04c78d8b396205b7ecc66926990481cbbe0ee89b0b5",
   "source": "Shipped ItemData SteamItemDefId/BlackMistSteamItemDefId and English localization; names remain candidates until exact Steam market description validation.",
   "items": {
     "DivineBack1": {
@@ -20,7 +20,7 @@
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 61707,
+      "source_path_id": 61715,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -128,7 +128,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61684,
+      "source_path_id": 61692,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -368,7 +368,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61709,
+      "source_path_id": 61717,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -380,7 +380,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61710,
+      "source_path_id": 61718,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -440,7 +440,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61711,
+      "source_path_id": 61719,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -560,7 +560,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61712,
+      "source_path_id": 61720,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -596,7 +596,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61713,
+      "source_path_id": 61721,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -764,7 +764,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61714,
+      "source_path_id": 61722,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -848,7 +848,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61715,
+      "source_path_id": 61723,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -872,7 +872,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61716,
+      "source_path_id": 61724,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -956,7 +956,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61729,
+      "source_path_id": 61737,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -980,7 +980,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61730,
+      "source_path_id": 61738,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -1700,7 +1700,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61731,
+      "source_path_id": 61739,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -1736,7 +1736,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61732,
+      "source_path_id": 61740,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -2000,7 +2000,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61828,
+      "source_path_id": 61836,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2012,7 +2012,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61833,
+      "source_path_id": 61841,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2024,7 +2024,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61834,
+      "source_path_id": 61842,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2036,7 +2036,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61836,
+      "source_path_id": 61844,
       "source_file": "sharedassets0.assets",
       "retired": true,
       "normal": {
@@ -2048,7 +2048,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61839,
+      "source_path_id": 61847,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2060,7 +2060,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61841,
+      "source_path_id": 61849,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2072,7 +2072,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61843,
+      "source_path_id": 61851,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2084,7 +2084,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61847,
+      "source_path_id": 61855,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2096,7 +2096,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61850,
+      "source_path_id": 61858,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2120,7 +2120,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61852,
+      "source_path_id": 61860,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2132,7 +2132,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61853,
+      "source_path_id": 61861,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2144,7 +2144,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61855,
+      "source_path_id": 61863,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2156,7 +2156,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61858,
+      "source_path_id": 61866,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2168,7 +2168,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61859,
+      "source_path_id": 61867,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2180,7 +2180,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61864,
+      "source_path_id": 61872,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2192,7 +2192,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61866,
+      "source_path_id": 61874,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2204,7 +2204,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61869,
+      "source_path_id": 61877,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2216,7 +2216,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61873,
+      "source_path_id": 61881,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2228,7 +2228,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61874,
+      "source_path_id": 61882,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2240,7 +2240,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61883,
+      "source_path_id": 61891,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2252,7 +2252,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61884,
+      "source_path_id": 61892,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2264,7 +2264,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61888,
+      "source_path_id": 61896,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2276,7 +2276,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61890,
+      "source_path_id": 61898,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2504,7 +2504,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61685,
+      "source_path_id": 61693,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {

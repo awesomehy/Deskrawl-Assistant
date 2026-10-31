@@ -253,13 +253,13 @@ class GameActions:
             raise NativeActionError('当前场景类型未核验')
         save = read.singleton('SaveSystem')
         read.read(save+32, 8)  # mode and character slot cannot change
-        if read.boolean(save+193) and not allow_busy:
+        if read.boolean(save+194) and not allow_busy:
             raise GameBusyError('游戏暂时禁止物品操作，等待在线同步完成。')
         return read, manager, area, scene
 
     def _online_state(self, read):
         save = read.singleton('SaveSystem')
-        saving = read.boolean(save+193)
+        saving = read.boolean(save+194)
         pending = 0
         if read.integer(save+32) == 1:
             cloud = read.singleton('CloudClient')

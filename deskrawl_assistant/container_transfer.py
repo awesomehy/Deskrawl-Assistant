@@ -28,10 +28,10 @@ K.WriteProcessMemory.restype = W.BOOL
 
 
 def ensure_items_writable(reader, save=None):
-    """Respect the SaveSystem gate checked by 1.0.2a inventory/storage methods."""
+    """Respect the SaveSystem gate checked by 1.1.0a inventory/storage methods."""
     assert_current(reader)
     save = reader.singleton('SaveSystem') if save is None else save
-    blocked = reader.memory.read(save+193,1)
+    blocked = reader.memory.read(save+194,1)
     if blocked == b'\1':
         raise GameBusyError('游戏暂时禁止物品操作，等待在线同步完成。')
     if blocked != b'\0':

@@ -120,7 +120,7 @@ class SynthesisRuntime:
             raise GameBusyError('等待场景切换结束后合成。')
         save = read.singleton('SaveSystem')
         if not after:
-            if read.boolean(save + 192):
+            if read.boolean(save + 193):
                 raise GameBusyError('等待游戏物品操作结束后合成。')
             self.actions._require_travel_ready(read)
         return read, manager, save

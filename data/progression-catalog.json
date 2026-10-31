@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "build": "Deskrawl 1.1.0 / Steam 26310087",
+  "build": "Deskrawl 1.1.0a / Steam 26337088",
   "sha256": {
-    "GameAssembly.dll": "72c9bd3a42790516c18c4728a25d6eff481bf8232288a2bfe60f550f7bfdbe26",
+    "GameAssembly.dll": "14a46e0a1bccd03fa1091f72d26f739f8502780689df79ed9ec2e9112180ca5c",
     "UnityPlayer.dll": "9feedb4527a30fae4762bff45d204f8e85b90851b2c8ae8d24f436f7d474667b",
-    "Deskrawl_Data/il2cpp_data/Metadata/global-metadata.dat": "26de344c09a88a59d19b81053c62f0612cc748206799e9f28297db4d72ad33d5"
+    "Deskrawl_Data/il2cpp_data/Metadata/global-metadata.dat": "a011ecdbd6f41d3e34c47aa85acc05868268710779c6a008bf8a841ef0d57942"
   },
   "soul_maximum": 2000,
   "shop": [

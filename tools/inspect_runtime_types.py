@@ -21,15 +21,15 @@ from pathlib import Path
 import struct
 
 
-METADATA_HASH = "26de344c09a88a59d19b81053c62f0612cc748206799e9f28297db4d72ad33d5"
-GAME_VERSION = "1.1.0"
-STEAM_BUILD = 26310087
+METADATA_HASH = "a011ecdbd6f41d3e34c47aa85acc05868268710779c6a008bf8a841ef0d57942"
+GAME_VERSION = "1.1.0a"
+STEAM_BUILD = 26337088
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from deskrawl_assistant.il2cpp_metadata import PE, MetadataInspector
 
 SELECTED = {
-    "Inventory", "InventorySlot", "Storage", "GeneratedItemData", "ItemData", "gp",
+    "Inventory", "InventorySlot", "Storage", "GeneratedItemData", "ItemData", "gq",
     "StatModifier", "LeveledStatModifier", "SaveSystem", "SaveData", "SavedSlot",
     "SavedRegistryEntry", "SavedStatModifier", "SavedStash", "SaveContainer",
     "ObscuredFloat", "ObscuredInt", "ObscuredLong", "ObscuredString",
@@ -51,7 +51,7 @@ class Inspector(MetadataInspector):
             if hits:
                 references.append({"type": ".".join(x for x in (d["namespace"], d["name"]) if x), "fields": hits})
             if d["name"] in SELECTED or hits:
-                selected.append({"name": d["name"], "logicalName": "gj" if d["name"] == "gp" and not d['namespace'] else d['name'], "namespace": d["namespace"], "typeDefinitionIndex": index,
+                selected.append({"name": d["name"], "logicalName": "gj" if d["name"] == "gq" and not d['namespace'] else d['name'], "namespace": d["namespace"], "typeDefinitionIndex": index,
                                  "isValueType": d["isValueType"], "byvalTypeIndex": d["byvalTypeIndex"],
                                  "fields": fields, "methods": self.methods(index)})
         by_name = {row["name"]: row for row in selected}
@@ -78,8 +78,8 @@ class Inspector(MetadataInspector):
                 "storage": {"class": "Storage", "namespace": "",
                             "singletonStaticField": field_name("Storage", "Storage", static=True),
                             "slotsInstanceField": field_name("Storage", "InventorySlot[]"), "slotsType": "InventorySlot[]"},
-                "registry": {"class": "gp", "namespace": "", "dictionaryStaticField": field_name(
-                    "gp", "System.Collections.Generic.Dictionary`2<System.String, GeneratedItemData>", static=True),
+                "registry": {"class": "gq", "namespace": "", "dictionaryStaticField": field_name(
+                    "gq", "System.Collections.Generic.Dictionary`2<System.String, GeneratedItemData>", static=True),
                              "dictionaryType": "System.Collections.Generic.Dictionary`2<System.String, GeneratedItemData>",
                              "candidateKeySlotField": "ItemUid", "keyAssociationValidatedAtRuntime": False},
                 "modifiers": {"class": "GeneratedItemData", "field": "Modifiers", "type": "StatModifier[]",

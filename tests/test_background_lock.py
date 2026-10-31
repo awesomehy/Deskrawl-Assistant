@@ -15,7 +15,7 @@ REGISTRY = 0x400000
 
 class FakeMemory:
     def __init__(self):
-        self.bytes = {OBJECT+73:b'\0', SAVE+92:b'\0', SAVE+193:b'\0'}
+        self.bytes = {OBJECT+73:b'\0', SAVE+92:b'\0', SAVE+194:b'\0'}
         self.pointers = {OBJECT:0x110000, OBJECT+80:0x500000, SAVE:0x310000, REGISTRY+24:0x420000}
         self.ints = {REGISTRY+44:7}
     def read(self,address,size): return self.bytes[address]
@@ -101,14 +101,14 @@ class BackgroundLockTests(unittest.TestCase):
                 self.assertFalse(self.writes)
 
     def test_game_item_gate_blocks_writes_including_boundary_changes(self):
-        self.reader.memory.bytes[SAVE+193]=b'\1'
+        self.reader.memory.bytes[SAVE+194]=b'\1'
         with self.assertRaisesRegex(MemoryReadError,'暂时禁止'):
             self.lock()
         self.assertFalse(self.writes)
-        self.reader.memory.bytes[SAVE+193]=b'\0'
+        self.reader.memory.bytes[SAVE+194]=b'\0'
         def blocked(pid):
             writer=self.factory(pid)
-            self.reader.memory.bytes[SAVE+193]=b'\1'
+            self.reader.memory.bytes[SAVE+194]=b'\1'
             return writer
         with self.assertRaisesRegex(MemoryReadError,'暂时禁止'):
             self.lock(factory=blocked)

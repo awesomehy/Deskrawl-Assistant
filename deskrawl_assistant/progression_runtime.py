@@ -223,7 +223,7 @@ class ProgressionRuntime:
                 # Its absence cannot invalidate independent currency/books.
                 skills = {'readable': False, 'equipped': None, 'available': [], 'reason': str(exc)}
         inventory = self._singleton(copy, 'Inventory'); save = self._singleton(copy, 'SaveSystem')
-        busy = copy.boolean(save + 193)
+        busy = copy.boolean(save + 194)
         items = copy.dictionary(copy.ptr(save + 112), 'pointer', 'object')
         item_map = {self.reader.string(key): value for key, value in items.items()}
         soul = copy.verify(item_map.get('SoulShard'), 'ItemData')

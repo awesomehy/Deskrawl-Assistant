@@ -16,10 +16,10 @@ from deskrawl_assistant.native_reader import NativeReader
 
 BASE = 0x180000000
 TOKENS = {
-    # Deskrawl 1.1.0 / Steam 26310087: copied from each TypeInfo slot in
+    # Deskrawl 1.1.0a / Steam 26337088: copied from each TypeInfo slot in
     # GameAssembly before IL2CPP resolves the encoded type reference.
-    'CombatMapCompletionUI': 0x200096A5,
-    'MythicCompletionUI': 0x2000CB69,
+    'CombatMapCompletionUI': 0x200096D3,
+    'MythicCompletionUI': 0x2000CB97,
 }
 VISIBILITY_OFFSETS = {'CombatMapCompletionUI': 0, 'MythicCompletionUI': 8}
 
@@ -162,13 +162,13 @@ class CompletionTypeInitializationTests(unittest.TestCase):
     def test_release_profile_records_the_two_verified_exact_tokens(self):
         self.assertEqual({key:load_profile()['uninitialized_type_tokens'][key] for key in TOKENS}, TOKENS)
 
-    def test_exact_cold_tokens_are_bound_to_the_revalidated_1_1_0_build(self):
+    def test_exact_cold_tokens_are_bound_to_the_revalidated_1_1_0a_build(self):
         profile = load_profile()
-        self.assertEqual(profile['build'], 'Deskrawl 1.1.0 / Steam 26310087')
+        self.assertEqual(profile['build'], 'Deskrawl 1.1.0a / Steam 26337088')
         self.assertEqual(profile['sha256']['GameAssembly.dll'],
-                         '72c9bd3a42790516c18c4728a25d6eff481bf8232288a2bfe60f550f7bfdbe26')
+                         '14a46e0a1bccd03fa1091f72d26f739f8502780689df79ed9ec2e9112180ca5c')
         self.assertEqual({name:profile['statics'][name] for name in TOKENS},
-                         {'CombatMapCompletionUI': 61589520, 'MythicCompletionUI': 61589512})
+                         {'CombatMapCompletionUI': 61637424, 'MythicCompletionUI': 61637392})
 
     def test_both_cold_tokens_are_absent_without_being_dereferenced(self):
         fixture = CompletionFixture()
@@ -393,6 +393,59 @@ class CompletionTypeInitializationTests(unittest.TestCase):
         self.assertEqual(result['completion_visible'], {name: False for name in TOKENS})
         self.assertTrue(result['ground_complete'])
         fixture.dispatcher.invoke.assert_not_called()
+
+
+class SaveSystemGateCompatibilityTests(unittest.TestCase):
+    """1.1.0a inserts a private flag before the two independent busy gates."""
+
+    def town(self):
+        fixture = CompletionFixture()
+        _, area, _ = fixture.context()
+        save = fixture.objects['SaveSystem']
+        fixture.memory.put(area + 120, struct.pack('<i', 1))
+        fixture.memory.put(save + 32, struct.pack('<i', 1))
+        fixture.singleton('CloudClient')
+        return fixture, save
+
+    def test_online_saving_blocks_actions_at_the_new_field_only(self):
+        fixture, save = self.town()
+        # Neither the new private flag nor the independent item gate is an
+        # online-save request. Mistaking either for it would stall shopping.
+        fixture.memory.put(save + 192, b'\1\1\0')
+        read, _, _, scene = fixture.game._context()
+        self.assertEqual(scene, 1)
+        self.assertEqual(fixture.game._online_state(read),
+                         {'online_saving': False, 'online_pending_requests': 0})
+        read.finish()
+        fixture.memory.put(save + 194, b'\1')
+        with self.assertRaisesRegex(GameBusyError, '在线同步'):
+            fixture.game._context()
+        read, _, _, _ = fixture.game._context(allow_busy=True)
+        self.assertTrue(fixture.game._online_state(read)['online_saving'])
+        read.finish()
+        fixture.dispatcher.invoke.assert_not_called()
+
+    def test_item_gate_blocks_auction_and_synthesis_but_allows_receipt_reads(self):
+        from deskrawl_assistant.auction_runtime import AuctionRuntime
+        from deskrawl_assistant.synthesis_runtime import SynthesisRuntime
+
+        for runtime_type in (AuctionRuntime, SynthesisRuntime):
+            with self.subTest(runtime=runtime_type.__name__):
+                fixture, save = self.town()
+                # Bypass construction so no on-disk pending-action journal
+                # is inspected; exercise the production context readers.
+                runtime = runtime_type.__new__(runtime_type)
+                runtime.actions = fixture.game
+                fixture.memory.put(save + 192, b'\1\0\0')
+                runtime._context()
+                fixture.memory.put(save + 193, b'\1')
+                with self.assertRaisesRegex(GameBusyError, '物品操作'):
+                    runtime._context()
+                # In-flight receipt checks must remain possible while the
+                # native operation and online-save gates are both active.
+                fixture.memory.put(save + 194, b'\1')
+                runtime._context(after=True)
+                fixture.dispatcher.invoke.assert_not_called()
 
 
 if __name__ == '__main__':

@@ -1420,14 +1420,14 @@ class ManagedMode:
             self.status = '等待完整读取马车与地面掉落。'
         return None, complete
 
-    def _return_town(self, observation, all_items=None, **data):
-        """Count wins immediately, but collect their settled drops before travel."""
+    def _completion_reward_action(self, observation, all_items=None):
+        """Share the settled-drop barrier between returns and native replays."""
         if observation.get('scene', {}).get('dead') is not True:
             if not self.completion_rewards.ready(observation):
                 self.status = self.completion_rewards.reason
                 ground = observation.get('ground') or {}
                 if ground.get('complete') is not True:
-                    return None
+                    return False, None
                 rows = [r for r in (all_items if all_items is not None else observation_items(observation))
                         if r.get('container') == 'ground' and identity(r) and not r.get('issues')]
                 # Currency/potions do not consume a bag slot. Chests are picked
@@ -1436,19 +1436,58 @@ class ManagedMode:
                 pickable = [r for r in rows if free > 0 or r.get('item_type') == 1]
                 if pickable:
                     row = min(pickable, key=lambda r: (r.get('item_type') != 1, item_kind(r) == 'chest'))
-                    return self._action('collect_ground', row, reason_code='completion_rewards',
+                    return False, self._action('collect_ground', row, reason_code='completion_rewards',
                         reason='切图前拾取本局地面奖励，确认收到后再继续。')
                 if rows and free == 0:
                     action = self._background_organize(observation, all_items or observation_items(observation))
                     if action:
-                        return action
-                    return self._pause('背包已满，本局地面奖励尚未收完；已暂停且未切图，请腾出空间后继续。')
+                        return False, action
+                    return False, self._pause('背包已满，本局地面奖励尚未收完；已暂停且未切图，请腾出空间后继续。')
                 if ground.get('items'):
                     self.status = '地面奖励身份待核验，等待重新读取，暂不切图。'
-                return None
+                return False, None
+        return True, None
+
+    def _return_town(self, observation, all_items=None, **data):
+        """Count wins immediately, but collect their settled drops before travel."""
+        ready, action = self._completion_reward_action(observation, all_items)
+        if not ready:
+            return action
         if self.completion_rewards.run_id is not None:
             data['protect_completion_rewards'] = True
         return self._action('return_town', **data)
+
+    def _merchant_triggered(self, state):
+        shards = state['soul_shards']
+        trigger = shards['current'] * 100 >= shards['maximum'] * self.settings['merchant']['trigger_percent']
+        selected = {int(k) for k,v in self.settings['merchant']['weights'].items() if v > 0}
+        stock_ready = selected <= {r['slot'] for r in state.get('merchant',{}).get('stock',[])}
+        changed = (self.merchant_last_balance is None or shards['current'] > self.merchant_last_balance
+                   or shards['maximum'] != self.merchant_last_capacity
+                   or self.merchant_refresh_deferred and stock_ready)
+        return trigger and changed and (not self.merchant_refresh_deferred or stock_ready)
+
+    def pumpkin_replay_ready(self, observation):
+        """Rechecked against fresh observations immediately before replay too."""
+        scene = observation.get('scene') or {}
+        run = run_record(scene.get('run'))
+        if (not self.pumpkin_active or not self.settings['pumpkin']['enabled'] or self.finishing
+                or scene.get('in_town') is True or scene.get('dungeon_id') != PUMPKIN
+                or self.target_dungeon != PUMPKIN or scene.get('difficulty') != self.target_difficulty
+                or run.get('status') != 'success' or not run.get('id') or scene.get('dead') is True):
+            return False, '南瓜王关卡或托管目标已变化，重新规划。'
+        if self._bag_chest_count(observation_items(observation)) >= CHEST_BATCH_LIMIT:
+            return False, '背包宝箱达到批量处理门槛，回城整理。'
+        if self._bag_free(observation) < self.settings['farming']['free_threshold']:
+            return False, '背包剩余空格低于门槛，回城整理。'
+        if self.settings['merchant']['enabled']:
+            state = observation.get('progression') or {}
+            if state.get('available') is not True:
+                return False, '等待读取灵魂碎片容量后再决定是否复刷。'
+            if self.merchant_pending or self._merchant_triggered(state):
+                return False, '已触发神秘商人消费，回城整理。'
+        status, reason = pumpkin_status(scene, self.target_difficulty)
+        return status == 'ready', reason
 
     def _merchant_batch_blockers(self, observation):
         return [r for r in observation['items'] if r.get('container') == 'inventory'
@@ -1994,16 +2033,9 @@ class ManagedMode:
                 state = observation.get('progression', {})
                 if state.get('available') is not True:
                     self.status = state.get('reason') or '等待读取灵魂碎片容量。'; return None
-                shards = state['soul_shards']
-                trigger = shards['current'] * 100 >= shards['maximum'] * self.settings['merchant']['trigger_percent']
-                selected = {int(k) for k,v in self.settings['merchant']['weights'].items() if v > 0}
-                stock_ready = selected <= {r['slot'] for r in state.get('merchant',{}).get('stock',[])}
-                changed = (self.merchant_last_balance is None or shards['current'] > self.merchant_last_balance
-                           or shards['maximum'] != self.merchant_last_capacity
-                           or self.merchant_refresh_deferred and stock_ready)
                 # A delayed refill already submitted its sync. Do not repeatedly
                 # return to town or resubmit it, even if shards keep increasing.
-                if trigger and changed and (not self.merchant_refresh_deferred or stock_ready):
+                if self._merchant_triggered(state):
                     self.merchant_pending = True
                 if self.merchant_pending:
                     self.phase = 'cleanup' if self._town(observation) else 'returning'
@@ -2046,6 +2078,24 @@ class ManagedMode:
                     self.phase = 'returning'
                     return self._return_town(observation, all_items, reason='背包剩余空格低于门槛，自动回城整理。')
                 if run_record(scene.get('run')).get('status') in ('success', 'failed'):
+                    if (self.pumpkin_active and scene.get('dungeon_id') == PUMPKIN
+                            and run_record(scene.get('run')).get('status') == 'success'):
+                        state, reason = pumpkin_status(scene, self.target_difficulty)
+                        if state == 'unknown':
+                            self.status = reason
+                            return None
+                        if state == 'ready':
+                            ready, action = self._completion_reward_action(observation, all_items)
+                            if not ready:
+                                return action
+                            if not (scene.get('completion_visible') or {}).get('CombatMapCompletionUI'):
+                                self.status = '等待南瓜王结算界面就绪，收完奖励后继续复刷。'
+                                return None
+                            self.phase = 'farming'
+                            return self._action('enter_dungeon', dungeon_id=PUMPKIN,
+                                difficulty=self.target_difficulty, source_run_id=scene['run']['id'],
+                                reason_code='pumpkin_replay', protect_completion_rewards=True,
+                                reason='南瓜王本局奖励已收完，继续原生复刷。')
                     # TownPortalSystem.fri rejects the already active combat map.
                     # Finish every run through the original return/cleanup/entry
                     # path, including repeats of the same map after a failure.

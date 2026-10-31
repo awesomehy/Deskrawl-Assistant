@@ -703,6 +703,16 @@ class ManagedServiceMixin:
                 action['protect_completion_rewards'] = True
         elif kind == 'return_town':
             action.pop('protect_completion_rewards', None)
+        pumpkin_replay = kind == 'enter_dungeon' and action.get('reason_code') == 'pumpkin_replay'
+        if pumpkin_replay:
+            ready, reason = self.managed.pumpkin_replay_ready(observation)
+            if (not ready or action.get('dungeon_id') != PUMPKIN
+                    or action.get('difficulty') != scene.get('difficulty')
+                    or action.get('source_run_id') != run_record(scene.get('run')).get('id')):
+                return {'verified':False, 'retryable':True, 'reason':reason or '南瓜王本局已变化，重新规划。'}
+            if not self.managed.completion_rewards.ready(observation):
+                return {'verified':False, 'retryable':True, 'reason':self.managed.completion_rewards.reason}
+            action['protect_completion_rewards'] = True
         stargazing_entry = kind == 'enter_dungeon' and action.get('reason_code') == 'stargazing_skip'
         if action.get('reason_code') == 'stargazing_skip':
             if scene.get('travel_blocked') is True:
@@ -721,7 +731,7 @@ class ManagedServiceMixin:
                     or verdict['verdict'] != 'skip'
                     or not (combat_rewards_clear(observation) if stargazing_entry else combat_rewards_known(observation))):
                 return {'verified':False, 'retryable':True, 'reason':'观星状态或实际奖励已变化，重新核验后再切图。'}
-        if kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh') and not stargazing_entry and not managed_town_rewards_clear(observation):
+        if kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh') and not (stargazing_entry or pumpkin_replay) and not managed_town_rewards_clear(observation):
             return {'verified':False,'retryable':True,'reason':'主城奖励尚未收取或收纳完成，继续整理后再进入地图。'}
         if self.managed.finishing and (kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh','allocate_talent','learn_life_skill','set_skill','auction_upload','auction_open',*SYNTHESIS_ACTIONS)
                 or action.get('reason_code') in ('synthesis_prepare', 'auction_prepare')):

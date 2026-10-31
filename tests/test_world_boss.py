@@ -110,13 +110,16 @@ class BossManagedTests(unittest.TestCase):
         engine,world=self.engine(remaining=5)
         for run_id,status,count in [('loss','failed',0),('win1','success',1),('win2','success',2)]:
             world['scene']['run'].update(id=run_id,status=status)
+            world['scene']['completion_visible'] = {'CombatMapCompletionUI': True}
             action=after_rewards(engine,world)
-            self.assertEqual(action['kind'],'return_town');verified(engine,action)
+            self.assertEqual(action['kind'],'return_town' if status == 'failed' else 'enter_dungeon')
+            verified(engine,action)
             self.assertEqual((engine.pumpkin_completed,engine.repeat_completed,engine.repeat_index),(count,0,0))
-            town=scene(None,town=True);town['scene']['maps_by_difficulty']=options()
-            entry=engine.next_action(town)
-            self.assertEqual(entry['kind'],'enter_dungeon');verified(engine,entry)
-            self.assertEqual(entry['dungeon_id'],PUMPKIN)
+            if status == 'failed':
+                town=scene(None,town=True);town['scene']['maps_by_difficulty']=options()
+                entry=engine.next_action(town)
+                self.assertEqual(entry['kind'],'enter_dungeon');verified(engine,entry)
+                self.assertEqual(entry['dungeon_id'],PUMPKIN)
             world=scene(PUMPKIN,run_id=run_id+'-fresh')
             world['scene']['maps_by_difficulty']=options()
 
@@ -157,6 +160,7 @@ class BossManagedTests(unittest.TestCase):
     def test_push_target_is_preserved_by_boss_success_and_failure(self):
         for status in ('success','failed'):
             engine,world=self.engine(mode='push')
+            world['scene']['maps_by_difficulty'] = options(0)
             world['scene']['run'].update(id='boss-'+status,status=status)
             action=after_rewards(engine,world);verified(engine,action)
             town=scene(None,town=True);town['scene']['maps_by_difficulty']=options(0)

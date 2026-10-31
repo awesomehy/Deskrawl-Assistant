@@ -799,6 +799,77 @@ class GameActions:
         copy.finish()
         read.guards.extend(copy.guards)
 
+    def _require_pumpkin_replay(self, read, manager, scene, payload, state):
+        # Match the settlement ReplayButton path, keeping source-plan, UI and
+        # ground-list guards until the main-thread job actually runs.
+        run = state.get('run') or {}
+        if (scene != 0 or payload.get('map_id') != world_boss.PUMPKIN
+                or state.get('map_id') != world_boss.PUMPKIN or state.get('dead') is True
+                or not payload.get('source_run_id') or run.get('id') != payload['source_run_id']
+                or run.get('status') != 'success'):
+            raise SnapshotChangedError('南瓜王结算关卡已变化，重新读取后再复刷。')
+        if not self._completion_state(read).get('CombatMapCompletionUI'):
+            raise GameBusyError('等待南瓜王结算界面就绪后复刷。')
+        if read.boolean(manager + 240):
+            raise GameBusyError('游戏正在重开关卡，等待完成。')
+        from .recommendation_reader import _Copy, _campaign_run
+        copy = _Copy(self.reader)
+        current = _campaign_run(copy, manager, state['difficulty'], allow_settled_world_boss=True)
+        if (not current or current['id'] != payload['source_run_id']
+                or current.get('finished') is not True or current.get('enemy_count') != 0):
+            raise SnapshotChangedError('南瓜王本局尚未结算或已经复刷，重新核验。')
+        copy.finish()
+        read.guards.extend(copy.guards)
+        if self._ground(read, manager):
+            raise GameBusyError('本局仍有地面奖励，先拾取后再复刷。')
+
+    def _pumpkin_replay_ui(self, read, map_object):
+        """Find the live completion dialog through its native event subscription.
+
+        The dialog has no singleton. Start/OnDestroy register/unregister its
+        instance on the GameArea-change event. Read that bounded invocation
+        list, then invoke the original ReplayButton handler on the verified
+        dialog; it hides the dialog and cancels its timer before replaying.
+        """
+        address = self.reader.module['base'] + self.profile['statics']['completion_events']
+        klass = read.ptr(address)
+        if not klass or klass == self.profile['uninitialized_type_tokens']['completion_events']:
+            raise GameBusyError('等待南瓜王结算窗口完成初始化。')
+        static = read.ptr(read.klass(klass, 'completion_events') + 184)
+        root = read.ptr(static + 424) if static else 0
+        if not root:
+            raise GameBusyError('等待南瓜王结算窗口注册完成。')
+        delegate_class = read.ptr(root)
+        multicast = read.ptr(delegate_class + 88)
+        delegate_base = read.ptr(multicast + 88)
+        if (self.reader.class_name(delegate_class) != 'Action`2'
+                or self.reader.class_name(multicast) != 'MulticastDelegate'
+                or self.reader.class_name(delegate_base) != 'Delegate'
+                or {f['name']: f['offset'] for f in self.reader.fields(multicast)}.get('delegates') != 120
+                or {f['name']: f['offset'] for f in self.reader.fields(delegate_base)}.get('m_target') != 32):
+            raise MemoryReadError('结算窗口事件布局未确认，未提交复刷。')
+        array = read.ptr(root + 120)
+        delegates = read.pointers(array, 'Delegate', limit=64) if array else [root]
+        dialogs = set()
+        for entry in delegates:
+            if not entry:
+                continue
+            if read.ptr(entry) != delegate_class:
+                raise MemoryReadError('结算窗口事件类型不一致，未提交复刷。')
+            target = read.ptr(entry + 32)
+            if target and self.reader.class_name(read.ptr(target)) == 'CombatMapCompletionUI':
+                dialogs.add(read.verify(target, 'CombatMapCompletionUI'))
+        if len(dialogs) != 1:
+            raise GameBusyError('南瓜王结算窗口实例尚未确认，等待重新读取。')
+        dialog = dialogs.pop()
+        # These fields belong to the current dialog, not a retained old scene.
+        # Guard its timer too: the native auto-replay may run before our job.
+        if read.ptr(dialog + 208) != map_object:
+            raise SnapshotChangedError('结算窗口的关卡已变化，重新核验后再复刷。')
+        read.read(dialog + 200, 1)
+        read.ptr(dialog + 224)
+        return dialog
+
     def _require_stored_inventory(self, read):
         # Guard empty slots too: an offload can fill an existing slot after the
         # planning snapshot without changing the inventory array itself.
@@ -893,7 +964,8 @@ class GameActions:
         elif kind == 'enter_map':
             self._require_travel_ready(read)
             stargazing_entry = payload.get('reason_code') == 'stargazing_skip'
-            if not stargazing_entry:
+            pumpkin_replay = payload.get('reason_code') == 'pumpkin_replay'
+            if not (stargazing_entry or pumpkin_replay):
                 self._require_empty_town(read,manager,scene)
             state = self.control_snapshot()
             if not state['available']:
@@ -902,6 +974,8 @@ class GameActions:
                 if state.get('retryable') is True:
                     raise SnapshotChangedError(state['reason'])
                 raise NativeActionError(state['reason'])
+            if pumpkin_replay:
+                self._require_pumpkin_replay(read, manager, scene, payload, state)
             if stargazing_entry:
                 if (scene != 0 or (state.get('run') or {}).get('id') != payload.get('source_run_id')
                         or not payload.get('source_run_id') or state.get('dead') is True
@@ -947,6 +1021,12 @@ class GameActions:
                     Invocation('SaveSystem.mythic_unlocked',arguments=(Argument.reference(obj),Argument.integer(floor)),require_true=True),
                     Invocation('TownPortalSystem.entry_materials',arguments=(Argument.reference(obj),),require_true=True),
                     Invocation('GameManager.enter_mythic',manager,(Argument.reference(obj),Argument.integer(floor)))]
+            elif pumpkin_replay:
+                dialog = self._pumpkin_replay_ui(read, obj)
+                calls = [Invocation('GameManager.travel_busy', require_false=True, mutates=False),
+                    Invocation('TownPortalSystem.entry_materials', arguments=(Argument.reference(obj),),
+                               require_true=True, mutates=False),
+                    Invocation('CombatMapCompletionUI.replay', dialog, mutates=True)]
             else:
                 calls = [Invocation('TownPortalSystem.fri', portal, (Argument.reference(obj),), require_true=True)]
         elif kind == 'collect_ground':

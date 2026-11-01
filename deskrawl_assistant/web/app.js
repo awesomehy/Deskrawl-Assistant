@@ -20,7 +20,7 @@ const columnMenus={
   position:{label:'位置',sort:'position',filter:'containers',options:[['inventory','背包'],['storage','仓库']]},
   level:{label:'物品等级',sort:'level'},upgrade:{label:'强化',sort:'upgrade'},sockets:{label:'总孔数',sort:'sockets'},
   lock:{label:'锁状态',filter:'locks',options:[['locked','已锁定'],['unlocked','未锁定']]},
-  power:{label:'换装攻击力',sort:'power'},rules:{label:'规则结果',filter:'rules',options:[['matches','符合规则'],['miss','不符合规则'],['perfect','主词条全中']]}
+  power:{label:'换装攻击力',sort:'power'},rules:{label:'规则结果',filter:'rules',options:[['matches','符合规则'],['matches_only','仅符合规则（非四词条全中）'],['miss','不符合规则'],['perfect','主词条全中']]}
 };
 const inventoryFilterIds=['inventory-class','inventory-slot','inventory-rarity','inventory-sockets','inventory-upgrade','inventory-level-min','inventory-level-max','inventory-power','inventory-sort','inventory-ancient','inventory-mist','inventory-divine','inventory-tradable'];
 
@@ -202,6 +202,12 @@ function visibleItems(){
     power:$('inventory-power').value,sort:$('inventory-sort').value,
     ancient:$('inventory-ancient').checked,mist:$('inventory-mist').checked,divine:$('inventory-divine').checked,tradable:$('inventory-tradable').checked};
   return InventoryTools.select((state?.items||[]).map(i=>({...i,en:gearMap.get(i.name_key)?.en})),filters,state?.character?.class_mask);
+}
+function selectedTransferItems(target){
+  const view=visibleItems(),visible=new Set(view.map(i=>i.selection_id));
+  // Preserve hidden selections, after the selected rows in displayed order.
+  return [...view,...state.items.filter(i=>!visible.has(i.selection_id))]
+    .filter(i=>selectedItems.has(i.selection_id)&&i.container!==target);
 }
 function equipmentTags(item){return `<span class="equipment-tags">${(item.tags||[]).map(t=>`<span class="equipment-tag ${t==='远古'?'ancient':t==='黑雾'?'mist':'divine'}">${esc(t)}</span>`).join('')}</span>`;}
 function powerNumber(value){return Number.isFinite(value)?Math.round(value).toLocaleString('zh-CN'):'—';}
@@ -437,7 +443,7 @@ function updateControls(){
   $('unlock-all').disabled=!available||!scopedItems().some(i=>i.locked===true);
   $('lock-selected').disabled=!available||!state.items.some(i=>selectedItems.has(i.selection_id)&&i.is_equipment&&i.locked===false);
   for(const target of ['storage','inventory']){const items=state.items.filter(i=>selectedItems.has(i.selection_id)&&i.container!==target);$('move-'+target+'-count').textContent=items.length;$('move-'+target).disabled=!available||!state.transfer?.available||!items.length||items.some(i=>!i.movable);}
-  $('transfer-hint').textContent=state.connected&&!state.transfer?.available?(state.transfer?.reason||'移动条件尚未核验，请刷新物品。'):'优先堆叠同种同等级宝石；满堆后使用已开放的空格。';
+  $('transfer-hint').textContent=state.connected&&!state.transfer?.available?(state.transfer?.reason||'移动条件尚未核验，请刷新物品。'):'空间不足时按当前列表顺序搬运可容纳的前几组，其余留在原处；宝石优先堆叠。';
   $('lock-rules').disabled=!available||!enabled;
   $('lock-rules').title=enabled?'按已启用规则处理批量范围内的装备':'请先在规则页保存并启用至少一条规则';
   $('export-items').disabled=!state.items.length;
@@ -595,7 +601,7 @@ $('item-rows').addEventListener('change',e=>{const id=e.target.dataset.itemSelec
 $('item-rows').addEventListener('click',e=>{if(e.target.matches('input'))return;const row=e.target.closest('[data-item]');if(row){if(detailId!==row.dataset.item)detailTarget=null;detailId=row.dataset.item;renderInventory();}});
 $('item-rows').addEventListener('keydown',e=>{if(e.target.matches('input')||!['Enter',' '].includes(e.key))return;const row=e.target.closest('[data-item]');if(row){e.preventDefault();if(detailId!==row.dataset.item)detailTarget=null;detailId=row.dataset.item;renderInventory();}});
 $('select-visible').addEventListener('change',e=>{visibleItems().filter(i=>i.selection_id).forEach(i=>e.target.checked?selectedItems.add(i.selection_id):selectedItems.delete(i.selection_id));renderInventory();});
-for(const target of ['storage','inventory'])$('move-'+target).addEventListener('click',()=>action('move_items',{target,items:state.items.filter(i=>selectedItems.has(i.selection_id)&&i.container!==target).map(i=>i.selection_id)}));
+for(const target of ['storage','inventory'])$('move-'+target).addEventListener('click',()=>action('move_items',{target,items:selectedTransferItems(target).map(i=>i.selection_id)}));
 $('item-detail').addEventListener('click',async e=>{const move=e.target.closest('[data-move-item]');if(move){await action('move_items',{target:move.dataset.target,items:[move.dataset.moveItem]});return;}const button=e.target.closest('[data-configure-item]');if(button&&gearMap.has(button.dataset.configureItem)){await chooseGear(button.dataset.configureItem);switchTab('rules');}});
 $('lock-selected').addEventListener('click',()=>action('lock_selected',{items:state.items.filter(i=>selectedItems.has(i.selection_id)&&i.is_equipment&&i.locked===false).map(i=>({item_uid:i.item_uid,instance_id:i.instance_id,name_key:i.name_key}))}));
 $('lock-rules').addEventListener('click',()=>action('lock_rules'));

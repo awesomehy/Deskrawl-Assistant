@@ -189,7 +189,8 @@ class WebServiceTests(unittest.TestCase):
 
     def test_selected_tokens_are_resolved_server_side_and_preserve_locked_gear(self):
         self.publish_physical_items()
-        def move(expected,target,validate):
+        def move(expected,target,validate,*,allow_partial):
+            self.assertTrue(allow_partial)
             self.assertTrue(validate())
             self.assertEqual(expected[0]['transfer_key'],'gear-token')
             self.assertTrue(expected[0]['locked'])
@@ -201,6 +202,31 @@ class WebServiceTests(unittest.TestCase):
             operation.assert_called_once()
         self.assertTrue(self.client.items[0]['locked'])
         self.assertIn('移入仓库 1 组',self.service.message)
+
+    def test_manual_partial_transfer_preserves_request_order_and_reports_remainder(self):
+        self.publish_physical_items()
+        def move(expected,target,validate,*,allow_partial):
+            self.assertTrue(allow_partial)
+            self.assertEqual([r['transfer_key'] for r in expected],['stack-2','stack-0','stack-1'])
+            self.assertEqual(target,'inventory')
+            self.client.items[-1]['container']=target
+            return {'moved':1,'remaining':2}
+        with patch.object(self.client,'move_items',side_effect=move,create=True):
+            self.run_action('move_items',items=['stack-2','stack-0','stack-1'],target='inventory')
+        self.assertEqual(self.service.progress,{'done':1,'total':3})
+        self.assertIn('取回背包 1 组',self.service.message)
+        self.assertIn('其余 2 组保留在原处',self.service.message)
+        self.assertEqual([i['container'] for i in self.client.items[1:]],['storage','storage','inventory'])
+
+    def test_manual_zero_capacity_is_a_noop_without_claiming_save_or_item_commit(self):
+        self.publish_physical_items()
+        with patch.object(self.client,'move_items',return_value={'moved':0,'remaining':1},create=True), \
+                patch.object(self.service,'_record_item_commit') as commit:
+            self.run_action('move_items',items=['gear-token'],target='storage')
+        commit.assert_not_called()
+        self.assertIn('未移动物品',self.service.message)
+        self.assertNotIn('请求游戏保存',self.service.message)
+        self.assertEqual(self.service.progress,{'done':0,'total':1})
 
     def test_moving_rejects_stale_duplicate_or_wrong_direction_selection(self):
         self.publish_physical_items()

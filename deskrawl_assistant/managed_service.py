@@ -23,6 +23,7 @@ from .progression import catalog as growth_catalog, growth_action, next_purchase
 from .auction import next_action as auction_action, validate_settings as validate_auction
 from .auction_runtime import auction_eligibility
 from .carriage_transfer import CarriageUnavailable
+from .town_cleanup_recovery import cleanup_ready, cleanup_action_allowed
 
 SYNTHESIS_ACTIONS = ('synthesize_gems', 'synthesize_runes')
 
@@ -147,6 +148,7 @@ class ManagedServiceMixin:
         self.managed_transition = None
         self.managed_retry = None
         self.managed_return_recovery = None
+        self.managed_scene_wait = None
         # Keep submitted craft receipts across user pause/stop, independently
         # of planner resets. They must settle before any later inventory work.
         self.managed_synthesis_wait = None
@@ -235,7 +237,8 @@ class ManagedServiceMixin:
         scene.setdefault('dungeon_id',control.get('map_id'))
         scene.setdefault('difficulty',control.get('difficulty'))
         for key in ('world_difficulty','mythic_entry_difficulty','scene_changing','teleporting','dead','completion_visible','online_saving','online_pending_requests',
-                    'player_state','gathering','travel_blocked','travel_wait_reason','maps_by_difficulty'):
+                    'player_state','gathering','travel_blocked','travel_wait_reason','maps_by_difficulty',
+                    'in_battle','town_cleanup_recovery'):
             scene.setdefault(key,control.get(key))
         run = deepcopy(run_record(scene.get('run',control.get('run'))))
         if run:
@@ -560,6 +563,7 @@ class ManagedServiceMixin:
                 self.managed_started_clock = time.monotonic()
                 self.managed_reconnect = ReconnectFlow()
                 self._managed_reconnect_read_since = None
+                self.managed_scene_wait = None
                 self.managed_can_resume = False
                 self.journal.append('system','managed_started','启动托管模式')
         finally:
@@ -588,6 +592,7 @@ class ManagedServiceMixin:
             if self.operation_kind!='managed':
                 self.managed_reconnect = ReconnectFlow()
                 self._managed_reconnect_read_since = None
+                self.managed_scene_wait = None
         return self.managed_page()
 
     def finish_managed(self):
@@ -621,6 +626,7 @@ class ManagedServiceMixin:
         if not self.managed.running:
             self.managed_reconnect = ReconnectFlow()
             self._managed_reconnect_read_since = None
+            self.managed_scene_wait = None
             self.managed_transition = None
             self.managed_retry = None
             self.managed_return_recovery = None
@@ -634,6 +640,7 @@ class ManagedServiceMixin:
             self.managed_transition=None; self.managed_elapsed=0
             self.managed_retry=None
             self.managed_return_recovery=None
+            self.managed_scene_wait=None
             self.managed_history=[]
         return self.managed_page()
 
@@ -662,8 +669,13 @@ class ManagedServiceMixin:
                 and action.get('reason_code') not in ('equip_prepare', 'synthesis_prepare', 'auction_prepare'))
         if observation.get('complete') is not True: raise SnapshotChangedError('物品正在变化，等待重新规划。')
         scene = observation.get('scene',{})
-        if scene.get('scene_changing') is True or scene.get('teleporting') is True:
+        recovery = cleanup_ready(observation)
+        if recovery and not self._managed_identity_ok(observation, require_character=True):
+            return {'verified':False, 'retryable':True, 'reason':self.managed.status}
+        if scene.get('teleporting') is True or (scene.get('scene_changing') is True
+                and not (recovery and cleanup_action_allowed(action))):
             raise GameBusyError('游戏正在切换场景，等待完成。')
+        recovery_options = {'town_cleanup':True} if recovery else {}
         if scene.get('online_saving') is True:
             if kind in ('return_town','enter_dungeon','switch_difficulty'):
                 raise OnlineSyncBusyError('等待游戏完成在线同步后切换场景。')
@@ -858,14 +870,14 @@ class ManagedServiceMixin:
                    source_slot=item.get('slot_index'),item_uid=item.get('item_uid'),
                    item_key=item.get('internal_name') or item.get('name_key'),
                    quantity=item.get('count'),target=action['target'],reason_code=action.get('reason_code'))
-            result = self.client.move_items([source],action['target'],active,target_indices=action.get('target_indices'))
+            result = self.client.move_items([source],action['target'],active,target_indices=action.get('target_indices'), **recovery_options)
             result = {**result,'verified':result.get('moved')==1,'quantity':item.get('count',1)}
         elif kind=='lock':
-            result = self.client.lock_equipment(source,lambda row:active())
+            result = self.client.lock_equipment(source,lambda row:active(), **recovery_options)
             result = {**result,'verified':result.get('status') in ('locked','already_locked')}
         elif kind=='collect_carriage':
             try:
-                result = self.client.collect_carriage(item['selection_id'],active)
+                result = self.client.collect_carriage(item['selection_id'],active, **recovery_options)
             except CarriageUnavailable as exc:
                 # This typed exception is raised only before collection writes.
                 # Discard the stale selection and let the normal backoff obtain
@@ -875,6 +887,7 @@ class ManagedServiceMixin:
         else:
             native_kind = 'enter_map' if kind=='enter_dungeon' else kind
             payload = {**action,'item':source or item}
+            if recovery: payload['_town_cleanup'] = True
             if kind in SYNTHESIS_ACTIONS:
                 payload['character_id'] = self.managed.character_id
             auction_intent = None
@@ -986,7 +999,8 @@ class ManagedServiceMixin:
             delay = min(15,2**min(attempts,4))
             if code == 'stargazing_entry_rejected': delay = min(3, attempts)
             self.managed_retry = {'key':key,'started':started,'attempts':attempts,
-                'next_at':now+delay,'action_kind':action.get('kind'),'reason':reason}
+                'next_at':now+delay,'action_kind':action.get('kind'),'reason':reason,
+                'target':action.get('target'),'reason_code':action.get('reason_code')}
             self.managed.status = reason+f' {delay} 秒后重新检查，托管继续运行。'
             if online_wait and elapsed >= 120:
                 self.managed.status = reason+f' 已等待 {int(elapsed)} 秒，尚未提交切换请求；同步恢复后自动继续。'
@@ -994,6 +1008,51 @@ class ManagedServiceMixin:
                    native_state=native_state,attempts=attempts,delay_seconds=delay,
                    scene=self._transition_scene(self._managed_scene()),reason=reason)
             return self.managed.status
+
+    def _managed_wait_scene(self, observation):
+        """Bound a native scene gate even when there is no submitted travel.
+
+        A reconnect may restore town objects while the game's transition
+        coroutine is still active (or never finished). Neither town arrival
+        nor a complete inventory read alone authorizes ignoring that native flag.
+        A separately guarded, continuous town proof permits only cleanup.
+        """
+        scene = observation.get('scene', {})
+        flags = ('scene_changing', 'teleporting')
+        wait = self.managed_scene_wait
+        if cleanup_ready(observation):
+            if wait is None or not wait.get('cleanup_only'):
+                record('managed_town_cleanup_recovery', scene=self._transition_scene(scene))
+                self.managed_scene_wait = {'started':time.monotonic(), 'cleanup_only':True}
+            return False
+        if wait is not None and wait.get('cleanup_only'):
+            # Revoked evidence starts a fresh bounded wait, never a grant that
+            # lives on in service state after native proof becomes unavailable.
+            self.managed_scene_wait = wait = {'started':time.monotonic()}
+        stable = (scene.get('available') is True
+                  and all(scene.get(key) is False for key in flags))
+        if stable:
+            if wait is not None:
+                record('managed_scene_resumed', scene=self._transition_scene(scene),
+                       elapsed_seconds=round(time.monotonic()-wait['started'], 2))
+                self.managed_scene_wait = None
+            return False
+        if wait is None:
+            if not any(scene.get(key) is True for key in flags): return False
+            wait = self.managed_scene_wait = {'started': time.monotonic()}
+            record('managed_scene_wait', scene=self._transition_scene(scene))
+        elapsed = time.monotonic()-wait['started']
+        if elapsed >= 120:
+            self.managed._pause('游戏场景切换状态连续 2 分钟未恢复，托管已暂停，统计已保留。'
+                               '请确认游戏切场状态恢复后继续；未强制开箱或搬运。')
+            self.managed_can_resume = True
+            self._managed_freeze_clock()
+            record('managed_scene_paused', scene=self._transition_scene(scene),
+                   elapsed_seconds=round(elapsed, 2))
+        else:
+            location = '已在主城，但游戏仍报告场景切换中' if scene.get('in_town') is True else '等待游戏场景切换状态恢复'
+            self.managed.status = location+f'（已等待 {int(elapsed)} 秒），暂不开箱或搬运。'
+        return True
 
     def _managed_pause_return(self, reason):
         """An unconfirmed town visit never authorizes inventory cleanup."""
@@ -1202,7 +1261,22 @@ class ManagedServiceMixin:
             if self.managed.merchant_refresh_wait:
                 self._managed_wait_merchant_refresh(observation)
                 return self.managed.status
+            # Submitted travel retains its own receipt/deadline protocol. A
+            # planner-only native gate otherwise had no timeout at all.
+            if self.managed_transition is None and self._managed_wait_scene(observation):
+                return self.managed.status
             retry = self.managed_retry
+            if self.managed_transition is None and cleanup_ready(observation):
+                # A verified stable town closes the old return wait, while
+                # submitted transitions and item receipts keep their protocols.
+                self.managed_return_recovery = None
+            if retry and cleanup_ready(observation) and not cleanup_action_allowed({
+                    'kind':retry['action_kind'],'target':retry.get('target'),
+                    'reason_code':retry.get('reason_code')}):
+                # This retry has not submitted a native action. Keep in-flight
+                # receipts, but re-plan town cleanup instead of retrying travel.
+                self.managed_retry = retry = None
+                self.managed.pending = None
             if retry:
                 scene = observation['scene']
                 if retry['action_kind']=='return_town' and scene.get('in_town') is True:
@@ -1454,6 +1528,7 @@ class ManagedServiceMixin:
                 self.managed.stop('掉线期间已请求结束托管，不再自动登录游戏。')
                 return True
             if not was_active:
+                self.managed_scene_wait = None
                 record('managed_reconnect_started', character_index=config['character_index'])
             self.managed.phase = 'reconnecting'
             self.managed.status = decision.get('reason', '断线重连中。')
@@ -1471,6 +1546,15 @@ class ManagedServiceMixin:
                 if observation.get('complete') is not True or observation.get('scene', {}).get('available') is not True:
                     return True
                 if not self._managed_identity_ok(observation, require_character=True): return True
+                if self._managed_wait_scene(observation): return True
+                scene = observation['scene']
+                recovery = cleanup_ready(observation)
+                if ((not recovery and scene.get('scene_changing') is not False)
+                        or not all(scene.get(key) is False for key in ('teleporting', 'online_saving'))
+                        or type(scene.get('online_pending_requests')) is not int
+                        or scene['online_pending_requests'] != 0):
+                    self.managed.status = '角色已加载，等待场景切换和在线同步完成后恢复托管。'
+                    return True
                 self.managed_transition = self.managed_retry = self.managed_return_recovery = None
                 self.managed.pending = None
                 if self.managed.await_effect and self.managed.await_effect['kind'] in (
@@ -1482,7 +1566,8 @@ class ManagedServiceMixin:
                 self.managed.phase = 'cleanup' if observation['scene'].get('in_town') is True else 'farming'
                 self.managed.reward_barrier = self.managed.phase == 'cleanup'
                 self.managed.barrier_reads = 0
-                self.managed.status = '断线重连成功，原角色数据已确认，继续本次托管。'
+                self.managed.status = ('断线重连后主城已稳定，先受限整理奖励，等待切场状态恢复。' if recovery
+                                       else '断线重连成功，原角色数据已确认，继续本次托管。')
                 self.managed_reconnect = ReconnectFlow()
                 self.managed_fast_followup = True
                 record('managed_reconnect_resumed', character_index=config['character_index'])

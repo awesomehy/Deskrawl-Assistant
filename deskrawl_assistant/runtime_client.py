@@ -218,12 +218,13 @@ class RuntimeClient:
             if self._reader is None: raise RuntimeConnectionError('尚未连接游戏。')
             return {**read_loot_plan(self._reader), 'session': self._reader.session_id}
 
-    def lock_equipment(self, expected, validate=lambda row: True):
+    def lock_equipment(self, expected, validate=lambda row: True, *, town_cleanup=False):
         from .background_lock import lock_equipment
         with self._guard:
             if self._reader is None:
                 raise RuntimeConnectionError("尚未连接游戏。")
-            return lock_equipment(self._reader, expected, validate)
+            options = {'context_guards':lambda: self._game_actions().town_cleanup_guards('lock')} if town_cleanup else {}
+            return lock_equipment(self._reader, expected, validate, **options)
 
     def unlock_equipment(self, expected, validate=lambda row: True):
         from .background_lock import unlock_equipment
@@ -232,14 +233,19 @@ class RuntimeClient:
                 raise RuntimeConnectionError("尚未连接游戏。")
             return unlock_equipment(self._reader, expected, validate)
 
-    def move_items(self, expected, target, validate=lambda: True, *, target_indices=None):
+    def move_items(self, expected, target, validate=lambda: True, *, target_indices=None, town_cleanup=False, allow_partial=False):
         from .container_transfer import move_items
         with self._guard:
             if self._reader is None:
                 raise RuntimeConnectionError("尚未连接游戏。")
+            if town_cleanup and target != 'storage':
+                from .native_memory import GameBusyError
+                raise GameBusyError('主城恢复期间不从仓库取出物品。')
+            options = {'context_guards':lambda: self._game_actions().town_cleanup_guards('transfer')} if town_cleanup else {}
+            if allow_partial: options['allow_partial'] = True
             return move_items(self._reader, expected, target, validate,
                 on_commit=lambda result: self.item_events('items_transferred',result) if self.item_events else None,
-                target_indices=target_indices)
+                target_indices=target_indices, **options)
 
     def _game_actions(self):
         # Construction and capability discovery never install the dispatcher.
@@ -308,12 +314,13 @@ class RuntimeClient:
             if self._reader is None: raise RuntimeConnectionError('尚未连接游戏。')
             return public_carriage(self._reader)
 
-    def collect_carriage(self,selection_id,validate=lambda:True):
+    def collect_carriage(self,selection_id,validate=lambda:True,*,town_cleanup=False):
         from .carriage_transfer import collect_item
         with self._guard:
             if self._reader is None: raise RuntimeConnectionError('尚未连接游戏。')
+            options = {'context_guards':lambda: self._game_actions().town_cleanup_guards('collect_carriage')} if town_cleanup else {}
             return collect_item(self._reader,selection_id,validate,
-                on_commit=lambda result: self.item_events('carriage_collected',result) if self.item_events else None)
+                on_commit=lambda result: self.item_events('carriage_collected',result) if self.item_events else None, **options)
 
     def __enter__(self):
         return self

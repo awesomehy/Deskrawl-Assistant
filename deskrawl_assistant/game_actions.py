@@ -24,6 +24,7 @@ from .progression import NEW_ACTIONS
 from .synthesis import KINDS as SYNTHESIS_ACTIONS
 from .auction_runtime import KINDS as AUCTION_ACTIONS
 from .run_receipts import RunReceipts
+from .town_cleanup_recovery import StableTown, CLEANUP_KINDS
 from .chests import is_chest
 from . import world_boss
 
@@ -112,10 +113,10 @@ class _Read:
         static = self.ptr(klass+184)
         return self.verify(self.ptr(static), name)
 
-    def pointers(self, obj, element, limit=4096):
+    def pointers(self, obj, element, limit=4096, *, contents=True):
         rows, block = self.reader.array(obj, element, stride=8, limit=limit)
         self.guards.append((obj+24, struct.pack('<Q', len(rows))))
-        if block: self.guards.append((obj+32, block))
+        if contents and block: self.guards.append((obj+32, block))
         return [struct.unpack('<Q', raw)[0] for raw in rows]
 
     def list(self, obj, element, limit=4096, selected_only=False):
@@ -157,6 +158,7 @@ class GameActions:
         self._synthesis = None
         self._auction = None
         self._reconnect = None
+        self._stable_town = StableTown()
 
     def reconnect_runtime(self):
         if self._reconnect is None:
@@ -322,13 +324,19 @@ class GameActions:
             self.reader.snapshot_stamps = old_stamps
         return rows
 
-    def _carriage(self, read, *, in_town=False):
+    def _carriage(self, read, *, in_town=False, offload_only=False):
         from .carriage_transfer import read_carriage, CarriageUnavailable
         try:
             value = read_carriage(self.reader)
             rows = [dict(row, container='carriage') for row in value['items']]
-            self._enrich_drops(read, rows)
-            read.guards.extend(value['guards'])
+            if offload_only:
+                # read_carriage verified this class/layout. Keep its identity
+                # and the offload gates below, without copying every unrelated
+                # world drop into the native mailbox's bounded guard array.
+                read.guards.extend(value['context_guards'])
+            else:
+                self._enrich_drops(read, rows)
+                read.guards.extend(value['guards'])
             # Town offloading first removes held drops from the carriage list
             # and then animates them onto the ground. Those gaps are not empty
             # reward sources and must not complete a graceful stop.
@@ -492,14 +500,84 @@ class GameActions:
         method = 'TownPortalSystem.frl' if any(completion.values()) else 'TownPortalSystem.frk'
         return Invocation(method, portal, require_true=True)
 
+    def _town_cleanup_signature(self, read, manager, area, scene):
+        """Retain native guards for every condition behind the narrow grant."""
+        if scene != 1 or not read.boolean(area+176): return None
+        portal = read.singleton('TownPortalSystem')
+        online = self._online_state(read)
+        if (read.boolean(portal+76) or online['online_saving']
+                or online['online_pending_requests'] != 0 or read.boolean(manager+276)):
+            return None
+        combat = read.verify(read.ptr(manager+64), 'PlayerCombatController')
+        player = read.verify(read.ptr(combat+32), 'Player')
+        if read.boolean(player+296) or read.boolean(combat+80): return None
+        town = read.verify(read.ptr(area+128), 'TownData')
+        root = read.ptr(area+40)
+        if not root or self.reader.class_name(read.ptr(root)) != 'GameObject': return None
+        save = read.singleton('SaveSystem')
+        role = read.read(save+32, 16)  # mode, slot and loaded save-container pointer
+        containers = []
+        for name, offset in (('Inventory', 56), ('Storage', 48)):
+            # Storage belongs to the already connection-verified read profile.
+            klass = self.reader.classes[name]
+            static = read.ptr(klass+184)
+            obj = read.ptr(static)
+            if not obj or read.ptr(obj) != klass: return None
+            array = read.ptr(obj+offset)
+            # Item actions retain their own slot/count/UID guards. Town
+            # stability only needs the container root and size; unrelated bag
+            # contents must not exhaust the native guard mailbox.
+            entries = read.pointers(array, 'InventorySlot', limit=2048, contents=False)
+            if not entries: return None
+            containers.extend((obj, array, len(entries)))
+        carriage = read.ptr(manager+88)
+        if carriage:
+            value = self._carriage(read, in_town=True, offload_only=True)
+            if value.get('complete') is not True or value.get('settling') is not False: return None
+        return (self.reader.session_id, manager, area, town, root, combat, player,
+                save, role, carriage, *containers)
+
+    def town_cleanup_guards(self, kind):
+        """Action-time validation; never clear a game flag or grant on request."""
+        if kind not in CLEANUP_KINDS:
+            raise GameBusyError('主城恢复期间仅允许拾取、开箱和奖励整理。')
+        try:
+            read, manager, area, scene = self._context()
+            signature = self._town_cleanup_signature(read, manager, area, scene)
+            read.finish()
+            if not self._stable_town.check(signature, time.monotonic()):
+                raise GameBusyError('主城稳定状态已变化，重新核验后再整理。')
+        except (MemoryReadError, OSError, ValueError, KeyError):
+            self._stable_town.reset()
+            raise
+        return read.guards
+
     def action_context_snapshot(self):
         """Fresh scene/sync gates for inventory actions, without campaign data."""
-        read,_,area,scene = self._context(allow_busy=True)
-        online = self._online_state(read)
-        portal = read.singleton('TownPortalSystem')
-        value = {'available':True,'scene':{'available':True,'in_town':scene==1,'in_dungeon':scene==2,
-                 'teleporting':read.boolean(portal+76),'scene_changing':read.boolean(area+176),**online}}
-        read.finish()
+        try:
+            read,manager,area,scene = self._context(allow_busy=True)
+            online = self._online_state(read)
+            portal = read.singleton('TownPortalSystem')
+            value = {'available':True,'scene':{'available':True,'in_town':scene==1,'in_dungeon':scene==2,
+                     'teleporting':read.boolean(portal+76),'scene_changing':read.boolean(area+176),**online}}
+            value['scene']['town_cleanup_recovery'] = None
+            if value['scene']['scene_changing'] is True and scene == 1:
+                signature = self._town_cleanup_signature(read, manager, area, scene)
+                value['scene'].update(dead=False if signature else None, in_battle=False if signature else None)
+                if self._stable_town.check(signature, time.monotonic()):
+                    value['scene']['town_cleanup_recovery'] = {'eligible':True,
+                        'session':self.reader.session_id, 'character_id':self._stable_town.character_id}
+                    # This ID is bound to freshly guarded role/save/player roots,
+                    # unlike an arbitrary last displayed campaign identity.
+                    value['character_id'] = self._stable_town.character_id
+                elif not signature or signature != self._stable_town.signature:
+                    self._stable_town.reset()
+            else:
+                self._stable_town.reset()
+            read.finish()
+        except (MemoryReadError, OSError, ValueError, KeyError):
+            self._stable_town.reset()
+            raise
         return value
 
     def _capture_run_receipts(self, recommendation):
@@ -661,7 +739,12 @@ class GameActions:
                     raise SnapshotChangedError('结算界面与当前关卡计划正在切换，等待重新读取。')
                 read.guards.extend(copy.guards)
                 campaign_run, settlement = current, completion
+            signature = None
+            if scene == 1 and scene_changing is True:
+                signature = self._town_cleanup_signature(read, manager, area, scene)
             read.finish()
+            cleanup_recovery = {'eligible':self._stable_town.observe(signature, progress['character_id'], time.monotonic()),
+                'session':self.reader.session_id, 'character_id':progress['character_id']}
             run = normalise_run(campaign_run, completed | set(progress['mythic_completed']), dead, settlement)
             if native_campaign and settlement is not None:
                 run_history = self._run_receipts.observe(getattr(self.reader, 'session_id', None),
@@ -674,7 +757,8 @@ class GameActions:
             elif not run and self._last_terminal_run:
                 run = dict(self._last_terminal_run, retained_terminal=True)
             return {'available':True, 'compatible':True, 'scene':{0:'combat',1:'town',2:'fishing'}[scene],
-                'scene_changing':scene_changing, 'teleporting':teleporting, 'dead':dead, 'in_battle':in_battle, **travel_state, **online,
+                'scene_changing':scene_changing, 'teleporting':teleporting, 'dead':dead, 'in_battle':in_battle,
+                'town_cleanup_recovery':cleanup_recovery, **travel_state, **online,
                 'completion_visible':completion,
                 'run_history':run_history,
                 'loot_ledger':loot_ledger,
@@ -687,6 +771,7 @@ class GameActions:
                 'carriage':{**carriage, 'items':[{k:v for k,v in row.items() if not k.startswith('_')} for row in carriage['items']]},
                 'captured_at':datetime.now(timezone.utc).isoformat(), 'reason':''}
         except (MemoryReadError, OSError, ValueError, KeyError, UnicodeError, struct.error) as exc:
+            self._stable_town.reset()
             return {'available':False, 'compatible':self._compatible is True, 'maps':[], 'ground':[],
                 'ground_complete':False, 'native_verified':False, 'reason':str(exc),
                 'retryable':isinstance(exc, SnapshotChangedError),
@@ -925,6 +1010,8 @@ class GameActions:
         if not self.capabilities()['compatible']:
             raise NativeActionError(self.capabilities()['reason'])
         payload = payload or {}
+        if payload.get('_town_cleanup') and kind not in CLEANUP_KINDS:
+            raise GameBusyError('主城恢复期间不执行进图、消费、合成或换装。')
         if kind in AUCTION_ACTIONS:
             return self.auction_runtime().execute(kind, payload, cancel_event=cancel_event, validate=validate)
         if kind in SYNTHESIS_ACTIONS:
@@ -937,8 +1024,11 @@ class GameActions:
             return result
         read, manager, area, scene = self._context()
         portal = read.singleton('TownPortalSystem')
-        if read.boolean(portal+76) or read.boolean(area+176):
+        teleporting, changing = read.boolean(portal+76), read.boolean(area+176)
+        if teleporting or changing and not payload.get('_town_cleanup'):
             raise GameBusyError('游戏正在切换场景，等待完成。')
+        if payload.get('_town_cleanup'):
+            read.guards.extend(self.town_cleanup_guards(kind))
         calls, selected = [], None
         if kind == 'return_town':
             if scene == 1:

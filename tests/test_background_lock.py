@@ -136,6 +136,21 @@ class BackgroundLockTests(unittest.TestCase):
         self.assertFalse(self.writes)
         self.assertTrue(self.closed)
 
+    def test_changed_cleanup_context_or_item_during_context_read_never_writes(self):
+        for changed in ('context', 'item'):
+            with self.subTest(changed=changed):
+                self.reader = FakeReader()
+                self.writes = []
+                self.closed = False
+                def guards():
+                    if changed == 'item':
+                        self.reader.memory.ints[REGISTRY+44] = 8
+                    return [(SAVE+194,b'\1')] if changed == 'context' else []
+                with self.assertRaises(SnapshotChangedError):
+                    lock_equipment(self.reader,ITEM,writer_factory=self.factory,context_guards=guards)
+                self.assertFalse(self.writes)
+                self.assertTrue(self.closed)
+
     def test_hidden_black_mist_locks_without_revealing_or_changing_affixes(self):
         self.reader.row['is_black_mist']=True
         self.reader.row['modifiers']=[]

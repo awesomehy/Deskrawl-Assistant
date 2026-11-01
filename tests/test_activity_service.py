@@ -17,7 +17,7 @@ from test_web_service import item
 
 class ReceiptClient(AutomationClient):
     """Fake transactions emit the same committed receipt as the native client."""
-    def move_items(self,expected,target,validate,*,target_indices=None):
+    def move_items(self,expected,target,validate,*,target_indices=None,allow_partial=False):
         source=copy.deepcopy(expected[0])
         result=super().move_items(expected,target,validate,target_indices=target_indices)
         changed=next(r for r in self.items if r['internal_name']==source['internal_name'] and r['container']==target)
@@ -163,8 +163,8 @@ class ActivityServiceTests(unittest.TestCase):
     def test_confirmed_transfer_is_logged_even_if_following_read_fails(self):
         self.client.items=[gem(0,count=2)];self.service._publish(self.client.snapshot())
         token=self.client.items[0]['transfer_key'];original=self.client.move_items
-        def commit_then_fail(*args):
-            original(*args)
+        def commit_then_fail(*args,**kwargs):
+            original(*args,**kwargs)
             raise MemoryReadError('read after commit failed')
         with patch.object(self.client,'move_items',side_effect=commit_then_fail):
             self.service.start('move_items',dict(items=[token],target='storage'));self.service.worker.join(3)

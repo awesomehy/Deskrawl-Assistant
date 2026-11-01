@@ -219,6 +219,73 @@ class ManagedReconnectTests(unittest.TestCase):
         self.assertEqual(self.service.managed.phase, 'paused')
         self.assertEqual(self.client.actions, [])
 
+    def test_loaded_town_with_live_scene_flag_does_not_clear_travel_or_item_fences(self):
+        self.ready()
+        self.service._managed_once()
+        self.client.reconnect_snapshot.return_value = {'in_game': True}
+        observation = self.service._managed_observation()
+        observation['scene']['scene_changing'] = True
+        engine = self.service.managed
+        engine.repeat_completed = 33
+        engine.await_effect = {'kind': 'return_town', 'receipt_id': 'returning'}
+        transition = {'action': {'kind': 'return_town'}, 'started': 50}
+        self.service.managed_transition = transition
+        with patch.object(self.service, '_managed_observation', return_value=observation):
+            self.service._managed_once()
+            self.assertTrue(self.service.managed_reconnect.active)
+            self.assertIs(self.service.managed_transition, transition)
+            self.assertEqual(engine.await_effect['receipt_id'], 'returning')
+            self.assertNotIn('重连成功', engine.status)
+            self.assertEqual(engine.repeat_completed, 33)
+            observation['scene']['scene_changing'] = False
+            self.service._managed_once()
+        self.assertFalse(self.service.managed_reconnect.active)
+        self.assertIsNone(self.service.managed_transition)
+        self.assertIsNone(engine.await_effect)
+        self.assertIn('重连成功', engine.status)
+        self.assertEqual(engine.repeat_completed, 33)
+        self.assertEqual(self.client.actions, [])
+
+    def test_reconnect_scene_wait_is_bounded_without_more_login_or_inventory_actions(self):
+        self.ready()
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=100):
+            self.service._managed_once()
+        self.client.reconnect_snapshot.return_value = {'in_game': True}
+        observation = self.service._managed_observation()
+        observation['scene']['scene_changing'] = True
+        with patch.object(self.service, '_managed_observation', return_value=observation):
+            with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=110):
+                self.service._managed_once()
+            with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=230):
+                self.service._managed_once()
+        self.assertFalse(self.service.managed.running)
+        self.assertTrue(self.service.managed_can_resume)
+        self.assertIn('场景切换状态', self.service.managed.status)
+        self.assertEqual(self.client.execute_reconnect_action.call_count, 1)
+        self.assertEqual(self.client.actions, [])
+
+    def test_reconnect_success_also_requires_confirmed_idle_sync_and_scene_flags(self):
+        self.ready()
+        self.service._managed_once()
+        self.client.reconnect_snapshot.return_value = {'in_game': True}
+        observation = self.service._managed_observation()
+        scene = observation['scene']
+        for field, value in (('scene_changing', None), ('teleporting', None),
+                             ('online_saving', True), ('online_pending_requests', 1),
+                             ('online_pending_requests', None)):
+            with self.subTest(field=field, value=value):
+                previous = scene[field]
+                scene[field] = value
+                with patch.object(self.service, '_managed_observation', return_value=observation):
+                    self.service._managed_once()
+                self.assertTrue(self.service.managed_reconnect.active)
+                self.assertNotIn('重连成功', self.service.managed.status)
+                scene[field] = previous
+        with patch.object(self.service, '_managed_observation', return_value=observation):
+            self.service._managed_once()
+        self.assertFalse(self.service.managed_reconnect.active)
+        self.assertEqual(self.client.actions, [])
+
     def test_uncertain_login_ack_pauses_without_retry(self):
         self.ready()
         self.client.execute_reconnect_action.side_effect = NativeActionError('未确认', uncertain=True)
@@ -226,6 +293,21 @@ class ManagedReconnectTests(unittest.TestCase):
         self.assertEqual(self.service.managed.phase, 'paused')
         self.assertFalse(self.service._managed_reconnect_once())
         self.assertEqual(self.client.execute_reconnect_action.call_count, 1)
+
+    def test_stable_town_after_reconnect_permits_cleanup_but_keeps_item_receipts(self):
+        self.ready()
+        self.service._managed_once()
+        self.client.reconnect_snapshot.return_value = {'in_game':True}
+        observation = self.service._managed_observation()
+        observation['scene'].update(scene_changing=True,dead=False,in_battle=False,
+            town_cleanup_recovery={'eligible':True,'session':observation['session'],'character_id':CHARACTER})
+        self.service.managed.await_effect = {'kind':'synthesize_runes','receipt_id':'outstanding'}
+        with patch.object(self.service, '_managed_observation', return_value=observation):
+            self.service._managed_once()
+        self.assertFalse(self.service.managed_reconnect.active)
+        self.assertEqual(self.service.managed.await_effect['receipt_id'],'outstanding')
+        self.assertIn('受限整理奖励',self.service.managed.status)
+        self.assertEqual(self.client.actions,[])
 
     def test_inventory_receipt_fence_survives_reconnect(self):
         self.ready()

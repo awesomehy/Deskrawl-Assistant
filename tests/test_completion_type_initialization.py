@@ -79,6 +79,7 @@ class CompletionFixture:
         self.memory = ByteMemory()
         # Bypass construction, which is the only step that opens a process.
         self.reader = NativeReader.__new__(NativeReader)
+        self.reader.session_id = 'completion-fixture-session'
         self.reader.memory = self.memory
         self.reader.module = {'base': BASE}
         self.reader.field_cache = {}

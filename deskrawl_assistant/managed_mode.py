@@ -24,10 +24,12 @@ from .combat_rewards import CompletionRewards
 from .synthesis import (DEFAULT_SYNTHESIS, enabled as synthesis_enabled,
                         validate_settings as validate_synthesis, next_action as synthesis_action, KINDS as SYNTHESIS_ACTIONS)
 from .reconnect import DEFAULT_RECONNECT, validate_settings as validate_reconnect
+from .town_cleanup_recovery import cleanup_ready
 from .progression import (DEFAULT_PROGRESSION, DEFAULT_LIFE, DEFAULT_MERCHANT,
                           validate_growth, enabled as growth_enabled, growth_action, next_purchase, PURCHASE_BATCH_LIMIT)
 from .auction import (DEFAULT_AUCTION, validate_settings as validate_auction,
-                      enabled as auction_enabled, next_action as auction_action)
+                      enabled as auction_enabled, next_action as auction_action,
+                      eligible as auction_eligible)
 
 
 DEFAULT_SETTINGS = {
@@ -1331,6 +1333,9 @@ class ManagedMode:
         if not mandatory:
             return self._action(equipment_policy(cleanup,row,fallback=True), row,
                 reason_code='equipment_fallback', reason='装备专用仓库页已满，按品质配置处置未命中装备。')
+        if cleanup_ready(observation):
+            self.status = '主城受限整理：仓库页已满，保留物品在背包；等待切场状态恢复后再处理仓库容量。'
+            return None
         if self._bag_free(observation) == 0:
             disposable = next((r for r in all_items if r.get('container') == 'inventory'
                                and (not is_minion_equipment(r) or equipment_policy(cleanup, r) in ('sell', 'salvage'))
@@ -1517,11 +1522,11 @@ class ManagedMode:
             return self._action('merchant_open',class_mask=state['class_mask'],reason='奖励整理完成，打开神秘商人。')
         self.phase='shopping';return self._action(**purchase)
 
-    def _cleanup(self, observation, all_items):
+    def _cleanup(self, observation, all_items, *, recovery_only=False):
         if not self._town(observation):
             return self._return_town(observation, all_items, reason='返回主城后整理奖励。')
         state = observation.get('progression', {})
-        if self.merchant_cleanup_pending:
+        if self.merchant_cleanup_pending and not recovery_only:
             if state.get('available') is not True or state.get('busy') is True:
                 self.status = '等待游戏完成商人同步，购买已确认，不会重复扣款。'; return None
             if not self.finishing and self.merchant_pending and self.merchant_batch_ready(observation):
@@ -1568,14 +1573,30 @@ class ManagedMode:
         if action: return action
         self.reward_barrier = False; self.barrier_reads = 0
         # Phase 2: only fully screened/locked rewards may now be rearranged.
+        # Recovery postpones equip/upload, not the player's intent to keep
+        # those candidates. Never let ordinary disposal consume them first.
+        deferred = []
+        if recovery_only:
+            equip = self.settings['auto_equip']
+            for row in bag:
+                power = row.get('power') or {}
+                upgrade = (equip['enabled'] and item_kind(row) == 'equipment'
+                    and power.get('available') is True and any(
+                        equip_candidate_allowed(row, score, equip, observation.get('character'))
+                        for score in power.get('comparisons', [power])))
+                if upgrade or auction_eligible(row, self.settings):
+                    deferred.append(row)
+        deferred_ids = {identity(row) for row in deferred}
         for row in bag:
             if identity(row) in self.force_dispose:
+                if identity(row) in deferred_ids: continue
                 if not self._disposable(row): return self._pause('待清理仓库装备状态发生变化，已停止以保留装备。')
                 return self._action(equipment_policy(settings,row,fallback=True), row,
                     reason_code='equipment_fallback', reason='按品质处理从装备专用页取出的未命中装备。')
-        action = self._equip(observation, all_items)
-        if action: return action
-        if not self.finishing:
+        if not recovery_only:
+            action = self._equip(observation, all_items)
+            if action: return action
+        if not self.finishing and not recovery_only:
             action = auction_action(self.settings, observation)
             if action:
                 self.phase = 'auction'
@@ -1584,10 +1605,18 @@ class ManagedMode:
         for row in protected:
             return self._storage_transfer(observation, row,
                 settings['minion_equipment_pages' if is_minion_equipment(row) else 'equipment_pages'], all_items, mandatory=True)
+        for row in deferred:
+            if not self._safe(row) or item_kind(row) != 'equipment': continue
+            pages = settings['minion_equipment_pages' if is_minion_equipment(row) else 'equipment_pages']
+            targets = self._targets(observation, pages)
+            if targets and self._room(row, targets, all_items):
+                return self._action('transfer', row, target='storage', target_indices=targets,
+                    reason='暂存待换装或上架的装备，切场状态恢复后继续原配置流程。')
         # Matched/locked servant gear was protected above. Only verified misses
         # follow the saved per-quality disposition; unknown reads stay safe.
         for row in bag:
             if not is_minion_equipment(row): continue
+            if identity(row) in deferred_ids: continue
             if not self._safe(row) or self._protected(row):
                 return self._pause('仆从装备身份或品质尚未核验，保留物品并等待重新读取。')
             handling = equipment_policy(settings, row)
@@ -1597,7 +1626,7 @@ class ManagedMode:
         # Free the crafting workspace only after the complete protection and
         # auto-equip stages. Storage materials remain available to the planner
         # until it has exhausted eligible recipes, even if their home is full.
-        if synthesis_enabled(self.settings):
+        if synthesis_enabled(self.settings) and not recovery_only:
             for row in bag:
                 if (item_kind(row) == 'equipment' and self._safe(row) and not self._protected(row)
                         and row.get('matches') is False):
@@ -1628,6 +1657,7 @@ class ManagedMode:
                 return self._storage_transfer(observation, row, settings[material+'_pages'], all_items, mandatory=True)
         for row in bag:
             kind = item_kind(row)
+            if identity(row) in deferred_ids: continue
             if not self._safe(row): continue
             if kind == 'equipment':
                 if self._protected(row): continue
@@ -1667,6 +1697,9 @@ class ManagedMode:
         for row in bag:
             if item_kind(row) == 'chest' and self._safe(row) and row.get('locked') is False:
                 return self._action('open_chest', row, reason='奖励处理完毕，打开宝箱后重新扫描。')
+        if recovery_only:
+            self.status = '主城受限整理已完成，等待游戏切场标志恢复后再进图、消费或合成。'
+            return None
         if self.finishing:
             if self.merchant_opened and observation.get('progression', {}).get('merchant', {}).get('open'):
                 return self._action('merchant_close', class_mask=observation['progression']['class_mask'], reason='结束消费，关闭神秘商人。')
@@ -1999,6 +2032,9 @@ class ManagedMode:
             if not self._effect_visible(observation, all_items): return None
             self.metrics.observe(observation)
             scene = observation.get('scene', {})
+            if cleanup_ready(observation):
+                self.phase = 'cleanup'
+                return self._cleanup(observation, all_items, recovery_only=True)
             if scene.get('scene_changing') is True or scene.get('teleporting') is True:
                 self.status = '等待游戏完成场景切换，不重复请求。'; return None
             if scene.get('online_saving') is True:

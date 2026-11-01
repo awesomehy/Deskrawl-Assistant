@@ -1,4 +1,4 @@
-"""Production transfers: whole stacks, all-or-nothing batches and stale guards."""
+"""Production transfers: whole stacks, capacity-limited prefixes and stale guards."""
 import struct
 from types import SimpleNamespace
 import unittest
@@ -178,6 +178,19 @@ class TransferTests(unittest.TestCase):
 
     @patch('deskrawl_assistant.container_transfer.access_state',return_value=({'storage_indices':[0]},[]))
     @patch('deskrawl_assistant.container_transfer.FrozenSlotTransaction')
+    def test_cleanup_context_is_attached_to_atomic_transaction_or_blocks_it(self,tx,access):
+        row,_ = self.fake_reader()
+        tx.return_value.apply_slots.return_value = {'moved':1}
+        move_items(self.reader,[row],'inventory',context_guards=lambda:[(0x900000,b'town')])
+        self.assertIn((0x900000,b'town'),tx.return_value.apply_slots.call_args.args[1])
+        tx.reset_mock()
+        def changed(): raise GameBusyError('town changed')
+        with self.assertRaises(GameBusyError):
+            move_items(self.reader,[row],'inventory',context_guards=changed)
+        tx.assert_not_called()
+
+    @patch('deskrawl_assistant.container_transfer.access_state',return_value=({'storage_indices':[0]},[]))
+    @patch('deskrawl_assistant.container_transfer.FrozenSlotTransaction')
     def test_target_restriction_rejects_closed_page_before_write(self,tx,access):
         row,pair = self.fake_reader()
         with self.assertRaisesRegex(RuntimeError,'尚未开放'):
@@ -208,6 +221,66 @@ class TransferTests(unittest.TestCase):
         changes = tx.return_value.apply_slots.call_args.args[0]
         self.assertEqual({a for a,_,_ in changes},{src,another})
         self.assertEqual(result['destinations'][0]['slot_index'],1)
+
+    def test_manual_prefix_moves_in_requested_order_using_fresh_unlocked_capacity(self):
+        for target in ('inventory','storage'):
+            with self.subTest(target=target):
+                self.fake_reader()
+                source_name = 'storage' if target=='inventory' else 'inventory'
+                sources = [self.stack(0x100000+n*0x1000,1,item=0x500000+n*0x1000,index=n,locked=1) for n in range(3)]
+                # The cached snapshot claims plenty of space. Physical slots
+                # have only one empty usable slot; a closed storage page does
+                # not add capacity.
+                targets = [self.stack(0x200000,0),self.stack(0x210000,1,item=0x600000,index=1)]
+                if target=='storage': targets.append(self.stack(0x220000,0,index=2))
+                rows = [dict(transfer_key=f'token-{n}',slot_index=n,internal_name=f'item-{n}',item_type=2)
+                        for n in range(3)]
+                self.reader.snapshot = lambda:{'complete':True,'containers':{
+                    source_name:{'slots':rows},target:{'slots':[],'slot_count':250}}}
+                self.reader.transfer_key = lambda container,index,address,head,row:row['transfer_key']
+                arrays = {}
+                for name,ptr in [('inventory',0x820000),('storage',0x830000)]:
+                    entries = [struct.pack('<Q',s['address']) for s in (targets if name==target else sources)]
+                    arrays[ptr] = entries,b''.join(entries)
+                    self.p.put(ptr+32,arrays[ptr][1])
+                self.reader.array = lambda ptr,*a,**kw:arrays[ptr]
+                expected = [rows[2],rows[0],rows[1]]
+                allowed = [0,1] if target=='storage' else [0,1,2]
+                with patch('deskrawl_assistant.container_transfer.access_state',return_value=({'storage_indices':allowed},[])), \
+                        patch('deskrawl_assistant.container_transfer.FrozenSlotTransaction',return_value=self.tx), \
+                        patch.object(self.tx,'close'), \
+                        patch.object(self.tx,'apply_slots',wraps=self.tx.apply_slots) as apply, \
+                        patch('deskrawl_assistant.container_transfer.operation_id',return_value='test-op'):
+                    result = move_items(self.reader,expected,target,allow_partial=True)
+                self.assertEqual((result['moved'],result['remaining']),(1,2))
+                self.assertEqual(result['movements'][0]['source'],
+                    {'container':source_name,'slot_index':2,'count_before':1,'count_after':0})
+                self.assertEqual(self.p.u64(sources[2]['address']+16),0)
+                self.assertEqual(self.p.read(targets[0]['address'],48),sources[2]['header'])
+                for src in sources[:2]: self.assertEqual(self.p.read(src['address'],48),src['header'])
+                self.assertEqual(apply.call_args.kwargs['moved'],1)
+                if target=='storage': self.assertEqual(self.p.u64(targets[2]['address']+16),0)
+
+    @patch('deskrawl_assistant.container_transfer.access_state',return_value=({'storage_indices':[0]},[]))
+    @patch('deskrawl_assistant.container_transfer.FrozenSlotTransaction')
+    def test_manual_full_destination_returns_zero_without_transaction_or_commit(self,tx,access):
+        row,(src,dst,full,empty) = self.fake_reader()
+        self.p.put(dst,full)
+        commits = []
+        result = move_items(self.reader,[row],'inventory',allow_partial=True,on_commit=commits.append)
+        self.assertEqual((result['moved'],result['remaining']),(0,1))
+        self.assertEqual(result['movements'],[])
+        tx.assert_not_called()
+        self.assertEqual(commits,[])
+        self.assertEqual(self.p.read(src,48),full)
+
+    @patch('deskrawl_assistant.container_transfer.access_state',return_value=({'storage_indices':[0]},[]))
+    @patch('deskrawl_assistant.container_transfer.FrozenSlotTransaction')
+    def test_partial_mode_still_rejects_stale_selection_before_any_move(self,tx,access):
+        row,_ = self.fake_reader()
+        with self.assertRaises(SnapshotChangedError):
+            move_items(self.reader,[row,{'transfer_key':'stale'}],'inventory',allow_partial=True)
+        tx.assert_not_called()
 
     def stack(self,address,count,item=0x500000,index=0,uid=0,locked=0):
         head = bytearray(48)
@@ -287,6 +360,41 @@ class TransferTests(unittest.TestCase):
             plan_transfers([gem,gear],[target])
         self.assertEqual(self.p.i32(0x200000+24),38)
         self.assertEqual(self.p.i32(0x100000+24),1)
+
+    def test_partial_allocation_undoes_tentative_merges_of_first_unfitting_stack(self):
+        sources = [self.stack(0x100000,1),self.stack(0x110000,20),self.stack(0x120000,1)]
+        target = self.stack(0x200000,38)
+        plan = plan_transfers(sources,[target],allow_partial=True)
+        self.assertEqual((plan['moved'],plan['remaining'],plan['stacked_count']),(1,2,1))
+        self.tx.apply_slots(plan['changes'],[],moved=plan['moved'])
+        self.assertEqual(self.p.i32(target['address']+24),39)
+        self.assertEqual(self.p.u64(sources[0]['address']+16),0)
+        self.assertEqual(self.p.read(sources[1]['address'],48),sources[1]['header'])
+        self.assertEqual(self.p.read(sources[2]['address'],48),sources[2]['header'])
+        self.assertEqual(len(plan['movements']),1)
+
+    def test_partial_capacity_accounts_for_stacking_before_empty_slots(self):
+        sources = [self.stack(0x100000,1),self.stack(0x110000,10),self.stack(0x120000,50)]
+        targets = [self.stack(0x200000,49),self.stack(0x210000,0,index=1)]
+        plan = plan_transfers(sources,targets,allow_partial=True)
+        self.assertEqual((plan['moved'],plan['remaining'],plan['new_slots']),(2,1,1))
+        self.tx.apply_slots(plan['changes'],[],moved=plan['moved'])
+        self.assertEqual(self.p.i32(targets[0]['address']+24),50)
+        self.assertEqual(self.p.i32(targets[1]['address']+24),10)
+        self.assertEqual(self.p.read(sources[2]['address'],48),sources[2]['header'])
+
+    def test_partial_capacity_does_not_skip_an_unfitting_first_row(self):
+        sources = [self.stack(0x100000,1,item=0x600000),self.stack(0x110000,1)]
+        plan = plan_transfers(sources,[self.stack(0x200000,49)],allow_partial=True)
+        self.assertEqual((plan['moved'],plan['remaining']),(0,2))
+        self.assertEqual(plan['changes'],[])
+        self.assertEqual(plan['movements'],[])
+
+    def test_partial_mode_validates_all_sources_even_if_capacity_would_stop_earlier(self):
+        sources = [self.stack(0x100000,1),self.stack(0x110000,1),self.stack(0x120000,0)]
+        with self.assertRaisesRegex(MemoryReadError,'来源物品或数量无效'):
+            plan_transfers(sources,[self.stack(0x200000,0)],allow_partial=True)
+        self.suspend.assert_not_called()
 
     def test_generated_instances_never_merge_even_with_the_same_base_item(self):
         source = self.stack(0x100000,1,uid=0x700000)

@@ -19,6 +19,24 @@ test('ancient, mist and divine tags intersect and retain independent flags',()=>
   assert.deepEqual(ids(items,{ancient:true,mist:true,divine:true}),['all']);
   assert.deepEqual(ids(items,{divine:true,rarity:'4'}),['all','divine']);
 });
+test('legendary rarity variants are exclusive, including ancient mist and minion gear',()=>{
+  const items=[gear('normal'),gear('ancient',{is_ancient:true}),gear('mist',{is_black_mist:true}),
+    gear('ancient mist',{is_ancient:true,is_black_mist:true}),gear('divine',{rarity:4,is_divine:true,is_ancient:true,is_black_mist:true}),
+    gear('rare',{rarity:2}),gear('minion',{slot:'Minion',is_minion_equipment:true,is_ancient:true})];
+  assert.deepEqual(ids(items,{rarity:'legendary-normal'}),['normal']);
+  assert.deepEqual(ids(items,{rarity:'legendary-ancient'}),['ancient','minion']);
+  assert.deepEqual(ids(items,{rarity:'legendary-mist'}),['ancient mist','mist']);
+  assert.deepEqual(ids(items,{rarity:'3'}),['ancient','ancient mist','minion','mist','normal']);
+  assert.deepEqual(ids(items,{rarity:'legendary-ancient',kind:'minion_equipment'}),['minion']);
+});
+test('only rule matches excludes four-affix perfect items and secondary-rule misses',()=>{
+  const items=[gear('partial',{matches:true,primary_perfect:false}),gear('all four',{matches:true,primary_perfect:true}),
+    gear('secondary miss',{primary_perfect:true}),gear('miss'),gear('pending',{review:true}),
+    {selection_id:'material',matches:true,kind:'material',container:'inventory'}];
+  assert.deepEqual(ids(items,{rules:['matches_only']}),['partial']);
+  assert.deepEqual(ids(items,{rules:['matches_only','perfect']}),['all four','partial','secondary miss']);
+  assert.deepEqual(ids(items,{rules:['matches']}),['all four','partial']);
+});
 test('unknown comparison never becomes unchanged or a zero gain when sorted',()=>{
   const items=[gear('unknown',{power:{available:false}}),gear('same',{power:{available:true,delta:0,percent:0}}),
     gear('loss',{power:{available:true,delta:-3,percent:-1}}),gear('gain',{power:{available:true,delta:8,percent:2}})];
@@ -118,4 +136,39 @@ test('real inventory controls apply tradable filtering and reset leaves market c
   element('inventory-reset').events.click();
   assert.equal(element('inventory-tradable').checked,false);assert.equal(element('market-currency').value,'23');assert.equal(closed,1);
   assert.deepEqual(Array.from(vm.runInContext('visibleItems()',context),item=>item.selection_id),['bound','trade']);
+  context.state.items=[gear('mist',{is_black_mist:true}),gear('ancient',{is_ancient:true}),gear('normal')];
+  const rarityValues=[...html.matchAll(/<option value="(legendary-[^"]+)"/g)].map(m=>m[1]);
+  assert.equal(rarityValues.length,3);
+  for(const value of rarityValues){
+    element('inventory-rarity').value=value;
+    const expected=value.split('-')[1];
+    assert.deepEqual(Array.from(vm.runInContext('visibleItems()',context),item=>item.selection_id),[expected]);
+  }
+});
+
+test('actual rules menu wires only-match choice into displayed items',()=>{
+  const source=fs.readFileSync('deskrawl_assistant/web/app.js','utf8');
+  const menus=source.match(/const columnMenus=\{[\s\S]*?\n\};/)[0];
+  const context={};vm.createContext(context);vm.runInContext(menus,context);
+  const value=vm.runInContext("columnMenus.rules.options.find(o=>o[1].startsWith('仅符合规则'))[0]",context);
+  assert.deepEqual(ids([gear('partial',{matches:true}),gear('perfect',{matches:true,primary_perfect:true})],{rules:[value]}),['partial']);
+});
+
+test('batch move buttons submit visible selection in display order before hidden selections',()=>{
+  const source=fs.readFileSync('deskrawl_assistant/web/app.js','utf8');
+  const helper=source.match(/function selectedTransferItems\(target\)\{[\s\S]*?\n\}/)[0];
+  const listeners=source.match(/^for\(const target of \['storage','inventory'\]\)\$\('move-'\+target\).*$/m)[0];
+  const items=[gear('low',{container:'inventory',level:1}),gear('hidden',{container:'inventory'}),
+    gear('high',{container:'inventory',level:9}),gear('store'),gear('unselected',{container:'inventory'})];
+  const elements=new Map(),requests=[];
+  const context={state:{items},selectedItems:new Set(['low','high','hidden','store']),
+    visibleItems:()=>select(items.filter(i=>!['hidden','unselected'].includes(i.selection_id)),{sort:'level-desc'}),
+    $:id=>{if(!elements.has(id))elements.set(id,{addEventListener(type,handler){this[type]=handler;}});return elements.get(id);},
+    action:(kind,data)=>requests.push({kind,...data})};
+  vm.createContext(context);vm.runInContext(helper+'\n'+listeners,context);
+  elements.get('move-storage').click();elements.get('move-inventory').click();
+  assert.equal(requests[0].kind,'move_items');
+  assert.deepEqual(Array.from(requests[0].items),['high','low','hidden']);
+  assert.deepEqual(Array.from(requests[1].items),['store']);
+  assert.deepEqual([...context.selectedItems],['low','high','hidden','store'],'unmoved selections are retained');
 });

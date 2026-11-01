@@ -899,13 +899,18 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
             elif kind=='move_items':
                 self._publish(self.client.snapshot())
                 with self.guard: self.progress = {'done':0,'total':len(payload['expected'])}
-                result = self.client.move_items(payload['expected'],payload['target'],lambda:not self.cancelled.is_set())
-                self._record_item_commit('items_transferred',result)
+                result = self.client.move_items(payload['expected'],payload['target'],lambda:not self.cancelled.is_set(),allow_partial=True)
+                if result['moved']: self._record_item_commit('items_transferred',result)
                 self._publish(self.client.snapshot())
                 with self.guard: self.progress = {'done':result['moved'],'total':len(payload['expected'])}
                 label = '移入仓库' if payload['target']=='storage' else '取回背包'
                 stacked = f"，其中 {result['stacked_count']} 颗宝石已合并堆叠" if result.get('stacked_count') else ''
-                message = f"已{label} {result['moved']} 组物品{stacked}；数量、词条及锁定状态保留，已回读并请求游戏保存。"
+                remaining = len(payload['expected'])-result['moved']
+                if result['moved']:
+                    message = f"已{label} {result['moved']} 组物品{stacked}；数量、词条及锁定状态保留，已回读并请求游戏保存。"
+                    if remaining: message += f"目标空间不足，其余 {remaining} 组保留在原处。"
+                else:
+                    message = f"目标空间不足，未移动物品；所选 {remaining} 组保留在原处。"
             else:
                 snapshot = self.client.snapshot()
                 if not snapshot.get('complete'): raise ValidationError('装备正在变化或读取不完整，请稍后重试。')

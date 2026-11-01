@@ -49,11 +49,13 @@ def replace_fields(header, fields):
     return bytes(result)
 
 
-def plan_transfers(sources, targets):
+def plan_transfers(sources, targets, *, allow_partial=False):
     """Allocate entire selections before writing, filling matching gem stacks.
 
     Stacking matches the exact ItemData reference, preserving type and grade.
     Generated items never merge. InventorySlot.Locked is OR'ed as in fnw.
+    Manual moves can opt into the longest fitting prefix; individual source
+    stacks are still moved in full. Automated callers remain all-or-nothing.
     """
     addresses = [s['address'] for s in sources]+[t['address'] for t in targets]
     if not sources or len(set(addresses))!=len(addresses):
@@ -65,6 +67,8 @@ def plan_transfers(sources, targets):
     movements = []
     stacked_count = 0
     new_slots = set()
+    # Validate every selected source before considering a capacity-limited
+    # prefix. Invalid data must not silently turn into a successful partial move.
     for source in sources:
         address,header = source['address'],source['header']
         item = struct.unpack_from('<Q',header,16)[0]
@@ -76,6 +80,15 @@ def plan_transfers(sources, targets):
         maximum = source.get('max_stack',1)
         if stackable and (not isinstance(maximum,int) or isinstance(maximum,bool) or not 1<=count<=maximum<=2147483647):
             raise MemoryReadError('宝石数量或堆叠上限异常')
+    moved = 0
+    for source in sources:
+        address,header = source['address'],source['header']
+        item = struct.unpack_from('<Q',header,16)[0]
+        count = struct.unpack_from('<i',header,24)[0]
+        stackable = source.get('stackable',False) and not unique_uids[address]
+        maximum = source.get('max_stack',1)
+        if allow_partial:
+            checkpoint = (dict(staged),dict(unique_uids),len(destinations),len(movements),stacked_count,set(new_slots))
         remaining = count
         if stackable and maximum>1:
             for target in targets:
@@ -97,6 +110,13 @@ def plan_transfers(sources, targets):
         if remaining:
             empty = next((t for t in targets if not any(any(v) for v in slot_fields(staged[t['address']]).values())),None)
             if empty is None:
+                if allow_partial:
+                    # Roll back this source's tentative merges as well. Stop
+                    # here rather than skipping a row or splitting its stack.
+                    staged,unique_uids,dest_len,move_len,stacked_count,new_slots = checkpoint
+                    del destinations[dest_len:]
+                    del movements[move_len:]
+                    break
                 raise MemoryReadError('目标堆叠容量及可用空格不足；未移动任何物品')
             values = slot_fields(header)
             values[24] = struct.pack('<i',remaining)
@@ -108,8 +128,10 @@ def plan_transfers(sources, targets):
                 'destination':{'slot_index':empty['slot_index'],'count_before':0,'count_after':remaining}})
             new_slots.add(empty['address'])
         staged[address] = replace_fields(header,{16:b'\0'*8,24:b'\0'*4,32:b'\0'*8,40:b'\0'})
+        moved += 1
     changes = [(a,original[a],new) for a,new in staged.items() if new!=original[a]]
-    return {'changes':changes,'destinations':destinations,'movements':movements,'stacked_count':stacked_count,'new_slots':len(new_slots)}
+    return {'changes':changes,'destinations':destinations,'movements':movements,'stacked_count':stacked_count,
+            'new_slots':len(new_slots),'moved':moved,'remaining':len(sources)-moved}
 
 
 def access_state(reader):
@@ -293,7 +315,7 @@ class FrozenSlotTransaction:
             self.handle = None
 
 
-def move_items(reader,expected,target,validate=lambda:True,on_commit=None,*,target_indices=None):
+def move_items(reader,expected,target,validate=lambda:True,on_commit=None,*,target_indices=None,context_guards=None,allow_partial=False):
     if target not in ('inventory','storage') or not expected:
         raise MemoryReadError('请选择物品和移动方向')
     snapshot = reader.snapshot()
@@ -354,13 +376,17 @@ def move_items(reader,expected,target,validate=lambda:True,on_commit=None,*,targ
         sources.append({'address':source,'header':head,'name':row['internal_name'],
                         'slot_index':row['slot_index'],'identity':row.get('item_uid') or row.get('instance_id') or '',
                         'stackable':stackable,'max_stack':maximum,'has_unique_uid':bool(row.get('item_uid'))})
-    allocation = plan_transfers(sources,targets)
+    allocation = plan_transfers(sources,targets,allow_partial=allow_partial)
     guards.extend(reader.snapshot_stamps)
     if not validate(): raise MemoryReadError('移动已取消，未更改物品')
+    if context_guards is not None: guards.extend(context_guards())
+    if not allocation['moved']:
+        return {'moved':0,'remaining':len(expected),'movements':[],'destinations':[],
+                'stacked_count':0,'new_slots':0}
     tx = FrozenSlotTransaction(reader)
-    try: result = tx.apply_slots(allocation['changes'],guards,moved=len(expected))
+    try: result = tx.apply_slots(allocation['changes'],guards,moved=allocation['moved'])
     finally: tx.close()
-    result = {**result,'operation_id':operation_id(),
+    result = {**result,'operation_id':operation_id(),'remaining':allocation['remaining'],
             'movements':[{**m,'source':{'container':source_name,**m['source']},
                 'destination':{'container':target,**m['destination']}} for m in allocation['movements']],
             'destinations':[{'container':target,**d} for d in allocation['destinations']],

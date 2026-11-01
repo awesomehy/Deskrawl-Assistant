@@ -10,13 +10,21 @@
       if(f.tradable&&i.market_eligible!==true)return false;
       if(Array.isArray(f.containers)&&!f.containers.includes(i.container))return false;
       if(Array.isArray(f.locks)&&(!i.is_equipment||!f.locks.some(v=>v==='locked'?i.locked===true:i.locked===false)))return false;
-      if(Array.isArray(f.rules)&&(!i.is_equipment||!f.rules.some(v=>v==='matches'?i.matches:v==='perfect'?i.primary_perfect:!i.matches&&!i.review)))return false;
+      if(Array.isArray(f.rules)&&(!i.is_equipment||!f.rules.some(v=>v==='matches'?i.matches:v==='matches_only'?i.matches===true&&i.primary_perfect!==true:v==='perfect'?i.primary_perfect:!i.matches&&!i.review)))return false;
       if(query&&![i.name,i.en,i.internal_name].some(v=>String(v||'').toLowerCase().includes(query)))return false;
       if(f.lock&&(!i.is_equipment||(f.lock==='locked'?i.locked!==true:f.lock==='unlocked'?i.locked!==false:f.lock==='matches'?!i.matches:f.lock==='perfect'?!i.primary_perfect:f.lock==='review'?!i.review:i.matches||i.review)))return false;
       const equipmentFilter=f.class||f.slot||f.rarity||f.ancient||f.mist||f.divine||f.sockets||f.upgrade||f.levelMin||f.levelMax||f.power;
       if(equipmentFilter&&!i.is_equipment)return false;
       if(f.class&&(!classMask||!(i.class_mask&classMask)))return false;
-      if(f.slot&&i.slot!==f.slot||f.rarity&&i.rarity!==Number(f.rarity))return false;
+      if(f.slot&&i.slot!==f.slot)return false;
+      if(f.rarity){
+        const legendary={ 'legendary-mist':i.is_black_mist===true,
+          'legendary-ancient':i.is_black_mist!==true&&i.is_ancient===true,
+          'legendary-normal':i.is_black_mist!==true&&i.is_ancient!==true };
+        if(Object.prototype.hasOwnProperty.call(legendary,f.rarity)){
+          if(i.rarity!==3||i.is_divine===true||!legendary[f.rarity])return false;
+        }else if(i.rarity!==Number(f.rarity))return false;
+      }
       if(f.ancient&&i.is_ancient!==true||f.mist&&i.is_black_mist!==true||f.divine&&i.is_divine!==true)return false;
       if(f.sockets&&(i.sockets==null||(f.sockets==='none'?i.sockets!==0:i.sockets<Number(f.sockets))))return false;
       if(f.upgrade&&(i.upgrade==null||i.upgrade<Number(f.upgrade)))return false;

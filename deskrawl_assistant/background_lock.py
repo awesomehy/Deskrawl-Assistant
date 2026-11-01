@@ -45,9 +45,9 @@ def identity(row):
     return tuple(row.get(key) for key in ('item_uid', 'instance_id', 'name_key'))
 
 
-def lock_equipment(reader, expected, validate=lambda row: True, writer_factory=TrueBitWriter):
+def lock_equipment(reader, expected, validate=lambda row: True, writer_factory=TrueBitWriter, *, context_guards=None):
     """Resolve afresh, revalidate and set true; never toggle or unlock."""
-    return _set_equipment_locked(reader, expected, True, validate, writer_factory)
+    return _set_equipment_locked(reader, expected, True, validate, writer_factory, context_guards=context_guards)
 
 
 def unlock_equipment(reader, expected, validate=lambda row: True, writer_factory=TrueBitWriter):
@@ -55,7 +55,7 @@ def unlock_equipment(reader, expected, validate=lambda row: True, writer_factory
     return _set_equipment_locked(reader, expected, False, validate, writer_factory)
 
 
-def _set_equipment_locked(reader, expected, locked, validate, writer_factory):
+def _set_equipment_locked(reader, expected, locked, validate, writer_factory, *, context_guards=None):
     status = 'locked' if locked else 'unlocked'
     required = identity(expected)
     if not all(isinstance(value, str) and value for value in required) or expected.get('is_equipment') is not True:
@@ -93,6 +93,7 @@ def _set_equipment_locked(reader, expected, locked, validate, writer_factory):
     ensure_items_writable(reader,save)
     writer = writer_factory(reader.pid)
     try:
+        guards = context_guards() if context_guards is not None else ()
         # Re-read through the still-live original process handle immediately
         # before the one-byte mutation; no cached screen or object addresses.
         if (p.u64(address) != reader.classes['GeneratedItemData'] or
@@ -105,6 +106,8 @@ def _set_equipment_locked(reader, expected, locked, validate, writer_factory):
             raise SnapshotChangedError("写入前装备注册表发生变化，未写入")
         desired = bytes([int(locked)])
         ensure_items_writable(reader,save)
+        if any(p.read(a, len(raw)) != raw for a, raw in guards):
+            raise SnapshotChangedError('主城状态已变化，未锁定物品。')
         if p.read(address + 73, 1) == desired:
             return {'status':'already_'+status,'item_uid':required[0],'instance_id':required[1]}
         if p.read(address + 73, 1) != bytes([int(not locked)]):

@@ -109,6 +109,7 @@ def read_carriage(reader):
     klass=ptr(reader.module['base']+native_rva(reader,'game_manager_rva',GAME_MANAGER_RVA))
     manager=verify(ptr(ptr(klass+184)),'GameManager')
     carriage=verify(ptr(manager+88),'HorseCarriage')
+    context_guards=list(guards)
     def objects(root,element):
         if not root or reader.class_name(p.u64(root))!='List`1': raise MemoryReadError('马车列表类型未确认')
         fields={f['name']:f['offset'] for f in reader.fields(p.u64(root))}
@@ -140,7 +141,8 @@ def read_carriage(reader):
              '_address':address,'_header':header}
         rows.append(row)
     if any(p.read(a,len(b))!=b for a,b in guards): raise CarriageUnavailable('马车正在收集物品，等待下一次读取。')
-    return {'available':True,'count':len(rows),'items':rows,'guards':guards,'world':world,'manager':manager,'carriage':carriage}
+    return {'available':True,'count':len(rows),'items':rows,'guards':guards,'context_guards':context_guards,
+            'world':world,'manager':manager,'carriage':carriage}
 
 
 def public_carriage(reader):
@@ -151,7 +153,7 @@ def public_carriage(reader):
         return {'available':False,'complete':'正在' not in str(exc),'count':0,'items':[],'reason':str(exc)}
 
 
-def collect_item(reader,selection_id,validate=lambda:True,on_commit=None):
+def collect_item(reader,selection_id,validate=lambda:True,on_commit=None,*,context_guards=None):
     snapshot=reader.snapshot()
     if not snapshot['complete']: raise CarriageUnavailable('物品正在变化，等待下次读取。')
     current=read_carriage(reader)
@@ -176,6 +178,7 @@ def collect_item(reader,selection_id,validate=lambda:True,on_commit=None):
             if not remaining: break
     if remaining: raise CarriageUnavailable('背包空格不足以收取整组物品，马车物品保留，等待腾出空间。')
     if not validate(): raise CarriageUnavailable('自动收取已暂停。')
+    if context_guards is not None: guards.extend(context_guards())
     tx=FrozenCarriageTransaction(reader)
     try: result=tx.collect_many(row['_address'],row['_header'],[(a,h,n) for _,a,h,n in targets],guards)
     finally: tx.close()

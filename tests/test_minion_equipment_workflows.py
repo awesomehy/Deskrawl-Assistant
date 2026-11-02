@@ -328,7 +328,7 @@ class MinionServiceTests(unittest.TestCase):
         self.assertTrue(row['matches'])
         self.assertFalse(row['review'])
         self.assertEqual(row['matched_combinations'], ['仆从冷却规则'])
-        self.assertEqual([s['key'] for s in row['groups']['primary'] if s['matched']],
+        self.assertEqual([s['key'] for s in row['groups']['random'] if s['matched']],
                          ['Stats.CooldownReduction'])
         self.assertEqual(self.service.state()['counts']['inventory']['matches'], 1)
         managed = self.service._managed_observation()['items'][0]

@@ -59,17 +59,18 @@
   function stateView(value={}){
     const state=value?.state||value,steam=state.steam||{},upload=state.upload||{},sell=state.sell||{};
     const count=v=>Number.isInteger(v)&&v>=0?v:0;
-    const authenticated=steam.authenticated===true;
-    return {authenticated,bound:steam.bound===true,loginAvailable:state.login_available===true,loginPending:steam.login_pending===true,
+    const expired=steam.expired===true,authenticated=steam.authenticated===true&&!expired;
+    const confirmationKnown=authenticated&&sell.confirmation_known===true&&Number.isFinite(sell.confirmation_expires_at)&&Date.now()<sell.confirmation_expires_at*1000;
+    return {authenticated,expired,bound:steam.bound===true,loginAvailable:state.login_available===true,loginPending:steam.login_pending===true,
       loginReason:state.login_reason||'请在桌面助手中登录 Steam；普通浏览器不能打开桌面登录窗口。',
-      loginText:authenticated?`已登录${steam.account_name?' · '+steam.account_name:''}`:steam.login_pending?'等待 Steam 登录完成':steam.bound?'登录凭证已保存，等待核验':'尚未登录 Steam',
+      loginText:authenticated?`已登录${steam.account_name?' · '+steam.account_name:''}`:steam.login_pending?'等待 Steam 登录完成':expired?'登录凭证已过期，请重新登录':steam.bound?'登录凭证已保存，等待核验':'尚未登录 Steam',
       loginMessage:typeof steam.message==='string'?steam.message:'',
       currency:authenticated&&typeof steam.wallet_currency==='string'&&steam.wallet_currency?steam.wallet_currency:'等待读取 Steam 钱包币种',
       uploadText:upload.message||(upload.pending?'上传结果待确认':upload.phase==='disabled'?'上传未启用':'等待上传状态'),
       sellText:(sell.message||(sell.pending?'出售结果待确认':sell.phase==='disabled'?'出售未启用':'等待出售状态'))+(count(sell.uncertain_count)?` · ${count(sell.uncertain_count)} 件结果待核验，不重复提交`:''),
       listingCount:Number.isInteger(upload.listing_count)&&upload.listing_count>=0?upload.listing_count:null,listingLimit:count(upload.listing_limit)||8,
-      pendingConfirmation:sell.pending_confirmation===true||count(sell.confirmation_count)>0,
-      confirmationCount:count(sell.confirmation_count),error:typeof state.error==='string'?state.error:''};
+      pendingConfirmation:confirmationKnown&&count(sell.confirmation_count)>0,
+      confirmationCount:confirmationKnown?count(sell.confirmation_count):0,error:typeof state.error==='string'?state.error:''};
   }
   function createStateController({api,onState=()=>{},onError=()=>{}}){
     let epoch=0,polling=false,acting=false;
@@ -87,8 +88,14 @@
   if(!root.document)return;
   const $=id=>root.document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let options=null,current=normalize(),catalog={},disabled=false,state=null,signatures={},controller=null,initialized=false,loginWatchUntil=0;
+  function revokeSale(){
+    if(!current.sell_enabled)return;
+    current.sell_enabled=false;$('auction-sell-enabled').checked=false;$('auction-price-rule').disabled=true;
+    options.onAuthInvalid?.(current);
+  }
   function renderState(){
     const view=stateView(state||{}),waiting=controller?.busy===true,openingLogin=Date.now()<loginWatchUntil&&!view.authenticated;
+    if(view.expired)revokeSale();
     $('auction-steam-status').textContent=openingLogin&&!view.loginPending?'正在打开 Steam 登录窗口':view.loginText;
     $('auction-wallet-currency').textContent=view.currency;
     $('auction-login-note').textContent=view.loginAvailable?(view.loginMessage||'登录后凭证加密保存在本机，窗口自动关闭；无需填写 Cookie 或令牌。'):view.loginReason;
@@ -102,7 +109,7 @@
     $('auction-sell-enabled').disabled=disabled||waiting;
     $('auction-sell-enabled').setAttribute('aria-disabled',String(disabled||waiting||!current.upload_enabled||!view.authenticated&&!current.sell_enabled));
     const sellNote=!current.upload_enabled?'请先启用游戏拍卖行上传，再启用 Steam 市场出售；取消上传会同时取消出售。':
-      view.authenticated?'Steam 登录有效，可以启用自动出售。':current.sell_enabled?'已保存自动出售设置；等待 Steam 登录核验，期间暂停出售。':'请先在下方“Steam 登录”绑定账号，登录有效后才能启用自动出售。';
+      view.authenticated?'Steam 登录有效，可以启用自动出售。':view.expired?'Steam 登录已过期，自动出售已取消；请在下方重新登录。游戏拍卖行上传继续。':current.sell_enabled?'已保存自动出售设置；等待 Steam 登录核验，期间暂停出售，游戏拍卖行上传继续。':'请先在下方“Steam 登录”绑定账号，登录有效后才能启用自动出售。';
     $('auction-sell-enabled').title=sellNote;
     $('auction-sell-login-note').textContent=sellNote;
     $('auction-upload-status').textContent=view.uploadText;$('auction-sell-status').textContent=view.sellText;
@@ -138,7 +145,8 @@
   function read(value=current){
     const next=normalize(value);if(!initialized)return next;
     next.upload_enabled=$('auction-upload-enabled').checked;
-    next.sell_enabled=next.upload_enabled&&$('auction-sell-enabled').checked&&(current.sell_enabled||!controller.busy&&stateView(state||{}).authenticated);
+    const view=stateView(state||{});
+    next.sell_enabled=next.upload_enabled&&!view.expired&&$('auction-sell-enabled').checked&&(current.sell_enabled||!controller.busy&&view.authenticated);
     next.price_rule=$('auction-price-rule').value;
     next.categories=updateWhitelist(next.categories,[...$('auction-category-options').querySelectorAll('[data-auction-category]')].map(input=>({key:input.dataset.auctionCategory,selected:input.checked})));
     next.excluded_keys=updateWhitelist(next.excluded_keys,[...$('auction-excluded-options').querySelectorAll('[data-auction-excluded-key]')].map(input=>({key:input.dataset.auctionExcludedKey,selected:input.checked})));
@@ -155,7 +163,7 @@
   }
   function init(config){
     options=config;if(initialized)return;initialized=true;
-    controller=createStateController({api:options.api,onState:value=>{state=value;const view=stateView(state||{});if(view.authenticated||view.loginPending||view.bound)loginWatchUntil=0;renderState();},onError:error=>{loginWatchUntil=0;state={...(state||{}),steam:{...(state?.steam||{}),authenticated:false},error:error?.message||String(error)};renderState();}});
+    controller=createStateController({api:options.api,onState:value=>{state=value;const view=stateView(state||{});if(view.authenticated||view.loginPending||view.bound||view.expired)loginWatchUntil=0;renderState();},onError:error=>{loginWatchUntil=0;state={...(state||{}),steam:{...(state?.steam||{}),authenticated:false},sell:{...(state?.sell||{}),confirmation_known:false,confirmation_count:0,pending_confirmation:false},error:error?.message||String(error)};renderState();}});
     $('auction-sell-enabled').addEventListener('click',event=>{
       if(disabled||controller.busy){event.preventDefault();return;}
       if(!current.upload_enabled||!current.sell_enabled&&!stateView(state||{}).authenticated){
@@ -178,6 +186,7 @@
       if(name==='logout'&&await options.confirmAction?.('退出助手中的 Steam 登录？','停止自动出售并清除助手保存的登录会话。已经提交的上传、出售或手机确认不会撤回。','退出 Steam',true)===false)return;
       loginWatchUntil=name==='login'?Date.now()+30000:0;
       const pending=controller.action(name);renderState();await pending;renderState();
+      if(name==='logout'&&!stateView(state||{}).authenticated&&!stateView(state||{}).bound)revokeSale();
     };
     $('auction-login').addEventListener('click',()=>action('login'));
     $('auction-logout').addEventListener('click',()=>action('logout'));

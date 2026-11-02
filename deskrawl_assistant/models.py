@@ -137,7 +137,7 @@ class Rule:
 
     @property
     def schema_version(self) -> int:
-        return 2 if self.is_count_rule else 1
+        return 3 if 'random' in self.groups else 2 if self.is_count_rule else 1
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any], catalog: Any = None) -> "Rule":
@@ -171,10 +171,14 @@ class Rule:
             raw_groups = _mapping(data["groups"], "主副词条组")
             if not raw_groups:
                 raise ValidationError("规则必须启用至少一个主词条或副词条组")
-            _known_fields(raw_groups, {"primary", "secondary"}, "主副词条组")
-            if "primary" not in raw_groups:
+            _known_fields(raw_groups, {"primary", "secondary", "random"}, "词条组")
+            if 'random' in raw_groups and len(raw_groups) != 1:
+                raise ValidationError('随机词条筛选不能与主副词条组混用')
+            if "primary" not in raw_groups and 'random' not in raw_groups:
                 raise ValidationError("主词条筛选必须启用；副词条筛选可以关闭")
             groups = {key: CountGroup.from_dict(value) for key, value in raw_groups.items()}
+            if 'random' in groups and (groups['random'].count + (groups['random'].operator == '>')) > 3:
+                raise ValidationError('传说仆从装备只有 3 条随机词条，命中数量最多为 3。')
         else:
             raw_conditions = data.get("conditions")
             if not isinstance(raw_conditions, list) or not raw_conditions:
@@ -272,7 +276,7 @@ class ItemObservation:
             raise ValidationError("tooltip_complete 必须是布尔值")
         token = _text(data.get("observed_token", ""), "观测标识", empty=True)
         raw_groups_complete = _mapping(data.get("groups_complete", {}), "词条组完整性")
-        _known_fields(raw_groups_complete, {"primary", "secondary"}, "词条组完整性")
+        _known_fields(raw_groups_complete, {"primary", "secondary", "random"}, "词条组完整性")
         groups_complete = {"primary": False, "secondary": False}
         for key, flag in raw_groups_complete.items():
             if not isinstance(flag, bool):

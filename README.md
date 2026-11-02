@@ -1,8 +1,8 @@
 # Deskrawl 装备助手
 
-为 Deskrawl 提供装备筛选、物品整理与自动刷图的 Windows x64 工具，无需安装 Python。当前版本：**v1.5.6**。
+为 Deskrawl 提供装备筛选、物品整理与自动刷图的 Windows x64 工具，无需安装 Python。当前版本：**v1.6.0**。
 
-**[下载 Windows 版](https://github.com/awesomehy/Deskrawl-Assistant/releases/download/v1.5.6/Deskrawl-Assistant-v1.5.6.exe)** · [大陆下载](https://hhyan.me:25667/s/a1247f09c37c4b4bb7) · [官网](https://deskrawl.hhyan.me/) · [全部版本与更新说明](https://github.com/awesomehy/Deskrawl-Assistant/releases)
+**[下载 Windows 版](https://github.com/awesomehy/Deskrawl-Assistant/releases/download/v1.6.0/Deskrawl-Assistant-v1.6.0.exe)** · [大陆下载](https://hhyan.me:25667/s/a1247f09c37c4b4bb7) · [官网](https://deskrawl.hhyan.me/) · [全部版本与更新说明](https://github.com/awesomehy/Deskrawl-Assistant/releases)
 
 ## 快速开始
 
@@ -18,7 +18,7 @@
 
 ### 装备筛选规则
 
-为角色与仆从传说装备配置多套主／副词条组合和命中数量，支持规则复制、导入与导出。
+角色传说装备按主／副词条筛选，仆从传说装备按一组随机词条筛选；可配置多套组合与命中数量，支持复制、导入与导出。
 
 ![装备筛选规则：选择装备并配置词条组合](docs/screenshots/rules.png)
 
@@ -40,13 +40,14 @@
 
 ![掉落预览：查看当前关卡计划与高价值掉落监控](docs/screenshots/loot.png)
 
-此外，“日志”可查询物品操作记录，“交流&反馈”提供 QQ 群入口。
+此外，“日志”可查询物品操作记录，“交流&反馈”提供 QQ 群入口。右上角[助手设置](docs/助手设置说明.md)支持 Steam 社区加速、老板键、打开数据目录与分类重置；关闭窗口会隐藏到托盘，电源按钮或托盘菜单用于退出。
 
 ## 兼容性与数据
 
 - 已验证 **Deskrawl 1.1.0a / Steam build 26337088**；游戏更新后可能需要适配。
-- 配置与日志保存在 `%LOCALAPPDATA%\Deskrawl装备助手\`，升级保留；Steam 登录凭证使用当前 Windows 用户的 DPAPI 在本机加密保存。
+- 配置与日志保存在 `%LOCALAPPDATA%\Deskrawl装备助手\`，升级保留；Steam 登录成功后自动关闭窗口，凭证使用当前 Windows 用户的 DPAPI 在本机加密保存，重开助手后自动核验。
 - 自动合成、交易所上传与 Steam 出售默认关闭，启用前请确认配置；战力和市场报价仅供参考，掉落以游戏实际结算为准。
+- Steam 登录确认过期后会提示重新登录并取消自动出售，游戏交易所上传继续；待手机确认数量只显示近期核验成功的数据。
 
 [使用与数据说明](docs/使用与数据说明.md)包含收纳规则、合成与上架限制、旧配置迁移及异常恢复细节。
 

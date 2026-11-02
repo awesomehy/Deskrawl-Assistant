@@ -4,7 +4,7 @@ Synthetic plan identities are confined here: no lock/transfer planner receives
 these observations and no selection token is exported to the browser.
 """
 from .runtime_adapter import RuntimeReadEvidence
-from .rules import DEFAULT_MIN_CONFIDENCE, evaluate, primary_perfect_rules
+from .rules import DEFAULT_MIN_CONFIDENCE, evaluate, primary_perfect_rules, selected_group_stats
 
 
 def decorate_equipment(item, rules, adapter, catalog):
@@ -25,13 +25,12 @@ def decorate_equipment(item, rules, adapter, catalog):
     adapted = adapter.adapt_item(raw, session_id='preview-only', evidence=evidence)
     observation = adapted.observation
     item_rules = [r for r in rules if r.enabled and item['item_key'] in r.equipment_keys]
-    item['groups'] = {k:[] for k in ('base','primary','secondary','unknown')}
+    item['groups'] = {k:[] for k in ('base','primary','secondary','random','unknown')}
     for modifier in adapted.display_modifiers:
         source = item['modifiers'][modifier.record_index]
         group = modifier.group
-        hits = [r.name for r in item_rules if r.is_count_rule and group in r.groups
-                and modifier.stat_key in r.groups[group].selected_stats] if (
-            group in ('primary','secondary') and observation.groups_complete.get(group)
+        hits = [r.name for r in item_rules if modifier.stat_key in selected_group_stats(r, group)] if (
+            group in ('primary','secondary','random') and observation.groups_complete.get(group)
             and modifier.confidence >= DEFAULT_MIN_CONFIDENCE
             and modifier.group_confidence >= DEFAULT_MIN_CONFIDENCE) else []
         item['groups'][group].append({'key':modifier.stat_key,

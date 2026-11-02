@@ -287,7 +287,11 @@ class RuntimeAdapter:
                 value=value, unit=None,
                 confidence=Decimal(1) if stat_valid and evidence.enum_values_verified else Decimal(0),
                 group=group, group_confidence=Decimal(1) if group != "unknown" else Decimal(0)))
-            display_modifiers.append(AdaptedModifier(stat_key, value, stat, group,
+            # Keep the static buckets in observations so old v2 AND rules
+            # retain their exact meaning. They are NOT generation quotas:
+            # Minion display and v3 matching use one verified random pool.
+            display_group = 'random' if slot_name == 'Minion' and group != 'unknown' else group
+            display_modifiers.append(AdaptedModifier(stat_key, value, stat, display_group,
                 Decimal(1) if stat_valid and evidence.enum_values_verified else Decimal(0),
                 Decimal(1) if group != "unknown" else Decimal(0), record_index))
         if excluded:
@@ -307,7 +311,8 @@ class RuntimeAdapter:
             lock_confidence=Decimal(1) if lock_ready else Decimal(0),
             tooltip_complete=evidence.tooltip_complete_verified and evidence.snapshot_consistent,
             observed_token=token,
-            groups_complete={"primary": bool(all_native_resolved), "secondary": bool(all_native_resolved)})
+            groups_complete={"primary": bool(all_native_resolved), "secondary": bool(all_native_resolved),
+                             **({'random': bool(all_native_resolved)} if slot_name == 'Minion' else {})})
         return AdaptedItem(observation, tuple(dict.fromkeys(issues)), container, index, uid, instance,
                            tuple(base_stats), tuple(display_modifiers))
 

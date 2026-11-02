@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import json
 import threading
+import time
 import urllib.request
 
-from .paths import data_root, cache_root
+from .paths import data_root, cache_root, RESOURCE_ROOT
 from .action_log import record
 from .web_server import AssistantServer, existing_service
 from .version import VERSION
@@ -41,25 +42,130 @@ class WindowHooks:
         self.dirty = False
         self.exiting = False
         self.minimized = False
+        self.hotkeys = None
+        self.hotkey_error = ''
+        self.hotkey_capture_until = 0
+        self.hidden = False
+        self.tray = None
+        self.tray_error = ''
+        self.visibility_guard = threading.RLock()
+        self.hotkey_guard = threading.RLock()
 
     def set_dirty(self, value):
         if not isinstance(value,bool): raise ValueError('配置状态必须为布尔值。')
         self.dirty = value
 
     def activate(self):
-        def bring_forward():
-            if self.minimized: self.window.restore()
+        threading.Thread(target=self.show_window,daemon=True).start()
+
+    def show_window(self):
+        with self.visibility_guard:
+            if self.exiting: return
             self.window.show()
-        threading.Thread(target=bring_forward,daemon=True).start()
+            if self.minimized: self.window.restore()
+            self.minimized = False
+            self.hidden = False
+
+    def start_tray(self):
+        if self.tray is not None: return
+        from .desktop_tray import DesktopTray
+        tray = DesktopTray(self.window, RESOURCE_ROOT / 'deskrawl_assistant/web/assistant.ico',
+                           self.activate, self.request_exit)
+        try: tray.start()
+        except Exception:
+            try: tray.close()
+            except Exception: pass
+            self.tray_error = '系统托盘未能启动，关闭窗口将暂时最小化到任务栏。'
+            return
+        self.tray = tray
+        self.tray_error = ''
+
+    def hide_to_tray(self):
+        with self.visibility_guard:
+            if self.exiting: return
+            self.hotkey_capture_until = 0
+            if self.tray is None:
+                self.minimize_window()  # Keep a recovery path if tray startup failed.
+                return
+            self.window.hide()
+            self.hidden = True
+
+    def request_exit(self):
+        def exit_window():
+            if self.exiting: return
+            if self.dirty:
+                self.show_window()
+                if not self.window.create_confirmation_dialog('退出助手', '有未保存的配置，仍要退出助手吗？'):
+                    return
+            self.exiting = True
+            self.window.destroy()
+        threading.Thread(target=exit_window,daemon=True).start()
 
     def closing(self):
-        if self.dirty and not self.exiting:
-            return bool(self.window.create_confirmation_dialog('退出装备助手？',
-                '当前配置或经验采样尚未保存。退出将放弃改动，并停止持续监控。'))
-        return True
+        if self.exiting: return True
+        # Closing the chrome must never stop the service or discard drafts.
+        threading.Thread(target=self.hide_to_tray, daemon=True).start()
+        return False
+
+    def minimize_window(self):
+        if self.exiting: return
+        self.minimized = True
+        self.window.minimize()
+
+    def toggle_window(self):
+        if self.exiting or time.monotonic() < self.hotkey_capture_until: return
+        def toggle():
+            with self.visibility_guard:
+                if self.exiting or time.monotonic() < self.hotkey_capture_until: return
+                if self.hidden or (self.tray is None and self.minimized):
+                    self.show_window()
+                else:
+                    self.hide_to_tray()
+        threading.Thread(target=toggle, daemon=True).start()
+
+    def start_hotkeys(self):
+        if self.hotkeys is not None: return
+        shortcut = self.service.assistant_preferences.snapshot()['boss_hotkey']
+        with self.hotkey_guard:
+            if self.hotkeys is not None: return
+            from .window_hotkey import GlobalHotkey
+            self.hotkeys = GlobalHotkey(self.toggle_window)
+            if shortcut:
+                try: self.hotkeys.change(shortcut)
+                except (ValueError, OSError) as exc: self.hotkey_error = str(exc)
+
+    def apply_hotkey(self, shortcut, persist):
+        self.start_hotkeys()
+        with self.hotkey_guard:
+            self.hotkeys.change(shortcut, persist)
+            self.hotkey_error = ''
+            self.hotkey_capture_until = 0
+
+    def hotkey_state(self):
+        return {'active': bool(self.hotkeys and self.hotkeys.shortcut and not self.hotkeys.error),
+                'error': self.hotkey_error or (self.hotkeys.error if self.hotkeys else '')}
+
+    def release_hotkeys(self):
+        if self.hotkeys: self.hotkeys.close()
+
+    def release_desktop(self):
+        self.release_hotkeys()
+        if self.tray:
+            self.tray.close()
+            self.tray = None
+
+    def clear_browser_cache(self):
+        if self.tray is None: raise ValueError('请在助手独立窗口中清理浏览器缓存。')
+        return self.tray.clear_browser_cache()
+
+    def capture_hotkey(self, capturing):
+        if type(capturing) is not bool: raise ValueError('快捷键录入状态无效。')
+        self.hotkey_capture_until = time.monotonic() + 30 if capturing else 0
+        return {'capturing': capturing}
 
     def closed(self):
         self.exiting = True
+        self.release_desktop()
         self.service.stop()
         record('desktop_window_closed')
 
@@ -111,6 +217,8 @@ def main(port=18741, *, test_managed=False):
         window.events.shown += lambda: record('desktop_window_shown')
         def loaded():
             record('desktop_window_loaded')
+            hooks.start_tray()
+            hooks.start_hotkeys()
             application_ready()
         window.events.loaded += loaded
         host.start()
@@ -122,6 +230,8 @@ def main(port=18741, *, test_managed=False):
         threading.Thread(target=close_after_shutdown,daemon=True).start()
         cache = cache_root()
         cache.mkdir(parents=True,exist_ok=True)
-        webview.start(gui='edgechromium',debug=False,private_mode=True,storage_path=str(cache))
+        webview.start(gui='edgechromium',debug=False,private_mode=True,storage_path=str(cache),
+            icon=str(RESOURCE_ROOT / 'deskrawl_assistant/web/assistant.ico'))
     finally:
+        if 'hooks' in locals(): hooks.release_desktop()
         host.close()

@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="/auction-ui.css">
   <link rel="stylesheet" href="/inventory-auction.css">
   <link rel="stylesheet" href="/steam-market.css">
+  <link rel="stylesheet" href="/assistant-settings.css">
   <script src="/inventory-tools.js" defer></script>
   <script src="/automation-tools.js" defer></script>
   <script src="/managed-growth.js" defer></script>
@@ -19,17 +20,51 @@
   <script src="/steam-market.js" defer></script>
   <script src="/inventory-auction.js" defer></script>
   <script src="/app.js" defer></script>
+  <script src="/assistant-settings.js" defer></script>
   <script src="/rule-tools.js" defer></script>
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="https://deskrawl.hhyan.me/" target="_blank" rel="noopener noreferrer" title="在默认浏览器中打开官网" aria-label="Deskrawl 装备助手官网"><img src="/mark.svg" alt=""><div><strong>DESKRAWL <span>装备助手 · v__APP_VERSION__</span></strong><small>挑选值得保留的每一件装备</small></div></a>
     <div class="topbar-actions">
+      <button id="settings-open" class="button ghost settings-open" type="button" aria-haspopup="dialog" aria-controls="settings-dialog" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m9 3-.6 2.4-2 1.2L4 6l-2 3.5 1.8 1.7v2.2L2 15l2 3.5 2.4-.6 2 1.2L9 21h6l.6-1.9 2-1.2 2.4.6 2-3.5-1.8-1.6v-2.2L22 9.5 20 6l-2.4.6-2-1.2L15 3Z"/><circle cx="12" cy="12" r="3.2"/></svg>设置</button>
       <div class="project-support"><a id="github-link" class="github-link" href="https://github.com/awesomehy/Deskrawl-Assistant" target="_blank" rel="noopener noreferrer" title="在浏览器中打开 GitHub 项目">GitHub <span aria-hidden="true">↗</span></a><small>如果觉得本软件对你有帮助，欢迎点亮 Star。</small></div>
       <div class="game-control"><span id="game-state" class="game-state" role="status">检测游戏中…</span><button id="game-start" class="button ghost" type="button" disabled>Steam 启动</button><button id="game-close" class="button ghost" type="button" hidden disabled>关闭游戏</button></div>
       <div class="connection"><span id="connection-state" class="status-pill"><i></i>未连接游戏</span><button id="connect" class="button primary">连接游戏</button><button id="disconnect" class="button ghost" hidden>断开</button><button id="exit" class="icon-button" aria-label="退出助手" title="退出助手并停止监控"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v10M6.2 5.8a9 9 0 1 0 11.6 0"/></svg></button></div>
     </div>
   </header>
+  <dialog id="settings-dialog" class="assistant-settings-dialog" aria-labelledby="settings-title">
+    <form id="settings-form">
+      <div class="settings-heading"><div class="settings-heading-copy"><img src="/mark.svg" width="42" height="42" alt=""><div><h2 id="settings-title">助手设置</h2><p>按你的习惯使用助手</p></div></div><button id="settings-close" class="icon-button" type="button" aria-label="关闭设置">×</button></div>
+      <div class="settings-body">
+      <p id="settings-loading" class="settings-loading" role="status">正在读取设置…</p>
+      <div class="settings-group">
+        <div class="settings-row"><div><h3 id="settings-steam-label">Steam 社区加速 <span id="settings-steam-state" class="settings-value">关闭</span></h3><p>用于助手内 Steam 登录、市场报价、上架与卖单核验，不影响其他软件的网络设置。</p></div><button id="settings-steam" class="settings-switch" type="button" role="switch" aria-checked="false" aria-labelledby="settings-steam-label" disabled><span></span></button></div>
+        <p class="settings-footnote">默认关闭。开启后优先使用现有代理，连接失败时自动回退。</p>
+      </div>
+      <div class="settings-group">
+        <div class="settings-row"><div><h3>老板键</h3><p>按下组合键隐藏到右下角托盘，再按一次恢复窗口。</p></div><span id="settings-hotkey-status" class="settings-value">未设置</span></div>
+        <div class="settings-hotkey-control"><label for="settings-hotkey">快捷键</label><input id="settings-hotkey" type="text" readonly autocomplete="off" spellcheck="false" placeholder="点击这里，再按组合键" aria-describedby="settings-hotkey-help" disabled><button id="settings-hotkey-clear" class="button ghost" type="button" disabled>清除</button></div>
+        <p id="settings-hotkey-help" class="settings-footnote">支持 Ctrl 或 Alt 搭配字母、数字、F1–F11。数字键同时支持主键盘和开启 Num Lock 的小键盘。按 Esc 取消录入。</p>
+        <div class="settings-close-note"><span aria-hidden="true">↘</span><p>关闭窗口会隐藏到系统托盘，后台任务继续。双击托盘图标或使用老板键恢复；右键托盘可退出助手。标题栏最小化按钮仍保留任务栏窗口。</p></div>
+      </div>
+      <div class="settings-group">
+        <div class="settings-row"><div><h3>配置与存档</h3><p>筛选规则、托管设置及助手运行记录保存在这里。</p></div></div>
+        <div id="settings-data-path" class="settings-data-path" tabindex="0" aria-label="当前助手数据目录">正在读取存档位置…</div>
+        <div class="settings-folder-row"><p class="settings-footnote">暂不支持更改位置，新版本将继续使用此目录。</p><button id="settings-open-folder" class="button ghost" type="button" disabled>打开存档位置 <span aria-hidden="true">↗</span></button></div>
+        <div class="settings-reset-list" aria-label="按类别重置配置">
+          <div class="settings-reset-row"><div><strong>装备筛选规则</strong><p>清空已保存的筛选组合，不改变游戏内装备锁定状态。</p></div><button id="settings-reset-rules" class="button ghost" type="button" disabled>重置规则</button></div>
+          <div class="settings-reset-row"><div><strong>托管与背包仓库</strong><p>恢复托管、自动整理及共用存放页的默认设置。</p></div><button id="settings-reset-automation" class="button ghost" type="button" disabled>重置设置</button></div>
+          <div class="settings-reset-row"><div><strong>浏览器缓存</strong><p>清理内置窗口的网页资源缓存，保留登录与助手配置。</p></div><button id="settings-reset-cache" class="button ghost" type="button" disabled>清理缓存</button></div>
+          <p class="settings-footnote">重置规则或托管配置前自动备份原文件。请先暂停相关任务。</p>
+        </div>
+        <p id="settings-reset-result" class="settings-footnote" role="status" hidden></p>
+      </div>
+      <p id="settings-error" class="settings-error" role="alert" hidden></p>
+      </div>
+      <div class="settings-actions"><button id="settings-cancel" class="button ghost" type="button">取消</button><button id="settings-save" class="button primary" type="submit" disabled>保存设置</button></div>
+    </form>
+  </dialog>
   <div class="community-notice" role="note">启动后每 30 秒自动匿名上报职业、等级、累计游玩时长、神圣装备及符文套装获得数量，用于 <a href="https://deskrawl.hhyan.me/" target="_blank" rel="noopener noreferrer">deskrawl.hhyan.me</a> 社区统计；不上传账号或角色名。</div>
   <section id="compatibility-bar" class="compatibility-bar" aria-label="游戏兼容性" aria-live="polite"><span id="compatibility-message">连接时自动检测游戏兼容性</span></section>
   <section class="update-bar" id="update-bar" aria-label="程序更新" aria-live="polite">
@@ -377,5 +412,5 @@
     </div>
     <div class="inventory-auction-footer"><span id="inventory-auction-footer-note">确认后，仓库商品会先取回背包再上传。</span><button id="inventory-auction-recheck" class="button" type="button">重新核验</button><button id="inventory-auction-cancel" class="button danger" type="button" hidden>停止后续操作</button><button id="inventory-auction-submit" class="button primary" type="button" disabled>确认上传</button></div>
   </dialog>
-  <dialog id="confirm-dialog"><div class="dialog-icon">↗</div><h2 id="confirm-title"></h2><p id="confirm-body"></p><div class="dialog-actions"><button id="confirm-cancel" class="button">取消</button><button id="confirm-ok" class="button danger">确认</button></div></dialog>
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-body"><div class="dialog-icon">↗</div><h2 id="confirm-title"></h2><p id="confirm-body"></p><div class="dialog-actions"><button id="confirm-cancel" class="button" type="button" autofocus>取消</button><button id="confirm-ok" class="button danger" type="button">确认</button></div></dialog>
 </body></html>

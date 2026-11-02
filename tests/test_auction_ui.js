@@ -75,7 +75,7 @@ test('empty whitelist cannot authorize money operations and upload requires its 
 test('upload and real-sale state remain separate and money uses the exact wallet currency',()=>{
   const view=auction.stateView({login_available:true,steam:{authenticated:true,account_name:'玩家',wallet_currency:'HKD'},
     upload:{message:'上架结果已确认',listing_count:3,listing_limit:8},
-    sell:{message:'等待手机确认',pending_confirmation:true,confirmation_count:2},display_currency:'CNY'});
+    sell:{message:'等待手机确认',pending_confirmation:true,confirmation_count:2,confirmation_known:true,confirmation_expires_at:Date.now()/1000+15},display_currency:'CNY'});
   assert.equal(view.uploadText,'上架结果已确认');assert.equal(view.sellText,'等待手机确认');
   assert.equal(view.currency,'HKD');assert.equal(view.pendingConfirmation,true);assert.equal(view.confirmationCount,2);
   assert.equal(view.listingCount,3);assert.equal(view.listingLimit,8);
@@ -103,6 +103,25 @@ test('saved credentials awaiting verification show the backend reason without cl
   assert.equal(view.loginPending,false);
   assert.equal(view.loginText,'登录凭证已保存，等待核验');
   assert.equal(view.loginMessage,'Steam 请求被限制（HTTP 429），请稍后重试。');
+  assert.equal(view.currency,'等待读取 Steam 钱包币种');
+});
+
+test('stale or unverified confirmation counts cannot be shown',()=>{
+  const steam={authenticated:true},sell={confirmation_known:true,pending_confirmation:true,confirmation_count:1,confirmation_expires_at:Date.now()/1000-1};
+  assert.equal(auction.stateView({steam,sell}).pendingConfirmation,false);
+  sell.confirmation_expires_at=Date.now()/1000+15;sell.confirmation_known=false;
+  assert.equal(auction.stateView({steam,sell}).confirmationCount,0);
+  sell.confirmation_known=true;
+  assert.equal(auction.stateView({steam:{authenticated:true,expired:true},sell}).authenticated,false);
+  assert.equal(auction.stateView({steam:{authenticated:true,expired:true},sell}).pendingConfirmation,false);
+});
+
+test('confirmed expiry replaces the saved credential label directly',()=>{
+  const view=auction.stateView({steam:{bound:true,authenticated:true,expired:true,
+    message:'Steam 登录凭证已过期，请重新登录。'}});
+  assert.equal(view.authenticated,false);
+  assert.equal(view.loginText,'登录凭证已过期，请重新登录');
+  assert.equal(view.loginMessage,'Steam 登录凭证已过期，请重新登录。');
   assert.equal(view.currency,'等待读取 Steam 钱包币种');
 });
 

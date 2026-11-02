@@ -23,7 +23,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.5.6'
+NAME = 'Deskrawl装备助手-v1.6.0'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -90,6 +90,10 @@ def main():
     for module in ('auction', 'auction_runtime', 'auction_service', 'manual_auction',
                    'steam_session', 'steam_trading', 'steam_listing_receipts'):
         assert 'deskrawl_assistant.' + module in bundled_modules.toc
+    for module in ('assistant_settings', 'desktop_tray', 'window_hotkey', 'steam_acceleration', 'steam_network', 'steam_login_window', 'steam_login_transport', 'steam_login_diagnostics', 'panel_reader'):
+        assert 'deskrawl_assistant.' + module in bundled_modules.toc
+    for asset in ('assistant-settings.js', 'assistant-settings.css', 'assistant.ico', 'assistant-icon.png'):
+        assert 'deskrawl_assistant/web/' + asset in normalized
     for asset in ('auction-ui.js', 'auction-ui.css', 'inventory-auction.js', 'inventory-auction.css'):
         assert 'deskrawl_assistant/web/' + asset in normalized
     assert not any(marker in name.lower() for name in names for marker in
@@ -134,7 +138,7 @@ def main():
                 result = {'schema': 1, 'client_id': payload['client_id'], 'token': 'a' * 64}
             elif self.path == '/v1/report':
                 assert self.headers.get('Authorization') == 'Bearer ' + 'a' * 64
-                assert payload['version'] == '1.5.6'
+                assert payload['version'] == '1.6.0'
                 result = {'accepted': True, 'report_id': payload['report_id'],
                           'sequence': payload['sequence'], 'accepted_at': datetime.now(timezone.utc).isoformat()}
             else:
@@ -202,7 +206,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.5.6'
+                assert request('/api/state')['app_version'] == '1.6.0'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -447,6 +451,18 @@ def main():
         assert request('/api/export/rules')['rules'] == originals
         assert not request('/api/state')['monitoring'] and not request('/api/state')['automation']['running']
         report['checks'].append('新版组合脚本已内置；跨装备复制、去重、批量删除及启用导入通过隔离配置验证')
+        settings_info = request('/api/settings')
+        assert settings_info['desktop_supported'] is args.desktop
+        assert not settings_info['load_error'] and not settings_info['tray_error']
+        assert settings_info['close_behavior'] == 'hide_to_tray'
+        assert settings_info['steam_acceleration_enabled'] is False and settings_info['boss_hotkey'] == ''
+        saved_preferences = request('/api/settings', {'steam_acceleration_enabled': True, 'boss_hotkey': ''})
+        assert saved_preferences['steam_acceleration_enabled'] is True
+        assert request('/assistant-settings.js') and request('/assistant-settings.css') and request('/assistant.ico')
+        assert 'id="settings-open"' in page and 'id="settings-reset-rules"' in page
+        if args.desktop:
+            assert request('/api/settings/reset', {'section': 'browser_cache'})['cleared'] is True
+        report['checks'].append('设置模块及图标完整内置，托盘无启动错误；独立配置保存正常，桌面模式实际清理隔离窗口缓存')
         logs_before = request('/api/logs?category=settings')['total']
         assert logs_before >= 3
         assert request('/api/state')['rules'][0]['enabled'] is False
@@ -532,6 +548,22 @@ def main():
         assert request('/api/community')['enabled'] is True
         assert request('/api/community')['url'] == receipt_url
         assert request('/api/market/settings')['currency_id'] == 23
+        assert request('/api/settings')['steam_acceleration_enabled'] is True
+        assert not request('/api/settings')['load_error']
+        assert catalog['pools']['Minion']['random'] == catalog['pools']['Minion']['primary'] + catalog['pools']['Minion']['secondary']
+        minion_rule = {'id': 'packaging-minion-random', 'name': '仆从随机词条', 'equipment_keys': ['LegendaryMinionGear1'],
+            'enabled': False, 'groups': {'random': {'selected_stats': ['Stats.LifeOnHit', 'Stats.LifeOnKill', 'Stats.ManaOnKill'],
+                'operator': '>=', 'count': 3}}}
+        request('/api/rule/save', minion_rule)
+        finish()
+        start()
+        exported = request('/api/export/rules')
+        exported_rules = exported['rules'] if isinstance(exported, dict) else exported
+        minion_loaded = next(row for row in exported_rules if row['id'] == minion_rule['id'])
+        assert minion_loaded['groups'] == minion_rule['groups']
+        assert request('/api/settings')['steam_acceleration_enabled'] is True
+        assert not request('/api/managed')['running'] and not request('/api/state')['connected']
+        report['checks'].append('仆从随机词条候选池、三词条阈值及新格式规则保存重启后保留；助手设置独立持久化')
         report['checks'].append('战斗天赋、生活技能路径、技能组合及自定义93%/17%商人比例与购买件数，保存后重启完整保留')
         report['checks'].append('自定义托管分区、未解锁页选择与自动整理偏好重启后保留，默认方案不覆盖本地配置')
         check_reporting_disabled()

@@ -234,6 +234,8 @@ class PreviewReadTests(unittest.TestCase):
         actions=SimpleNamespace(reader=reader,profile=load_profile(),dispatcher=Mock(),
             _context=Mock(return_value=(read,manager,0,scene)),_difficulty_state=Mock(return_value=('Normal',[])))
         runtime=ProgressionRuntime(actions);runtime._copy=Mock(return_value=copy)
+        copy.panel_active_self = self.enterContext(patch(
+            'deskrawl_assistant.progression_runtime.panel_active_self', return_value=False))
         runtime._merchant_quotes=Mock(return_value={})
         runtime._merchant_unlock=Mock(return_value={'unlock_known':True,'unlocked':True})
         runtime._singleton=Mock(side_effect=lambda copy,name:singletons[name]);runtime._ranks=Mock(return_value=({},{}))
@@ -270,6 +272,21 @@ class PreviewReadTests(unittest.TestCase):
         self.assertTrue(restored['skills']['readable'])
         self.assertEqual(restored['skills']['equipped'],[None]*4)
 
+    def test_merchant_visibility_uses_native_panel_state_not_managed_flag(self):
+        for native_open, managed_flag in ((False, True), (True, False)):
+            runtime, actions, copy = self.snapshot_fixture(scene=1)
+            copy.panel_active_self.return_value = native_open
+            original_ptr = copy.ptr.side_effect
+            copy.ptr.side_effect = lambda address: (600 if address == 70000 + 192
+                                                    else original_ptr(address))
+            copy.boolean.return_value = managed_flag
+            with patch('deskrawl_assistant.progression_runtime.decode_obscured_int', return_value=70):
+                result = runtime.snapshot(merchant=True)
+            self.assertIs(result['merchant']['open'], native_open)
+            copy.panel_active_self.assert_called_once_with(copy, 70000)
+            self.assertNotIn(70040, [call.args[0] for call in copy.boolean.call_args_list])
+            actions.dispatcher.invoke.assert_not_called()
+
     def test_optional_skills_do_not_swallow_changing_roots_or_skip_final_consistency(self):
         runtime,actions,copy=self.snapshot_fixture(ability=0)
         with patch.object(runtime,'_skills',side_effect=SnapshotChangedError('技能根已变化')), \
@@ -304,6 +321,8 @@ class RuntimeBoundaryTests(unittest.TestCase):
         read.singleton.return_value = 900
         copy.action_guards = []
         copy.boolean.return_value = False
+        copy.panel_active_self = self.enterContext(patch(
+            'deskrawl_assistant.progression_runtime.panel_active_self', return_value=False))
         copy.copied_only.side_effect = nullcontext
         copy.verify.side_effect = lambda obj, name: obj
         copy.ptr.side_effect = lambda address: {1056:2000,1064:3000,3032:4000,3112:5000,2080:6000}.get(address, 7000)
@@ -425,7 +444,7 @@ class RuntimeBoundaryTests(unittest.TestCase):
         for snapshot_open in (True,False):
             before=state();before['merchant']['open']=snapshot_open
             runtime,actions,copy=self.fixture(before,before)
-            copy.boolean.return_value=True
+            copy.panel_active_self.return_value=True
             copy.ptr.side_effect=lambda address:123 if address==900+192 else 7000
             result=runtime.execute('merchant_open',{'class_mask':4})
             self.assertTrue(result['effect_confirmed'])
@@ -436,14 +455,37 @@ class RuntimeBoundaryTests(unittest.TestCase):
     def test_other_currency_shop_still_requires_verified_soul_shard_merchant(self):
         before=state();after=deepcopy(before);after['merchant']['open']=True
         runtime,actions,copy=self.fixture(before,after)
-        copy.boolean.return_value=True
+        copy.panel_active_self.return_value=True
         self.assertTrue(runtime.execute('merchant_open',{'class_mask':4})['effect_confirmed'])
         self.assertEqual(runtime._merchant_npc.call_args.args[1],123)
         self.assertEqual(actions.dispatcher.invoke.call_args.args[0][0].method,'DialogueInteractable.clw')
 
+    def test_stale_managed_flag_does_not_skip_opening_a_hidden_shop(self):
+        before=state();after=deepcopy(before);after['merchant']['open']=True
+        runtime,actions,copy=self.fixture(before,after)
+        copy.boolean.return_value=True
+        copy.panel_active_self.return_value=False
+        copy.ptr.side_effect=lambda address:123 if address==900+192 else 7000
+        self.assertTrue(runtime.execute('merchant_open',{'class_mask':4})['effect_confirmed'])
+        runtime._merchant_npc.assert_called_once()
+        self.assertEqual(actions.dispatcher.invoke.call_args.args[0][0].method,'DialogueInteractable.clw')
+
+    def test_close_still_requires_observed_hidden_panel_and_never_repeats_submission(self):
+        before=state();before['merchant']['open']=True
+        runtime,actions,_=self.fixture(before,deepcopy(before))
+        with patch('deskrawl_assistant.progression_runtime.time.monotonic',side_effect=[0,0,13]), \
+                patch('deskrawl_assistant.progression_runtime.time.sleep'), \
+                patch('deskrawl_assistant.progression_runtime.record') as recorded, \
+                self.assertRaisesRegex(NativeActionError,'关闭神秘商人动作已提交') as caught:
+            runtime.execute('merchant_close',{'class_mask':4})
+        self.assertTrue(caught.exception.uncertain)
+        self.assertEqual(actions.dispatcher.invoke.call_count,1)
+        failure=next(c.kwargs for c in recorded.call_args_list if c.args[0]=='growth_action_unconfirmed')
+        self.assertIs(failure['observed']['merchant_open'],True)
+
     def test_open_shop_noop_does_not_confirm_a_panel_that_changed_during_read(self):
         before=state();runtime,actions,copy=self.fixture(before,before)
-        copy.boolean.return_value=True
+        copy.panel_active_self.return_value=True
         copy.ptr.side_effect=lambda address:123 if address==900+192 else 7000
         copy.finish.side_effect=SnapshotChangedError('商人窗口或货币已变化')
         with self.assertRaises(SnapshotChangedError):

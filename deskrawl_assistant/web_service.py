@@ -9,7 +9,7 @@ import traceback
 import uuid
 from .catalog import load_catalog
 from .models import Rule, ValidationError
-from .rules import LockPlanner, rules_from_dict, evaluate, DEFAULT_MIN_CONFIDENCE, primary_perfect_rules
+from .rules import LockPlanner, rules_from_dict, evaluate, DEFAULT_MIN_CONFIDENCE, primary_perfect_rules, selected_group_stats
 from .runtime_adapter import RuntimeAdapter, RuntimeReadEvidence, headline_stats
 from .affix_pools import editor_pools
 from .stat_display import preview_value
@@ -77,6 +77,10 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
         self.config = Path(config) if config else rules_file()
         self.market_data_dir = self.config.parent if config else runtime_dir()
         self.market_config = self.config.with_name('steam-market.json')
+        from .assistant_settings import AssistantSettings
+        self.assistant_preferences = AssistantSettings(self.config.with_name('assistant-settings.json'))
+        from .paths import data_root
+        self.settings_data_dir = self.config.parent if config else data_root()
         self.market_currency_id = 0
         from .market_currency import valid_currency_id
         try:
@@ -157,6 +161,81 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
     def community_status(self):
         return self.community.status()
 
+    def assistant_settings_info(self, desktop=None):
+        with self.guard:
+            return {**self.assistant_preferences.snapshot(),
+                    'data_directory': str(self.settings_data_dir.resolve()),
+                    'config_directory': str(self.config.parent.resolve()),
+                    'load_error': self.assistant_preferences.load_error,
+                    'desktop_supported': desktop is not None,
+                    'hotkey': desktop.hotkey_state() if desktop is not None else {
+                        'active': False, 'error': '老板键仅在助手独立窗口中可用。'},
+                    'tray_error': desktop.tray_error if desktop is not None else '',
+                    'close_behavior': 'hide_to_tray'}
+
+
+    def save_assistant_settings(self, value, desktop=None):
+        with self.guard:
+            if self.closed.is_set(): raise ValidationError('助手已退出。')
+            previous = self.assistant_preferences.acceleration_enabled()
+            self.assistant_preferences.save(value,
+                apply_hotkey=desktop.apply_hotkey if desktop is not None else None)
+            if previous != self.assistant_preferences.acceleration_enabled() and self.market is not None:
+                self.market.refresh_failed()
+            return self.assistant_settings_info(desktop)
+
+
+    def open_assistant_data_directory(self):
+        import os
+        if os.name != 'nt': raise ValidationError('请在 Windows 助手中打开数据目录。')
+        directory = self.settings_data_dir.resolve()
+        directory.mkdir(parents=True, exist_ok=True)
+        os.startfile(str(directory))
+        return {'opened': True}
+
+
+    def reset_assistant_configuration(self, section, desktop=None):
+        if section not in ('equipment_rules', 'automation', 'browser_cache'):
+            raise ValidationError('不支持重置此配置。')
+        if section == 'browser_cache':
+            if desktop is None: raise ValidationError('请在助手独立窗口中清理浏览器缓存。')
+            return {'section': section, **desktop.clear_browser_cache()}
+        with self.guard:
+            if self.closed.is_set() or self.updating:
+                raise ValidationError('助手正在退出或更新，暂不能重置配置。')
+            if (self.busy or self.monitoring or self.automation_running or self.managed.running
+                    or self.operation_kind == 'managed'):
+                raise ValidationError('请先暂停监控、自动整理和托管，并等待当前任务结束，再重置配置。')
+            if section == 'equipment_rules':
+                files = {self.config: {'version': 2, 'rules': []}}
+            else:
+                from .managed_mode import DEFAULT_SETTINGS as MANAGED_DEFAULTS
+                files = {self.automation_config: deepcopy(DEFAULT_SETTINGS),
+                         self.managed_config: deepcopy(MANAGED_DEFAULTS)}
+            # Back up only the selected, fixed files before changing anything.
+            backup = self.config.parent / 'reset-backups' / (time.strftime('%Y%m%d-%H%M%S') + '-' + uuid.uuid4().hex[:8])
+            originals = {path: path.read_bytes() for path in files if path.exists()}
+            if originals:
+                backup.mkdir(parents=True)
+                for path, content in originals.items(): (backup / path.name).write_bytes(content)
+            write_settings_files(files)
+            if section == 'equipment_rules':
+                self.rules = []
+                self.config_error = ''
+            else:
+                self.automation_settings = deepcopy(files[self.automation_config])
+                self.managed.settings = deepcopy(files[self.managed_config])
+                self.automation_config_load_failed = False
+                self.managed_config_load_failed = False
+                self.managed_config_error = ''
+                self.managed_can_resume = False
+                self.pressure_active = False
+                self.automation_status = '自动整理已暂停。'
+            self.revision += 1
+            return {'section': section, 'reset': True,
+                    'backup_directory': str(backup.resolve()) if originals else None}
+
+
     def market_settings(self):
         from .market_currency import currency_options
         with self.guard:
@@ -208,7 +287,8 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
                 if catalog is None:
                     return {'items': [], 'currency_id':self.market_currency_id}
                 self.market = SteamMarketPrices(catalog,
-                    cache_path=self.market_data_dir / 'steam-market-prices.json')
+                    cache_path=self.market_data_dir / 'steam-market-prices.json',
+                    transport=self._market_transport())
             market = self.market
             currency_id = self.market_currency_id
             if currency_id and self.market_currency is None:
@@ -218,6 +298,12 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
         return {'currency_id':currency_id, 'items': [{'selection_id':key, 'quote':
             currency.for_quote(market.for_item(row), currency_id) if currency_id else market.for_item(row)}
             for key,row in selected]}
+
+    def _market_transport(self):
+        from .steam_acceleration import SteamMarketTransport
+        return SteamMarketTransport(self.assistant_preferences.acceleration_enabled,
+            self.market_data_dir / 'steam-community-backoff.json')
+
 
     def _item_metadata(self, key):
         # The full drop catalog also includes commodities and mount reins
@@ -527,16 +613,22 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
             rule = Rule.from_dict(raw, self.catalog)
             if len(rule.name)>80: raise ValidationError('组合名称最多 80 个字符。')
             if len(rule.equipment_keys)!=1 or not rule.is_count_rule:
-                raise ValidationError('每条配置需对应一件装备，并设置主词条数量条件。')
+                raise ValidationError('每条配置需对应一件装备，并设置随机词条或主副词条数量条件。')
             if any(g.operator!='>=' for g in rule.groups.values()):
                 raise ValidationError('界面使用“至少 n 类（≥n）”。')
             item = self.ui['equipment'][rule.equipment_keys[0]]
             pool = next(p for p in self.pools['slotPools'] if p['slot']==item['slot'])
+            if 'random' in rule.groups:
+                if item['slot'] != 'Minion':
+                    raise ValidationError('只有仆从装备使用单组随机词条筛选。')
+                if rule.groups['random'].count > 3:
+                    raise ValidationError('传说仆从装备只有 3 条随机词条，命中数量最多为 3。')
             for name, group in rule.groups.items():
                 if set(group.selected_stats) & headline_stats(item['slot']):
                     raise ValidationError('基础护甲、武器伤害和武器速度不属于随机主副词条，不能参与筛选。')
-                if set(group.selected_stats)-set(pool[name]):
-                    raise ValidationError('所选词条不属于这件装备的'+('主词条' if name=='primary' else '副词条')+'池。')
+                candidates = set(pool['primary']) | set(pool['secondary']) if name == 'random' else set(pool[name])
+                if set(group.selected_stats)-candidates:
+                    raise ValidationError('所选词条不属于这件装备的'+('随机词条' if name=='random' else '主词条' if name=='primary' else '副词条')+'池。')
             updated = [rule if r.id==rule.id else r for r in self.rules]
             if not any(r.id==rule.id for r in self.rules): updated.append(rule)
             self._persist(updated)
@@ -701,7 +793,7 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
         for row in character['equipment']:
             key=row.get('name_key');meta=self.ui['equipment'].get(key,{})
             adapted=self.adapter.adapt_item(row,snapshot_token=character['captured_at'],session_id=character['session'],evidence=evidence)
-            groups={'base':[],'primary':[],'secondary':[],'unknown':[]}
+            groups={'base':[],'primary':[],'secondary':[],'random':[],'unknown':[]}
             for mod in adapted.display_modifiers:
                 groups[mod.group].append({'key':mod.stat_key,'name':self.catalog.stats[mod.stat_key].label if mod.stat_key in self.catalog.stats else mod.stat_key,
                     **preview_value(mod,row),'matched':False,'matched_rules':[]})
@@ -757,7 +849,7 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
             if type(rarity) is not int or rarity not in range(6): rarity = None
             adapted_item = observations.get((row.get('container'),row.get('slot_index')))
             observation = adapted_item.observation if adapted_item else None
-            groups = {'base':[],'primary':[],'secondary':[],'unknown':[]}
+            groups = {'base':[],'primary':[],'secondary':[],'random':[],'unknown':[]}
             match = False
             reasons = []
             matched_combinations = []
@@ -768,11 +860,10 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
                 for modifier in adapted_item.display_modifiers:
                     stat, group = modifier.stat_key, modifier.group
                     hit_rules = []
-                    if (group in ('primary','secondary') and observation.name_confidence >= DEFAULT_MIN_CONFIDENCE
+                    if (group in ('primary','secondary','random') and observation.name_confidence >= DEFAULT_MIN_CONFIDENCE
                             and observation.groups_complete.get(group) and modifier.confidence >= DEFAULT_MIN_CONFIDENCE
                             and modifier.group_confidence >= DEFAULT_MIN_CONFIDENCE):
-                        hit_rules = [r.name for r in item_rules if r.is_count_rule and group in r.groups
-                                     and stat in r.groups[group].selected_stats]
+                        hit_rules = [r.name for r in item_rules if stat in selected_group_stats(r, group)]
                     groups[group].append({'key':stat,'name':self.catalog.stats[stat].label if stat in self.catalog.stats else stat,
                         **preview_value(modifier, row), 'matched':bool(hit_rules), 'matched_rules':list(dict.fromkeys(hit_rules))})
                 match = any(e.status=='match' for e in evaluations)

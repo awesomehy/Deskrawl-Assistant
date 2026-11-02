@@ -41,7 +41,7 @@ function page(settings={}){
   const api=async(path,data)=>{calls.push({path,...(data===undefined?{}:{data:clone(data)})});return handler(path,data);};
   window.AuctionUI.init({api,toast:message=>toasts.push(message),confirmAction:async()=>confirmResult,onChange:auction=>{
     draft=managed.normalizeSettings({...draft,auction:clone(auction)});changes.push(clone(draft));window.AuctionUI.render(draft.auction,catalog);
-  }});
+  },onAuthInvalid:()=>{draft.auction.sell_enabled=false;}});
   window.AuctionUI.render(draft.auction,catalog);
   return {window,elements,timers,calls,changes,toasts,node,fold,get draft(){return draft;},
     setState:value=>{apiState=value;},setHandler:value=>{handler=value;},setConfirm:value=>{confirmResult=value;},
@@ -188,6 +188,7 @@ test('saved enabled settings wait for login verification without erasing prefere
   await p.open();await p.poll();assert.equal(p.calls.length,3);
   assert.equal(p.node('auction-sell-enabled').checked,true);
   assert.match(p.node('auction-sell-login-note').textContent,/等待 Steam 登录核验/);
+  assert.match(p.node('auction-sell-login-note').textContent,/游戏拍卖行上传继续/);
   await p.change('auction-sell-enabled',false);await p.poll();assert.equal(p.calls.length,4);
   assert.equal(p.draft.auction.upload_enabled,true);assert.equal(p.draft.auction.sell_enabled,false);
 });
@@ -195,7 +196,7 @@ test('saved enabled settings wait for login verification without erasing prefere
 test('native upload and mobile sale confirmation remain separate with the actual Steam wallet currency',async()=>{
   const p=page();p.setState({...defaultState(),steam:{authenticated:true,account_name:'76561198000000001',wallet_currency:'HKD'},
     upload:{phase:'idle',message:'上传已核验',listing_count:2,listing_limit:8},
-    sell:{phase:'pending',message:'等待手机确认',pending:1,pending_confirmation:true,confirmation_count:1},display_currency:'CNY'});
+    sell:{phase:'pending',message:'等待手机确认',pending:1,pending_confirmation:true,confirmation_count:1,confirmation_known:true,confirmation_expires_at:Date.now()/1000+15},display_currency:'CNY'});
   await p.open();assert.equal(p.node('auction-wallet-currency').textContent,'HKD');
   assert.equal(p.node('auction-listing-count').textContent,'游戏上传 2 / 8 件');
   assert.equal(p.node('auction-upload-status').textContent,'上传已核验');assert.equal(p.node('auction-sell-status').textContent,'等待手机确认');
@@ -254,6 +255,37 @@ test('failed status refresh revokes ability to newly enable sales',async()=>{
   p.setHandler(async()=>{throw Error('offline');});await p.poll();
   assert.equal(p.node('auction-sell-enabled')['aria-disabled'],'true');
   await p.change('auction-sell-enabled',true);assert.equal(p.draft.auction.sell_enabled,false);
+});
+
+test('confirmed expiry clears the sale checkbox and draft while keeping upload and other edits',async()=>{
+  const p=page({auction:{upload_enabled:true,sell_enabled:true,categories:['grand_rune'],excluded_keys:['HunterSetRune2'],price_rule:'highest_buy'},
+    auto_equip:{enabled:true,minimum_delta:17}});
+  await flush();
+  p.setState({...defaultState(),steam:{expired:true,bound:false,authenticated:false,message:'Steam 登录已过期，请重新登录。'}});
+  await p.open();
+  assert.match(p.node('auction-steam-status').textContent,/已过期.*重新登录/);
+  assert.equal(p.node('auction-sell-enabled').checked,false);
+  assert.equal(p.node('auction-sell-enabled')['aria-disabled'],'true');
+  assert.equal(p.draft.auction.sell_enabled,false);
+  assert.equal(p.draft.auction.upload_enabled,true);
+  assert.equal(p.draft.auction.price_rule,'highest_buy');
+  assert.deepEqual(p.draft.auction.excluded_keys,['HunterSetRune2']);
+  assert.equal(p.draft.auto_equip.minimum_delta,17);
+  p.setState({...defaultState(),steam:{authenticated:true,bound:true}});await p.poll();
+  assert.equal(p.node('auction-sell-enabled').checked,false,'relogin does not silently reauthorize selling');
+});
+
+test('failed confirmation fetch hides previous count and does not erase configured categories',async()=>{
+  const p=page({auction:{upload_enabled:true,categories:['grand_rune']}});
+  await flush();
+  p.setState({...defaultState(),steam:{authenticated:true},sell:{confirmation_known:true,confirmation_expires_at:Date.now()/1000+15,
+    pending_confirmation:true,confirmation_count:1}});
+  await p.open();assert.equal(p.node('auction-confirmation').hidden,false);
+  p.setHandler(async()=>{throw Error('offline');});await p.poll();
+  assert.equal(p.node('auction-confirmation').hidden,true);
+  assert.deepEqual(p.draft.auction.categories,['grand_rune']);
+  p.setHandler(async()=>({...defaultState(),steam:{authenticated:true},sell:{confirmation_known:false,pending_confirmation:true,confirmation_count:1}}));
+  await p.poll();assert.equal(p.node('auction-confirmation').hidden,true);
 });
 
 test('sale requires upload even with valid login and cancelling upload clears sale persistently',async()=>{

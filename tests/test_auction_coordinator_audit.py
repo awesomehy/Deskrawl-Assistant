@@ -20,6 +20,7 @@ class TradingFake:
     def __init__(self):
         self.calls = []
         self.failure_keys = set()
+        self.auth = {'verified': True, 'steamid': STEAMID, 'wallet_currency': 'CNY'}
 
     def prepare_upload(self, steamid, item_key, variant):
         self.calls.append(('prepare', steamid, item_key, variant))
@@ -30,13 +31,16 @@ class TradingFake:
     def complete_upload(self, ticket, count, *, expected_instance_id=None):
         self.calls.append(('complete', ticket, count, expected_instance_id))
 
+    def discard_upload_baseline(self, ticket):
+        self.calls.append(('discard', ticket))
+
     def sale_once(self, config, steamid, *, validate=None):
         if validate is not None and validate() is not True:
             return
         self.calls.append(('sale', deepcopy(config), steamid))
 
     def state(self):
-        return {'verified': True, 'steamid': STEAMID, 'wallet_currency': 'CNY'}
+        return deepcopy(self.auth)
 
     def close(self):
         pass
@@ -139,6 +143,94 @@ class CoordinatorAuditTests(unittest.TestCase):
         self.coordinator.process_once()
         self.assertEqual(self.coordinator.prepare(self.row('uid-b', 'DivineHelm1'), STEAMID, self.config),
                          sha256(b'DivineHelm1').hexdigest()[:32])
+
+    def test_expiry_during_preparation_releases_only_the_steam_preparation_gate(self):
+        self.coordinator.prepare(self.row(), STEAMID, self.config)
+        def expired(*args):
+            self.trading.auth.update(verified=False, steamid=None)
+            raise RuntimeError('sensitive expired cookie response')
+        self.trading.prepare_upload = expired
+        self.coordinator.process_once()
+        self.assertFalse(self.coordinator.market_preparation_required(STEAMID))
+        observed = self.coordinator.observe({'steamid': STEAMID, 'blocked_uids': ['native-pending']})
+        self.assertEqual(observed['blocked_uids'], ['native-pending'])
+        self.assertNotIn('sensitive', self.coordinator.state()['error'])
+        self.assertIn('游戏拍卖行上传继续', self.coordinator.state()['error'])
+        identity = self.coordinator.submitted(self.row(), STEAMID)
+        self.assertNotIn(identity, self.coordinator.jobs)
+        self.assertIn('uid-a', self.coordinator.observe({'steamid': STEAMID})['blocked_uids'])
+        self.coordinator.confirmed(identity, self.receipt(self.row()))
+        self.assertEqual(self.coordinator.intents[identity]['phase'], 'resolved')
+        self.trading.auth.update(verified=True, steamid=STEAMID)
+        self.coordinator.process_once()
+        # Re-login cannot create a late baseline or map an unproven asset.
+        self.assertFalse(any(call[0] in ('prepare', 'complete') for call in self.trading.calls))
+
+    def test_game_prewrite_rejection_remains_blocked_with_expired_web_login(self):
+        self.trading.auth.update(verified=False, steamid=None)
+        self.coordinator.process_once()
+        identity = self.coordinator.submitted(self.row(), STEAMID)
+        self.coordinator.rejected(identity)
+        self.assertIn('uid-a', self.coordinator.observe({'steamid': STEAMID})['blocked_uids'])
+
+    def test_expiry_after_game_receipt_releases_kind_only_after_retiring_market_baseline(self):
+        ticket = self.ready()
+        identity = self.coordinator.submitted(self.row(), STEAMID, ticket)
+        self.coordinator.confirmed(identity, self.receipt(self.row()))
+        self.assertIn('DivineBow1', self.coordinator.observe({'steamid': STEAMID})['blocked_keys'])
+        original = self.trading.discard_upload_baseline
+        def retire(value):
+            # The native-confirmed item still fences its kind until durable discard.
+            self.assertIn('DivineBow1', self.coordinator.observe({'steamid': STEAMID})['blocked_keys'])
+            original(value)
+        self.trading.discard_upload_baseline = retire
+        self.trading.auth.update(verified=False, steamid=None)
+        self.coordinator.process_once()
+        self.assertEqual(self.trading.calls[-1], ('discard', ticket))
+        self.assertEqual(self.coordinator.observe({'steamid': STEAMID})['blocked_keys'], [])
+        self.assertEqual(self.coordinator.intents[identity]['phase'], 'resolved')
+        self.assertTrue(self.coordinator.intents[identity]['market_skipped'])
+        self.assertEqual(self.coordinator.jobs, {})
+        self.trading.auth.update(verified=True, steamid=STEAMID)
+        self.coordinator.process_once()
+        self.assertNotIn('complete', [call[0] for call in self.trading.calls])
+
+    def test_expiry_never_releases_an_unconfirmed_game_write(self):
+        ticket = self.ready()
+        identity = self.coordinator.submitted(self.row(), STEAMID, ticket)
+        self.trading.auth.update(verified=False, steamid=None)
+        self.coordinator.process_once()
+        self.assertEqual(self.coordinator.intents[identity]['phase'], 'submitted')
+        observed = self.coordinator.observe({'steamid': STEAMID})
+        self.assertIn('uid-a', observed['blocked_uids'])
+        self.assertIn('DivineBow1', observed['blocked_keys'])
+        self.assertNotIn('discard', [call[0] for call in self.trading.calls])
+
+    def test_failed_baseline_discard_preserves_the_game_upload_fence(self):
+        ticket = self.ready()
+        identity = self.coordinator.submitted(self.row(), STEAMID, ticket)
+        self.coordinator.confirmed(identity, self.receipt(self.row()))
+        self.trading.auth.update(verified=False, steamid=None)
+        self.trading.discard_upload_baseline = lambda ticket: (_ for _ in ()).throw(OSError('disk unavailable'))
+        with self.assertRaises(OSError):
+            self.coordinator.process_once()
+        self.assertEqual(self.coordinator.intents[identity]['phase'], 'confirmed')
+        self.assertIn('DivineBow1', self.coordinator.observe({'steamid': STEAMID})['blocked_keys'])
+
+    def test_late_preparation_result_cannot_resurrect_an_upload_only_job(self):
+        self.coordinator.prepare(self.row(), STEAMID, self.config)
+        original = self.trading.prepare_upload
+        def delayed(*args):
+            identity = self.coordinator.submitted(self.row(), STEAMID)
+            self.coordinator.confirmed(identity, self.receipt(self.row()))
+            return original(*args)
+        self.trading.prepare_upload = delayed
+        self.coordinator.process_once()
+        self.assertEqual(self.coordinator.jobs, {})
+        self.assertEqual(next(iter(self.coordinator.intents.values()))['phase'], 'resolved')
+        self.assertEqual(self.trading.calls[-1][0], 'discard')
+        self.coordinator.process_once()
+        self.assertNotIn('complete', [call[0] for call in self.trading.calls])
 
     def test_native_pending_guards_are_combined_with_coordinator_guards(self):
         identity = self.coordinator.submitted(self.row(), STEAMID)

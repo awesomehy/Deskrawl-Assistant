@@ -60,7 +60,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='Deskrawl装备助手-v1.5.6',
+    name='Deskrawl装备助手-v1.6.0',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -68,6 +68,7 @@ exe = EXE(
     console=False,
     disable_windowed_traceback=False,
     version=str(root / 'packaging' / 'version-info.txt'),
+    icon=str(root / 'deskrawl_assistant' / 'web' / 'assistant.ico'),
     uac_admin=False,
     runtime_tmpdir=os.environ.get('DESKRAWL_ASSISTANT_BUNDLE_DIR'),
 )

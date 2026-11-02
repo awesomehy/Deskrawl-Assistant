@@ -20,7 +20,7 @@ const columnMenus={
   position:{label:'位置',sort:'position',filter:'containers',options:[['inventory','背包'],['storage','仓库']]},
   level:{label:'物品等级',sort:'level'},upgrade:{label:'强化',sort:'upgrade'},sockets:{label:'总孔数',sort:'sockets'},
   lock:{label:'锁状态',filter:'locks',options:[['locked','已锁定'],['unlocked','未锁定']]},
-  power:{label:'换装攻击力',sort:'power'},rules:{label:'规则结果',filter:'rules',options:[['matches','符合规则'],['matches_only','仅符合规则（非四词条全中）'],['miss','不符合规则'],['perfect','主词条全中']]}
+  power:{label:'换装攻击力',sort:'power'},rules:{label:'规则结果',filter:'rules',options:[['matches','符合规则'],['matches_only','仅符合规则（非词条全中）'],['miss','不符合规则'],['perfect','词条全中']]}
 };
 const inventoryFilterIds=['inventory-class','inventory-slot','inventory-rarity','inventory-sockets','inventory-upgrade','inventory-level-min','inventory-level-max','inventory-power','inventory-sort','inventory-ancient','inventory-mist','inventory-divine','inventory-tradable'];
 
@@ -99,10 +99,17 @@ function renderCatalog(){
 }
 function makeDraft(rule){
   const groups=rule?.groups||{};
+  const threshold=g=>g?g.count+(g.operator==='>'?1:0):1;
+  const minion=gearMap.get(gearKey)?.slot==='Minion';
+  const primaryPool=catalog.pools.Minion?.primary||[];
+  const legacyGroups=minion&&groups.primary&&(groups.secondary||threshold(groups.primary)>3||groups.primary.selected_stats.some(key=>!primaryPool.includes(key)))?JSON.parse(JSON.stringify(groups)):null;
   let number=1;while(rulesFor(gearKey).some(r=>r.name===`组合 ${number}`))number++;
   return {id:rule?.id||'',name:rule?.name||`组合 ${number}`,enabled:rule?.enabled??true,
-    primary:[...(groups.primary?.selected_stats||[])],primaryCount:groups.primary?.count||1,
-    secondary:[...(groups.secondary?.selected_stats||[])],secondaryCount:groups.secondary?.count||1,
+    primary:[...(groups.primary?.selected_stats||[])],primaryCount:threshold(groups.primary),
+    secondary:[...(groups.secondary?.selected_stats||[])],secondaryCount:threshold(groups.secondary),
+    random:[...new Set(groups.random?.selected_stats||[...(groups.primary?.selected_stats||[]),...(groups.secondary?.selected_stats||[])])],
+    randomCount:groups.random?threshold(groups.random):groups.primary?threshold(groups.primary)+(groups.secondary?threshold(groups.secondary):0):1,
+    legacyGroups,
     secondaryEnabled:!!groups.secondary,legacy:!!rule&&!rule.groups};
 }
 async function chooseGear(key,ruleId){
@@ -126,15 +133,16 @@ function currentAffixPool(group){
 }
 function affixClassMarkup(){
   if(!catalog.class_pools)return '';
-  return `<label class="combination-name affix-class-select">词条池职业<select id="affix-class" aria-label="词条池职业"><option value="0" ${affixClass===0?'selected':''}>全部职业 · 合并查看</option>${catalog.classes.map(c=>`<option value="${c.value}" ${affixClass===c.value?'selected':''}>${esc(c.name)}</option>`).join('')}</select></label><p class="note">按装备生成职业显示随机主词条，副词条遵循游戏原生部位池。切换只改变候选项，已选词条保留。</p>`;
+  const note=gearMap.get(gearKey)?.slot==='Minion'?'按装备生成职业显示合并后的随机词条池，仆从装备不区分主副词条。':'按装备生成职业显示随机主词条，副词条遵循游戏原生部位池。';
+  return `<label class="combination-name affix-class-select">词条池职业<select id="affix-class" aria-label="词条池职业"><option value="0" ${affixClass===0?'selected':''}>全部职业 · 合并查看</option>${catalog.classes.map(c=>`<option value="${c.value}" ${affixClass===c.value?'selected':''}>${esc(c.name)}</option>`).join('')}</select></label><p class="note">${note}切换只改变候选项，已选词条保留。</p>`;
 }
 function groupMarkup(group,title){
-  const gear=gearMap.get(gearKey),optional=group==='secondary',enabled=!optional||draft.secondaryEnabled;
+  const gear=gearMap.get(gearKey),optional=group==='secondary',enabled=(!optional||draft.secondaryEnabled)&&!(group==='random'&&draft.legacyGroups);
   const pool=currentAffixPool(group),broad=catalog.pools[gear.slot]?.[group]||[],selected=draft[group];
   const options=[...pool,...selected.filter(key=>!pool.includes(key))];
   return `<div class="affix-group ${enabled?'':'disabled'}" data-group="${group}"><div class="group-heading"><div class="group-title"><span class="step">${optional?'2':'1'}</span><h3>${title}</h3></div>
-    ${optional?`<label class="group-toggle"><input type="checkbox" id="secondary-enabled" ${enabled?'checked':''}>启用副词条筛选</label>`:'<small>先判断这一组</small>'}</div>
-    <div class="count-line">选中的词条，至少命中 <input type="number" min="1" max="${Math.max(1,selected.length)}" value="${draft[group+'Count']}" data-count="${group}" aria-label="${title}至少命中数量" ${enabled?'':'disabled'}> 类<span class="selected-total" data-total="${group}">已选 ${selected.length} 类</span></div>
+    ${optional?`<label class="group-toggle"><input type="checkbox" id="secondary-enabled" ${enabled?'checked':''}>启用副词条筛选</label>`:group==='random'?'<small>稀有 2 条 · 传说 3 条</small>':'<small>先判断这一组</small>'}</div>
+    <div class="count-line">选中的词条，至少命中 <input type="number" min="1" max="${Math.max(1,Math.min(group==='random'?3:Infinity,selected.length))}" value="${draft[group+'Count']}" data-count="${group}" aria-label="${title}至少命中数量" ${enabled?'':'disabled'}> 类<span class="selected-total" data-total="${group}">已选 ${selected.length} 类</span></div>
     <input class="affix-search" data-affix-search="${group}" placeholder="搜索${title}…" aria-label="搜索${title}" ${enabled?'':'disabled'}>
     <div class="affix-options">${options.length?options.map(key=>`<label class="affix-chip ${selected.includes(key)?'checked':''}" data-stat-name="${esc((statMap.get(key)?.name+' '+statMap.get(key)?.en).toLowerCase())}"><input type="checkbox" data-affix="${esc(key)}" data-group="${group}" ${selected.includes(key)?'checked':''} ${enabled?'':'disabled'}>${esc(statMap.get(key)?.name||key)}${!broad.includes(key)?' · 不参与筛选，请取消勾选':!pool.includes(key)?' · 其他职业已选':''}</label>`).join(''):'<div class="note">此部位的本地随机词条池为空，目前无法配置该组条件。</div>'}</div></div>`;
 }
@@ -148,11 +156,12 @@ function renderEditor(){
     <label class="combination-name">组合名称<input id="rule-name" value="${esc(draft.name)}" maxlength="80" placeholder="例如：暴击流、冰伤流" aria-label="组合名称"></label>
     <p class="combination-note">这件装备有 ${existing.length} 个已保存组合，${existing.filter(r=>r.enabled).length} 个启用。满足任意一个启用组合，即符合规则。</p>
     <div class="rule-state"><label><input type="checkbox" id="rule-enabled" ${draft.enabled?'checked':''}>启用当前词条组合</label><span id="draft-status">${dirty?'有未保存的改动':draft.id?'已保存':'尚未配置'}</span></div>
-    ${draft.legacy?'<div class="inline-error">这是旧版数值规则；保存将改为当前主、副词条数量规则。</div>':''}
+    ${draft.legacy?`<div class="inline-error">这是旧版数值规则；保存将改为${gear.slot==='Minion'?'单组随机词条':'主、副词条'}数量规则。</div>`:''}
+    ${draft.legacyGroups?`<div class="rule-summary">旧组合兼容中：原有分组数量条件仍分别生效，不会自动合并而改变筛选结果。下方展示已选词条；修改词条前请确认转换。<button id="convert-minion-rule" class="button ghost">转换为随机词条筛选</button></div>`:''}
     ${affixClassMarkup()}
-    ${groupMarkup('primary','主词条')}<div class="flow-label">↓ 主词条达标后，再检查副词条</div>${groupMarkup('secondary','副词条')}
+    ${gear.slot==='Minion'?groupMarkup('random','随机词条'):groupMarkup('primary','主词条')+'<div class="flow-label">↓ 主词条达标后，再检查副词条</div>'+groupMarkup('secondary','副词条')}
     <div id="rule-summary" class="rule-summary"></div><div id="rule-error" class="inline-error" hidden></div>
-    <p class="note">每个组合独立判断主、副词条。只需所选池中任意 n 类达标；同类型只算一次，基础属性不参与计数。一键锁定和持续监控都会检查所有启用组合。</p></div>
+    <p class="note">${gear.slot==='Minion'?'仆从装备从同一随机池抽取词条，不区分主副词条；传说装备有 3 条随机词条。':'每个组合独立判断主、副词条。'}只需所选池中任意 n 类达标；同类型只算一次，基础属性和固定效果不参与计数。一键锁定、持续监控及托管整理共用已启用组合。</p></div>
     <div class="editor-actions"><small class="saved-state">${existing.length} 个已保存组合</small><span class="spacer"></span><button id="reset-rule" class="button ghost">重置改动</button><button id="save-rule" class="button primary">${draft.id?'保存修改':'保存并应用'}</button></div>`;
   updateSummary();
 }
@@ -164,11 +173,13 @@ function validation(){
   if(!draft.name.trim())return '请填写组合名称。';
   if(draft.name.trim().length>80)return '组合名称最多 80 个字符。';
   const gear=gearMap.get(gearKey),pool=catalog.pools[gear.slot];
+  if(gear.slot==='Minion'&&draft.legacyGroups)return state?.config_error||'';
   if(!pool?.primary?.length)return '此部位没有可用的随机词条，暂不支持词条筛选配置。';
-  for(const group of ['primary',...(draft.secondaryEnabled?['secondary']:[])]){
-    const label=group==='primary'?'主词条':'副词条',number=draft[group+'Count'];
+  for(const group of gear.slot==='Minion'?['random']:['primary',...(draft.secondaryEnabled?['secondary']:[])]){
+    const label=group==='random'?'随机词条':group==='primary'?'主词条':'副词条',number=draft[group+'Count'];
     if(!draft[group].length)return `请至少选择一种${label}。`;
     if(!Number.isInteger(number)||number<1)return `${label}命中数量必须是大于 0 的整数。`;
+    if(group==='random'&&number>3)return '传说仆从装备只有 3 条随机词条，命中数量不能超过 3。';
     if(number>draft[group].length)return `${label}要求至少 ${number} 类，但只选了 ${draft[group].length} 类。`;
     const invalid=draft[group].filter(s=>!pool?.[group]?.includes(s));
     if(invalid.length)return `${invalid.map(s=>statMap.get(s)?.name||s).join('、')}不参与此部位的随机${label}筛选，请取消勾选后保存。`;
@@ -178,16 +189,21 @@ function validation(){
 function updateSummary(){
   if(!$('rule-summary'))return;
   const second=draft.secondaryEnabled?`，并且副词条至少命中 ${draft.secondaryCount} / ${draft.secondary.length} 类`:'，不检查副词条';
-  $('rule-summary').textContent=`主词条至少命中 ${draft.primaryCount} / ${draft.primary.length} 类${second}，则锁定。`;
+  $('rule-summary').textContent=gearMap.get(gearKey)?.slot==='Minion'?(draft.legacyGroups?`旧组合：原主词条池至少命中 ${draft.primaryCount} / ${draft.primary.length} 类${second}，则锁定。`:`随机词条至少命中 ${draft.randomCount} / ${draft.random.length} 类，则锁定。`):`主词条至少命中 ${draft.primaryCount} / ${draft.primary.length} 类${second}，则锁定。`;
   document.querySelectorAll('[data-total]').forEach(e=>e.textContent=`已选 ${draft[e.dataset.total].length} 类`);
-  document.querySelectorAll('[data-count]').forEach(e=>e.max=Math.max(1,draft[e.dataset.count].length));
+  document.querySelectorAll('[data-count]').forEach(e=>e.max=Math.max(1,Math.min(e.dataset.count==='random'?3:Infinity,draft[e.dataset.count].length)));
   const error=validation();$('rule-error').textContent=error;$('rule-error').hidden=!error;
   $('save-rule').disabled=!!error;
 }
 async function saveRule(){
   const error=validation();if(error){toast(error,true);return;}
-  const groups={primary:{selected_stats:draft.primary,operator:'>=',count:draft.primaryCount}};
-  if(draft.secondaryEnabled)groups.secondary={selected_stats:draft.secondary,operator:'>=',count:draft.secondaryCount};
+  let groups;
+  if(gearMap.get(gearKey)?.slot==='Minion'){
+    groups=draft.legacyGroups?Object.fromEntries(Object.entries(draft.legacyGroups).map(([name,g])=>[name,{...g,operator:'>=',count:g.count+(g.operator==='>'?1:0)}])):{random:{selected_stats:draft.random,operator:'>=',count:draft.randomCount}};
+  }else{
+    groups={primary:{selected_stats:draft.primary,operator:'>=',count:draft.primaryCount}};
+    if(draft.secondaryEnabled)groups.secondary={selected_stats:draft.secondary,operator:'>=',count:draft.secondaryCount};
+  }
   $('save-rule').disabled=true;
   try{
     const result=await api('rule/save',{id:draft.id,name:draft.name,equipment_keys:[gearKey],enabled:draft.enabled,groups,group_mode:'all'});
@@ -250,7 +266,8 @@ function renderCharacter(){
 }
 function resultBadge(item){
   if(!item.is_equipment)return '<span class="badge miss">—</span>';
-  const mark=item.primary_perfect?'<span class="badge primary-perfect" title="四条随机主词条全部命中同一个启用组合，不检查副词条">✦ 主词条全中</span>':'';
+  const minion=item.is_minion_equipment||item.slot==='Minion';
+  const mark=item.primary_perfect?`<span class="badge primary-perfect" title="${minion?'三条随机词条全部命中同一个启用组合':'四条随机主词条全部命中同一个启用组合，不检查副词条'}">✦ ${minion?'随机词条全中':'主词条全中'}</span>`:'';
   const normal=item.matches?'<span class="badge match">符合规则</span>':item.review?'<span class="badge review">待核验</span>':'<span class="badge miss">未命中</span>';
   return `<span class="result-badges">${mark}${normal}</span>`;
 }
@@ -300,10 +317,10 @@ function equipmentPreviewHtml(item,moveButton=''){
     ${window.SteamMarketUI?.slot(item,true)||''}
     ${worn||item.is_minion_equipment?'':renderComparison(item)}
     ${renderEffects(item)}
-    ${['base','primary','secondary','unknown'].map(g=>{const values=item.groups[g]||[];return values.length?`<div class="detail-group"><h4>${{base:'基础属性 · 不参与筛选',primary:'主词条',secondary:'副词条',unknown:'待核验词条'}[g]}</h4><div class="type-list">${values.map(v=>`<div class="affix-row ${v.matched?'matched':''}" data-affix-key="${esc(v.key)}" title="${esc(v.value_note||(v.matched?'命中规则：'+v.matched_rules.join('、'):''))}"><span class="affix-name">${esc(v.name)}</span><strong class="affix-value">${esc(v.display_value??'未读取')}</strong>${v.matched?'<small class="affix-hit" aria-label="命中规则">✓</small>':''}</div>`).join('')}</div></div>`:'';}).join('')}
+    ${['base','random','primary','secondary','unknown'].map(g=>{const values=item.groups[g]||[];return values.length?`<div class="detail-group"><h4>${{base:'基础属性 · 不参与筛选',random:'随机词条',primary:'主词条',secondary:'副词条',unknown:'待核验词条'}[g]}</h4><div class="type-list">${values.map(v=>`<div class="affix-row ${v.matched?'matched':''}" data-affix-key="${esc(v.key)}" title="${esc(v.value_note||(v.matched?'命中规则：'+v.matched_rules.join('、'):''))}"><span class="affix-name">${esc(v.name)}</span><strong class="affix-value">${esc(v.display_value??'未读取')}</strong>${v.matched?'<small class="affix-hit" aria-label="命中规则">✓</small>':''}</div>`).join('')}</div></div>`:'';}).join('')}
     <p class="detail-hint">${worn?'当前穿戴装备的属性预览。':'绿色为命中已启用规则的词条；整件装备是否达标见下方结果。'}${item.is_minion_equipment?'仆从装备使用自身筛选规则及独立仓库分区，不参与角色自动换装。':''}数值包含已确认的装备强化。</p>
     ${renderGems(item)}
-    <div class="detail-rule">${worn?'':resultBadge(item)}${item.primary_perfect_combinations?.length?`<p class="perfect-combinations">主词条全中组合：${item.primary_perfect_combinations.map(esc).join('、')}<small>四条随机主词条都在该组合的勾选范围内；此标记不检查副词条，不改变自动锁定条件。</small></p>`:''}${item.matched_combinations?.length?`<p class="matched-combinations">命中组合：${item.matched_combinations.map(esc).join('、')}</p>`:''}${item.reasons.map(r=>`<p>${esc(r)}</p>`).join('')}<button class="text-button" data-configure-item="${esc(item.name_key)}">配置这件装备的规则 →</button></div>${moveButton}`;
+    <div class="detail-rule">${worn?'':resultBadge(item)}${item.primary_perfect_combinations?.length?`<p class="perfect-combinations">${item.is_minion_equipment?'随机词条':'主词条'}全中组合：${item.primary_perfect_combinations.map(esc).join('、')}<small>${item.is_minion_equipment?'三条随机词条都在该组合的勾选范围内，且满足组合条件。':'四条随机主词条都在该组合的勾选范围内；此标记不检查副词条。'}此标记不改变自动锁定条件。</small></p>`:''}${item.matched_combinations?.length?`<p class="matched-combinations">命中组合：${item.matched_combinations.map(esc).join('、')}</p>`:''}${item.reasons.map(r=>`<p>${esc(r)}</p>`).join('')}<button class="text-button" data-configure-item="${esc(item.name_key)}">配置这件装备的规则 →</button></div>${moveButton}`;
 }
 function renderEquippedPreview(){
   const dialog=$('equipped-dialog');
@@ -548,7 +565,15 @@ $('rule-editor').addEventListener('input',e=>{
 $('rule-editor').addEventListener('click',async e=>{
   const button=e.target.closest('button');if(!button)return;
   if(button.id==='save-rule')saveRule();
-  if(button.id==='reset-rule'){setDirty(false);const r=rulesFor(gearKey).find(r=>r.id===draft.id);draft=makeDraft(r);renderEditor();}
+  if(button.id==='convert-minion-rule'){
+    if(!draft.legacyGroups)return;
+    if(await confirmAction('转换旧仆从装备组合？','旧组合的分组条件将合并为一组随机词条，已选词条全部保留。命中门槛先按原分组数量之和设置，最多 3 条；转换后请重新确认门槛。此转换可能改变哪些装备符合规则，保存后才生效。','转换并检查',false)!==true)return;
+    draft.legacyGroups=null;draft.randomCount=Math.min(3,draft.randomCount);markDirty();renderEditor();
+  }
+  if(button.id==='reset-rule'){
+    if(await confirmAction('放弃当前规则改动？','将丢弃当前词条组合尚未保存的修改，恢复到上次保存的内容。\n其他筛选组合、托管设置和游戏内装备锁定状态不变。','放弃改动')!==true)return;
+    setDirty(false);const r=rulesFor(gearKey).find(r=>r.id===draft.id);draft=makeDraft(r);renderEditor();
+  }
   if(['new-rule','copy-rule'].includes(button.id)){
     if(!dirty||await confirmAction('新增词条组合？','当前未保存的改动将被放弃。','继续',false)){
       if(button.id==='copy-rule'){const source=rulesFor(gearKey).find(r=>r.id===draft.id);draft=makeDraft(source);draft.id='';draft.name=(draft.name+' · 副本').slice(0,80);}
@@ -715,7 +740,7 @@ function lootPreviewItem(item){
   const equipment=item.kind==='equipment';
   const mistClass=equipment&&item.black_mist&&rarity!==4?' loot-black-mist':'';
   return `<article class="loot-preview-item${rarityClass}${mistClass}"><div class="loot-preview-item-head"><div class="loot-preview-icon">${icon?`<img src="${esc(icon)}" alt="" loading="lazy">`:'<span aria-hidden="true">◇</span>'}</div><div><h3>${esc(item.name||'名称尚未确认')}</h3><p>${esc(item.rarity_label||kinds[item.kind]||'其他物品')}${item.slot_label?' · '+esc(item.slot_label):''}</p></div><strong class="loot-preview-quantity" title="计划数量">×${lootPreviewNumber(item.quantity)}</strong></div>
-    <div class="loot-preview-item-meta">${item.level!==null&&item.level!==undefined?`<span>物品等级 ${esc(item.level)}</span>`:''}${equipment?`<span>${item.sockets===null||item.sockets===undefined?'孔数未确认':esc(item.sockets)+' 孔'}</span>`:''}${equipment&&item.ancient?'<span class="equipment-tag ancient">远古</span>':''}${equipment&&item.black_mist?'<span class="equipment-tag mist">黑雾</span>':''}${equipment&&item.matches?`<span class="equipment-tag loot-rule-match" title="${esc(item.rule_note)}">符合规则</span>`:''}${equipment&&item.primary_perfect?'<span class="equipment-tag loot-rule-match">主词条全中</span>':''}</div>
+    <div class="loot-preview-item-meta">${item.level!==null&&item.level!==undefined?`<span>物品等级 ${esc(item.level)}</span>`:''}${equipment?`<span>${item.sockets===null||item.sockets===undefined?'孔数未确认':esc(item.sockets)+' 孔'}</span>`:''}${equipment&&item.ancient?'<span class="equipment-tag ancient">远古</span>':''}${equipment&&item.black_mist?'<span class="equipment-tag mist">黑雾</span>':''}${equipment&&item.matches?`<span class="equipment-tag loot-rule-match" title="${esc(item.rule_note)}">符合规则</span>`:''}${equipment&&item.primary_perfect?`<span class="equipment-tag loot-rule-match">${item.slot==='Minion'?'随机词条':'主词条'}全中</span>`:''}</div>
     ${equipment&&item.groups?lootPreviewGroups(item):modifiers.length?`<ul class="loot-preview-affixes">${modifiers.map(modifier=>`<li>${esc(modifier.text||'词条待确认')}</li>`).join('')}</ul>`:equipment?'<p class="loot-preview-item-note">此装备暂无可显示词条。</p>':''}
     ${renderEffects(item)}${item.effect_note?`<p class="loot-preview-item-note">${esc(item.effect_note)}</p>`:''}
     ${equipment&&item.rule_note?`<p class="loot-preview-item-note">${esc(item.rule_note)}</p>`:''}
@@ -723,7 +748,7 @@ function lootPreviewItem(item){
     ${item.kind==='chest'&&Number(item.chest_gold)>0?`<p class="loot-preview-item-note">计划箱内金币 ${lootPreviewNumber(item.chest_gold)}（不计入波次合计）</p>`:''}${item.kind==='chest'?'<p class="loot-preview-item-note">箱子内物品需结算后确认。</p>':''}</article>`;
 }
 function lootPreviewGroups(item){
-  const titles={base:'基础属性 · 不参与筛选',primary:'主词条',secondary:'副词条',unknown:'未确认词条'};
+  const titles={base:'基础属性 · 不参与筛选',random:'随机词条',primary:'主词条',secondary:'副词条',unknown:'未确认词条'};
   return Object.entries(titles).map(([group,title])=>{
     const rows=Array.isArray(item.groups[group])?item.groups[group]:[];
     return rows.length?`<div class="detail-group loot-affix-group"><h4>${title}</h4>${rows.map(row=>`<div class="affix-row${row.matched?' matched':''}" title="${esc(row.matched?(row.matched_rules||[]).join('、'):row.value_note||'')}"><span>${esc(row.name)}</span><strong>${esc(row.display_value)}${row.matched?' ✓':''}</strong></div>`).join('')}</div>`:'';
@@ -789,4 +814,16 @@ async function loadLootPreview(background=false){
 }
 $('loot-preview-refresh').addEventListener('click',()=>loadLootPreview());
 setInterval(()=>{if(!exiting&&activeTab==='loot-preview')loadLootPreview(true);},2000);
+window.AssistantConfigurationUI={async refresh(section){
+  if(section==='browser_cache')return;
+  state=await api('state');
+  if(section==='equipment_rules'){
+    setDirty(false);draft=makeDraft();lastRules='';renderCatalog();renderEditor();
+  }else if(section==='automation'){
+    if(state.automation)sharedStorage?.observe(window.AutomationTools.sharedPages(state.automation.settings));
+    sharedStorage?.reset();automationDirty=false;automationDraft=null;
+    await window.ManagedModeUI?.reloadSettings();
+  }
+  renderState();syncDraftState();
+}};
 boot();

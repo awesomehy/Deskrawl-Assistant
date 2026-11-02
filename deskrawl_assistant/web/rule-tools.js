@@ -45,7 +45,8 @@ function renderCombinationManager(){
   const rules=rulesFor(managerGear);
   $('manage-title').textContent=`管理 ${gearMap.get(managerGear).name} 的组合`;
   $('manage-list').innerHTML=rules.length?rules.map((r,i)=>{
-    const summary=r.groups?`主词条 ≥${r.groups.primary.count} 类${r.groups.secondary?` · 副词条 ≥${r.groups.secondary.count} 类`:' · 不检查副词条'}`:'旧版数值规则';
+    const groupSummary=(g,label)=>`${label} ${g.operator==='>'?'>':'≥'}${g.count} 类`;
+    const summary=r.groups?.random?groupSummary(r.groups.random,'随机词条'):r.groups?`${gearMap.get(managerGear)?.slot==='Minion'?'旧组合兼容 · ':''}${groupSummary(r.groups.primary,'主词条')}${r.groups.secondary?` · ${groupSummary(r.groups.secondary,'副词条')}`:' · 不检查副词条'}`:'旧版数值规则';
     return `<label class="manage-row"><input type="checkbox" data-manage-id="${esc(r.id)}" aria-label="选择第 ${i+1} 个组合 ${esc(r.name)}"><span><strong>${i+1}. ${esc(r.name)}</strong><small>${esc(summary)}</small></span><span class="badge ${r.enabled?'match':'miss'}">${r.enabled?'已启用':'已停用'}</span></label>`;
   }).join(''):'<div class="empty-state">这件装备的组合已清空</div>';
   updateManagerSelection();

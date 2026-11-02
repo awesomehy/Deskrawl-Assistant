@@ -22,8 +22,8 @@ def rules_from_dict(data: Any, catalog: Catalog) -> list[Rule]:
     version = None
     if isinstance(data, Mapping):
         version = data.get("schema_version", data.get("version"))
-        if isinstance(version, bool) or not isinstance(version, int) or version not in (1, 2):
-            raise ValidationError("规则文件版本必须是 1 或 2")
+        if isinstance(version, bool) or not isinstance(version, int) or version not in (1, 2, 3):
+            raise ValidationError("规则文件版本必须是 1、2 或 3")
         if "schema_version" in data and "version" in data and data["schema_version"] != data["version"]:
             raise ValidationError("规则版本字段不一致")
         unknown = set(data) - {"schema_version", "version", "rules"}
@@ -34,7 +34,7 @@ def rules_from_dict(data: Any, catalog: Catalog) -> list[Rule]:
         raise ValidationError("规则文件必须包含 rules 列表")
     rules = [Rule.from_dict(row, catalog) for row in data]
     if version is not None and any(rule.schema_version != version for rule in rules):
-        raise ValidationError("规则内容与文件版本不一致：v1 使用 conditions，v2 使用 groups")
+        raise ValidationError("规则内容与文件版本不一致：v1 使用 conditions，v2 使用主副 groups，v3 使用 random groups")
     ids = [rule.id for rule in rules]
     if len(ids) != len(set(ids)):
         raise ValidationError("规则 ID 不能重复")
@@ -117,14 +117,14 @@ def _evaluate_condition(condition: Condition, item: ItemObservation, catalog: Ca
 
 def _evaluate_group(name: str, group: CountGroup, item: ItemObservation,
                     catalog: Catalog, minimum: Decimal) -> tuple[str, str]:
-    label = "主词条" if name == "primary" else "副词条"
+    label = '随机词条' if name == 'random' else "主词条" if name == "primary" else "副词条"
     hit_types: set[str] = set()
     uncertain_types: set[str] = set()
     for key in group.selected_stats:
         for value in item.affixes.get(key, ()):
             if value.confidence < minimum or value.group not in {"primary", "secondary"} or value.group_confidence < minimum:
                 uncertain_types.add(key)
-            elif value.group == name:
+            elif name == 'random' or value.group == name:
                 hit_types.add(key)
     count = len(hit_types)
     threshold = f"{'超过' if group.operator == '>' else '至少'} {group.count} 条"
@@ -135,7 +135,7 @@ def _evaluate_group(name: str, group: CountGroup, item: ItemObservation,
         return "uncertain", detail + "；该组分类或读取尚未完整，无法确认"
     if uncertain_types:
         unknown = "、".join(catalog.stats[key].label for key in group.selected_stats if key in uncertain_types)
-        return "uncertain", detail + f"；{unknown}的类型或主副分组证据不足"
+        return "uncertain", detail + f"；{unknown}的类型或随机来源证据不足"
     success = count > group.count if group.operator == ">" else count >= group.count
     return "match" if success else "miss", detail + ("；满足数量条件" if success else "；不满足数量条件")
 
@@ -155,6 +155,9 @@ def evaluate(rule: Rule, item: ItemObservation, catalog: Catalog,
     if key not in rule.equipment_keys:
         return Evaluation("miss", rule.id, ("装备名称不在此规则指定的装备中",))
     if rule.is_count_rule:
+        if 'random' in rule.groups:
+            result = _evaluate_group('random', rule.groups['random'], item, catalog, minimum)
+            return Evaluation(result[0], rule.id, (result[1],))
         primary = _evaluate_group("primary", rule.groups["primary"], item, catalog, minimum)
         if primary[0] != "match":
             return Evaluation(primary[0], rule.id, (primary[1],))
@@ -173,8 +176,27 @@ def evaluate(rule: Rule, item: ItemObservation, catalog: Catalog,
     return Evaluation(status, rule.id, tuple(reason for _, reason in results))
 
 
+def selected_group_stats(rule: Rule, group: str) -> frozenset[str]:
+    """Display selection; legacy minion AND requirements stay in evaluate()."""
+    if group == 'random' and rule.is_count_rule:
+        return frozenset(key for value in rule.groups.values() for key in value.selected_stats)
+    return frozenset(rule.groups[group].selected_stats) if group in rule.groups else frozenset()
+
+
 def primary_perfect_rules(item: ItemObservation, rules: Iterable[Rule], catalog: Catalog) -> list[Rule]:
-    """A display-only mark for four random primaries within one enabled pool."""
+    """Display-only: four character primaries or all three minion random affixes."""
+    if item.groups_complete.get('random'):
+        # Only the adapter's verified Minion slot can assert this completeness.
+        values = [(key, value) for key, rows in item.affixes.items() for value in rows]
+        if (not (item.equipment_key or '').startswith('LegendaryMinionGear') or len(values) != 3
+                or len({key for key, _ in values}) != 3
+                or any(value.group not in ('primary', 'secondary')
+                       or value.confidence < DEFAULT_MIN_CONFIDENCE
+                       or value.group_confidence < DEFAULT_MIN_CONFIDENCE for _, value in values)):
+            return []
+        return [rule for rule in rules if rule.is_count_rule
+                and all(key in selected_group_stats(rule, 'random') for key, _ in values)
+                and evaluate(rule, item, catalog).status == 'match']
     if not item.groups_complete.get('primary') or item.name_confidence < DEFAULT_MIN_CONFIDENCE:
         return []
     primaries = [(key, value) for key, values in item.affixes.items() for value in values if value.group == 'primary']
@@ -183,7 +205,7 @@ def primary_perfect_rules(item: ItemObservation, rules: Iterable[Rule], catalog:
         return []
     matches = []
     for rule in rules:
-        if not rule.enabled or not rule.is_count_rule:
+        if not rule.enabled or not rule.is_count_rule or 'primary' not in rule.groups:
             continue
         if all(key in rule.groups['primary'].selected_stats for key, _ in primaries):
             primary_only = replace(rule, groups={'primary':rule.groups['primary']})

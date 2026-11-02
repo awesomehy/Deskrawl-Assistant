@@ -63,6 +63,11 @@ def make_handler(service, token):
                     if getattr(self.server,'desktop',None) is None: value['can_install'] = False
                     return self.reply(value)
                 if path=='/api/session': return self.reply({'token':token})
+                if path=='/api/settings':
+                    if self.headers.get('X-Assistant-Token') != token:
+                        return self.reply({'error':'请重新打开助手页面。','session_expired':True},403)
+                    if urlsplit(self.path).query: raise ValueError('助手设置不接受查询参数。')
+                    return self.reply(service.assistant_settings_info(getattr(self.server,'desktop',None)))
                 if path=='/api/market/settings':
                     if self.headers.get('X-Assistant-Token') != token:
                         return self.reply({'error':'请重新打开助手页面。','session_expired':True},403)
@@ -150,6 +155,22 @@ def make_handler(service, token):
                 if getattr(service,'updating',False) is True and path not in ('/api/stop','/api/shutdown'):
                     raise ValueError('正在替换程序，请稍候。')
                 if path=='/api/action': service.start(data.get('kind'),data)
+                elif path=='/api/settings':
+                    if urlsplit(self.path).query: raise ValueError('助手设置不接受查询参数。')
+                    return self.reply(service.save_assistant_settings(data,getattr(self.server,'desktop',None)))
+                elif path=='/api/settings/open-folder':
+                    if data or urlsplit(self.path).query: raise ValueError('数据目录不接受自定义路径。')
+                    return self.reply(service.open_assistant_data_directory())
+                elif path=='/api/settings/reset':
+                    if set(data) != {'section'} or urlsplit(self.path).query:
+                        raise ValueError('重置参数无效。')
+                    if not isinstance(data['section'],str): raise ValueError('重置分类无效。')
+                    return self.reply(service.reset_assistant_configuration(data['section'],getattr(self.server,'desktop',None)))
+                elif path=='/api/window/hotkey-capture':
+                    desktop = getattr(self.server,'desktop',None)
+                    if desktop is None: raise ValueError('请在助手独立窗口中设置老板键。')
+                    if set(data) != {'capturing'}: raise ValueError('快捷键录入状态无效。')
+                    return self.reply(desktop.capture_hotkey(data['capturing']))
                 elif path=='/api/market/quotes':
                     if set(data) != {'items'}: raise ValueError('市场查询参数无效。')
                     return self.reply(service.market_quotes(data['items']))

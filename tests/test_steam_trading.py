@@ -155,6 +155,18 @@ class TradingTests(unittest.TestCase):
         self.service.sale_once(self.settings, STEAMID)
         self.assertEqual(self.session.sales, [])
 
+    def test_discarded_baseline_cannot_adopt_a_later_upload_even_after_restart(self):
+        ticket = self.service.prepare_upload(STEAMID, 'GoldBar')
+        self.session.requests.clear()
+        self.service.discard_upload_baseline(ticket)
+        self.assertEqual(self.session.requests, [])
+        self.session.inventory = inventory(('1', 1, {}), ('2', 1, {}))
+        restored = SteamTradingService(self.path, catalog(), session=self.session, clock=lambda: self.now)
+        with self.assertRaises(SteamSessionError):
+            restored.complete_upload(ticket, expected_instance_id='original-instance')
+        self.assertEqual(restored.state()['queued_count'], 0)
+        self.assertEqual(self.session.sales, [])
+
     def test_manual_scope_cannot_sell_other_captured_or_pending_assets(self):
         self.adopt()  # unrelated captured stock
         ticket = self.service.prepare_upload(STEAMID, 'GoldBar', manual=True)

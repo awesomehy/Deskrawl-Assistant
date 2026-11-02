@@ -11,6 +11,7 @@ from copy import deepcopy
 from decimal import Decimal, InvalidOperation
 from http.cookiejar import Cookie, CookieJar
 from http.cookies import SimpleCookie
+from hashlib import sha256
 import json
 import os
 from pathlib import Path
@@ -18,7 +19,7 @@ import re
 import threading
 import time
 from urllib.error import HTTPError
-from urllib.parse import urlencode, urlparse, unquote
+from urllib.parse import urlencode, urlparse, unquote, parse_qs
 from urllib.request import Request, build_opener, HTTPRedirectHandler, HTTPCookieProcessor, ProxyHandler
 
 from .steam_market import APP_ID, CURRENCIES
@@ -30,10 +31,11 @@ COOKIE_NAMES = frozenset(('steamLoginSecure', 'sessionid'))
 
 
 class SteamSessionError(RuntimeError):
-    def __init__(self, message, *, status=0, retry_after=0):
+    def __init__(self, message, *, status=0, retry_after=0, auth_expired=False):
         super().__init__(message)
         self.status = status
         self.retry_after = retry_after
+        self.auth_expired = auth_expired
 
 
 def _dpapi(raw, *, decrypt=False):
@@ -123,11 +125,15 @@ def _assignment(document, name):
 
 def parse_wallet(document, steamid):
     """Fail closed if the logged-in wallet or account cannot be verified."""
+    if re.search(r'\bg_steamID\s*=\s*(?:false|null|0|[\'\"]{2})\s*;', document):
+        raise SteamSessionError('Steam 登录已过期，请重新登录。', status=401, auth_expired=True)
     identity = re.search(r'(?:var\s+)?g_steamID\s*=\s*[\'\"](7656\d{13})[\'\"]', document)
     wallet = _assignment(document, 'g_rgWalletInfo')
     apps = _assignment(document, 'g_rgAppContextData') or {}
-    if not identity or identity.group(1) != steamid or not isinstance(wallet, dict):
-        raise SteamSessionError('Steam 登录已失效或钱包身份无法确认，请重新登录。', status=401)
+    if identity and identity.group(1) != steamid:
+        raise SteamSessionError('Steam 登录身份已变化，请重新登录。', status=401, auth_expired=True)
+    if not identity or not isinstance(wallet, dict):
+        raise SteamSessionError('Steam 登录或钱包页面暂无法核验，稍后重试。')
     currency = wallet.get('wallet_currency')
     try:
         currency = int(currency)
@@ -177,15 +183,32 @@ class _NoRedirect(HTTPRedirectHandler):
             raise SteamSessionError('Steam 写入请求发生重定向，结果待核验；不会重复提交。')
         try:
             target = urlparse(newurl)
-            safe = (target.scheme == 'https' and target.hostname == 'steamcommunity.com'
-                    and target.port in (None, 443) and not target.username and not target.password
-                    and not re.search(r'[\\\x00-\x20\x7f]', newurl))
+            secure = (target.scheme == 'https' and target.port in (None, 443)
+                      and not target.username and not target.password
+                      and not re.search(r'[\\\x00-\x20\x7f]', newurl))
+            safe = secure and target.hostname == 'steamcommunity.com'
+            if (secure and target.hostname == 'login.steampowered.com'
+                    and target.path in ('/jwt/refresh', '/jwt/refresh/') and not target.fragment):
+                returns = parse_qs(target.query, max_num_fields=32).get('redir', [])
+                if len(returns) == 1:
+                    source, back = urlparse(req.full_url), urlparse(returns[0])
+                    if (source.scheme == back.scheme == 'https'
+                            and source.hostname == back.hostname == 'steamcommunity.com'
+                            and source.port in (None, 443) and back.port in (None, 443)
+                            and not back.username and not back.password and not back.fragment
+                            and not re.search(r'[\\\x00-\x20\x7f]', returns[0])
+                            and (back.path, back.query) == (source.path, source.query)):
+                        # Our saved Community access cookie cannot satisfy this
+                        # request. Renew it through the official login window;
+                        # never forward cookies to the other origin or follow.
+                        raise SteamSessionError('Steam 登录凭证已过期，请重新登录。',
+                                                status=401, auth_expired=True)
         except ValueError:
             safe = False
         if not safe:
             raise SteamSessionError('Steam 返回不支持的跳转地址，已停止核验。')
         if target.path == '/login' or target.path.startswith('/login/'):
-            raise SteamSessionError('Steam 登录已失效，请重新登录。', status=401)
+            raise SteamSessionError('Steam 登录已过期，请重新登录。', status=401, auth_expired=True)
         allowed = ('/market/', '/market/eligibilitycheck/')
         if urlparse(req.full_url).path not in allowed or target.path not in allowed:
             raise SteamSessionError('Steam 返回不支持的页面跳转，已停止核验。')
@@ -195,14 +218,17 @@ class _NoRedirect(HTTPRedirectHandler):
 
 
 class SteamSession:
-    def __init__(self, path, *, transport=None, protector=_dpapi, clock=time.time):
+    def __init__(self, path, *, transport=None, login_window_factory=None, protector=_dpapi, clock=time.time):
         self.path = Path(path)
         self.transport = transport
+        self.login_window_factory = login_window_factory
         self.protector = protector
         self.clock = clock
         self.guard = threading.RLock()
         self._cookies = {}
         self._wallet = None
+        self._expired = False
+        self._persisted_fingerprint = None
         self._window = None
         self._login_busy = False
         self._generation = 0
@@ -217,6 +243,7 @@ class SteamSession:
                 values = _validated_values(data.get('cookies'))
                 # Saved data is never considered verified until Steam is read.
                 self._cookies = values
+                self._persisted_fingerprint = self._cookie_fingerprint(values)
                 self._message = '已保存 Steam 绑定，等待核验登录状态。'
             except Exception:
                 self._message = 'Steam 绑定无法解密；请用原 Windows 用户重新登录。'
@@ -224,7 +251,8 @@ class SteamSession:
     def state(self):
         with self.guard:
             wallet = self._wallet or {}
-            return {'bound': bool(self._cookies), 'verified': bool(self._wallet),
+            return {'bound': bool(self._cookies) and not self._expired, 'verified': bool(self._wallet) and not self._expired,
+                    'expired': self._expired,
                     'steamid': wallet.get('steamid'), 'wallet_currency': wallet.get('currency'),
                     'wallet_currency_id': wallet.get('currency_id'), 'login_open': self._login_busy,
                     'binding_generation': self._generation,
@@ -239,6 +267,8 @@ class SteamSession:
             self._login_busy = False
             self._cookies.clear()
             self._wallet = None
+            self._expired = False
+            self._persisted_fingerprint = None
             self._message = '已解除本机 Steam 绑定。'
             self.path.unlink(missing_ok=True)
         if window:
@@ -249,13 +279,44 @@ class SteamSession:
         return self.state()
 
     def request(self, method, path, data=None):
+        with self.guard:
+            if self._expired:
+                raise SteamSessionError('Steam 登录已过期，请重新登录。', status=401, auth_expired=True)
+            if set(self._cookies) != COOKIE_NAMES:
+                raise SteamSessionError('请先绑定 Steam 登录。', status=401)
+            generation = self._generation
+            cookies = deepcopy(self._cookies)
+        try:
+            return self._request(method, path, data, cookies=cookies)
+        except SteamSessionError as exc:
+            # Only Steam's own authentication rejection invalidates credentials;
+            # local account/generation guards and network failures do not.
+            if exc.status == 401 or exc.auth_expired:
+                self._expire(generation)
+            raise
+
+    @staticmethod
+    def _cookie_fingerprint(cookies):
+        return sha256(json.dumps(cookies, sort_keys=True).encode('utf-8')).digest()
+
+    def _expire(self, generation):
+        with self.guard:
+            if generation != self._generation:
+                return
+            self._expired = True
+            self._wallet = None
+            self._message = 'Steam 登录已过期，请重新登录；自动出售已取消，游戏拍卖行上传不受影响。'
+            if self._persisted_fingerprint == self._cookie_fingerprint(self._cookies):
+                try:
+                    self.path.unlink(missing_ok=True)
+                    self._persisted_fingerprint = None
+                except OSError:
+                    pass  # Never mask the authentication result with a disk error.
+
+    def _request(self, method, path, data=None, *, cookies):
         if (method not in ('GET', 'POST') or not path.startswith('/') or path.startswith('//')
                 or '\\' in path or '\r' in path or '\n' in path):
             raise SteamSessionError('Steam 请求地址无效。')
-        with self.guard:
-            if set(self._cookies) != COOKIE_NAMES:
-                raise SteamSessionError('请先绑定 Steam 登录。', status=401)
-            cookies = deepcopy(self._cookies)
         if self.transport:
             return self.transport(method, path, data, cookies)
         headers = {'User-Agent': 'Mozilla/5.0 DeskrawlAssistant',
@@ -319,8 +380,10 @@ class SteamSession:
         try:
             wallet = parse_wallet(self.request('GET', '/market/'), steamid)
         except SteamSessionError as exc:
+            if exc.auth_expired:
+                self._expire(generation)
             with self.guard:
-                if generation == self._generation and self._cookies.get('steamLoginSecure') == cookie:
+                if not self._expired and generation == self._generation and self._cookies.get('steamLoginSecure') == cookie:
                     self._wallet = None
                     self._message = str(exc)
             raise
@@ -340,10 +403,12 @@ class SteamSession:
                     and (window_epoch != self._window_epoch or not self._login_busy)):
                 raise SteamSessionError('Steam 登录窗口已关闭或取消，未保存绑定。')
             previous = self._cookies
+            previous_expired = self._expired
             self._generation += 1
             generation = self._generation
             self._cookies = values
             self._wallet = None
+            self._expired = False
         try:
             if verify_now:
                 self.verify(force=True)
@@ -353,6 +418,7 @@ class SteamSession:
                         and (window_epoch != self._window_epoch or not self._login_busy)):
                     raise SteamSessionError('Steam 绑定已取消，请重新登录。')
                 _atomic_write(self.path, encrypted)
+                self._persisted_fingerprint = self._cookie_fingerprint(values)
                 if not verify_now:
                     self._message = 'Steam 登录凭证已加密保存，正在后台核验账号与钱包；无需保持登录窗口打开。'
         except Exception:
@@ -360,6 +426,9 @@ class SteamSession:
                 if generation == self._generation:
                     self._cookies = previous
                     self._wallet = None
+                    self._expired = previous_expired
+                    if previous and not previous_expired:
+                        self._message = '新登录暂未核验，已保留原绑定，等待重新核验。'
                 elif self._cookies is values:
                     # Cancellation may change the generation while encryption
                     # is in progress. Discard only this uncommitted capture;
@@ -385,7 +454,8 @@ class SteamSession:
             self._window_epoch += 1
             epoch = self._window_epoch
         try:
-            window = webview.create_window('绑定 Steam · 仅在官方页面登录', LOGIN_URL,
+            factory = self.login_window_factory or webview.create_window
+            window = factory('绑定 Steam · 仅在官方页面登录', LOGIN_URL,
                                           js_api=None, width=1000, height=760,
                                           min_size=(740, 580), text_select=True)
             if window is None:

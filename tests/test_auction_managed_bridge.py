@@ -190,6 +190,51 @@ class AuctionManagedBridgeTests(unittest.TestCase):
         self.coordinator.process_once()
         self.assertEqual(self.trading.calls[-1][0], 'sale')
 
+    def test_expired_or_mismatched_web_login_only_disables_market_sale_not_game_upload(self):
+        self.enable(sell=True)
+        saved = deepcopy(self.service.managed.settings['auction'])
+        item = deepcopy(self.client.items[0])
+        for auth in ({'verified': False, 'bound': True, 'steamid': None},
+                     {'verified': False, 'bound': False, 'steamid': None},
+                     {'verified': True, 'steamid': '76561198000000002'}):
+            with self.subTest(auth=auth):
+                self.trading.auth = auth
+                self.coordinator.process_once()
+                action, world = self.plan()
+                def commit(kind, payload):
+                    self.assertEqual(kind, 'auction_upload')
+                    self.assertEqual(payload['expected_steamid'], STEAMID)
+                    self.client.items.clear()
+                    return {'effect_confirmed': True, 'quantity': 1,
+                        'uploaded_uid': payload['item']['item_uid'],
+                        'uploaded_instance_id': payload['item']['instance_id'],
+                        'uploaded_internal_name': payload['item']['internal_name']}
+                self.client.native_handler = commit
+                result = self.service._managed_execute(action, world)
+                self.assertTrue(result['verified'])
+                self.assertTrue(self.service.managed.running)
+                intent = next(iter(self.coordinator.intents.values()))
+                self.assertEqual(intent['phase'], 'resolved')
+                self.assertIsNone(intent['ticket'])
+                self.coordinator.process_once()
+                self.assertEqual(self.trading.calls, [])
+                self.assertEqual(self.service.managed.settings['auction'], saved)
+                # Use a fresh native item/journal for the next independent case.
+                self.coordinator.intents.clear()
+                self.client.items = [deepcopy(item)]
+
+    def test_expired_login_still_fences_unknown_game_upload_results(self):
+        self.enable(sell=True)
+        self.trading.auth.update(verified=False, steamid=None)
+        self.coordinator.process_once()
+        action, world = self.plan()
+        self.client.native_handler = Mock(side_effect=NativeActionError('lost receipt', uncertain=True))
+        with self.assertRaises(NativeActionError):
+            self.service._managed_execute(action, world)
+        self.assertIsNone(next_action(self.service.managed.settings, self.service._managed_observation()))
+        self.assertEqual(len(self.client.actions), 1)
+        self.assertEqual(next(iter(self.coordinator.intents.values()))['phase'], 'submitted')
+
     def test_proven_prewrite_rejection_skips_only_the_item_and_preserves_managed_running(self):
         self.enable()
         action, world = self.plan()

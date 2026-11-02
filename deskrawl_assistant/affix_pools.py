@@ -21,4 +21,10 @@ def editor_pools(slot_pools, class_filters):
         } for slot, pool in broad.items()}
         for value in class_filters['classes'].values()
     }
+    # go.dur combines the class-filtered primary pool with secondary before
+    # sampling Minion affixes. Retain the old buckets only for v2 AND rules.
+    for view in (broad, *by_class.values()):
+        if 'Minion' in view:
+            view['Minion']['random'] = list(dict.fromkeys(
+                view['Minion']['primary'] + view['Minion']['secondary']))
     return broad, by_class

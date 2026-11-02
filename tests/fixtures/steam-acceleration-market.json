@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "appid": 4623570,
+  "resources_sha256": "06e424d38d018a629559c04c78d8b396205b7ecc66926990481cbbe0ee89b0b5",
+  "source": "Read-only extraction from the running assistant v1.5.6 bundled market catalogue; confirmed against the local state/catalogue API on 2026-11-02. Independent test fixture only.",
+  "items": {
+    "LegendaryNeck8": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 61723,
+      "source_file": "sharedassets0.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3062,
+        "market_hash_name": "Prismatic Heart (Black Mist)"
+      }
+    }
+  }
+}

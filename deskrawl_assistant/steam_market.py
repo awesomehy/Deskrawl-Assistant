@@ -407,6 +407,17 @@ class SteamMarketPrices:
             self.condition.notify_all()
         self._save()
 
+    def refresh_failed(self):
+        """Retry connection errors after a preference change; keep Steam backoff."""
+        with self.condition:
+            for name, value in list(self.cache.items()):
+                if value.get('status') == 'unavailable':
+                    del self.cache[name]
+                elif value.get('refresh_error'):
+                    value['retry_after'] = 0
+            self.condition.notify_all()
+
+
     def close(self):
         with self.condition:
             self.closed = True

@@ -114,6 +114,34 @@ class ReadRedirectTests(unittest.TestCase):
         self.assertEqual(handler.max_redirections, 3)
         self.assertEqual(handler.max_repeats, 2)
 
+    def test_official_refresh_is_expired_but_unrelated_redirects_are_not(self):
+        request = Request('https://steamcommunity.com/market/', method='GET')
+        target = 'https://login.steampowered.com/jwt/refresh?redir=https%3A%2F%2Fsteamcommunity.com%2Fmarket%2F'
+        with self.assertRaises(SteamSessionError) as caught:
+            _NoRedirect().redirect_request(request, None, 302, 'Redirect', Message(), target)
+        self.assertTrue(caught.exception.auth_expired)
+        self.assertEqual(caught.exception.status, 401)
+        for destination in (
+            target.replace('login.steampowered.com', 'login.steampowered.com.other.test'),
+            target.replace('https://login.', 'http://login.'),
+            target.replace('login.steampowered.com/', 'login.steampowered.com:444/'),
+            target.replace('/jwt/refresh?', '/jwt/refresh/other?'),
+            target.replace('steamcommunity.com%2Fmarket', 'other.test%2Fmarket'),
+            target.replace('%2Fmarket%2F', '%2Finventory%2F'),
+            target + '&redir=https%3A%2F%2Fsteamcommunity.com%2Fmarket%2F',
+            target.replace('https%3A%2F%2Fsteamcommunity', 'http%3A%2F%2Fsteamcommunity'),
+            target.replace('steamcommunity.com', 'user%40steamcommunity.com'),
+            target + '#fragment',
+            'https://login.steampowered.com/jwt/refresh',
+        ):
+            with self.subTest(destination=destination), self.assertRaises(SteamSessionError) as rejected:
+                _NoRedirect().redirect_request(request, None, 302, 'Redirect', Message(), destination)
+            self.assertFalse(rejected.exception.auth_expired)
+        post = Request('https://steamcommunity.com/market/', data=b'price=1', method='POST')
+        with self.assertRaises(SteamSessionError) as write:
+            _NoRedirect().redirect_request(post, None, 302, 'Redirect', Message(), target)
+        self.assertFalse(write.exception.auth_expired)
+
 
 class SessionTests(unittest.TestCase):
     def test_official_cookie_domains_only(self):
@@ -346,6 +374,25 @@ class SessionTests(unittest.TestCase):
                     with self.assertRaises(SteamSessionError):
                         service.request(method, path, {'price': 1} if method == 'POST' else None)
                 self.assertEqual(len(requests), 1)
+
+    def test_market_refresh_redirect_revokes_saved_credentials_without_a_second_request(self):
+        with tempfile.TemporaryDirectory() as temp:
+            service = SteamSession(Path(temp) / 'session.dpapi', protector=lambda raw, **kwargs: raw)
+            service.capture_session(cookies(), verify_now=False)
+            requests = []
+            destination = 'https://login.steampowered.com/jwt/refresh?redir=https%3A%2F%2Fsteamcommunity.com%2Fmarket%2F'
+            fake_https = _ScriptedHTTPS([(302, destination, [], '')], requests)
+            with patch('urllib.request.getproxies', return_value={}), \
+                    patch('deskrawl_assistant.steam_session.build_opener',
+                          side_effect=lambda *handlers: real_build_opener(*handlers, fake_https)):
+                with self.assertRaises(SteamSessionError) as caught:
+                    service.verify(force=True)
+            self.assertTrue(caught.exception.auth_expired)
+            self.assertTrue(service.state()['expired'])
+            self.assertFalse(service.state()['bound'])
+            self.assertIn('重新登录', service.state()['message'])
+            self.assertFalse(service.path.exists())
+            self.assertEqual(len(requests), 1)
 
     def test_eligibility_loop_is_limited_to_three_followed_hops(self):
         with tempfile.TemporaryDirectory() as temp:

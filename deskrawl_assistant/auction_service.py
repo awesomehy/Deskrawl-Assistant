@@ -12,8 +12,9 @@ from .models import ValidationError
 
 
 class AuctionCoordinator:
-    def __init__(self, directory, trading, provider, *, start_worker=True):
+    def __init__(self, directory, trading, provider, *, start_worker=True, on_auth_expired=None):
         self.trading, self.provider = trading, provider
+        self.on_auth_expired = on_auth_expired
         self.path = directory / 'auction-upload-intents.json'
         self.guard = threading.RLock()
         # A manual batch owns this lock across baseline -> native upload ->
@@ -89,7 +90,9 @@ class AuctionCoordinator:
             result['blocked_uids'] = list(native.get('blocked_uids', [])) + [row['uid'] for row in self.intents.values()
                 if row.get('phase') != 'resolved']
             result['blocked_uids'] += [row['uid'] for row in self.jobs.values()
-                if row.get('steamid') == steamid and row.get('phase') == 'failed' and row.get('retry_at', 0) > time.monotonic()]
+                if row.get('steamid') == steamid and row.get('phase') == 'failed'
+                and row.get('retry_at', 0) > time.monotonic()
+                and not (row.get('failure_stage') == 'prepare' and not self.market_preparation_required(steamid))]
             result['blocked_uids'] = sorted(set(result['blocked_uids']))
             result['blocked_keys'] = sorted(set(native.get('blocked_keys', [])) | {row['item_key'] for row in self.intents.values()
                 if row.get('ticket') and row.get('phase') != 'resolved'})
@@ -100,11 +103,15 @@ class AuctionCoordinator:
     def state(self):
         with self.guard:
             value = deepcopy(self.cached)
+            confirmation_known = (value.get('verified') is True and value.get('confirmation_known') is True
+                                  and time.time() < (value.get('confirmation_expires_at') or 0))
+            confirmation_count = value.get('pending_count', 0) if confirmation_known else 0
             native = self.native
             unresolved = sum(r.get('phase') in ('submitted', 'uncertain', 'confirmed') for r in self.intents.values())
             pending = any(r.get('phase') in ('prepare', 'preparing', 'complete', 'completing') for r in self.jobs.values())
             return {'steam': {'authenticated': value.get('verified') is True,
                     'bound': value.get('bound') is True,
+                    'expired': value.get('expired') is True,
                     'login_pending': value.get('login_open') is True,
                     'account_name': value.get('steamid') or '', 'wallet_currency': value.get('wallet_currency'),
                     'message': value.get('message') or ''},
@@ -113,9 +120,22 @@ class AuctionCoordinator:
                     'listing_count': native.get('listing_count'), 'listing_limit': 8, 'pending': pending},
                 'sell': {'phase': value.get('status', 'idle'), 'message': value.get('sale_message') or '',
                     'pending': value.get('queued_count', 0),
-                    'pending_confirmation': value.get('pending_count', 0) > 0,
-                    'confirmation_count': value.get('pending_count', 0),
+                    'pending_confirmation': confirmation_count > 0,
+                    'confirmation_count': confirmation_count,
+                    'confirmation_known': confirmation_known,
+                    'confirmation_expires_at': value.get('confirmation_expires_at') if confirmation_known else None,
                     'uncertain_count': value.get('uncertain_count', 0)}, 'error': self.error}
+
+    def market_preparation_required(self, steamid):
+        """A known unusable web login disables sale preparation, not game uploads.
+
+        Empty cache means the Steam worker has not read the saved session yet;
+        retain the normal asynchronous preparation until that first read.
+        Game account/scene/receipt checks remain independent of this web login.
+        """
+        with self.guard:
+            return not self.cached or (self.cached.get('verified') is True
+                                       and self.cached.get('steamid') == steamid)
 
     def prepare(self, row, steamid, config):
         """Return ready ticket or enqueue I/O; called outside the game lock."""
@@ -154,6 +174,10 @@ class AuctionCoordinator:
             except Exception:
                 self.intents.pop(identity, None)
                 raise
+            if ticket is None:
+                # A later login must not take a baseline after this upload and
+                # mistake a different inventory increment for this exact item.
+                self.jobs.pop(identity, None)
             return identity
 
     def rejected(self, identity):
@@ -162,9 +186,10 @@ class AuctionCoordinator:
             intent = self.intents.pop(identity, None)
             job = self.jobs.get(identity)
             if job:
-                job.update(phase='failed', retry_at=time.monotonic() + 30)
+                job.update(phase='failed', failure_stage='native', retry_at=time.monotonic() + 30)
             elif intent:
-                self.jobs[identity] = {**intent, 'phase': 'failed', 'retry_at': time.monotonic() + 30}
+                self.jobs[identity] = {**intent, 'phase': 'failed', 'failure_stage': 'native',
+                                       'retry_at': time.monotonic() + 30}
             self._save()
 
     def confirmed(self, identity, receipt, *, enqueue=True):
@@ -189,21 +214,70 @@ class AuctionCoordinator:
 
     def process_once(self):
         with self.operation:
-            return self._process_once()
+            try:
+                return self._process_once()
+            finally:
+                # An expired session discovered by prepare/complete/sale must
+                # also release the game-upload gate, even if that call failed.
+                state = deepcopy(self.trading.state())
+                with self.guard:
+                    self.cached = state
+                if state.get('expired') is True and self.on_auth_expired:
+                    self.on_auth_expired(state)
+
+    def _skip_unavailable_market_mapping(self, steamid):
+        # Runs on the Steam worker under operation, never on the game thread.
+        # Only native-confirmed uploads may be released. Submitted/uncertain
+        # game writes retain their durable fence until their own receipt arrives.
+        with self.guard:
+            targets = [(identity, row['ticket']) for identity, row in self.intents.items()
+                       if row.get('steamid') == steamid and row.get('phase') == 'confirmed' and row.get('ticket')]
+        for identity, ticket in targets:
+            # Retire the baseline durably BEFORE lifting the per-kind fence.
+            self.trading.discard_upload_baseline(ticket)
+            with self.guard:
+                row = self.intents[identity]
+                previous = deepcopy(row)
+                job = self.jobs.pop(identity, None)
+                row.update(phase='resolved', market_skipped=True)
+                try:
+                    self._save()
+                except Exception:
+                    self.intents[identity] = previous
+                    if job:
+                        self.jobs[identity] = job
+                    raise
+                self.error = 'Steam 登录未确认或账号不匹配；物品已上传游戏拍卖行，本次不自动出售。'
 
     def _process_once(self):
         refresh = getattr(self.trading, 'refresh_auth', None)
         if refresh:
             refresh()
+        refresh = getattr(self.trading, 'refresh_confirmation', None)
+        if refresh:
+            refresh()
+        with self.guard:
+            self.cached = deepcopy(self.trading.state())
         running, config, steamid = self.provider()
         sale_enabled = config.get('upload_enabled') is True and config.get('sell_enabled') is True
         with self.guard:
+            market_available = (self.cached.get('verified') is True and self.cached.get('steamid') == steamid)
+        if steamid and not market_available:
+            self._skip_unavailable_market_mapping(steamid)
+        if self.cached.get('expired') is True:
+            with self.guard:
+                accounts = {row.get('steamid') for row in self.intents.values()
+                            if row.get('phase') == 'confirmed' and row.get('ticket')}
+            for account in accounts:
+                self._skip_unavailable_market_mapping(account)
+        with self.guard:
             candidate = next(((identity, deepcopy(row)) for identity, row in self.jobs.items()
                 if row['phase'] == 'complete' and row.get('retry_at', 0) <= time.monotonic()
-                or row['phase'] == 'prepare' and running and sale_enabled), None)
+                or row['phase'] == 'prepare' and running and sale_enabled and market_available), None)
             if candidate:
                 identity, job = candidate
-                self.jobs[identity]['phase'] = 'completing' if job['phase'] == 'complete' else 'preparing'
+                current_job = self.jobs[identity]
+                current_job['phase'] = 'completing' if job['phase'] == 'complete' else 'preparing'
         if candidate:
             identity, job = candidate
             try:
@@ -212,8 +286,12 @@ class AuctionCoordinator:
                         raise ValidationError('拍卖配置或游戏账号已改变，重新读取后准备。')
                     ticket = self.trading.prepare_upload(job['steamid'], job['item_key'], job['variant'])
                     with self.guard:
-                        self.jobs[identity].update(phase='ready', ticket=ticket)
-                        self.error = ''
+                        accepted = self.jobs.get(identity) is current_job
+                        if accepted:
+                            current_job.update(phase='ready', ticket=ticket)
+                            self.error = ''
+                    if not accepted:
+                        self.trading.discard_upload_baseline(ticket)
                 else:
                     self.trading.complete_upload(job['ticket'], count=1, expected_instance_id=job['instance_id'])
                     with self.guard:
@@ -224,15 +302,19 @@ class AuctionCoordinator:
             except Exception:
                 # Exceptions can contain HTTP payloads; keep cookies/session
                 # and arbitrary upstream error text out of UI and logs.
+                auth = self.trading.state()
                 with self.guard:
                     old = self.jobs.get(identity)
-                    if old:
+                    if old is current_job:
                         attempts = old.get('attempts', 0) + 1
                         old.update(phase='complete' if job['phase'] == 'complete' and attempts < 5 else 'failed',
-                                   attempts=attempts, retry_at=time.monotonic() + 30)
+                                   failure_stage=job['phase'], attempts=attempts, retry_at=time.monotonic() + 30)
                     self.error = ('游戏已上传，但 Steam 资产尚未精确匹配；保留记录，暂不出售。'
-                        if job['phase'] == 'complete' else 'Steam 登录、账号或库存基线暂未确认，跳过本次上传，其他托管继续。')
-        elif running and sale_enabled and steamid and time.monotonic() >= self.next_sale:
+                        if job['phase'] == 'complete' else
+                        'Steam 登录未确认或账号不匹配；游戏拍卖行上传继续，市场出售暂停。'
+                        if auth.get('verified') is not True or auth.get('steamid') != steamid else
+                        'Steam 库存基线暂未确认，跳过此物品，其他托管继续。')
+        elif running and sale_enabled and market_available and steamid and time.monotonic() >= self.next_sale:
             self.next_sale = time.monotonic() + 30
             signature = json.dumps(config, sort_keys=True)
             def still_authorized():
@@ -244,9 +326,6 @@ class AuctionCoordinator:
             except Exception:
                 with self.guard:
                     self.error = 'Steam 市场暂不可用，稍后重试；已提交的订单不会重复发送。'
-        # state() is only called by this network worker, never by a game tick.
-        with self.guard:
-            self.cached = deepcopy(self.trading.state())
 
     def _loop(self):
         while not self.closed.is_set():
@@ -271,8 +350,16 @@ class AuctionServiceMixin:
         with self.guard:
             if getattr(self, 'auction_coordinator', None) is None:
                 from .steam_trading import SteamTradingService
-                trading = SteamTradingService(self.market_data_dir, catalog=self._market_catalog())
-                self.auction_coordinator = AuctionCoordinator(self.market_data_dir, trading, self._auction_policy)
+                from functools import partial
+                from .steam_network import AuthenticatedSteamTransport
+                from .steam_login_window import create_login_window
+                enabled = self.assistant_preferences.acceleration_enabled
+                trading = SteamTradingService(self.market_data_dir, catalog=self._market_catalog(),
+                    transport=AuthenticatedSteamTransport(enabled, self.market_data_dir / 'steam-auth-backoff.json'),
+                    login_window_factory=partial(create_login_window, enabled=enabled,
+                                                 profile_directory=self.market_data_dir / 'steam-login-webview'))
+                self.auction_coordinator = AuctionCoordinator(self.market_data_dir, trading, self._auction_policy,
+                    on_auth_expired=self._auction_auth_expired)
             return self.auction_coordinator
 
     def _auction_policy(self):
@@ -312,6 +399,32 @@ class AuctionServiceMixin:
         return {**value, 'login_available': bool(desktop),
                 'login_reason': '' if desktop else '请在助手独立窗口中绑定 Steam。'}
 
+    def _auction_auth_expired(self, auth):
+        self._disable_steam_sale(expired_generation=auth.get('binding_generation'))
+
+    def _disable_steam_sale(self, *, expired_generation=None):
+        """Revoke only automatic Steam sales; never stop native game uploads."""
+        with self.guard:
+            if expired_generation is not None:
+                coordinator = getattr(self, 'auction_coordinator', None)
+                current = coordinator.trading.session.state() if coordinator else {}
+                if current.get('expired') is not True or current.get('binding_generation') != expired_generation:
+                    return  # A newly captured login must not be revoked by an old read.
+            pending = getattr(self, '_auction_sale_disable_pending', False)
+            if not self.managed.settings['auction']['sell_enabled'] and not pending:
+                return
+            settings = deepcopy(self.managed.settings)
+            settings['auction']['sell_enabled'] = False
+            self.managed.settings = settings
+            self.revision += 1
+            # Do not replace an unreadable config with defaults. In all cases
+            # the runtime permission is revoked before attempting disk I/O.
+            if not self.managed_config_load_failed:
+                self._auction_sale_disable_pending = True
+                from .storage_preferences import write_settings_files
+                write_settings_files({self.managed_config: settings})
+            self._auction_sale_disable_pending = False
+
     def auction_login(self):
         coordinator = self._auction_service()
         coordinator.trading.login_window()
@@ -322,8 +435,9 @@ class AuctionServiceMixin:
         coordinator = getattr(self, 'auction_coordinator', None)
         if coordinator:
             coordinator.trading.logout()
+            self._disable_steam_sale()
             with coordinator.guard:
-                coordinator.cached = {}
+                coordinator.cached = deepcopy(coordinator.trading.state())
                 coordinator.jobs = {k: v for k, v in coordinator.jobs.items()
                     if v['phase'] in ('complete', 'completing')}
         return self.auction_state()

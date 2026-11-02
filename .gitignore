@@ -156,3 +156,9 @@ docs/*
 !docs/1.5.5验收说明.md
 !docs/1.5.6验收说明.md
 !docs/使用与数据说明.md
+
+# Local network diagnostics are not application assets.
+experiments/
+!tools/build_app_icon.ps1
+!docs/助手设置说明.md
+!docs/1.6.0验收说明.md

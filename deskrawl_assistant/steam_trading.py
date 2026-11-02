@@ -119,11 +119,12 @@ def _assetid(value):
 
 
 class SteamTradingService:
-    def __init__(self, path, catalog=None, *, session=None, transport=None, clock=time.time):
+    def __init__(self, path, catalog=None, *, session=None, transport=None, login_window_factory=None, clock=time.time):
         self.path = Path(path)
         self.catalog = catalog
         self.clock = clock
-        self.session = session or SteamSession(self.path / 'steam-session.dpapi', transport=transport, clock=clock)
+        self.session = session or SteamSession(self.path / 'steam-session.dpapi', transport=transport,
+                                             login_window_factory=login_window_factory, clock=clock)
         self.guard = threading.RLock()
         self._operation = threading.Lock()
         self._journal_path = self.path / 'steam-sale-journal.json'
@@ -134,6 +135,7 @@ class SteamTradingService:
         self._retry_after = 0
         self._auth_retry_after = 0
         self._reconcile_after = 0
+        self._confirmation = None
         self._closed = False
         if self._journal_path.exists():
             try:
@@ -195,8 +197,21 @@ class SteamTradingService:
             state = self.session.state()
             counts = {key: sum(row.get('status') == key for row in self._journal)
                       for key in ('captured', 'intent', 'uncertain', 'pending', 'listed')}
-            return {**state, 'status': self._status, 'sale_message': self._message,
-                    'pending_count': counts['pending'], 'uncertain_count': counts['uncertain'],
+            confirmation = self._confirmation or {}
+            fresh = (state.get('verified') is True and not state.get('expired')
+                     and confirmation.get('steamid') == state.get('steamid')
+                     and confirmation.get('generation') == state.get('binding_generation')
+                     and self.clock() < confirmation.get('expires_at', 0))
+            message = self._message
+            if counts['pending'] and self._status in ('pending', 'idle') and not fresh:
+                message = '已提交的卖单记录已保留，不重复提交；当前确认状态待读取。'
+            elif counts['pending'] and self._status in ('pending', 'idle') and not confirmation.get('assets'):
+                message = '当前卖单未读到待确认记录；已提交的出售记录保留，不重复提交。'
+            return {**state, 'status': self._status, 'sale_message': message,
+                    'pending_count': len(confirmation['assets']) if fresh else 0,
+                    'confirmation_known': fresh,
+                    'confirmation_expires_at': confirmation.get('expires_at') if fresh else None,
+                    'uncertain_count': counts['uncertain'],
                     'queued_count': counts['captured'], 'retry_after': self._retry_after,
                     'counts': counts, 'development': True}
 
@@ -206,14 +221,29 @@ class SteamTradingService:
     def refresh_auth(self):
         """Read-only verification on the Steam worker, also while managed mode is idle."""
         state = self.session.state()
-        if (not state.get('bound') or state.get('verified') or state.get('login_open')
+        if (not state.get('bound') or state.get('expired') or state.get('login_open')
                 or self._closed or self.clock() < max(self._auth_retry_after, self._retry_after)):
             return
         self._auth_retry_after = self.clock() + 30
         try:
             self.session.verify()
         except SteamSessionError as exc:
+            self._confirmation = None
             self._limited(exc)
+
+    def refresh_confirmation(self):
+        """Refresh read-only confirmation status even when automatic sales are off."""
+        state = self.session.state()
+        if (self._closed or not state.get('verified') or state.get('expired')
+                or self.clock() < self._retry_after or not self._operation.acquire(blocking=False)):
+            return
+        try:
+            self._reconcile_listings(state.get('steamid'))
+        except SteamSessionError as exc:
+            self._confirmation = None
+            self._limited(exc)
+        finally:
+            self._operation.release()
 
     def capture_session(self, cookies):
         return self.session.capture_session(cookies)
@@ -349,6 +379,22 @@ class SteamTradingService:
                 and state.get('binding_generation') == row.get('binding_generation'))
         finally:
             self._operation.release()
+
+    def discard_upload_baseline(self, ticket):
+        """Retire optional sale mapping before permitting more game uploads.
+
+        This does not undo a game upload or a sale. Without a usable web login
+        a delayed baseline must never adopt a later, unrelated inventory delta.
+        """
+        with self._operation:
+            self._healthy_journal()
+            row = self._tickets.pop(ticket, None)
+            if row is not None:
+                try:
+                    self._save()
+                except Exception:
+                    self._tickets[ticket] = row
+                    raise
 
     def complete_upload(self, ticket, count=1, *, expected_instance_id=None):
         with self._operation:
@@ -500,9 +546,13 @@ class SteamTradingService:
                 and r['status'] in ('pending', 'uncertain')]
         if not rows or self.clock() < self._reconcile_after:
             return
-        self._reconcile_after = self.clock() + 60
+        self._reconcile_after = self.clock() + 15
+        self._confirmation = None
+        auth = self.session.state()
         from .steam_listing_receipts import listing_receipts
         changed = False
+        pending = set()
+        complete = False
         for page in range(20):
             response = _json(self.session.request('GET', '/market/mylistings/?' +
                              urlencode({'start': page * 100, 'count': 100, 'l': 'english'})))
@@ -516,13 +566,24 @@ class SteamTradingService:
                 if len(matches) == 1 and not matches[0]['pending']:
                     row.update(status='listed', listingid=matches[0]['listingid'], confirmed_at=self.clock())
                     changed = True
+                elif len(matches) == 1:
+                    pending.add(row['assetid'])
             if changed:
                 self._save()
             total = response.get('total_count')
             if type(total) is not int or total < 0:
                 raise SteamSessionError('Steam 卖单分页尚未确认，保留原记录。')
             if (page + 1) * 100 >= total:
+                complete = True
                 break
+        if not complete:
+            raise SteamSessionError('Steam 卖单列表未完整读取，暂不显示确认数量。')
+        current = self.session.state()
+        if (current.get('verified') is True and not current.get('expired')
+                and current.get('steamid') == steamid
+                and current.get('binding_generation') == auth.get('binding_generation')):
+            self._confirmation = {'steamid': steamid, 'generation': current.get('binding_generation'),
+                                  'assets': pending, 'expires_at': self.clock() + 15}
         if changed:
             self._message = '已在 Steam 当前卖单中确认上架；是否成交请以 Steam 市场记录为准。'
 
@@ -564,7 +625,7 @@ class SteamTradingService:
                 self._reconcile_listings(expected_steamid)
             except SteamSessionError as exc:
                 self._limited(exc)
-                if self.clock() < self._retry_after:
+                if exc.status == 401 or self.session.state().get('expired') or self.clock() < self._retry_after:
                     raise
                 # An unreadable market-history view cannot authorize a retry
                 # of an old request; unrelated captured assets may still proceed.
@@ -636,6 +697,17 @@ class SteamTradingService:
                     elif response.get('requires_confirmation'):
                         row['status'] = 'pending'
                         self._message = '卖单已提交，请在 Steam 手机或邮件中确认；暂不重复出售此资产。'
+                        current = self.session.state()
+                        if (current.get('verified') is True and current.get('steamid') == expected_steamid
+                                and current.get('binding_generation') == wallet.get('binding_generation')):
+                            previous = self._confirmation or {}
+                            assets = set(previous.get('assets', ())) if (previous.get('steamid') == expected_steamid
+                                and previous.get('generation') == current.get('binding_generation')
+                                and self.clock() < previous.get('expires_at', 0)) else set()
+                            assets.add(row['assetid'])
+                            self._confirmation = {'steamid': expected_steamid,
+                                'generation': current.get('binding_generation'), 'assets': assets,
+                                'expires_at': self.clock() + 15}
                     else:
                         row['status'] = 'listed'
                         self._message = 'Steam 已接受挂牌；是否成交请以市场记录为准。'

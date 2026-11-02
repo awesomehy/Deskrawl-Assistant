@@ -557,7 +557,9 @@
   }
   function init(options){
     context=options;if(initialized)return;initialized=true;root.ManagedGrowthUI?.init();draft=normalizeSettings();
-    root.AuctionUI?.init({api:context.api,toast:context.toast,confirmAction:context.confirmAction,onChange:()=>{draft=readForm();markDirty();renderDependencies();renderCapabilities();}});
+    root.AuctionUI?.init({api:context.api,toast:context.toast,confirmAction:context.confirmAction,
+      onAuthInvalid:()=>{if(draft?.auction)draft.auction.sell_enabled=false;if(packet?.settings?.auction)packet.settings.auction.sell_enabled=false;renderFoldSummaries();renderControls();},
+      onChange:()=>{draft=readForm();markDirty();renderDependencies();renderCapabilities();}});
     context.sharedStorage?.subscribe(applySharedPages);
     let storage=null;try{storage=root.localStorage;}catch(_){/* Storage access can be blocked independently of the UI. */}
     folds=createFoldState([...root.document.querySelectorAll('[data-managed-fold]')],storage,(key,open)=>{
@@ -611,7 +613,12 @@
     root.document.querySelectorAll('[data-managed-preset]').forEach(button=>button.addEventListener('click',()=>{
       if(packet?.running||busy)return;draft=equipmentPreset(readForm(),button.dataset.managedPreset);markDirty();pageSignature='';writeForm();renderCapabilities();
     }));
-    $('managed-reset-draft').addEventListener('click',()=>{draft=normalizeSettings(packet?.settings);context.sharedStorage?.reset();markDirty(false);applySharedPages();slotSignature='';pageSignature='';mapSignature='';writeForm();render();});
+    $('managed-reset-draft').addEventListener('click',async()=>{
+      if(packet?.running||busy||!dirty)return;
+      if(await context.confirmAction?.('放弃托管设置改动？','将丢弃托管模式及共用存放页尚未保存的修改，恢复到上次保存的配置。\n已保存的配置、装备筛选规则和累计掉落统计不变。','放弃改动')!==true)return;
+      if(packet?.running||busy)return;
+      draft=normalizeSettings(packet?.settings);context.sharedStorage?.reset();markDirty(false);applySharedPages();slotSignature='';pageSignature='';mapSignature='';writeForm();render();
+    });
     root.setInterval(()=>{renderTime();if(active||packet?.running)refresh();},1500);
   }
   function setConnection(value){
@@ -623,5 +630,9 @@
   }
   function setCharacter(value){currentCharacter={available:value?.available===true,class_mask:value?.class_mask};renderSlots();}
   function setActive(value){active=!!value;if(active)refresh();else closePicker();}
-  root.ManagedModeUI={init,refresh,applyPacket,setConnection,setCharacter,setActive,isDirty:()=>dirty,helpers};
+  async function reloadSettings(){
+    const value=await context.api('managed');
+    markDirty(false);slotSignature='';pageSignature='';mapSignature='';applyPacket(value);
+  }
+  root.ManagedModeUI={init,refresh,reloadSettings,applyPacket,setConnection,setCharacter,setActive,isDirty:()=>dirty,helpers};
 })(typeof window!=='undefined'?window:globalThis);

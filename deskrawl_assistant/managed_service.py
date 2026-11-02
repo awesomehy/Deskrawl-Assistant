@@ -326,7 +326,8 @@ class ManagedServiceMixin:
                     item['issues'].append('装备身份或锁状态读取尚未核验。')
                 if source.get('modifiers_complete') is not True:
                     item['issues'].append('装备实例读取不完整。')
-                known = identity_known and all(obs.groups_complete.get(g) is True for g in ('primary','secondary'))
+                required_groups = ('random',) if is_minion_equipment(item) else ('primary','secondary')
+                known = identity_known and all(obs.groups_complete.get(g) is True for g in required_groups)
                 active_rules = [r for r in self._rules() if r.enabled and item['name_key'] in r.equipment_keys]
                 if not known or not item['rules_known']:
                     item['review'] = True; item['rule_status'] = 'review'
@@ -465,6 +466,9 @@ class ManagedServiceMixin:
             settings['farming']['stargazing']['enabled'] = False
             catalog = self._market_catalog()
             settings['auction'] = validate_auction(settings['auction'], catalog.items if catalog else ())
+            coordinator = getattr(self, 'auction_coordinator', None)
+            if settings['auction']['sell_enabled'] and coordinator and coordinator.state()['steam'].get('expired'):
+                raise ValidationError('Steam 登录已过期，请重新登录后再启用自动出售；游戏拍卖行上传可以继续。')
             self._validate_managed_storage_pages(settings['cleanup'])
             if settings['merchant']['enabled']:
                 shop=self.managed_growth.get('merchant',{})
@@ -898,7 +902,7 @@ class ManagedServiceMixin:
                 steamid = auction_state.get('steamid') if auction_state.get('steamid_verified') is True else None
                 payload['expected_steamid'] = steamid
                 ticket = None
-                if config['sell_enabled']:
+                if config['sell_enabled'] and coordinator.market_preparation_required(steamid):
                     ticket = coordinator.prepare(item, steamid, config)
                     if not ticket:
                         return {'verified': False, 'retryable': True,

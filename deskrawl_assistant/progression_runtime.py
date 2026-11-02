@@ -12,6 +12,7 @@ from .native_dispatcher import Argument, Invocation, NativeActionError
 from .recommendation_reader import _Copy, decode_obscured_int
 from .progression import catalog, merchant_prices
 from .action_log import record
+from .panel_reader import panel_active_self
 
 
 MERCHANT_SCAN_CHUNK = 1024 * 1024
@@ -242,7 +243,7 @@ class ProgressionRuntime:
             if scene == 1:
                 ui = self._singleton(copy, 'MerchantUI')
                 currency = copy.ptr(ui + 192)
-                shop['open'] = copy.boolean(ui + 40) and currency == soul
+                shop['open'] = panel_active_self(copy, ui) and currency == soul
             # Saved serialized stocks are a fallback; live queues below are the
             # exact source used by the game's price and purchase methods.
             stocks = {}
@@ -470,7 +471,7 @@ class ProgressionRuntime:
                 currency = before['_item_map']['SoulShard']
                 # An open soul-shard shop is already the requested result. A
                 # stale planner or a manually opened dialog must not scan/reopen.
-                if not (copy.boolean(ui + 40) and copy.ptr(ui + 192) == currency):
+                if not (panel_active_self(copy, ui) and copy.ptr(ui + 192) == currency):
                     npc = self._merchant_npc(read, currency, cancel_event=cancel_event, validate=validate)
                     calls = [Invocation('DialogueInteractable.clw', npc)]
             elif kind == 'merchant_refresh':
@@ -542,8 +543,10 @@ class ProgressionRuntime:
                     confirmed = (after['skills'].get('readable') is not False
                                  and after['skills']['equipped'] == payload['skill_slots'])
                     observed['skills'] = after['skills'].get('equipped')
-                elif kind == 'merchant_open': confirmed = after['merchant']['open']
-                elif kind == 'merchant_close': confirmed = not after['merchant']['open']
+                elif kind in ('merchant_open', 'merchant_close'):
+                    observed['merchant_open'] = after['merchant']['open']
+                    confirmed = (after['merchant']['open'] if kind == 'merchant_open'
+                                 else not after['merchant']['open'])
                 elif kind == 'merchant_refresh':
                     observed['stock_slots'] = sorted(r['slot'] for r in after['merchant']['stock'])
                     confirmed = (set(required)<={r['slot'] for r in after['merchant']['stock']}

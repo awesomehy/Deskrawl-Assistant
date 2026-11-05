@@ -55,8 +55,14 @@
 
 [版本记录](docs/版本记录.md) · [掉落预览说明](docs/掉落预览说明.md) · [交易所与 Steam 市场](docs/拍卖行与Steam市场验收说明.md) · [源码运行与构建](docs/开发与构建.md) · [第三方资源说明](NOTICE.md)
 
-欢迎提交 [Issue](https://github.com/awesomehy/Deskrawl-Assistant/issues) 或 [Pull Request](https://github.com/awesomehy/Deskrawl-Assistant/pulls)，也欢迎点亮 **Star** 支持项目。
+欢迎通过 [Issue](https://github.com/awesomehy/Deskrawl-Assistant/issues) 报告 Bug 或提出建议，也欢迎点亮 **Star** 支持项目。提交 [Pull Request](https://github.com/awesomehy/Deskrawl-Assistant/pulls) 前，请阅读[贡献与额外授权](CONTRIBUTING.md)：仅为向本项目提交 PR，允许 Fork、修改、编译、测试和提供代码供审阅；是否合并及正式发布由维护者决定。
 
 ## 许可证
 
-本项目软件采用 [AGPL-3.0](LICENSE) 许可证。
+本项目当前源码采用 [PolyForm Strict License 1.0.0](LICENSE)，另有[仅为提交 PR 的补充授权及贡献约定](CONTRIBUTING.md)。
+
+- 允许免费、非商业使用；未经另行授权，不允许商业使用、修改、制作衍生作品或再分发。
+- 为提交 PR 而进行的 Fork、修改和测试适用上述补充授权，不包含独立发布修改版或分发安装包的权利。
+- 这是源码可见、限制使用的项目，不属于 OSI 定义的开源软件。游戏资源及第三方组件适用各自许可，见 [NOTICE.md](NOTICE.md)。
+
+新许可自首次包含本次许可变更的提交起，适用于该提交及后续明确采用新许可的版本。此前已按 AGPL-3.0 发布的代码和发行包继续保留原授权，不因本次变更而撤回。

@@ -40,6 +40,9 @@ def main():
         str(ROOT / 'packaging' / 'deskrawl.spec')], cwd=ROOT, check=True)
     exe = output / (NAME + '.exe')
     shutil.copyfile(ROOT / 'packaging' / '使用说明.txt', output / '使用说明.txt')
+    project_license_files = ('LICENSE', 'CONTRIBUTING.md', 'NOTICE.md')
+    for filename in project_license_files:
+        shutil.copyfile(ROOT / filename, output / filename)
     setup = ROOT / 'packaging' / 'MicrosoftEdgeWebview2Setup.exe'
     if not setup.is_file(): raise RuntimeError('Missing official WebView2 bootstrapper.')
     shutil.copyfile(setup,output / setup.name)
@@ -80,7 +83,8 @@ def main():
     # Never archive the whole release directory: test data and user's files
     # must not accidentally become part of a future rebuild.
     with ZipFile(archive, 'w', ZIP_DEFLATED) as zipped:
-        for file in (exe, output / '使用说明.txt', output / '第三方许可.txt', output / setup.name):
+        for file in (exe, output / '使用说明.txt', output / '第三方许可.txt', output / setup.name,
+                     *(output / filename for filename in project_license_files)):
             zipped.write(file, NAME + '/' + file.name)
     print(json.dumps({'exe': str(exe), 'zip': str(archive), **report}, ensure_ascii=False, indent=2))
 

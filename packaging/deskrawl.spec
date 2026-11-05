@@ -26,6 +26,7 @@ assets = [
     'game-actions-profile.json',
 ]
 datas = [(str(root / 'data' / name), 'data') for name in assets]
+datas += [(str(root / name), 'licenses') for name in ('LICENSE', 'CONTRIBUTING.md', 'NOTICE.md')]
 datas.append((str(root / 'deskrawl_assistant' / 'web'), 'deskrawl_assistant/web'))
 datas.append((str(root / 'deskrawl_assistant' / 'update_replace.ps1'), 'deskrawl_assistant'))
 datas += collect_data_files('webview', subdir='js')

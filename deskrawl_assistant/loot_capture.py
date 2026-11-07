@@ -6,17 +6,14 @@ No game action or upload is performed. Polling can miss transient drops.
 from collections import OrderedDict
 from copy import deepcopy
 from datetime import datetime, timezone
-from functools import lru_cache
 import hashlib
 import json
 from pathlib import Path
 import threading
 import uuid
 
-from .item_protection import mandatory_storage
+from .high_value_loot import high_value_reason
 from .loot_plan_reader import describe_item, SLOT_LABELS, _labels
-from .paths import RESOURCE_ROOT
-from .steam_market import MarketCatalog
 
 
 def now():
@@ -25,41 +22,6 @@ def now():
 
 def plan_hash(raw):
     return hashlib.sha256(raw['runId'].encode()).hexdigest()
-
-
-@lru_cache(maxsize=1)
-def _market_catalog():
-    # Shipped Steam item definitions, not a quote lookup or network request.
-    return MarketCatalog.load(RESOURCE_ROOT / 'data/steam-market-catalog.json')
-
-
-def high_value_reason(row):
-    reason = mandatory_storage(row)
-    if reason:
-        return reason
-    key = row.get('internal_name') or row.get('name_key')
-    entry = _market_catalog().items.get(key)
-    if not entry:
-        return ''
-    variant = 'black_mist' if row.get('is_black_mist') is True else 'normal'
-    if entry.get('kind') == 'equipment':
-        # A base legendary template's black-mist definition must not turn its
-        # ordinary legendary variant into a marketable planned drop.
-        rarity = row.get('rarity', row.get('base_rarity'))
-        expected = 3 if variant == 'black_mist' else entry.get('rarity')
-        if type(rarity) is not int or rarity != expected:
-            return ''
-    if not entry.get(variant):
-        return ''
-    # Monitoring discovers valuable templates even before instance binding is
-    # known. It is not a claim that this particular item can already be listed.
-    if key == 'GoldBar':
-        return '金条'
-    if key == 'UpgradeCommodity1':
-        return '开光石'
-    if key.startswith('Rein_'):
-        return '传说缰绳'
-    return '可交易物品'
 
 
 def _observation_key(row):

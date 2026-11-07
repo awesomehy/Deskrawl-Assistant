@@ -22,18 +22,23 @@ def main():
 
     class OfflineTransport:
         closed = False
-        def __init__(self): self.requests = []
+        def __init__(self): self.requests = [];self.prepared = False
+        def prepare(self): self.prepared = True;return True
         def request(self, url, method, headers, body):
+            assert self.prepared
             self.requests.append((url, method, {key.lower():value for key,value in headers}, body))
             if url.endswith('/start'):
                 document = b'''<html><script>
                     fetch('/login/settoken', {method:'POST',credentials:'include',body:'offline-token'});
                     fetch('/login/omit', {credentials:'omit'});
                     fetch('/jwt/finalizelogin?nonce=offline-secret', {method:'POST',credentials:'include',body:'offline-secret'});
+                    fetch('/login/transfer?nonce=offline-secret', {method:'POST',credentials:'include',body:'offline-secret'});
                     </script></html>'''
                 return 200, [('Content-Type', 'text/html'),
                     ('Set-Cookie', 'steamLoginSecure=76561198000000001%7C%7Coffline-token; Path=/; Secure; HttpOnly; SameSite=None'),
                     ('Set-Cookie', 'sessionid=abcdef1234567890abcdef12; Path=/; Secure; HttpOnly; SameSite=None')], document
+            if '/login/transfer' in url:
+                raise ProbeFailure('offline-secret proxy-detail', kind='network')
             if '/jwt/finalizelogin' in url:
                 body = json.dumps({'steamID':'76561198000000001', 'refresh_token':'offline-secret',
                     'primary_domain':'.steamcommunity.com', 'transfer_info':[
@@ -69,16 +74,21 @@ def main():
                 assert omitted and not omitted[0][2].get('cookie')
                 assert set(normalise_cookies(child.get_cookies()))=={'steamLoginSecure','sessionid'}
                 assert child.get_current_url()=='https://steamcommunity.com/login/start'
+                deadline=time.monotonic()+5
+                while not child.login_complete and time.monotonic()<deadline: time.sleep(.05)
+                assert child.login_complete
                 diagnostic_file=Path(directory)/'steam-login-diagnostic.json'
                 deadline=time.monotonic()+5
                 while time.monotonic()<deadline:
                     data=json.loads(diagnostic_file.read_text('utf-8')) if diagnostic_file.exists() else {}
                     summaries=[row for row in data.get('events',[]) if row['event']=='result']
-                    if summaries: break
+                    failures=[row for row in data.get('events',[]) if row['event']=='transport_error']
+                    if summaries and failures: break
                     time.sleep(.05)
                 assert summaries and summaries[0]['identity_present']
                 assert summaries[0]['transfer_count']==1
                 assert summaries[0]['transfer_hosts']==['steamcommunity.com']
+                assert failures and failures[0]['code']=='login_transport_connection_failed'
                 raw=diagnostic_file.read_text('utf-8')
                 assert all(secret not in raw for secret in ('offline-secret','offline-token','76561198000000001','nonce='))
                 ended=threading.Event()
@@ -90,7 +100,9 @@ def main():
                 assert transport.closed and not child.tunnel.thread.is_alive()
                 results.update(native_interception=True, original_https_origin=True, cookie_roundtrip=True,
                     omit_credentials_respected=True, post_forwarded_once=True, post_body_unchanged=True,
-                    transport_released=True, safe_finalize_diagnostics=True, steam_requests=0)
+                    transport_released=True, safe_finalize_diagnostics=True, safe_transport_failure_diagnostics=True,
+                    community_completion_before_navigation=True, route_prepared_before_navigation=True,
+                    steam_requests=0)
             except Exception:
                 import traceback
                 errors.append(traceback.format_exc())

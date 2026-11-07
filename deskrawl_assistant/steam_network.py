@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import base64
 import http.client
+import re
 from http.cookiejar import Cookie, CookieJar
 import select
 import socket
@@ -27,10 +28,46 @@ def network_failure(error):
 
 
 class AuthenticatedSteamTransport:
+    ROUTE_TTL = 300
+
     def __init__(self, enabled, backoff_file=None, *, timeout=15):
         self.enabled, self.timeout = enabled, timeout
         self.budget = RequestBudget(backoff_file)
         self.local = threading.local()
+        self.route_guard = threading.Lock()
+        self.read_route = None
+        self.prepare_lock = threading.Lock()
+        self.prepare_after = 0
+        self.prepare_signature = None
+
+    def prepare_local_verification(self):
+        """Warm a read route without sending a native account's credentials.
+
+        Native verification runs on a disposable thread. Thread-local affinity
+        alone made every attempt pay the same dead system route/CDN timeout.
+        POST affinity remains thread-local and is established by real reads.
+        """
+        if not self.enabled() or not self.prepare_lock.acquire(blocking=False):
+            return
+        try:
+            now = time.monotonic()
+            signature = (True, tuple(sorted(getproxies().items())))
+            if signature == self.prepare_signature and now < self.prepare_after: return
+            self.budget.check_backoff()
+            from .steam_login_transport import CommunityLoginTransport
+            probe = CommunityLoginTransport(timeout=3)
+            try:
+                if probe.prepare():
+                    with self.route_guard:
+                        self.read_route = (signature, probe.preferred, time.monotonic())
+                    self.prepare_after = time.monotonic() + self.ROUTE_TTL
+                else:
+                    self.prepare_after = time.monotonic() + 60
+                self.prepare_signature = signature
+            finally:
+                probe.close()
+        finally:
+            self.prepare_lock.release()
 
     def _read(self, response):
         status = response.status if hasattr(response, 'status') else response.code
@@ -94,7 +131,8 @@ class AuthenticatedSteamTransport:
     def __call__(self, method, path, data, cookies):
         if (method not in ('GET', 'POST') or not path.startswith('/') or path.startswith('//')
                 or any(c in path for c in ('\\', '\r', '\n', '#'))
-                or (method == 'POST' and path != '/market/sellitem/')):
+                or (method == 'POST' and path != '/market/sellitem/'
+                    and re.fullmatch(r'/market/removelisting/[1-9]\d{0,24}', path) is None)):
             raise SteamSessionError('Steam 请求地址无效。')
         headers = {'Host': STEAM_HOST, 'User-Agent': 'Mozilla/5.0 DeskrawlAssistant',
             'Cookie': '; '.join(name + '=' + value for name, value in sorted(cookies.items())),
@@ -109,14 +147,30 @@ class AuthenticatedSteamTransport:
         except Exception: raise SteamSessionError('Steam 连接设置无法读取。') from None
         signature = (enabled, tuple(sorted(proxies.items())))
         selected = getattr(self.local, 'route', (None, None))
+        checked_at = getattr(self.local, 'route_checked_at', float('-inf'))
+        if method == 'GET':
+            with self.route_guard:
+                shared = self.read_route
+            if shared is not None and shared[0] == signature and shared[2] > checked_at:
+                selected, checked_at = shared[:2], shared[2]
         routes = [selected[1] if selected[0] == signature else None] if method == 'POST' else [None]
         if enabled and method == 'GET': routes += list(CDN_CANDIDATES)
+        if (method == 'GET' and selected[0] == signature and selected[1] in routes
+                and 0 <= time.monotonic() - checked_at < self.ROUTE_TTL):
+            # Reuse a recently working read route instead of paying the same
+            # failed system-route timeout before every inventory/order read.
+            # Only network failures may fall back; POST remains single-shot.
+            routes = [selected[1]] + [route for route in routes if route != selected[1]]
         try:
             self.budget.check_backoff()
             for index, route in enumerate(routes):
                 try:
                     result = self._send(route, method, path, body, headers, proxies)
-                    if method == 'GET': self.local.route = (signature, route)
+                    if method == 'GET':
+                        self.local.route = (signature, route)
+                        self.local.route_checked_at = time.monotonic()
+                        with self.route_guard:
+                            self.read_route = (signature, route, self.local.route_checked_at)
                     return result
                 except ProbeFailure as error:
                     if error.kind != 'network' or index == len(routes) - 1: raise
@@ -134,6 +188,13 @@ def login_host_allowed(host):
                     'www.google.com', 'www.gstatic.com', 'www.recaptcha.net')
             or any(host == suffix or host.endswith('.' + suffix)
                    for suffix in ('steamstatic.com', 'steamusercontent.com')))
+
+
+LOGIN_AUTH_HOSTS = frozenset((STEAM_HOST, 'login.steampowered.com',
+                              'store.steampowered.com', 'api.steampowered.com'))
+# These origins share Steam's Akamai edge. Every connection must still pass
+# certificate-chain and hostname verification for the ORIGINAL requested host.
+LOGIN_CDN_HOSTS = frozenset((STEAM_HOST, 'login.steampowered.com', 'store.steampowered.com'))
 
 
 class LoginTunnelConnector:
@@ -174,8 +235,8 @@ class LoginTunnelConnector:
         except Exception: raise ProbeFailure('proxy_config_unavailable', kind='config') from None
         proxy = proxies.get('https')
         candidates = [(proxy, None)]
-        if host == STEAM_HOST: candidates += [(None, address) for address in CDN_CANDIDATES]
-        elif proxy: candidates.append((None, None))
+        if proxy and host != STEAM_HOST: candidates.append((None, None))
+        if host in LOGIN_CDN_HOSTS: candidates += [(None, address) for address in CDN_CANDIDATES]
         for index, (candidate, address) in enumerate(candidates):
             try:
                 # No browser HTTP bytes, login data or Cookie exist at this stage.
@@ -184,19 +245,32 @@ class LoginTunnelConnector:
                     with ssl.create_default_context().wrap_socket(stream, server_hostname=host): pass
                 finally: stream.close()
                 return self._open(host, candidate, address)
-            except (OSError, URLError, http.client.HTTPException) as error:
-                failure = network_failure(error)
+            except (OSError, URLError, http.client.HTTPException, ProbeFailure) as error:
+                failure = error if isinstance(error, ProbeFailure) else network_failure(error)
+                # A gateway that cannot establish CONNECT has sent no browser
+                # TLS or HTTP bytes. Authentication/policy denials remain final.
+                if failure.kind == 'http' and failure.status in (502, 503, 504):
+                    failure = ProbeFailure('proxy_upstream_unavailable')
                 if failure.kind != 'network' or index == len(candidates) - 1: raise failure from None
         raise ProbeFailure('login_connection_failed')
 
 
 class LoginTunnel:
     """Window-scoped loopback CONNECT proxy. Never decrypts HTTPS or retries its bytes."""
-    def __init__(self, connector=None):
+    def __init__(self, connector=None, *, diagnostics=None):
         self.connector = connector or LoginTunnelConnector()
+        self.diagnostics = diagnostics
         self.server = self.thread = None
         self.closed = threading.Event();self.guard = threading.Lock();self.streams = set()
         self.slots = threading.BoundedSemaphore(12)
+        # CDN keep-alive connections must not exhaust the capacity needed for
+        # the final cross-origin sign-in request after mobile confirmation.
+        self.auth_slots = {host: threading.BoundedSemaphore(6) for host in LOGIN_AUTH_HOSTS}
+
+    def _diagnose(self, host, code):
+        if self.diagnostics is not None:
+            try: self.diagnostics.record('tunnel_error', {'host': host}, code=code)
+            except Exception: pass
 
     def start(self):
         owner = self
@@ -212,7 +286,10 @@ class LoginTunnel:
                         or self.headers.get('Cookie') or self.headers.get('Authorization')
                         or self.headers.get('Transfer-Encoding') or self.headers.get('Content-Length', '0') != '0'):
                     self.send_error(403);return
-                if not owner.slots.acquire(blocking=False): self.send_error(503);return
+                slots = owner.auth_slots.get(host, owner.slots)
+                if not slots.acquire(blocking=False):
+                    owner._diagnose(host, 'login_tunnel_busy')
+                    self.send_error(503);return
                 upstream = None
                 try:
                     if owner.closed.is_set(): return
@@ -229,15 +306,18 @@ class LoginTunnel:
                             raw = source.recv(65536)
                             if not raw: return
                             (upstream if source is self.connection else self.connection).sendall(raw)
-                except (OSError, ValueError, ProbeFailure, http.client.HTTPException):
+                except (OSError, ValueError, ProbeFailure, http.client.HTTPException) as error:
                     if upstream is None:
+                        code = ('login_tunnel_certificate_rejected' if isinstance(error, ProbeFailure)
+                                and error.kind == 'security' else 'login_tunnel_connect_failed')
+                        owner._diagnose(host, code)
                         try: self.send_error(502)
                         except OSError: pass
                 finally:
                     with owner.guard:
                         owner.streams.discard(self.connection);owner.streams.discard(upstream)
                     if upstream is not None: upstream.close()
-                    owner.slots.release()
+                    slots.release()
         self.server = ThreadingHTTPServer(('127.0.0.1', 0), Handler);self.server.daemon_threads = True
         self.thread = threading.Thread(target=self.server.serve_forever, kwargs={'poll_interval':.05},
                                        name='steam-login-tunnel', daemon=True)

@@ -7,7 +7,9 @@ Request bodies/cookies live in memory only and are never logged or replayed.
 from __future__ import annotations
 
 import http.client
+from queue import Empty, Queue
 import threading
+import time
 from urllib.parse import urljoin, urlsplit
 
 from .steam_acceleration import CDN_CANDIDATES, STEAM_HOST, ProbeFailure, SteamCdnConnection
@@ -43,14 +45,70 @@ class CommunityLoginTransport:
         self.connections = set()
         self.preferred = None
 
+    def prepare(self):
+        """Choose a responsive edge with disposable, unauthenticated GETs.
+
+        A TLS handshake alone can succeed on an edge whose HTTP responses stall.
+        Probe the public login page before the user signs in, never an auth POST
+        or a browser request carrying cookies. Losing probes cannot change the
+        chosen route or install their cookies in the browser.
+        """
+        if self.closed.is_set() or len(self.addresses) < 2:
+            return False
+        results = Queue()
+        timeout = min(self.timeout, 3)
+
+        def probe(address):
+            connection = None
+            success = False
+            try:
+                connection = self.connection_factory(address, timeout)
+                with self.lock:
+                    if self.closed.is_set(): return
+                    self.connections.add(connection)
+                connection.connect()
+                if self.closed.is_set(): return
+                connection.request('GET', '/login/home/?_cdn=akamai', headers={
+                    'Host': STEAM_HOST, 'User-Agent': 'Mozilla/5.0',
+                    'Accept': 'text/html', 'Accept-Encoding': 'identity', 'Connection': 'close'})
+                response = connection.getresponse()
+                success = response.status == 200 and bool(response.read(1))
+            except Exception:
+                pass  # No authentication data exists; the real request still checks TLS.
+            finally:
+                if connection is not None:
+                    with self.lock: self.connections.discard(connection)
+                    connection.close()
+                results.put(address if success else None)
+
+        for address in self.addresses:
+            threading.Thread(target=probe, args=(address,),
+                             name='steam-login-route-probe', daemon=True).start()
+        deadline = time.monotonic() + timeout * 3 + .5
+        remaining = len(self.addresses)
+        while remaining and not self.closed.is_set():
+            wait = min(.1, deadline - time.monotonic())
+            if wait <= 0: break
+            try: address = results.get(timeout=wait)
+            except Empty: continue
+            remaining -= 1
+            if address is not None:
+                with self.lock:
+                    if self.closed.is_set(): return False
+                    self.preferred = address
+                return True
+        return False
+
+    def method_allowed(self, method, path):
+        return (method in ('GET', 'HEAD', 'POST', 'OPTIONS')
+                and (method != 'POST' or path.startswith(('/login/', '/jwt/'))
+                     or path in LOGIN_AUTH_PATHS))
+
     def request(self, url, method, headers, body=b''):
         if not community_request(url):
             raise ProbeFailure('login_target_rejected', kind='security')
         parsed = urlsplit(url)
-        if (method not in ('GET', 'HEAD', 'POST', 'OPTIONS')
-                or (method == 'POST' and not (parsed.path.startswith(('/login/', '/jwt/'))
-                                             or parsed.path in LOGIN_AUTH_PATHS))
-                or len(body) > MAX_LOGIN_BODY):
+        if not self.method_allowed(method, parsed.path) or len(body) > MAX_LOGIN_BODY:
             raise ProbeFailure('login_request_rejected', kind='security')
         clean = {}
         for key, value in headers:
@@ -79,7 +137,6 @@ class CommunityLoginTransport:
                     failure = error if isinstance(error, ProbeFailure) else network_failure(error)
                     if failure.kind == 'network' and index + 1 < len(addresses): continue
                     raise failure from None
-                with self.lock: self.preferred = address
                 if self.closed.is_set(): raise ProbeFailure('login_window_closed', kind='network')
                 try:
                     connection.request(method, target, body=body or None, headers=clean)
@@ -100,6 +157,7 @@ class CommunityLoginTransport:
                         if key.lower() not in _HOP | {'content-length'}:
                             response_headers.append((key, value))
                     response_headers.append(('Content-Length', str(len(raw))))
+                    with self.lock: self.preferred = address
                     return int(response.status), response_headers, raw
                 except (OSError, http.client.HTTPException) as error:
                     # Never fall back/replay after a request has started, even GET.
@@ -122,6 +180,19 @@ def attach_community_transport(window, transport):
     from Microsoft.Web.WebView2.Core import CoreWebView2WebResourceContext
     core = window.browser.CoreWebView2
     slots = threading.BoundedSemaphore(8)
+
+    def diagnose(url, error):
+        diagnostics = getattr(window, 'diagnostics', None)
+        if diagnostics is None: return
+        from .steam_login_diagnostics import diagnostic_target
+        # Exception text may include cookies or proxy details. Retain only a
+        # fixed category, plus the allowlisted host/path without query strings.
+        kind = getattr(error, 'kind', '')
+        code = {'network': 'login_transport_connection_failed',
+                'security': 'login_transport_security_rejected',
+                'content': 'login_transport_response_rejected'}.get(kind, 'login_transport_failed')
+        try: diagnostics.record('transport_error', diagnostic_target(url), code=code)
+        except Exception: pass
 
     def respond(event, status, headers, body):
         reason = http.client.responses.get(status, 'Steam response')
@@ -148,7 +219,8 @@ def attach_community_transport(window, transport):
                     if len(body) > MAX_LOGIN_BODY:
                         raise ProbeFailure('login_body_too_large', kind='security')
             url, method, payload = str(request.Uri), str(request.Method), bytes(body)
-        except Exception:
+        except Exception as error:
+            diagnose(str(request.Uri), error)
             if acquired: slots.release()
             respond(event, 503, [('Content-Type', 'text/plain; charset=utf-8')],
                     'Steam 登录请求暂未完成，请关闭登录窗口后重试。'.encode())
@@ -159,7 +231,8 @@ def attach_community_transport(window, transport):
             try:
                 try:
                     result = transport.request(url, method, headers, payload)
-                except Exception:
+                except Exception as error:
+                    diagnose(url, error)
                     result = (502, [('Content-Type', 'text/plain; charset=utf-8'), ('Cache-Control', 'no-store')],
                         'Steam 登录通道连接失败，请检查网络或稍后重试。'.encode())
                 def complete():

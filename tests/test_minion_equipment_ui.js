@@ -31,7 +31,7 @@ test('capabilities follow both servant qualities rather than obsolete global cho
   settings.cleanup.minion_equipment_policies.rare='sell';
   assert.equal(managed.requiredCapabilities(settings).includes('sell'),true);
   const html=require('node:fs').readFileSync(require('node:path').join(__dirname,'../deskrawl_assistant/web/index.html'),'utf8');
-  assert.match(html,/仆从装备 · 黑雾传说<\/strong><small>固定保护，不可修改/);
+  assert.match(html,/黑雾传说仆从装备<\/strong><small>固定保护，不可修改/);
   assert.match(html,/符合筛选规则的仆从装备<\/strong><small>固定保护[^<]*<\/small><\/td><td><span class="badge match">锁定 → 仓库<\/span>/);
   assert.match(html,/符合筛选规则的角色装备<\/strong>/);
   assert.match(html,/仆从装备 · 传说 · 未命中<\/strong><\/td><td><select id="managed-minion-equipment-legendary-action"/);

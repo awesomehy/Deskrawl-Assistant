@@ -20,7 +20,8 @@ class TradingFake:
     def __init__(self):
         self.calls = []
         self.failure_keys = set()
-        self.auth = {'verified': True, 'steamid': STEAMID, 'wallet_currency': 'CNY'}
+        self.auth = {'bound': True, 'expired': False, 'verified': True, 'steamid': STEAMID,
+                     'wallet_currency': 'CNY'}
 
     def prepare_upload(self, steamid, item_key, variant):
         self.calls.append(('prepare', steamid, item_key, variant))
@@ -81,6 +82,72 @@ class CoordinatorAuditTests(unittest.TestCase):
         ticket = self.coordinator.prepare(row, STEAMID, self.config)
         self.assertTrue(ticket)
         return ticket
+
+    def test_queued_upload_and_due_sale_run_before_optional_tracking_reads(self):
+        self.trading.refresh_confirmation = lambda: self.trading.calls.append(('refresh',))
+        row = self.row()
+        ticket = self.ready(row)
+        self.assertEqual([call[0] for call in self.trading.calls], ['prepare'])
+        identity = self.coordinator.submitted(row, STEAMID, ticket=ticket)
+        self.coordinator.confirmed(identity, self.receipt(row))
+        self.coordinator.next_sale = self.now + 30
+        self.coordinator.process_once()
+        self.assertEqual(self.trading.calls[-1][0], 'complete')
+        self.coordinator.process_once()
+        self.assertEqual(self.trading.calls[-1][0], 'sale')
+        self.coordinator.process_once()
+        self.assertEqual(self.trading.calls[-1][0], 'refresh')
+
+    def test_idle_tracking_continues_with_automatic_sales_disabled(self):
+        self.trading.refresh_confirmation = lambda: self.trading.calls.append(('refresh',))
+        self.running = False
+        self.config['sell_enabled'] = False
+        self.coordinator.process_once()
+        self.assertEqual(self.trading.calls, [('refresh',)])
+
+    def test_visible_editor_quote_precedes_optional_history_but_not_due_sale(self):
+        self.trading.refresh_price_previews = lambda: self.trading.calls.append(('price',)) or True
+        self.trading.refresh_confirmation = lambda: self.trading.calls.append(('refresh',))
+        self.coordinator.process_once()
+        self.assertEqual([call[0] for call in self.trading.calls], ['sale'])
+        self.coordinator.process_once()
+        self.assertEqual([call[0] for call in self.trading.calls], ['sale', 'price'])
+        self.trading.refresh_price_previews = lambda: False
+        self.coordinator.process_once()
+        self.assertEqual(self.trading.calls[-1][0], 'refresh')
+
+    def test_visible_editor_quote_cannot_delay_short_sale_pacing(self):
+        self.trading.refresh_price_previews = lambda: self.trading.calls.append(('price',)) or True
+        self.coordinator.next_sale = self.now + 2
+        self.coordinator.process_once()
+        self.assertEqual(self.trading.calls, [])
+        self.now += 2
+        self.coordinator.process_once()
+        self.assertEqual(self.trading.calls[-1][0], 'sale')
+
+    def test_short_sale_pacing_gap_cannot_start_slow_optional_reads(self):
+        self.trading.refresh_confirmation = lambda: self.trading.calls.append(('refresh',))
+        self.coordinator.next_sale = self.now + 2
+        self.coordinator.process_once()
+        self.assertEqual(self.trading.calls, [])
+        self.now += 2
+        self.coordinator.process_once()
+        self.assertEqual(self.trading.calls[-1][0], 'sale')
+        self.coordinator.process_once()
+        self.assertEqual(self.trading.calls[-1][0], 'refresh')
+
+    def test_only_successful_sale_progress_shortens_queue_delay(self):
+        self.trading.sale_once = lambda *a, **kw: {'sale_submitted': True}
+        self.coordinator.process_once()
+        self.assertEqual(self.coordinator.next_sale, self.now + 2)
+        self.now += 2
+        self.trading.sale_once = lambda *a, **kw: {'status': 'waiting'}
+        self.coordinator.process_once()
+        self.assertEqual(self.coordinator.next_sale, self.now + 30)
+        self.now += 30
+        self.trading.sale_once = lambda *a, **kw: (_ for _ in ()).throw(RuntimeError('timeout'))
+        self.coordinator.process_once()
+        self.assertEqual(self.coordinator.next_sale, self.now + 30)
 
     def test_preparation_and_status_never_perform_network_on_the_calling_game_thread(self):
         self.assertIsNone(self.coordinator.prepare(self.row(), STEAMID, self.config))
@@ -184,7 +251,7 @@ class CoordinatorAuditTests(unittest.TestCase):
             self.assertIn('DivineBow1', self.coordinator.observe({'steamid': STEAMID})['blocked_keys'])
             original(value)
         self.trading.discard_upload_baseline = retire
-        self.trading.auth.update(verified=False, steamid=None)
+        self.trading.auth.update(verified=False, steamid=None, expired=True)
         self.coordinator.process_once()
         self.assertEqual(self.trading.calls[-1], ('discard', ticket))
         self.assertEqual(self.coordinator.observe({'steamid': STEAMID})['blocked_keys'], [])
@@ -210,12 +277,90 @@ class CoordinatorAuditTests(unittest.TestCase):
         ticket = self.ready()
         identity = self.coordinator.submitted(self.row(), STEAMID, ticket)
         self.coordinator.confirmed(identity, self.receipt(self.row()))
-        self.trading.auth.update(verified=False, steamid=None)
+        self.trading.auth.update(verified=False, steamid=None, expired=True)
         self.trading.discard_upload_baseline = lambda ticket: (_ for _ in ()).throw(OSError('disk unavailable'))
         with self.assertRaises(OSError):
             self.coordinator.process_once()
         self.assertEqual(self.coordinator.intents[identity]['phase'], 'confirmed')
         self.assertIn('DivineBow1', self.coordinator.observe({'steamid': STEAMID})['blocked_keys'])
+
+    def test_temporary_wallet_failure_preserves_original_baseline_and_recovers_mapping(self):
+        ticket = self.ready()
+        identity = self.coordinator.submitted(self.row(), STEAMID, ticket)
+        self.coordinator.confirmed(identity, self.receipt(self.row()))
+        before = list(self.trading.calls)
+        self.trading.auth.update(verified=False, steamid=None)
+        self.coordinator.process_once()
+        self.assertEqual(self.trading.calls, before)
+        self.assertEqual(self.coordinator.intents[identity]['phase'], 'confirmed')
+        self.assertIn('DivineBow1', self.coordinator.observe({'steamid': STEAMID})['blocked_keys'])
+        self.trading.auth.update(verified=True, steamid=STEAMID)
+        self.coordinator.process_once()
+        self.assertEqual(self.trading.calls[-1], ('complete', ticket, 1, 'server-uid-a'))
+        self.assertFalse(any(call[0] == 'discard' for call in self.trading.calls))
+        self.assertEqual(self.coordinator.intents[identity]['phase'], 'resolved')
+
+    def test_explicit_logout_or_account_change_never_resumes_original_mapping(self):
+        for change in ({'verified': False, 'steamid': None, 'bound': False},
+                       {'verified': True, 'steamid': OTHER}):
+            with self.subTest(change=change):
+                self.setUp()
+                ticket = self.ready()
+                identity = self.coordinator.submitted(self.row(), STEAMID, ticket)
+                self.coordinator.confirmed(identity, self.receipt(self.row()))
+                self.trading.auth.update(change)
+                self.coordinator.process_once()
+                self.assertTrue(self.coordinator.intents[identity]['market_skipped'])
+                self.assertEqual(self.coordinator.jobs, {})
+                self.trading.auth.update(bound=True, expired=False, verified=True, steamid=STEAMID)
+                self.coordinator.process_once()
+                self.assertFalse(any(call[0] == 'complete' for call in self.trading.calls))
+
+    def test_five_failed_mapping_reads_recover_at_bounded_lower_frequency_without_restart(self):
+        ticket = self.ready()
+        identity = self.coordinator.submitted(self.row(), STEAMID, ticket)
+        self.coordinator.confirmed(identity, self.receipt(self.row()))
+        original = self.trading.complete_upload
+        calls = []
+        def delayed(*args, **kwargs):
+            calls.append(1)
+            if len(calls) <= 5:
+                raise RuntimeError('temporary inventory read failure')
+            return original(*args, **kwargs)
+        self.trading.complete_upload = delayed
+        self.running = False  # Finishing exact mapping remains read-only after stop.
+        for attempt in range(5):
+            self.coordinator.process_once()
+            if attempt < 4:
+                self.now += 30
+        self.assertEqual(len(calls), 5)
+        self.assertEqual(self.coordinator.jobs[identity]['phase'], 'complete')
+        self.now += 119
+        self.coordinator.process_once()
+        self.assertEqual(len(calls), 5)
+        self.now += 1
+        self.coordinator.process_once()
+        self.assertEqual(len(calls), 6)
+        self.assertEqual(self.coordinator.intents[identity]['phase'], 'resolved')
+        self.assertFalse(any(call[0] in ('discard', 'sale') for call in self.trading.calls))
+        self.assertEqual(sum(call[0] == 'prepare' for call in self.trading.calls), 1)
+
+    def test_terminal_baseline_releases_only_confirmed_market_gate_and_keeps_game_receipt(self):
+        for reason in ('baseline_expired', 'ambiguous', 'binding_changed'):
+            with self.subTest(reason=reason):
+                self.setUp()
+                ticket = self.ready()
+                identity = self.coordinator.submitted(self.row(), STEAMID, ticket)
+                self.coordinator.confirmed(identity, self.receipt(self.row()))
+                self.trading.upload_mapping_state = lambda *args: {'status': 'terminal', 'reason': reason}
+                self.coordinator.process_once()
+                receipt = self.coordinator.intents[identity]
+                self.assertEqual(receipt['phase'], 'resolved')
+                self.assertEqual(receipt['instance_id'], 'server-uid-a')
+                self.assertEqual(receipt['market_skip_reason'], reason)
+                self.assertEqual(self.coordinator.observe({'steamid': STEAMID})['blocked_keys'], [])
+                self.assertIn(('discard', ticket), self.trading.calls)
+                self.assertFalse(any(call[0] == 'complete' for call in self.trading.calls))
 
     def test_late_preparation_result_cannot_resurrect_an_upload_only_job(self):
         self.coordinator.prepare(self.row(), STEAMID, self.config)

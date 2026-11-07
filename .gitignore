@@ -19,6 +19,8 @@ plugins/
 *.pem
 *.pfx
 *.key
+steam-community-certificate.dpapi
+steam-community-certificate.dpapi.*.tmp
 
 # Publish only the static resources required by this version.
 data/*
@@ -83,6 +85,7 @@ docs/*
 !docs/神秘商人接口分析.md
 !docs/screenshots/
 !docs/steam-market.md
+!docs/auction-tracking.md
 !docs/拍卖行与Steam市场验收说明.md
 
 !docs/经验收益说明.md

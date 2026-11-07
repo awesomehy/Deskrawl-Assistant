@@ -184,25 +184,18 @@ test('equipment cards split affix groups and highlight only matched rows',()=>{
   assert.doesNotMatch(markup,/<color/);
 });
 
-test('unknown rarity is not styled as common and monitor state survives plan clearing',()=>{
+test('unknown rarity is not styled as common',()=>{
   const p=page();p.context.item={name:'未知',rarity:null};
   assert.doesNotMatch(p.run('lootPreviewItem(item)'),/loot-rarity-0/);
-  p.context.monitor={enabled:true,saved_runs:2,directory:'C:\\captures',message:'正在监控'};
-  p.run("renderLootCapture(monitor);clearLootPreview('已回城');");
-  assert.equal(p.ids.get('loot-capture-enabled').checked,true);
-  assert.equal(p.ids.get('loot-capture-summary').textContent,'留档 2 份记录');
-  assert.equal(p.ids.get('loot-capture-directory').textContent,'C:\\captures');
 });
 
-test('capture summary reflects reduced file counts and unreadable directories',()=>{
-  const p=page();p.context.monitor={enabled:true,saved_runs:1};
-  p.run('renderLootCapture(monitor)');
-  assert.equal(p.ids.get('loot-capture-summary').textContent,'留档 1 份记录');
-  p.context.monitor.saved_runs=0;
-  p.run('renderLootCapture(monitor)');
-  assert.equal(p.ids.get('loot-capture-summary').textContent,'留档 0 份记录');
-  p.context.monitor.saved_runs=null;p.context.monitor.error='文件数量未确认';
-  p.run('renderLootCapture(monitor)');
-  assert.equal(p.ids.get('loot-capture-summary').textContent,'留档 — 份记录');
-  assert.equal(p.ids.get('loot-capture-status').textContent,'文件数量未确认');
+test('drop preview remains usable without the retired local capture controls',()=>{
+  const p=page();
+  assert.equal([...p.ids.keys()].some(id=>id.startsWith('loot-capture-')),false);
+  p.context.data=plan();
+  p.run('renderLootPreview(data)');
+  assert.equal(p.ids.get('loot-preview-map').textContent,'first');
+  assert.match(p.ids.get('loot-preview-waves').innerHTML,/测试装备/);
+  p.run("clearLootPreview('已回城')");
+  assert.equal(p.ids.get('loot-preview-waves').innerHTML,'');
 });

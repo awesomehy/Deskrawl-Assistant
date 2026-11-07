@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 import threading
 import time
 import urllib.request
@@ -70,7 +71,8 @@ class WindowHooks:
         if self.tray is not None: return
         from .desktop_tray import DesktopTray
         tray = DesktopTray(self.window, RESOURCE_ROOT / 'deskrawl_assistant/web/assistant.ico',
-                           self.activate, self.request_exit)
+                           self.activate, self.request_exit, snapshot=self.service.tray_snapshot,
+                           reprice=self.open_trade_reprice, sale=self.open_trade_sale)
         try: tray.start()
         except Exception:
             try: tray.close()
@@ -79,6 +81,31 @@ class WindowHooks:
             return
         self.tray = tray
         self.tray_error = ''
+
+    def open_trade_reprice(self, record_id):
+        if not isinstance(record_id, str) or not re.fullmatch(r'[a-f0-9]{32}', record_id):
+            return
+        def open_preview():
+            if self.exiting: return
+            self.show_window()
+            try:
+                self.window.evaluate_js('window.AuctionTrackingUI?.openReprice(' + json.dumps(record_id) + ');')
+            except Exception:
+                record('tray_reprice_preview_unavailable')
+        threading.Thread(target=open_preview, name='tray-reprice-preview', daemon=True).start()
+
+    def open_trade_sale(self, record_id):
+        if (not isinstance(record_id, str)
+                or not re.fullmatch(r'(?:[a-f0-9]{32}|inventory-[1-9]\d{0,24})', record_id)):
+            return
+        def open_preview():
+            if self.exiting: return
+            self.show_window()
+            try:
+                self.window.evaluate_js('window.AuctionTrackingUI?.openSale(' + json.dumps(record_id) + ');')
+            except Exception:
+                record('tray_sale_preview_unavailable')
+        threading.Thread(target=open_preview, name='tray-sale-preview', daemon=True).start()
 
     def hide_to_tray(self):
         with self.visibility_guard:
@@ -97,9 +124,23 @@ class WindowHooks:
                 self.show_window()
                 if not self.window.create_confirmation_dialog('退出助手', '有未保存的配置，仍要退出助手吗？'):
                     return
-            self.exiting = True
-            self.window.destroy()
+            self.finish_exit()
         threading.Thread(target=exit_window,daemon=True).start()
+
+    def finish_exit(self):
+        # Both the tray and the accepted HTTP shutdown converge here. Claim
+        # window destruction once; do not turn this close into hide-to-tray.
+        with self.visibility_guard:
+            if self.exiting: return
+            self.exiting = True
+        self.window.destroy()
+
+    def close_after_shutdown(self, stopping):
+        # Waiting for service.close() would leave a dead UI visible while a
+        # Steam request or an in-flight game operation finishes. The host's
+        # finally still joins that cleanup after the window loop returns.
+        stopping.wait()
+        self.finish_exit()
 
     def closing(self):
         if self.exiting: return True
@@ -219,15 +260,11 @@ def main(port=18741, *, test_managed=False):
             record('desktop_window_loaded')
             hooks.start_tray()
             hooks.start_hotkeys()
+            host.service.enable_native_steam_acceleration()
             application_ready()
         window.events.loaded += loaded
         host.start()
-        def close_after_shutdown():
-            host.finished.wait()
-            if not hooks.exiting:
-                hooks.exiting = True
-                window.destroy()
-        threading.Thread(target=close_after_shutdown,daemon=True).start()
+        threading.Thread(target=hooks.close_after_shutdown,args=(host.stopping,),daemon=True).start()
         cache = cache_root()
         cache.mkdir(parents=True,exist_ok=True)
         webview.start(gui='edgechromium',debug=False,private_mode=True,storage_path=str(cache),

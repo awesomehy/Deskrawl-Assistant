@@ -7,7 +7,7 @@ import unittest
 from deskrawl_assistant.steam_market import APP_ID, MarketCatalog
 from deskrawl_assistant.steam_session import SteamSessionError
 from deskrawl_assistant.steam_trading import (
-    SteamTradingService, buyer_total, fee_parameters, receive_for_total,
+    SteamTradingService, buyer_total, fee_parameters, receive_for_total, buyer_price_candidates,
 )
 
 STEAMID = '76561198000000001'
@@ -60,6 +60,7 @@ class FakeSession:
 
     def state(self):
         return {'bound': True, 'verified': True, 'steamid': self.wallet['steamid'],
+                'binding_generation': self.wallet.get('binding_generation'),
                 'wallet_currency': 'CNY', 'message': 'mock'}
 
     def verify(self):
@@ -75,6 +76,10 @@ class FakeSession:
             if self.on_quote:
                 self.on_quote()
             return self.quote
+        if path.startswith('/market/mylistings/'):
+            return {'success': 1, 'total_count': 0, 'results_html': ''}
+        if path.startswith('/market/myhistory/'):
+            return {'success': 1, 'total_count': 0, 'events': [], 'listings': {}, 'purchases': {}}
         raise AssertionError(path)
 
     def post(self, path, data, *, expected_steamid=None, expected_generation=None):
@@ -93,6 +98,31 @@ class FakeSession:
 
 
 class FeeTests(unittest.TestCase):
+    def test_price_gap_reports_verified_neighbours_without_changing_amount(self):
+        value = wallet(); value['wallet']['wallet_market_minimum'] = 7
+        parameters = fee_parameters(value, '.10')
+        self.assertEqual(buyer_price_candidates(1263, parameters), [(1262, 1099), (1265, 1100)])
+        with self.assertRaisesRegex(SteamSessionError, '12.62.*12.65'):
+            receive_for_total(1263, parameters)
+        self.assertEqual(receive_for_total(1262, parameters), 1099)
+        self.assertEqual(receive_for_total(1265, parameters), 1100)
+
+    def test_price_candidates_match_brute_force_for_currency_steps_and_minimums(self):
+        for minimum, step in ((1, 1), (7, 1), (100, 100), (5, 5), (7, 5)):
+            value = wallet(); value['wallet'].update(wallet_market_minimum=minimum, wallet_currency_increment=step)
+            p = fee_parameters(value, '.10')
+            totals = sorted({buyer_total(n, p) for n in {minimum, *range(step, 3000, step)}
+                             if n >= minimum})
+            for total in range(1, 1000, 3):
+                candidates = [v for v, _ in buyer_price_candidates(total, p)]
+                if total in totals:
+                    self.assertIn(total, candidates)
+                else:
+                    lower = max((v for v in totals if v < total), default=None)
+                    upper = min((v for v in totals if v > total), default=None)
+                    if lower is not None: self.assertIn(lower, candidates)
+                    if upper is not None: self.assertIn(upper, candidates)
+
     def test_exact_buyer_total_has_exact_receive(self):
         parameters = fee_parameters(wallet(), '.10')
         self.assertEqual(receive_for_total(230, parameters), 200)
@@ -154,6 +184,23 @@ class TradingTests(unittest.TestCase):
     def test_existing_stock_is_never_adopted_by_name(self):
         self.service.sale_once(self.settings, STEAMID)
         self.assertEqual(self.session.sales, [])
+
+    def test_queue_progress_only_reports_a_new_accepted_sale(self):
+        self.session.inventory = inventory(('1', 1, {}), ('2', 1, {}))
+        self.adopt()
+        self.service.register_uploaded('2', 'GoldBar', expected_steamid=STEAMID)
+        self.assertIs(self.service.sale_once(self.settings, STEAMID)['sale_submitted'], True)
+        self.assertIs(self.service.sale_once(self.settings, STEAMID)['sale_submitted'], True)
+        self.assertFalse(self.service.sale_once(self.settings, STEAMID).get('sale_submitted'))
+        self.assertEqual([row[1]['assetid'] for row in self.session.sales], ['1', '2'])
+
+    def test_unconfirmed_response_does_not_accelerate_the_sale_queue(self):
+        self.adopt()
+        self.session.result = {'success': 0}
+        self.assertIs(self.service.sale_once(self.settings, STEAMID)['sale_submitted'], False)
+        self.assertEqual(self.service._journal[0]['status'], 'uncertain')
+        self.service.sale_once(self.settings, STEAMID)
+        self.assertEqual(len(self.session.sales), 1)
 
     def test_discarded_baseline_cannot_adopt_a_later_upload_even_after_restart(self):
         ticket = self.service.prepare_upload(STEAMID, 'GoldBar')
@@ -225,6 +272,93 @@ class TradingTests(unittest.TestCase):
     def test_disabled_sale_does_not_make_network_requests(self):
         self.service.sale_once({**self.settings, 'sell_enabled': False}, STEAMID)
         self.assertEqual(self.session.requests, [])
+
+    def test_mapping_retry_state_is_local_and_keeps_original_600_second_lifetime(self):
+        ticket = self.service.prepare_upload(STEAMID, 'GoldBar')
+        self.session.requests.clear()
+        self.assertEqual(self.service.upload_mapping_state(ticket, STEAMID), {'status': 'ready'})
+        self.now += 599
+        self.assertEqual(self.service.upload_mapping_state(ticket, STEAMID)['status'], 'ready')
+        self.now += 1
+        self.assertEqual(self.service.upload_mapping_state(ticket, STEAMID),
+                         {'status': 'terminal', 'reason': 'baseline_expired'})
+        self.assertEqual(self.service._tickets[ticket]['created_at'], 1000)
+        self.assertEqual(self.session.requests, [])
+        self.assertEqual(self.session.sales, [])
+
+    def test_mapping_retry_waits_for_unknown_auth_but_rejects_rebinding(self):
+        self.session.wallet['binding_generation'] = 4
+        original_state = self.session.state
+        self.session.state = lambda: {**original_state(), 'binding_generation': 4}
+        ticket = self.service.prepare_upload(STEAMID, 'GoldBar')
+        self.session.peek_state = lambda: {'bound': True, 'verified': False, 'binding_generation': 4}
+        self.assertEqual(self.service.upload_mapping_state(ticket, STEAMID)['status'], 'waiting')
+        self.session.peek_state = lambda: {**original_state(), 'binding_generation': 4}
+        self.assertEqual(self.service.upload_mapping_state(ticket, STEAMID)['status'], 'ready')
+        self.session.peek_state = lambda: {**original_state(), 'binding_generation': 5}
+        self.assertEqual(self.service.upload_mapping_state(ticket, STEAMID),
+                         {'status': 'terminal', 'reason': 'binding_changed'})
+        self.session.wallet['binding_generation'] = 5
+        self.session.requests.clear()
+        with self.assertRaisesRegex(SteamSessionError, '会话已变化'):
+            self.service.complete_upload(ticket, expected_instance_id='original-instance')
+        self.assertEqual(self.session.requests, [])
+        self.assertEqual(self.session.sales, [])
+
+    def test_legacy_baseline_without_binding_generation_still_requires_same_verified_account(self):
+        ticket = self.service.prepare_upload(STEAMID, 'GoldBar')
+        self.service._tickets[ticket].pop('binding_generation', None)
+        self.service._save()
+        self.session.wallet['binding_generation'] = 4
+        self.session.inventory = inventory(('1', 1, {}), ('2', 1, {}))
+        self.service.complete_upload(ticket, expected_instance_id='original-instance')
+        self.assertEqual(self.service._journal[0]['game_instance_id'], 'original-instance')
+        self.assertEqual(self.session.sales, [])
+
+    def test_mapping_read_cannot_capture_after_logout_rebind_or_baseline_expiry(self):
+        for change in ('logout', 'rebind', 'account', 'expiry'):
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as directory:
+                session, now = FakeSession(), [1000]
+                session.wallet['binding_generation'] = 4
+                session.verify = lambda: dict(session.wallet)  # The real session returns a copy.
+                service = SteamTradingService(Path(directory) / 'state.json', catalog(),
+                                              session=session, clock=lambda: now[0])
+                ticket = service.prepare_upload(STEAMID, 'GoldBar')
+                original_inventory = service._inventory
+
+                def changed_inventory(steamid):
+                    result = original_inventory(steamid)
+                    if change == 'logout':
+                        session.state = lambda: {'bound': False, 'verified': False,
+                                                 'binding_generation': 5}
+                    elif change == 'rebind':
+                        session.wallet['binding_generation'] = 5
+                    elif change == 'account':
+                        session.wallet['steamid'] = OTHER
+                    else:
+                        now[0] += 600
+                    return result
+
+                service._inventory = changed_inventory
+                session.inventory = inventory(('1', 1, {}), ('2', 1, {}))
+                with self.assertRaises(SteamSessionError):
+                    service.complete_upload(ticket, expected_instance_id='original-instance')
+                self.assertEqual(service._journal, [])
+                self.assertIn(ticket, service._tickets)
+                self.assertEqual(session.sales, [])
+
+    def test_ambiguous_baseline_never_recovers_by_later_inventory_change(self):
+        ticket = self.service.prepare_upload(STEAMID, 'GoldBar')
+        self.session.inventory = inventory(('1', 1, {}), ('2', 1, {}), ('3', 1, {}))
+        with self.assertRaises(SteamSessionError):
+            self.service.complete_upload(ticket)
+        self.session.inventory = inventory(('1', 1, {}), ('2', 1, {}))
+        self.assertEqual(self.service.upload_mapping_state(ticket, STEAMID),
+                         {'status': 'terminal', 'reason': 'ambiguous'})
+        with self.service._operation:
+            self.assertEqual(self.service.upload_mapping_state(ticket, STEAMID),
+                             {'status': 'waiting', 'reason': 'operation_busy'})
+        self.assertEqual(self.session.sales, [])
 
     def test_explicit_verified_asset_is_sold_at_net_price(self):
         self.adopt()

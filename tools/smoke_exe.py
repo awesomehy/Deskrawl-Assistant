@@ -23,7 +23,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.6.0'
+NAME = 'Deskrawl装备助手-v1.6.1'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -92,6 +92,11 @@ def main():
         assert 'deskrawl_assistant.' + module in bundled_modules.toc
     for module in ('assistant_settings', 'desktop_tray', 'window_hotkey', 'steam_acceleration', 'steam_network', 'steam_login_window', 'steam_login_transport', 'steam_login_diagnostics', 'panel_reader'):
         assert 'deskrawl_assistant.' + module in bundled_modules.toc
+    for module in ('auction_tracking', 'pending_trades', 'sale_tracking', 'steam_manual_sale',
+                   'steam_return_receipts', 'tray_status', 'steam_local_session',
+                   'steam_native_acceleration', 'steam_native_certificate',
+                   'steam_native_hosts', 'steam_native_proxy'):
+        assert 'deskrawl_assistant.' + module in bundled_modules.toc
     for asset in ('assistant-settings.js', 'assistant-settings.css', 'assistant.ico', 'assistant-icon.png'):
         assert 'deskrawl_assistant/web/' + asset in normalized
     for asset in ('auction-ui.js', 'auction-ui.css', 'inventory-auction.js', 'inventory-auction.css'):
@@ -126,6 +131,17 @@ def main():
     working = folder / '空白工作目录'
     working.mkdir()
     persistent = folder / '用户数据'
+    # Desktop packaging checks must not change the real Steam route, hosts,
+    # proxy exceptions or certificate store while the player's app is running.
+    # Verify the shipped default directly, then exercise an explicit opt-out.
+    preferences_module = {}
+    exec(bundled_modules.extract('deskrawl_assistant.assistant_settings'), preferences_module)
+    assert preferences_module['DEFAULTS']['steam_acceleration_enabled'] is True
+    if args.desktop:
+        preferences_path = persistent / 'config/assistant-settings.json'
+        preferences_path.parent.mkdir(parents=True, exist_ok=True)
+        preferences_path.write_text(json.dumps({'schema_version': 1,
+            'steam_acceleration_enabled': False, 'boss_hotkey': ''}), encoding='utf-8')
     # Keep packaging checks away from the real community statistics service.
     # Seed only this test's isolated database with a local receipt endpoint.
     class ReceiptHandler(BaseHTTPRequestHandler):
@@ -138,7 +154,7 @@ def main():
                 result = {'schema': 1, 'client_id': payload['client_id'], 'token': 'a' * 64}
             elif self.path == '/v1/report':
                 assert self.headers.get('Authorization') == 'Bearer ' + 'a' * 64
-                assert payload['version'] == '1.6.0'
+                assert payload['version'] == '1.6.1'
                 result = {'accepted': True, 'report_id': payload['report_id'],
                           'sequence': payload['sequence'], 'accepted_at': datetime.now(timezone.utc).isoformat()}
             else:
@@ -206,7 +222,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.6.0'
+                assert request('/api/state')['app_version'] == '1.6.1'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -340,6 +356,13 @@ def main():
         report['checks'].append('六个页签完整且没有重复；交流与反馈位于日志之后，托管与掉落预览导航保留')
         assert '欢迎进群交流游戏心得以及反馈使用问题。' in page
         assert '1062040183' in page and request('/images/qq-group.png').startswith(b'\x89PNG')
+        assert '软件制作不易，如果觉得好用，欢迎打赏。' in page
+        assert request('/images/appreciation-code.png').startswith(b'\x89PNG')
+        assert '待交易物品' in page and 'id="auction-reprice-price-note"' in page
+        assert b'priceGuidance' in request('/auction-tracking.js')
+        assert b'openSale' in request('/auction-tracking.js')
+        assert 'id="loot-capture-enabled"' not in page
+        report['checks'].append('待交易物品共用弹窗、托盘定价入口、价格步长提示和赞赏码完整内置；掉落预览无本地留档开关')
         assert 'id="equipped-dialog"' in page and page.count('data-column="') == 7
         assert '单体 Boss 基准战力' in page
         assert 'id="loot-preview-page"' in page
@@ -455,9 +478,10 @@ def main():
         assert settings_info['desktop_supported'] is args.desktop
         assert not settings_info['load_error'] and not settings_info['tray_error']
         assert settings_info['close_behavior'] == 'hide_to_tray'
-        assert settings_info['steam_acceleration_enabled'] is False and settings_info['boss_hotkey'] == ''
-        saved_preferences = request('/api/settings', {'steam_acceleration_enabled': True, 'boss_hotkey': ''})
-        assert saved_preferences['steam_acceleration_enabled'] is True
+        assert settings_info['steam_acceleration_enabled'] is (not args.desktop) and settings_info['boss_hotkey'] == ''
+        saved_preferences = request('/api/settings', {'steam_acceleration_enabled': False, 'boss_hotkey': ''})
+        assert saved_preferences['steam_acceleration_enabled'] is False
+        report['checks'].append('Steam 社区加速内置默认开启；隔离桌面检查使用显式关闭配置，不改动正在运行的 Steam 通道')
         assert request('/assistant-settings.js') and request('/assistant-settings.css') and request('/assistant.ico')
         assert 'id="settings-open"' in page and 'id="settings-reset-rules"' in page
         if args.desktop:
@@ -548,7 +572,7 @@ def main():
         assert request('/api/community')['enabled'] is True
         assert request('/api/community')['url'] == receipt_url
         assert request('/api/market/settings')['currency_id'] == 23
-        assert request('/api/settings')['steam_acceleration_enabled'] is True
+        assert request('/api/settings')['steam_acceleration_enabled'] is False
         assert not request('/api/settings')['load_error']
         assert catalog['pools']['Minion']['random'] == catalog['pools']['Minion']['primary'] + catalog['pools']['Minion']['secondary']
         minion_rule = {'id': 'packaging-minion-random', 'name': '仆从随机词条', 'equipment_keys': ['LegendaryMinionGear1'],
@@ -561,7 +585,7 @@ def main():
         exported_rules = exported['rules'] if isinstance(exported, dict) else exported
         minion_loaded = next(row for row in exported_rules if row['id'] == minion_rule['id'])
         assert minion_loaded['groups'] == minion_rule['groups']
-        assert request('/api/settings')['steam_acceleration_enabled'] is True
+        assert request('/api/settings')['steam_acceleration_enabled'] is False
         assert not request('/api/managed')['running'] and not request('/api/state')['connected']
         report['checks'].append('仆从随机词条候选池、三词条阈值及新格式规则保存重启后保留；助手设置独立持久化')
         report['checks'].append('战斗天赋、生活技能路径、技能组合及自定义93%/17%商人比例与购买件数，保存后重启完整保留')

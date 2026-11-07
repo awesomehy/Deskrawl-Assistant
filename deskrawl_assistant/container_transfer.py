@@ -54,8 +54,9 @@ def plan_transfers(sources, targets, *, allow_partial=False):
 
     Stacking matches the exact ItemData reference, preserving type and grade.
     Generated items never merge. InventorySlot.Locked is OR'ed as in fnw.
-    Manual moves can opt into the longest fitting prefix; individual source
-    stacks are still moved in full. Automated callers remain all-or-nothing.
+    Callers can opt into the longest fitting prefix; individual source stacks
+    are still moved in full. This is used by manual moves and bounded automatic
+    gem/rune storage batches. Other callers remain all-or-nothing by default.
     """
     addresses = [s['address'] for s in sources]+[t['address'] for t in targets]
     if not sources or len(set(addresses))!=len(addresses):

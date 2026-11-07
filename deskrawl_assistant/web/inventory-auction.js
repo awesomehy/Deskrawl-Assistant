@@ -39,7 +39,8 @@
           const newBatch=result.running||!!batchIdentity(result)&&batchIdentity(result)!==previousBatchId;
           if(!uncertainStart||newBatch){batch=result;if(batch.running||uncertainStart){started=true;uncertainStart=false;preview=null;}}
           emit();}}
-        catch(cause){if(ticket===epoch&&(batch.running||uncertainStart)){error='进度暂时读取失败，请稍后重新核验；不要重复提交。'+cause.message;emit();}}
+        catch(cause){if(ticket===epoch&&(batch.running||batch.total>0||uncertainStart)){error='进度暂时读取失败，请稍后重新核验；不要重复提交。'+cause.message;
+          if(root.AuctionTrackingUI)batch={...batch,items:root.AuctionTrackingUI.helpers.invalidateLive(batch.items)};emit();}}
         finally{polling=false;}
       },
       async cancel(){
@@ -62,6 +63,7 @@
     $('inventory-auction-availability').hidden=!reason;$('inventory-auction-availability').textContent=reason||'';
   }
   function rowMarkup(row){
+    if(root.AuctionTrackingUI)return root.AuctionTrackingUI.helpers.rowMarkup(row);
     const status=String(row.status||'queued'),name=row.name||row.item_key||'未识别物品',quantity=Number.isInteger(row.count)&&row.count>0?row.count:1;
     const position=row.container==='storage'?'仓库':row.container==='inventory'?'背包':'';
     const reason=row.reason||row.message||'';
@@ -94,7 +96,8 @@
     $('inventory-auction-steam').hidden=!showPreview;
     $('inventory-auction-price').disabled=busy||submitting||!!blocked;
     $('inventory-auction-summary').textContent=showPreview?(busy?'正在核验所选商品…':preview?`本次选择 ${preview.items?.length||chosen.length} 组 · 可处理 ${preview.ready_count||0} 组 · 跳过 ${preview.skipped_count||0} 组${preview.message?'。'+preview.message:''}`:'请重新核验本次商品。'):(batch.message||'等待批量操作进度。');
-    $('inventory-auction-error').hidden=!(error||blocked);$('inventory-auction-error').textContent=error||blocked;
+    const repriceMessage=batch.reprice?.message||'';
+    $('inventory-auction-error').hidden=!(error||blocked||repriceMessage);$('inventory-auction-error').textContent=error||blocked||repriceMessage;
     const markup=rows.length?rows.map(rowMarkup).join(''):'<div class="empty-state">'+(busy?'正在读取商品…':'暂无商品清单')+'</div>';
     if($('inventory-auction-items').innerHTML!==markup)$('inventory-auction-items').innerHTML=markup;
     $('inventory-auction-scope').hidden=!showPreview;
@@ -102,7 +105,7 @@
     $('inventory-auction-submit').disabled=busy||submitting||uncertainStart||!preview?.token||preview.can_start===false||!(preview?.ready_count>0)||mode==='sell'&&steam.steam?.authenticated!==true||!!blocked;
     $('inventory-auction-submit').title=blocked;
     $('inventory-auction-submit').textContent=mode==='sell'?`确认上传并出售 ${preview?.ready_count||0} 组`:`确认上传 ${preview?.ready_count||0} 组`;
-    $('inventory-auction-recheck').hidden=!showPreview&&!uncertainStart&&!error;
+    $('inventory-auction-recheck').hidden=false;
     $('inventory-auction-recheck').disabled=busy||submitting||!!batch.running||!!blocked;
     $('inventory-auction-cancel').hidden=!batch.running;
     $('inventory-auction-cancel').disabled=busy||batch.can_cancel===false;

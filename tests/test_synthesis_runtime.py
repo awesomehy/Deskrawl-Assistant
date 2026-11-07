@@ -93,6 +93,7 @@ class SnapshotAndReceiptTests(unittest.TestCase):
     def runtime(self):
         reader = Mock(); reader.session_id = 'fake-session'
         actions = SimpleNamespace(reader=reader, profile=load_profile(), verified_kinds=set())
+        actions._require_travel_ready = Mock()
         runtime = SynthesisRuntime(actions)
         return runtime, actions
 
@@ -367,6 +368,172 @@ class SnapshotAndReceiptTests(unittest.TestCase):
         with self.assertRaisesRegex(NativeActionError,'角色已变化'):
             runtime.reconcile('role-b')
         self.assertEqual(runtime._invoke.call_count,1)
+
+    def rollback_runtime(self):
+        runtime, payload, _ = self.rune_execution()
+        runtime._runes.return_value['rules_version'] = 'rules-a'
+        runtime._confirm = Mock(side_effect=SynthesisReceiptPending('disconnected', uncertain=True))
+        with patch('deskrawl_assistant.synthesis_runtime.time.monotonic', return_value=100):
+            runtime.execute('synthesize_runes', payload)
+        rows = [dict(row, identity_verified=True,
+                     container='inventory' if i == 0 else 'storage', slot_index=150+i)
+                for i, row in enumerate(runtime._pending['before'])]
+        runtime._bag.return_value = rows, {}, 300, 40
+        # No save, request, reward or cube operation is outstanding.
+        runtime._cube_selections = Mock(return_value=([], []))
+        return runtime, rows
+
+    def test_rolled_back_runes_across_bag_and_storage_resolve_without_spending(self):
+        runtime, rows = self.rollback_runtime()
+        with patch('deskrawl_assistant.synthesis_runtime.time.monotonic', return_value=200):
+            result = runtime.reconcile('role-a', reconnected=True)
+        self.assertTrue(result['synthesis_pending'])
+        with patch('deskrawl_assistant.synthesis_runtime.time.monotonic', return_value=204):
+            result = runtime.reconcile('role-a', reconnected=True)
+        self.assertTrue(result['synthesis_aborted'])
+        self.assertFalse(result['effect_confirmed'])
+        self.assertNotIn('outputs', result)
+        self.assertIsNone(runtime._pending)
+        runtime._bag.assert_called_with(runtime._context.return_value[0], include_storage=True)
+        self.assertEqual(runtime._invoke.call_count, 1)
+
+    def test_unapplied_receipt_requires_real_reconnect_not_just_surviving_materials(self):
+        runtime, _ = self.rollback_runtime()
+        with patch.object(runtime, '_rune_rollback_confirmed', side_effect=AssertionError('not reloaded')):
+            for clock in (200, 500):
+                with patch('deskrawl_assistant.synthesis_runtime.time.monotonic', return_value=clock):
+                    self.assertTrue(runtime.reconcile('role-a')['synthesis_pending'])
+        self.assertEqual(runtime._invoke.call_count, 1)
+
+    def test_reconnect_does_not_extend_receipt_deadline_on_every_poll(self):
+        runtime, _ = self.rollback_runtime()
+        runtime._runes.return_value['gold'] = 950  # Cannot prove success or non-execution.
+        for clock in (200, 321):
+            with patch('deskrawl_assistant.synthesis_runtime.time.monotonic', return_value=clock):
+                result = runtime.reconcile('role-a', reconnected=True)
+        self.assertTrue(result['timed_out'])
+        self.assertIsNotNone(runtime._pending)
+
+    def test_rollback_requires_all_nine_unchanged_identities_and_server_state(self):
+        changes = {
+            'missing': lambda rt, rows: rows.pop(),
+            'duplicate': lambda rt, rows: rows.__setitem__(8, dict(rows[0])),
+            'name changed': lambda rt, rows: rows[0].update(internal_name='UncommonRune_other'),
+            'level changed': lambda rt, rows: rows[0].update(rune_level=16),
+            'unknown identity': lambda rt, rows: rows[0].update(identity_verified=False),
+            'sequence advanced': lambda rt, rows: rt._runes.return_value.update(sequence=11),
+            'gold charged': lambda rt, rows: rt._runes.return_value.update(gold=900),
+            'new rules': lambda rt, rows: rt._runes.return_value.update(rules_version='rules-b'),
+            'offline': lambda rt, rows: rt._runes.return_value.update(online=False),
+            'save pending': lambda rt, rows: setattr(rt._context.return_value[0].boolean, 'side_effect', lambda a: a==394),
+            'item operation pending': lambda rt, rows: setattr(rt._context.return_value[0].boolean, 'side_effect', lambda a: a==393),
+            'request pending': lambda rt, rows: setattr(rt.actions._require_travel_ready, 'side_effect', GameBusyError('request')),
+            'cube selection': lambda rt, rows: setattr(rt._cube_selections, 'return_value', ([], [(123, 'player-rune')])),
+        }
+        for label, change in changes.items():
+            with self.subTest(label=label):
+                runtime, rows = self.rollback_runtime()
+                change(runtime, rows)
+                for clock in (200, 205):
+                    with patch('deskrawl_assistant.synthesis_runtime.time.monotonic', return_value=clock):
+                        result = runtime.reconcile('role-a', reconnected=True)
+                self.assertTrue(result['synthesis_pending'])
+                self.assertIsNotNone(runtime._pending)
+                self.assertEqual(runtime._invoke.call_count, 1)
+
+    def test_loading_read_breaks_rollback_stability_window(self):
+        runtime, _ = self.rollback_runtime()
+        with patch('deskrawl_assistant.synthesis_runtime.time.monotonic', return_value=200):
+            runtime.reconcile('role-a', reconnected=True)
+        runtime._bag.side_effect = MemoryReadError('warehouse reloading')
+        with patch('deskrawl_assistant.synthesis_runtime.time.monotonic', return_value=203):
+            runtime.reconcile('role-a', reconnected=True)
+        runtime._bag.side_effect = None
+        with patch('deskrawl_assistant.synthesis_runtime.time.monotonic', return_value=205):
+            self.assertTrue(runtime.reconcile('role-a', reconnected=True)['synthesis_pending'])
+        with patch('deskrawl_assistant.synthesis_runtime.time.monotonic', return_value=209):
+            self.assertTrue(runtime.reconcile('role-a', reconnected=True)['synthesis_aborted'])
+
+    def test_loading_menu_retains_receipt_instead_of_stopping_or_crafting_again(self):
+        runtime, _ = self.rollback_runtime()
+        runtime._context.side_effect = NativeActionError('请先进入角色')
+        self.assertTrue(runtime.reconcile('role-a', reconnected=True)['synthesis_pending'])
+        self.assertEqual(runtime._invoke.call_count, 1)
+        self.assertIsNotNone(runtime._pending)
+
+    def test_reconnected_success_can_find_output_in_storage_without_treating_old_items_as_outputs(self):
+        runtime, _ = self.rollback_runtime()
+        runtime._pending['registry_uids'] = {'old-stored-rune'}
+        output = rune(12, container='storage', identity_verified=True)
+        old = rune(13, container='storage', item_uid='old-stored-rune')
+        runtime._bag.return_value = [old, output], {}, 300, 40
+        runtime._runes.return_value.update(sequence=11, gold=900)
+        runtime._cleanup_cube = Mock(return_value=True)
+        result = runtime.reconcile('role-a', reconnected=True)
+        self.assertTrue(result['effect_confirmed'])
+        self.assertEqual([r['item_uid'] for r in result['outputs']], ['rune-12'])
+        self.assertEqual(runtime._invoke.call_count, 1)
+
+    def test_incomplete_storage_cannot_be_used_to_resolve_synthesis(self):
+        runtime, _ = self.runtime()
+        runtime.reader.registry.return_value = {}, {'object': 100, 'header': b'header'}
+        runtime.reader.snapshot_stamps = []
+        runtime.reader.container.side_effect = [
+            {'complete': True, 'slots': [], 'slot_count': 40}, {'complete': False, 'slots': []}]
+        with self.assertRaisesRegex(MemoryReadError, '仓库材料'):
+            runtime._bag(Mock(), include_storage=True)
+        self.assertEqual(runtime.reader.container.call_args.args[0], 'Storage')
+
+    def test_autosave_dirty_materials_can_submit_once_without_bypassing_receipt_fence(self):
+        for kind in ('synthesize_gems', 'synthesize_runes'):
+            with self.subTest(kind=kind):
+                runtime, payload, _ = self.rune_execution()
+                read = runtime._context.return_value[0]
+                read.singleton.side_effect = lambda name: {
+                    'TownPortalSystem': 300, 'SaveSystem': 200, 'CubePanelUI': 700}[name]
+                read.boolean.side_effect = lambda address: address == 292
+                runtime.actions._context = Mock(return_value=(read, 100, 400, 1))
+                runtime._context = SynthesisRuntime._context.__get__(runtime)
+                runtime._confirm = Mock(side_effect=SynthesisReceiptPending('delayed', uncertain=True))
+                if kind == 'synthesize_gems':
+                    recipe = next(r for r in gem_recipes() if r['recipe_id'] == 'GemUpgradeRuby2')
+                    rows = [gem(0, 20)]
+                    runtime._bag.return_value = rows, {}, 300, 40
+                    runtime._gold.return_value = 10000
+                    runtime._find_recipe = Mock(return_value=500)
+                    read.integer.return_value = 99
+                    payload = {'recipe_id': recipe['recipe_id'], 'count': 1, 'max_quality': 5,
+                               'inputs': gem_inputs(rows, recipe, 1)}
+                self.assertTrue(runtime.execute(kind, payload)['synthesis_pending'])
+                with self.assertRaises(GameBusyError):
+                    runtime.execute(kind, payload)
+                runtime.actions._require_travel_ready.assert_called_once_with(read)
+                self.assertEqual(runtime._invoke.call_count, 1)
+                runtime.reader.memory.write.assert_not_called()
+
+    def test_actual_item_operation_or_online_request_still_blocks_before_submission(self):
+        runtime, _ = self.runtime()
+        read = Mock(); read.singleton.side_effect = lambda name: {'TownPortalSystem': 300, 'SaveSystem': 200}[name]
+        read.boolean.side_effect = lambda address: address in (292, 393)
+        runtime.actions._context = Mock(return_value=(read, 100, 400, 1))
+        with self.assertRaisesRegex(GameBusyError, '物品操作'):
+            runtime._context()
+        runtime.actions._require_travel_ready.assert_not_called()
+        read.boolean.side_effect = lambda address: address == 292
+        runtime.actions._require_travel_ready.side_effect = GameBusyError('在线同步未完成')
+        with self.assertRaisesRegex(GameBusyError, '在线同步'):
+            runtime._context()
+        # Receipt polling remains possible while an online request is pending.
+        self.assertEqual(runtime._context(after=True), (read, 100, 200))
+
+    def test_scheduled_autosave_does_not_hide_proven_reconnect_rollback(self):
+        runtime, _ = self.rollback_runtime()
+        runtime._context.return_value[0].boolean.side_effect = lambda address: address == 292
+        for clock in (200, 204):
+            with patch('deskrawl_assistant.synthesis_runtime.time.monotonic', return_value=clock):
+                result = runtime.reconcile('role-a', reconnected=True)
+        self.assertTrue(result['synthesis_aborted'])
+        self.assertEqual(runtime._invoke.call_count, 1)
 
     def test_confirmed_craft_cleanup_can_recover_without_latching_economic_uncertainty(self):
         runtime, payload, receipt = self.rune_execution()

@@ -19,7 +19,6 @@ class ServiceShutdownTests(unittest.TestCase):
         service.cancelled = threading.Event()
         service.worker = None
         service.recommendation_thread = None
-        service.loot_capture_thread = SimpleNamespace(join=lambda: None)
         service.community = service.market = None
         service.updating = service.busy = False
         service.managed = SimpleNamespace(running=False)

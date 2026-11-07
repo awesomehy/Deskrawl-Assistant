@@ -22,9 +22,21 @@ class PreferenceTests(unittest.TestCase):
         self.path = Path(self.tmp.name) / 'assistant-settings.json'
         self.settings = AssistantSettings(self.path)
 
-    def test_acceleration_is_off_and_no_shortcut_registered_by_default(self):
-        self.assertEqual(self.settings.snapshot(), {'steam_acceleration_enabled': False, 'boss_hotkey': ''})
+    def test_acceleration_is_on_and_no_shortcut_registered_by_default(self):
+        self.assertEqual(self.settings.snapshot(), {'steam_acceleration_enabled': True, 'boss_hotkey': ''})
         self.assertFalse(self.path.exists())
+
+    def test_upgrade_preserves_explicit_acceleration_choice_and_file(self):
+        for enabled in (False, True):
+            with self.subTest(enabled=enabled):
+                self.path.write_text(json.dumps({'schema_version': 1,
+                    'steam_acceleration_enabled': enabled, 'boss_hotkey': 'Ctrl+0'}), encoding='utf-8')
+                original = self.path.read_bytes()
+                loaded = AssistantSettings(self.path)
+                self.assertIs(loaded.acceleration_enabled(), enabled)
+                self.assertEqual(loaded.snapshot()['boss_hotkey'], 'Ctrl+0')
+                self.assertFalse(loaded.load_error)
+                self.assertEqual(self.path.read_bytes(), original)
 
     def test_save_roundtrip_and_no_location_migration_field(self):
         value = {'steam_acceleration_enabled': True, 'boss_hotkey': ''}
@@ -55,7 +67,7 @@ class PreferenceTests(unittest.TestCase):
         self.settings.save(initial)
         original = self.path.read_bytes()
         with patch('pathlib.Path.replace', side_effect=OSError('read only')):
-            with self.assertRaises(OSError): self.settings.save({**initial, 'steam_acceleration_enabled': True})
+            with self.assertRaises(OSError): self.settings.save({**initial, 'steam_acceleration_enabled': False})
         self.assertEqual(self.settings.snapshot(), initial)
         self.assertEqual(self.path.read_bytes(), original)
 
@@ -251,10 +263,28 @@ class SettingsServiceTests(unittest.TestCase):
         self.addCleanup(self.service.close)
 
     def test_settings_save_does_not_touch_game_or_market_until_requested(self):
-        self.assertFalse(self.service.assistant_settings_info()['steam_acceleration_enabled'])
+        self.assertTrue(self.service.assistant_settings_info()['steam_acceleration_enabled'])
+        self.service.save_assistant_settings({'steam_acceleration_enabled': False, 'boss_hotkey': ''})
         self.service.save_assistant_settings({'steam_acceleration_enabled': True, 'boss_hotkey': ''})
         self.assertTrue(self.service.assistant_preferences.acceleration_enabled())
         self.assertIsNone(self.service.market)
+        self.assertFalse(self.service.client.actions)
+        self.assertIsNone(self.service.native_steam_acceleration)
+
+    def test_desktop_activation_uses_saved_switch_and_settings_control_same_manager(self):
+        self.service.save_assistant_settings({'steam_acceleration_enabled': True, 'boss_hotkey': ''})
+        with patch('deskrawl_assistant.steam_native_acceleration.NativeSteamAcceleration') as factory:
+            manager = factory.return_value
+            manager.snapshot.return_value = {'status': 'active', 'message': 'fixture active'}
+            self.service.enable_native_steam_acceleration()
+            self.service.enable_native_steam_acceleration()
+            factory.assert_called_once_with()
+            manager.configure.assert_called_once_with(True)
+            self.assertEqual(self.service.assistant_settings_info()['native_steam_acceleration']['status'], 'active')
+            self.service.save_assistant_settings({'steam_acceleration_enabled': False, 'boss_hotkey': ''})
+            manager.configure.assert_called_with(False)
+            self.service.close()
+            manager.close.assert_called_once()
         self.assertFalse(self.service.client.actions)
 
     def test_open_uses_actual_data_path_and_accepts_no_caller_path(self):
@@ -264,7 +294,7 @@ class SettingsServiceTests(unittest.TestCase):
 
     def test_config_change_refreshes_only_market_failures(self):
         self.service.market = Mock()
-        self.service.save_assistant_settings({'steam_acceleration_enabled': True, 'boss_hotkey': ''})
+        self.service.save_assistant_settings({'steam_acceleration_enabled': False, 'boss_hotkey': ''})
         self.service.market.refresh_failed.assert_called_once()
 
     def test_reset_rules_backs_up_only_rules_and_keeps_other_files(self):

@@ -61,6 +61,22 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(headers['Content-Type'],'text/javascript; charset=utf-8')
         self.assertIn(b'async function api',body)
 
+    def test_local_steam_avatar_is_versioned_no_store_and_never_a_file_lookup(self):
+        from deskrawl_assistant.steam_client_profile import ClientIdentity, SteamClientProfile
+        from tests.test_steam_client_profile import png
+        from pathlib import Path
+        backend=Mock()
+        backend.identity.return_value=ClientIdentity('online',42,123,7,Path('fake-steam'))
+        backend.profile.return_value=('昵称',png())
+        self.service.steam_client_profile=SteamClientProfile(backend)
+        url=self.service.steam_client_profile.state()['avatar_url']
+        code,headers,body=self.request(url)
+        self.assertEqual((code,headers['Content-Type'],headers['Cache-Control'],body),
+                         (200,'image/png','no-store',png()))
+        for query in ('', '?v=../../config/loginusers.vdf', '?v='+'b'*64, '?v='+'a'*64+'&v='+'b'*64, '?path=secret'):
+            self.assertEqual(self.request('/api/steam-client/avatar'+query)[0],404)
+        backend.profile.assert_called_once()
+
     def test_game_process_actions_require_valid_origin_and_session(self):
         for endpoint,payload in (('start',{}),('close',{'confirmed':True,'target':{'pid':42,'instance':'42:1'}})):
             for headers in ({'Origin':self.url},{'Origin':'https://other.example','X-Assistant-Token':'test-session-token'}):
@@ -70,17 +86,15 @@ class HttpTests(unittest.TestCase):
             self.assertEqual(self.request('/api/game/'+endpoint,payload,headers)[0],200)
             self.assertEqual(self.service.actions.pop(),('game',endpoint,payload))
 
-    def test_loot_capture_toggle_requires_valid_origin_session_and_boolean(self):
+    def test_retired_loot_capture_endpoint_cannot_enable_local_archiving(self):
         for headers in ({'Origin':self.url},{'Origin':'https://other.example','X-Assistant-Token':'test-session-token'}):
             code,_,_=self.request('/api/loot-capture',{'enabled':True},headers)
             self.assertEqual(code,403)
         headers={'Origin':self.url,'X-Assistant-Token':'test-session-token'}
-        code,_,_=self.request('/api/loot-capture',{'enabled':'true'},headers)
-        self.assertEqual(code,400)
+        for enabled in (True, False, 'true'):
+            code,_,_=self.request('/api/loot-capture',{'enabled':enabled},headers)
+            self.assertEqual(code,404)
         self.assertFalse(self.service.actions)
-        code,_,body=self.request('/api/loot-capture',{'enabled':True},headers)
-        self.assertEqual(code,200)
-        self.assertEqual(json.loads(body),{'enabled':True})
 
     def test_main_page_renders_current_version_and_session(self):
         from deskrawl_assistant.version import VERSION
@@ -90,6 +104,7 @@ class HttpTests(unittest.TestCase):
         self.assertNotIn(b'__SESSION_TOKEN__',body)
         self.assertIn(('v'+VERSION).encode(),body)
         self.assertIn(b'test-session-token',body)
+        self.assertNotIn(b'loot-capture',body)
 
     def test_update_actions_require_session_and_never_accept_unsaved_drafts(self):
         updater=Mock();self.server.updater=updater

@@ -393,11 +393,11 @@ class ManagedSynthesisServiceTests(unittest.TestCase):
             if key == 'internal_name': changed['name_key'] = value
             self.assertFalse(retained_merchant_item(changed), (key, value))
 
-    def pending_craft(self, *, cleanup=False):
-        self.enable(gems=True)
+    def pending_craft(self, *, cleanup=False, kind='synthesize_gems'):
+        self.enable(gems=kind == 'synthesize_gems', runes=kind == 'synthesize_runes')
         self.client.items = []
         self.client.synthesis_snapshot = Mock(return_value={'gems':{'available':True,'recipes':[]}})
-        action = dict(self.craft(),action_id='delayed-craft')
+        action = dict(self.craft(kind),action_id='delayed-craft')
         receipt = {'effect_confirmed':True, 'receipt_id':'delayed-receipt',
             'inputs':[{'internal_name':'GemRuby1','count':10,'quantity':10,'container':'inventory','slot_index':0}],
             'outputs':[{'internal_name':'GemRuby2','count':1,'quantity':1,'container':'inventory','slot_index':0}]}
@@ -429,6 +429,62 @@ class ManagedSynthesisServiceTests(unittest.TestCase):
         self.assertEqual(self.service.managed.metrics.synthesis_ids,{'delayed-receipt'})
         self.assertEqual(len(self.client.actions),1)
         self.assertEqual(sum(row['count'] for row in self.service.managed.metrics.totals.values()),0)
+
+    def test_reconnect_rejection_continues_cleanup_without_counting_or_resubmitting(self):
+        self.pending_craft(kind='synthesize_runes')
+        self.service.managed_synthesis_wait.update(reconnected=True)
+        self.client.reconcile_synthesis.return_value = {
+            'synthesis_aborted': True, 'effect_confirmed': False, 'reason': '原符文完整，合成未生效。'}
+        with patch.object(self.service.managed, 'next_action', side_effect=AssertionError('no new craft')):
+            self.service._managed_once()
+        self.assertIsNone(self.service.managed_synthesis_wait)
+        self.assertIsNone(self.service.managed.pending)
+        self.assertEqual(self.service.managed.phase, 'cleanup')
+        self.assertTrue(self.service.managed.running)
+        self.assertEqual(self.service.managed_synthesis_deferred, {'runes'})
+        self.assertEqual(self.service.managed.metrics.synthesis_ids, set())
+        self.assertEqual(len(self.client.actions), 1)
+        self.assertTrue(self.client.reconcile_synthesis.call_args.kwargs['reconnected'])
+        self.enable(runes=True)
+        self.client.synthesis_snapshot.return_value = {'runes': {'available': True, 'recipes': []}}
+        self.assertFalse(self.service._managed_synthesis_state({'in_town': True})['runes']['available'])
+        self.service._managed_synthesis_state({'in_town': False, 'in_dungeon': True, 'available': True})
+        self.assertTrue(self.service._managed_synthesis_state({'in_town': True})['runes']['available'])
+
+    def test_rejection_without_authoritative_reconnect_does_not_release_receipt(self):
+        self.pending_craft(kind='synthesize_runes')
+        self.client.reconcile_synthesis.return_value = {'synthesis_aborted': True, 'effect_confirmed': False}
+        self.service._managed_once()
+        self.assertEqual(self.service.managed.phase, 'paused')
+        self.assertIsNotNone(self.service.managed_synthesis_wait)
+        self.assertEqual(self.service.managed.metrics.synthesis_ids, set())
+
+    def test_rune_nonexecution_marker_cannot_release_gem_receipt(self):
+        self.pending_craft()
+        self.service.managed_synthesis_wait['reconnected'] = True
+        self.client.reconcile_synthesis.return_value = {'synthesis_aborted': True, 'effect_confirmed': False}
+        self.service._managed_once()
+        self.assertEqual(self.service.managed.phase, 'paused')
+        self.assertIsNotNone(self.service.managed_synthesis_wait)
+        self.assertEqual(self.service.managed_synthesis_deferred, set())
+
+    def test_nonexecution_proof_arriving_during_pause_is_kept_until_resume(self):
+        self.pending_craft(kind='synthesize_runes')
+        self.service.managed_synthesis_wait['reconnected'] = True
+        def prove_while_pausing(*args, **kwargs):
+            self.service.stop_managed(pause=True)
+            return {'synthesis_aborted': True, 'effect_confirmed': False, 'reason': '原合成未生效。'}
+        self.client.reconcile_synthesis.side_effect = prove_while_pausing
+        self.service._managed_once()
+        self.assertFalse(self.service.managed.running)
+        self.assertTrue(self.service.managed_synthesis_wait['confirmed']['synthesis_aborted'])
+        self.service.managed.settings['cleanup']['rune_pages'] = [1]
+        self.service.set_managed_running(True)
+        self.service._managed_once()
+        self.assertIsNone(self.service.managed_synthesis_wait)
+        self.assertTrue(self.service.managed.running)
+        self.client.reconcile_synthesis.assert_called_once()
+        self.assertEqual(len(self.client.actions), 1)
 
     def test_receipt_timeout_pauses_with_statistics_and_resume_rechecks_original(self):
         _,receipt = self.pending_craft()

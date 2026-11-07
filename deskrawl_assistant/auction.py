@@ -5,7 +5,7 @@ from .models import ValidationError
 from .item_protection import is_minion_equipment
 
 CATEGORIES = {
-    'minion_equipment': '仆从装备（可交易）',
+    'minion_equipment': '黑雾传说仆从装备',
     'divine_equipment': '神圣装备', 'black_mist_equipment': '黑雾装备',
     'set_rune': '符文套装', 'grand_rune': '宏伟符文',
     'legendary_rein': '传说缰绳', 'consecration_stone': '开光石', 'gold_bar': '金条',

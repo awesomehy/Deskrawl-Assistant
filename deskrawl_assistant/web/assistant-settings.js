@@ -22,6 +22,7 @@
     if(typeof value.steam_acceleration_enabled!=='boolean'||typeof value.boss_hotkey!=='string'||typeof value.data_directory!=='string')throw new Error('设置读取失败，请重新打开设置。');
     snapshot=value;draft={steam_acceleration_enabled:value.steam_acceleration_enabled,boss_hotkey:value.boss_hotkey};
     get('settings-data-path').textContent=value.data_directory;
+    const native=get('settings-steam-native');if(native)native.textContent=value.native_steam_acceleration?.message||'';
     error(value.load_error||value.hotkey?.error||value.tray_error||'');paint();
   }
   function setCapture(value){captureRequests=captureRequests.catch(()=>{}).then(()=>api('window/hotkey-capture',{capturing:value}));return captureRequests;}

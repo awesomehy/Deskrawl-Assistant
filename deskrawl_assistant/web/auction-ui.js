@@ -1,7 +1,7 @@
 'use strict';
 (function(root){
   const priceRules={lowest_sell:'最低在售价',highest_buy:'最高求购价'};
-  const categoryNames={minion_equipment:'仆从装备（可交易）',divine_equipment:'神圣装备',black_mist_equipment:'黑雾装备',set_rune:'符文套装',grand_rune:'宏伟符文',legendary_rein:'传说缰绳',consecration_stone:'开光石',gold_bar:'金条'};
+  const categoryNames={minion_equipment:'黑雾传说仆从装备',divine_equipment:'神圣装备',black_mist_equipment:'黑雾装备',set_rune:'符文套装',grand_rune:'宏伟符文',legendary_rein:'传说缰绳',consecration_stone:'开光石',gold_bar:'金条'};
   const kindNames={equipment:'装备',rune:'符文',material:'材料',commodity:'材料',rein:'缰绳',consumable:'缰绳'};
   const qualityNames={divine:'神圣',black_mist:'黑雾传说',legendary:'传说',grand:'宏伟',set:'符文套装'};
   const cleanKeys=values=>[...new Set((Array.isArray(values)?values:[]).filter(key=>typeof key==='string'&&key.trim()).map(key=>key.trim()))].sort();
@@ -63,8 +63,8 @@
     const confirmationKnown=authenticated&&sell.confirmation_known===true&&Number.isFinite(sell.confirmation_expires_at)&&Date.now()<sell.confirmation_expires_at*1000;
     return {authenticated,expired,bound:steam.bound===true,loginAvailable:state.login_available===true,loginPending:steam.login_pending===true,
       loginReason:state.login_reason||'请在桌面助手中登录 Steam；普通浏览器不能打开桌面登录窗口。',
-      loginText:authenticated?`已登录${steam.account_name?' · '+steam.account_name:''}`:steam.login_pending?'等待 Steam 登录完成':expired?'登录凭证已过期，请重新登录':steam.bound?'登录凭证已保存，等待核验':'尚未登录 Steam',
-      loginMessage:typeof steam.message==='string'?steam.message:'',
+      loginText:authenticated?`${steam.source==='local_steam'?'本机 Steam 已登录':'已登录'}${steam.account_name?' · '+steam.account_name:''}`:steam.login_pending?'等待 Steam 登录完成':expired?'登录凭证已过期，请重新登录':steam.bound?'登录凭证已保存，等待核验':steam.local_status==='pending'?'正在核验本机 Steam':'尚未登录 Steam',
+      loginMessage:[typeof steam.message==='string'?steam.message:'',steam.source!=='local_steam'&&typeof steam.local_message==='string'?steam.local_message:''].filter(Boolean).join(' '),
       currency:authenticated&&typeof steam.wallet_currency==='string'&&steam.wallet_currency?steam.wallet_currency:'等待读取 Steam 钱包币种',
       uploadText:upload.message||(upload.pending?'上传结果待确认':upload.phase==='disabled'?'上传未启用':'等待上传状态'),
       sellText:(sell.message||(sell.pending?'出售结果待确认':sell.phase==='disabled'?'出售未启用':'等待出售状态'))+(count(sell.uncertain_count)?` · ${count(sell.uncertain_count)} 件结果待核验，不重复提交`:''),
@@ -163,6 +163,7 @@
   }
   function init(config){
     options=config;if(initialized)return;initialized=true;
+    root.AuctionTrackingUI?.init(config);
     controller=createStateController({api:options.api,onState:value=>{state=value;const view=stateView(state||{});if(view.authenticated||view.loginPending||view.bound||view.expired)loginWatchUntil=0;renderState();},onError:error=>{loginWatchUntil=0;state={...(state||{}),steam:{...(state?.steam||{}),authenticated:false},sell:{...(state?.sell||{}),confirmation_known:false,confirmation_count:0,pending_confirmation:false},error:error?.message||String(error)};renderState();}});
     $('auction-sell-enabled').addEventListener('click',event=>{
       if(disabled||controller.busy){event.preventDefault();return;}

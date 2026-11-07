@@ -15,6 +15,47 @@ from deskrawl_assistant.web_server import AssistantServer, make_handler
 
 
 class WindowTests(unittest.TestCase):
+    def test_tray_receives_read_only_snapshot_provider_without_reading_during_start(self):
+        window, service = Mock(), Mock()
+        hooks = WindowHooks(window, service)
+        with patch('deskrawl_assistant.desktop_tray.DesktopTray') as factory:
+            hooks.start_tray()
+        self.assertIs(factory.call_args.kwargs['snapshot'], service.tray_snapshot)
+        self.assertEqual(factory.call_args.kwargs['reprice'], hooks.open_trade_reprice)
+        self.assertEqual(factory.call_args.kwargs['sale'], hooks.open_trade_sale)
+        service.tray_snapshot.assert_not_called()
+        factory.return_value.start.assert_called_once()
+
+    def test_tray_reprice_restores_window_and_only_opens_shared_readonly_editor(self):
+        window, service = Mock(), Mock()
+        hooks = WindowHooks(window, service); hooks.hidden = True; hooks.minimized = True
+        ready = threading.Event(); window.evaluate_js.side_effect = lambda *_: ready.set()
+        hooks.open_trade_reprice('a' * 32)
+        self.assertTrue(ready.wait(1))
+        window.show.assert_called_once(); window.restore.assert_called_once()
+        window.evaluate_js.assert_called_once_with('window.AuctionTrackingUI?.openReprice("' + 'a' * 32 + '");')
+        service.auction_reprice_start.assert_not_called()
+        self.assertFalse(hooks.hidden)
+        for value in (None, '', '");evil()', 'b' * 33):
+            hooks.open_trade_reprice(value)
+        self.assertEqual(window.evaluate_js.call_count, 1)
+
+    def test_tray_sale_restores_window_without_submitting_and_rejects_arbitrary_identity(self):
+        for identity in ('inventory-123', 'b' * 32):
+            window, service = Mock(), Mock()
+            hooks = WindowHooks(window, service); hooks.hidden = True; hooks.minimized = True
+            ready = threading.Event(); window.evaluate_js.side_effect = lambda *_: ready.set()
+            hooks.open_trade_sale(identity)
+            self.assertTrue(ready.wait(1))
+            window.show.assert_called_once(); window.restore.assert_called_once()
+            window.evaluate_js.assert_called_once_with('window.AuctionTrackingUI?.openSale("' + identity + '");')
+            service.auction_sale_start.assert_not_called()
+            for value in (None, '', '\");evil()', 'inventory-0', 'auction-123', '1'):
+                hooks.open_trade_sale(value)
+            self.assertEqual(window.evaluate_js.call_count, 1)
+            hooks.exiting = True; hooks.open_trade_sale(identity)
+            self.assertEqual(window.evaluate_js.call_count, 1)
+
     @unittest.skipUnless(os.name == 'nt', 'Windows global shortcut integration')
     def test_saved_global_hotkey_message_hides_and_restores_without_capture_lease(self):
         import ctypes
@@ -105,6 +146,63 @@ class WindowTests(unittest.TestCase):
         hooks.closed()
         service.stop.assert_called_once()
         hooks.hotkeys.close.assert_called_once()
+
+    def test_explicit_and_http_exit_destroy_window_once_without_hiding_or_reprompting(self):
+        window, service = Mock(), Mock()
+        hooks = WindowHooks(window, service)
+        hooks.dirty = True  # HTTP caller has already confirmed the draft warning.
+        stopping = threading.Event()
+        watcher = threading.Thread(target=hooks.close_after_shutdown, args=(stopping,))
+        watcher.start()
+        try:
+            window.destroy.assert_not_called()
+            stopping.set()
+            watcher.join(1)
+            hooks.finish_exit()
+            self.assertTrue(hooks.exiting)
+            self.assertTrue(hooks.closing())
+            window.destroy.assert_called_once()
+            window.hide.assert_not_called()
+            window.create_confirmation_dialog.assert_not_called()
+        finally:
+            stopping.set()
+            watcher.join(1)
+
+    def test_shutdown_closes_window_before_slow_cleanup_but_keeps_host_owned_until_finished(self):
+        service, window = Mock(), Mock()
+        cleanup_entered, release_cleanup, destroyed = threading.Event(), threading.Event(), threading.Event()
+        def cleanup():
+            cleanup_entered.set()
+            self.assertTrue(release_cleanup.wait(3))
+        service.close.side_effect = cleanup
+        window.destroy.side_effect = destroyed.set
+        host = AssistantServer(0, service, updater=Mock())
+        hooks = WindowHooks(window, service)
+        watcher = threading.Thread(target=hooks.close_after_shutdown, args=(host.stopping,))
+        watcher.start()
+        host.start()
+        try:
+            base = host.url.rstrip('/')
+            opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            with opener.open(base+'/api/session', timeout=1) as response:
+                token = json.load(response)['token']
+            req = urllib.request.Request(base+'/api/shutdown', data=b'{}',
+                headers={'Origin':base, 'X-Assistant-Token':token, 'Content-Type':'application/json'})
+            with opener.open(req, timeout=1) as response:
+                self.assertEqual(json.load(response), {'ok':True})
+            self.assertTrue(cleanup_entered.wait(1))
+            self.assertTrue(destroyed.wait(1))
+            self.assertTrue(host.stopping.is_set())
+            self.assertFalse(host.finished.is_set())
+            self.assertTrue(host.thread.is_alive())
+            window.destroy.assert_called_once()
+            service.close.assert_called_once()
+        finally:
+            release_cleanup.set()
+            watcher.join(1)
+            host.close()
+        self.assertTrue(host.finished.is_set())
+        self.assertFalse(host.thread.is_alive())
 
     def test_minimizing_retains_unsaved_configuration(self):
         window, service = Mock(), Mock()

@@ -12,7 +12,7 @@ from deskrawl_assistant.steam_session import (
 import os
 import sys
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from urllib.request import HTTPSHandler, Request, build_opener as real_build_opener
 from urllib.response import addinfourl
 
@@ -244,6 +244,26 @@ class SessionTests(unittest.TestCase):
                 service.capture_session(cookies())
             self.assertFalse(path.exists())
             self.assertFalse(service.state()['bound'])
+
+    def test_saved_binding_survives_network_failure_and_a_second_restart(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'session.dpapi'
+            def protector(value, *, decrypt=False):
+                return value[9:][::-1] if decrypt else b'protected' + value[::-1]
+            first = SteamSession(path, protector=protector)
+            first.capture_session(cookies(), verify_now=False)
+            saved = path.read_bytes()
+            first.close()
+            restarted = SteamSession(path, protector=protector,
+                transport=Mock(side_effect=SteamSessionError('Steam 网络请求未确认。')))
+            with self.assertRaises(SteamSessionError): restarted.verify(force=True)
+            self.assertTrue(restarted.state()['bound'])
+            self.assertFalse(restarted.state()['expired'])
+            self.assertEqual(path.read_bytes(), saved)
+            restarted.close()
+            again = SteamSession(path, protector=protector, transport=lambda *args: page())
+            self.assertTrue(again.state()['bound'])
+            self.assertEqual(again.verify()['steamid'], STEAMID)
 
     def test_deferred_capture_is_encrypted_without_contacting_steam(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -526,6 +546,52 @@ class _Window:
 
 @unittest.skipUnless(os.name == 'nt', 'native Windows login host')
 class LoginWindowTests(unittest.TestCase):
+    def test_native_community_transfer_can_finish_on_slow_login_page(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'session.dpapi'
+            window = _Window()
+            window.login_complete = True
+            window.get_current_url = lambda: 'https://steamcommunity.com/login/home/?goto=market%2F'
+            window.get_cookies = cookies
+            service = SteamSession(path, transport=Mock(side_effect=AssertionError('no network')),
+                                   protector=lambda raw, **kwargs: b'protected')
+            with patch.dict(sys.modules, {'webview': SimpleNamespace(create_window=lambda *a, **k: window)}), \
+                    patch('deskrawl_assistant.steam_session.threading.Thread') as thread, \
+                    patch('deskrawl_assistant.steam_session.threading.Event') as ended:
+                ended.return_value.wait.side_effect = [False]
+                service.login_window()
+                thread.call_args.kwargs['target']()
+            self.assertEqual(window.destroyed, 1)
+            self.assertTrue(path.exists())
+            self.assertTrue(service.state()['bound'])
+            self.assertFalse(service.state()['login_open'])
+            self.assertFalse(service.state()['verified'])
+
+    def test_completion_receipt_still_requires_official_origin_and_valid_cookies(self):
+        cases = [
+            ('https://steamcommunity.com/login/home/', False, cookies()),
+            ('https://steamcommunity.com/login/home/', True, []),
+            ('https://steamcommunity.com.evil.invalid/login/', True, cookies()),
+            ('http://steamcommunity.com/login/', True, cookies()),
+            ('https://user@steamcommunity.com/login/', True, cookies()),
+        ]
+        for url, complete, values in cases:
+            with self.subTest(url=url, complete=complete), tempfile.TemporaryDirectory() as temp:
+                path = Path(temp) / 'session.dpapi'
+                window = _Window()
+                window.login_complete = complete
+                window.get_current_url = lambda: url
+                window.get_cookies = Mock(return_value=values)
+                service = SteamSession(path, protector=lambda raw, **kwargs: b'protected')
+                with patch.dict(sys.modules, {'webview': SimpleNamespace(create_window=lambda *a, **k: window)}), \
+                        patch('deskrawl_assistant.steam_session.threading.Thread') as thread, \
+                        patch('deskrawl_assistant.steam_session.threading.Event') as ended:
+                    ended.return_value.wait.side_effect = [False, True]
+                    service.login_window()
+                    thread.call_args.kwargs['target']()
+                self.assertFalse(path.exists())
+                self.assertEqual(window.destroyed, 0)
+
     def test_native_observer_saves_before_verification_and_keeps_binding_after_close(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / 'session.dpapi'

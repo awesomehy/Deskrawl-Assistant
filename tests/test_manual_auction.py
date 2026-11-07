@@ -48,11 +48,11 @@ class Trading:
         if validate():
             ticket = next(iter(proof_scope))
             self.calls.append(('sale', ticket, settings['price_rule']))
-            self.proofs[ticket] = {'status': 'pending'}
+            self.proofs[ticket] = {'status': 'pending', 'confirmation_pending': True}
             if self.on_sale: self.on_sale()
         return self.state()
 
-    def proof_state(self, proof, steamid): return deepcopy(self.proofs[proof])
+    def proof_state(self, proof, steamid, *, wait=True): return deepcopy(self.proofs[proof])
     def upload_binding_current(self, ticket, steamid): return True
     def state(self): return {}
     def close(self): pass
@@ -163,6 +163,74 @@ class ManualAuctionTests(unittest.TestCase):
         self.assertEqual([row[0] for row in self.service.trading.calls],
                          ['prepare', 'complete', 'sale', 'prepare', 'complete', 'sale'])
         self.assertTrue(all(row[2] == 'highest_buy' for row in self.service.trading.calls if row[0] == 'sale'))
+
+    def test_completed_batch_refreshes_each_exact_receipt_without_new_sales(self):
+        self.start(self.preview(mode='sell'))
+        tickets = list(self.service.trading.proofs)
+        calls, actions = deepcopy(self.service.trading.calls), deepcopy(self.service.client.actions)
+        self.service.trading.proofs[tickets[0]] = {'status': 'listed'}
+        result = self.service.manual_auction_state()
+        self.assertEqual([row['status'] for row in result['items']], ['listed', 'pending_confirmation'])
+        self.service.trading.proofs[tickets[1]] = {'status': 'listed'}
+        # Reopening/refreshing the result reads the latest receipts, even with
+        # managed mode off. Public snapshots contain neither proof nor account.
+        for _ in range(2):
+            result = self.service.manual_auction_state()
+            self.assertEqual([row['status'] for row in result['items']], ['listed', 'listed'])
+            self.assertIn('挂牌结果已更新', result['message'])
+            self.assertNotIn(STEAMID, str(result))
+            for ticket in tickets:
+                self.assertNotIn(ticket, str(result))
+        self.assertEqual(self.service.trading.calls, calls)
+        self.assertEqual(self.service.client.actions, actions)
+
+    def test_missing_or_stale_confirmation_does_not_claim_pending_or_listed(self):
+        self.start(self.preview(ids=['selected-1'], mode='sell'))
+        ticket = next(iter(self.service.trading.proofs))
+        for receipt in ({'status': 'pending', 'confirmation_pending': False},
+                        {'status': 'checking'}, {'status': 'unmatched'}, {'status': 'uncertain'}):
+            with self.subTest(receipt=receipt):
+                self.service.trading.proofs[ticket] = receipt
+                result = self.service.manual_auction_state()
+                self.assertEqual(result['items'][0]['status'], 'uncertain')
+                self.assertIn('待核验', result['message'])
+        self.service.trading.proofs[ticket] = {'status': 'pending', 'confirmation_pending': True}
+        self.assertEqual(self.service.manual_auction_state()['items'][0]['status'], 'pending_confirmation')
+        self.service.trading.proofs[ticket] = {'status': 'listed'}
+        self.assertEqual(self.service.manual_auction_state()['items'][0]['status'], 'listed')
+        self.assertEqual(sum(call[0] == 'sale' for call in self.service.trading.calls), 1)
+
+    def test_new_batch_cannot_inherit_previous_receipts(self):
+        self.start(self.preview(ids=['selected-1'], mode='sell'))
+        self.service.snapshot = self.service.client.snapshot()
+        result = self.start(self.preview(ids=['selected-2']))
+        self.assertEqual(result['items'][0]['status'], 'uploaded')
+        self.assertEqual(self.service.manual_auction_receipts, {})
+        self.assertEqual(sum(call[0] == 'sale' for call in self.service.trading.calls), 1)
+
+    def test_receipt_refresh_preserves_cancelled_batch_and_unsubmitted_rows(self):
+        self.service.trading.on_sale = self.service.manual_auction_cancel
+        result = self.start(self.preview(mode='sell'))
+        ticket = next(iter(self.service.trading.proofs))
+        self.service.trading.proofs[ticket] = {'status': 'listed'}
+        refreshed = self.service.manual_auction_state()
+        self.assertEqual(refreshed['phase'], 'cancelled')
+        self.assertEqual(refreshed['message'], result['message'])
+        self.assertEqual([row['status'] for row in refreshed['items']], ['listed', 'cancelled'])
+
+    def test_sale_exception_after_submit_can_still_reconcile_without_selling_remaining_items(self):
+        def interrupted():
+            raise RuntimeError('reply interrupted after submit')
+        self.service.trading.on_sale = interrupted
+        result = self.start(self.preview(mode='sell'))
+        self.assertEqual(result['phase'], 'failed')
+        self.assertEqual([row['status'] for row in result['items']], ['pending_confirmation', 'failed'])
+        ticket = next(iter(self.service.trading.proofs))
+        self.service.trading.proofs[ticket] = {'status': 'listed'}
+        refreshed = self.service.manual_auction_state()
+        self.assertEqual(refreshed['phase'], 'failed')
+        self.assertEqual([row['status'] for row in refreshed['items']], ['listed', 'failed'])
+        self.assertEqual(sum(call[0] == 'sale' for call in self.service.trading.calls), 1)
 
     def test_unknown_browser_tokens_duplicates_and_extra_parameters_rejected(self):
         for args in ({'ids': ['invented']}, {'ids': ['selected-1', 'selected-1']}, {'wrong': True}):

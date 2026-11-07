@@ -12,13 +12,16 @@
   <link rel="stylesheet" href="/inventory-auction.css">
   <link rel="stylesheet" href="/steam-market.css">
   <link rel="stylesheet" href="/assistant-settings.css">
+  <link rel="stylesheet" href="/steam-profile.css">
   <script src="/inventory-tools.js" defer></script>
   <script src="/automation-tools.js" defer></script>
   <script src="/managed-growth.js" defer></script>
   <script src="/auction-ui.js" defer></script>
+  <script src="/auction-tracking.js" defer></script>
   <script src="/managed-mode.js" defer></script>
   <script src="/steam-market.js" defer></script>
   <script src="/inventory-auction.js" defer></script>
+  <script src="/steam-profile.js" defer></script>
   <script src="/app.js" defer></script>
   <script src="/assistant-settings.js" defer></script>
   <script src="/rule-tools.js" defer></script>
@@ -27,10 +30,15 @@
   <header class="topbar">
     <a class="brand" href="https://deskrawl.hhyan.me/" target="_blank" rel="noopener noreferrer" title="在默认浏览器中打开官网" aria-label="Deskrawl 装备助手官网"><img src="/mark.svg" alt=""><div><strong>DESKRAWL <span>装备助手 · v__APP_VERSION__</span></strong><small>挑选值得保留的每一件装备</small></div></a>
     <div class="topbar-actions">
+      <div id="steam-profile" class="steam-profile" data-status="loading" role="status" aria-label="本机 Steam 账号">
+        <div class="steam-profile-picture"><img id="steam-profile-avatar" alt="" hidden><span id="steam-profile-fallback" class="steam-profile-placeholder" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></span></div>
+        <div class="steam-profile-copy"><strong id="steam-profile-name" class="steam-profile-name">正在识别 Steam…</strong><span class="steam-profile-detail"><i aria-hidden="true"></i><span id="steam-profile-detail">正在读取昵称和头像…</span></span></div>
+      </div>
+      <div class="game-control"><span id="game-state" class="game-state" role="status">检测游戏中…</span><button id="game-start" class="button ghost" type="button" disabled>Steam 启动</button><button id="game-close" class="button ghost" type="button" hidden disabled>关闭游戏</button></div>
+      <div class="connection"><span id="connection-state" class="status-pill"><i></i>未连接游戏</span><button id="connect" class="button primary">连接游戏</button><button id="disconnect" class="button ghost" hidden>断开</button></div>
       <button id="settings-open" class="button ghost settings-open" type="button" aria-haspopup="dialog" aria-controls="settings-dialog" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m9 3-.6 2.4-2 1.2L4 6l-2 3.5 1.8 1.7v2.2L2 15l2 3.5 2.4-.6 2 1.2L9 21h6l.6-1.9 2-1.2 2.4.6 2-3.5-1.8-1.6v-2.2L22 9.5 20 6l-2.4.6-2-1.2L15 3Z"/><circle cx="12" cy="12" r="3.2"/></svg>设置</button>
       <div class="project-support"><a id="github-link" class="github-link" href="https://github.com/awesomehy/Deskrawl-Assistant" target="_blank" rel="noopener noreferrer" title="在浏览器中打开 GitHub 项目">GitHub <span aria-hidden="true">↗</span></a><small>如果觉得本软件对你有帮助，欢迎点亮 Star。</small></div>
-      <div class="game-control"><span id="game-state" class="game-state" role="status">检测游戏中…</span><button id="game-start" class="button ghost" type="button" disabled>Steam 启动</button><button id="game-close" class="button ghost" type="button" hidden disabled>关闭游戏</button></div>
-      <div class="connection"><span id="connection-state" class="status-pill"><i></i>未连接游戏</span><button id="connect" class="button primary">连接游戏</button><button id="disconnect" class="button ghost" hidden>断开</button><button id="exit" class="icon-button" aria-label="退出助手" title="退出助手并停止监控"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v10M6.2 5.8a9 9 0 1 0 11.6 0"/></svg></button></div>
+      <button id="exit" class="icon-button" aria-label="退出助手" title="退出助手并停止监控"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v10M6.2 5.8a9 9 0 1 0 11.6 0"/></svg></button>
     </div>
   </header>
   <dialog id="settings-dialog" class="assistant-settings-dialog" aria-labelledby="settings-title">
@@ -39,8 +47,9 @@
       <div class="settings-body">
       <p id="settings-loading" class="settings-loading" role="status">正在读取设置…</p>
       <div class="settings-group">
-        <div class="settings-row"><div><h3 id="settings-steam-label">Steam 社区加速 <span id="settings-steam-state" class="settings-value">关闭</span></h3><p>用于助手内 Steam 登录、市场报价、上架与卖单核验，不影响其他软件的网络设置。</p></div><button id="settings-steam" class="settings-switch" type="button" role="switch" aria-checked="false" aria-labelledby="settings-steam-label" disabled><span></span></button></div>
-        <p class="settings-footnote">默认关闭。开启后优先使用现有代理，连接失败时自动回退。</p>
+        <div class="settings-row"><div><h3 id="settings-steam-label">Steam 社区加速 <span id="settings-steam-state" class="settings-value">关闭</span></h3><p>同时加速本机 Steam 社区，以及助手内登录、报价、上下架和卖单核验。</p></div><button id="settings-steam" class="settings-switch" type="button" role="switch" aria-checked="false" aria-labelledby="settings-steam-label" disabled><span></span></button></div>
+        <p class="settings-footnote">默认开启，保留已保存的开关选择。本机加速需 Windows 授权、社区专用证书和代理例外；其他软件访问同一域名也会使用该通道。关闭或退出助手后撤销临时映射和代理例外。</p>
+        <p id="settings-steam-native" class="settings-footnote" role="status"></p>
       </div>
       <div class="settings-group">
         <div class="settings-row"><div><h3>老板键</h3><p>按下组合键隐藏到右下角托盘，再按一次恢复窗口。</p></div><span id="settings-hotkey-status" class="settings-value">未设置</span></div>
@@ -117,7 +126,7 @@
           </div>
         </details>
         <div class="operations"><div class="scope-picker"><label for="action-scope">批量范围</label><select id="action-scope" title="全部解锁、按规则锁定的作用范围；锁定所选装备以勾选为准。"><option value="all">背包 + 仓库</option><option value="inventory">仅背包</option><option value="storage">仅仓库</option></select></div><button id="unlock-all" class="button danger">一键全部解锁</button><button id="lock-selected" class="button">锁定所选装备 <span id="selected-count">0</span></button><button id="lock-rules" class="button primary">一键按规则锁定</button><div class="monitor-control"><div><strong>持续监控</strong><small>新增装备按规则自动锁定</small></div><button id="monitor-switch" class="switch" role="switch" aria-checked="false" aria-label="持续监控背包和仓库"><span></span></button></div></div>
-        <div class="transfer-operations"><span id="transfer-selection">勾选物品后操作</span><button id="move-storage" class="button">移入仓库 <span id="move-storage-count">0</span></button><button id="move-inventory" class="button">取回背包 <span id="move-inventory-count">0</span></button><div class="inventory-auction-actions"><button id="inventory-auction-upload" class="button" type="button" aria-describedby="inventory-auction-availability" disabled>上架交易所</button><small id="inventory-auction-availability" role="status" hidden></small></div><small id="transfer-hint">同种同等级宝石优先堆叠，保留数量与锁定状态。</small></div>
+        <div class="transfer-operations"><span id="transfer-selection">勾选物品后操作</span><button id="move-storage" class="button">移入仓库 <span id="move-storage-count">0</span></button><button id="move-inventory" class="button">取回背包 <span id="move-inventory-count">0</span></button><div class="inventory-auction-actions"><button id="inventory-auction-upload" class="button" type="button" aria-describedby="inventory-auction-availability" disabled>上架交易所</button><small id="inventory-auction-availability" role="status" hidden></small></div><button id="inventory-trade-tracking-open" class="button ghost" type="button">待交易物品</button><small id="transfer-hint">同种同等级宝石优先堆叠，保留数量与锁定状态。</small></div>
         <div id="inventory-auction-progress" class="inventory-auction-progress" role="status" hidden><div><strong id="inventory-auction-progress-title">批量上架</strong><span id="inventory-auction-progress-message"></span></div><button id="inventory-auction-details" class="text-button" type="button">查看进度</button></div>
         <div class="operation-notice"><span id="operation-message">连接游戏后自动读取装备。</span><div class="progress-wrap" hidden id="progress-wrap"><progress id="operation-progress" max="1" value="0"></progress><small id="progress-label"></small></div><button id="stop" class="text-button" hidden>停止操作</button></div>
         <div class="inventory-filters"><label class="search"><span>⌕</span><input id="item-search" placeholder="搜索物品…" aria-label="搜索背包和仓库物品"></label><select id="kind-filter" aria-label="物品类型"><option value="">全部物品</option><option value="equipment">角色装备</option><option value="minion_equipment">仆从装备</option><option value="material">材料 / 其他</option><option value="gem">宝石</option><option value="chest">宝箱</option><option value="rune">符文</option></select><label class="inventory-tradable-filter" title="仅显示已确认可在 Steam 社区市场交易的物品"><input id="inventory-tradable" type="checkbox">可交易</label><label class="market-currency-control" for="market-currency">市场币种<select id="market-currency" disabled><option value="0">自动（Steam 返回币种）</option></select></label><small id="market-currency-error" class="market-currency-error" role="status" aria-live="polite" hidden></small><button id="inventory-reset" class="text-button">清除筛选 / 排序</button><span id="visible-count"></span></div>
@@ -297,6 +306,7 @@
               <section class="auction-login-card"><div class="auction-login-heading"><h3>Steam 登录</h3><div class="auction-login-actions"><span id="auction-steam-status">尚未登录 Steam</span><button id="auction-login" class="button ghost" type="button">登录 Steam</button><button id="auction-logout" class="button ghost" type="button" hidden>退出登录</button><button id="auction-refresh" class="button ghost" type="button">刷新状态</button></div></div><div class="auction-wallet"><span>实际交易币种</span><strong id="auction-wallet-currency">等待读取 Steam 钱包币种</strong></div><p id="auction-login-note">请在桌面助手中登录 Steam；无需提供 Cookie 或令牌。</p></section>
               <div class="auction-status-grid" aria-live="polite"><section class="auction-status-card"><strong>游戏上传状态</strong><p id="auction-upload-status">等待上传状态</p><small id="auction-listing-count">游戏上传名额待读取 · 当前数量未知</small></section><section class="auction-status-card"><strong>Steam 出售状态</strong><p id="auction-sell-status">等待出售状态</p></section></div>
               <p id="auction-confirmation" class="auction-confirmation" role="status" hidden></p><p id="auction-api-error" class="auction-api-error" role="alert" hidden></p>
+              <section class="auction-tracking-entry"><div><strong>待交易物品</strong><small>查看当前玩家尚未售出的物品及拍卖行、Steam 市场状态。</small></div><button id="managed-auction-tracking-open" type="button" class="button ghost">待交易物品</button></section>
               <section class="auction-choices"><div class="auction-choices-heading"><h3>允许上架的商品类别</h3><small id="auction-category-count">已允许 0 类</small></div><p>勾选后允许处理该类别的商品；下方“强制保留商品”按具体商品设置，始终优先。新类别默认不勾选。</p><div id="auction-category-options" class="auction-category-options" role="group" aria-label="允许上架的商品类别"></div><p>金条、开光石可预先配置；缺少原生实例编号的物品暂需手动上传，不会自动尝试。</p></section>
               <details class="auction-choices auction-retained-choices" id="auction-retained-fold">
                 <summary class="auction-choices-heading"><h3>强制保留商品（不自动上传或出售）</h3><small id="auction-excluded-count">已保留 0 种</small><span class="auction-retained-caret" aria-hidden="true">⌄</span></summary>
@@ -318,7 +328,7 @@
               <tr class="quality-rare"><td><strong>稀有 · 未命中</strong></td><td><select id="managed-equipment-rare-action" data-managed-policy aria-label="稀有未命中处理方式"><option value="store">放入仓库</option><option value="sell">出售</option><option value="salvage">分解</option></select></td><td><select id="managed-equipment-rare-fallback" data-managed-policy aria-label="稀有仓库满时处理方式"><option value="sell">出售</option><option value="salvage">分解</option></select></td></tr>
               <tr class="quality-uncommon"><td><strong>优秀 · 未命中</strong></td><td><select id="managed-equipment-uncommon-action" data-managed-policy aria-label="优秀未命中处理方式"><option value="store">放入仓库</option><option value="sell">出售</option><option value="salvage">分解</option></select></td><td><select id="managed-equipment-uncommon-fallback" data-managed-policy aria-label="优秀仓库满时处理方式"><option value="sell">出售</option><option value="salvage">分解</option></select></td></tr>
               <tr class="quality-normal"><td><strong>普通 · 未命中</strong></td><td><select id="managed-equipment-normal-action" data-managed-policy aria-label="普通未命中处理方式"><option value="store">放入仓库</option><option value="sell">出售</option><option value="salvage">分解</option></select></td><td><select id="managed-equipment-normal-fallback" data-managed-policy aria-label="普通仓库满时处理方式"><option value="sell">出售</option><option value="salvage">分解</option></select></td></tr>
-              <tr class="managed-protected-row"><td><strong>仆从装备 · 黑雾传说</strong><small>固定保护，不可修改</small></td><td><span class="badge match">锁定 → 仓库</span></td><td><small>满时留在背包</small></td><td rowspan="4"><strong>仆从装备共用存放页</strong><div id="managed-minion_equipment-pages" class="managed-page-choices"></div><small>独立于角色装备；已锁定、命中规则及待核验的仆从装备始终保留。</small></td></tr>
+              <tr class="managed-protected-row"><td><strong>黑雾传说仆从装备</strong><small>固定保护，不可修改</small></td><td><span class="badge match">锁定 → 仓库</span></td><td><small>满时留在背包</small></td><td rowspan="4"><strong>仆从装备共用存放页</strong><div id="managed-minion_equipment-pages" class="managed-page-choices"></div><small>独立于角色装备；已锁定、命中规则及待核验的仆从装备始终保留。</small></td></tr>
               <tr class="managed-protected-row"><td><strong>符合筛选规则的仆从装备</strong><small>固定保护，使用已启用的筛选组合</small></td><td><span class="badge match">锁定 → 仓库</span></td><td><small>满时留在背包</small></td></tr>
               <tr class="quality-legendary"><td><strong>仆从装备 · 传说 · 未命中</strong></td><td><select id="managed-minion-equipment-legendary-action" data-managed-policy aria-label="传说仆从装备未命中处理方式"><option value="store">放入仓库</option><option value="sell">出售</option><option value="salvage">分解</option></select></td><td><small>满时留在背包</small></td></tr>
               <tr class="quality-rare"><td><strong>仆从装备 · 稀有</strong></td><td><select id="managed-minion-equipment-rare-action" data-managed-policy aria-label="稀有仆从装备处理方式"><option value="store">放入仓库</option><option value="sell">出售</option><option value="salvage">分解</option></select></td><td><small>满时留在背包</small></td></tr>
@@ -351,11 +361,6 @@
     </section>
     <section id="loot-preview-page" role="tabpanel" hidden>
       <div class="page-heading"><div><h1>本趟掉落预览</h1><p>进入在线关卡后自动更新，每 2 秒查看当前计划。</p></div><div class="heading-actions"><span id="loot-preview-updated" class="note"></span><button id="loot-preview-refresh" class="button ghost" type="button">重新读取</button></div></div>
-      <section class="panel loot-capture-panel" aria-label="高价值掉落监控">
-        <div class="loot-capture-heading"><div><h2>高价值掉落监控</h2><p>监控黑雾传说、神圣装备、宏伟符文、符文套装，以及金条、传说缰绳、开光石等全部可交易物品，自动保存本局原始掉落计划与实际观测记录。</p></div><label class="loot-capture-toggle"><input id="loot-capture-enabled" type="checkbox">开启监控</label></div>
-        <p id="loot-capture-status" role="status">监控未开启。</p><p id="loot-capture-summary" class="note">留档 0 份记录</p><p class="loot-capture-path">本机留档：<span id="loot-capture-directory">等待读取</span></p>
-        <p class="note">开启后在所有页签持续运行；首次物品清单作为基线。数量按留档目录中的 JSON 文件实时统计。留档可核对是否在计划中，不计入累计掉落，重启后需重新开启。</p>
-      </section>
       <section class="panel loot-preview-summary" aria-label="本趟计划概要">
         <div class="loot-preview-heading"><div><span class="eyebrow">当前关卡</span><h2 id="loot-preview-map">等待读取关卡</h2><p id="loot-preview-run">连接游戏并进入在线关卡后，自动显示本趟计划。</p></div><span id="loot-preview-phase" class="loot-preview-phase" role="status" aria-live="polite">等待进图</span></div>
         <div class="overview loot-preview-overview"><div class="metric"><span>计划物品</span><strong id="loot-preview-items">—</strong><small id="loot-preview-equipment">包含装备、宝石、符文及其他物品</small></div><div class="metric"><span>计划金币</span><strong id="loot-preview-gold">—</strong><small>全关卡波次合计</small></div><div class="metric"><span>药水补充次数</span><strong id="loot-preview-potions">—</strong><small>全关卡波次合计</small></div><div class="metric"><span>当前波次</span><strong id="loot-preview-wave">—</strong><small>完成波次仍需游戏结算</small></div></div>
@@ -377,13 +382,24 @@
     </section>
     <section id="feedback-page" role="tabpanel" hidden>
       <div class="page-heading"><div><h1>交流&amp;反馈</h1><p>欢迎进群交流游戏心得以及反馈使用问题。</p></div></div>
-      <section class="panel feedback-panel" aria-label="QQ群交流与反馈">
-        <figure class="feedback-qr">
-          <img src="/images/qq-group.png" width="713" height="1046" alt="桌面破坏神助手QQ群二维码，群号1062040183">
-          <figcaption>QQ群：<strong>1062040183</strong></figcaption>
-        </figure>
-        <p class="note">使用 QQ 扫码加入群聊，也可以搜索群号。</p>
-      </section>
+      <div class="feedback-grid">
+        <section class="panel feedback-panel" aria-labelledby="feedback-community-title">
+          <h2 id="feedback-community-title">加入 QQ 群</h2>
+          <figure class="feedback-qr">
+            <img src="/images/qq-group.png" width="713" height="1046" alt="桌面破坏神助手QQ群二维码，群号1062040183">
+            <figcaption>QQ群：<strong>1062040183</strong></figcaption>
+          </figure>
+          <p class="note">使用 QQ 扫码加入群聊，也可以搜索群号。</p>
+        </section>
+        <section class="panel feedback-panel" aria-labelledby="feedback-support-title">
+          <h2 id="feedback-support-title">支持作者</h2>
+          <p class="feedback-support-copy">软件制作不易，如果觉得好用，欢迎打赏。</p>
+          <figure class="feedback-qr feedback-appreciation-qr">
+            <img src="/images/appreciation-code.png" width="1152" height="1152" alt="微信赞赏码，使用微信扫码支持作者">
+            <figcaption>使用微信扫码赞赏</figcaption>
+          </figure>
+        </section>
+      </div>
     </section>
   </main>
   <footer><span id="footer-state">本机运行 · 无需切回游戏前台</span><span id="last-read">自动监控默认关闭</span></footer>
@@ -411,6 +427,16 @@
       <p id="inventory-auction-scope" class="inventory-auction-scope">仅处理本次勾选的商品，包含筛选条件外仍被勾选的商品。不使用托管模式的自动出售范围与保留设置；请核对清单。</p>
     </div>
     <div class="inventory-auction-footer"><span id="inventory-auction-footer-note">确认后，仓库商品会先取回背包再上传。</span><button id="inventory-auction-recheck" class="button" type="button">重新核验</button><button id="inventory-auction-cancel" class="button danger" type="button" hidden>停止后续操作</button><button id="inventory-auction-submit" class="button primary" type="button" disabled>确认上传</button></div>
+  </dialog>
+  <dialog id="managed-auction-tracking-dialog" class="inventory-auction-dialog" aria-labelledby="managed-auction-tracking-title">
+    <div class="inventory-auction-heading"><div><span class="eyebrow">当前玩家 · 交易状态追踪</span><h2 id="managed-auction-tracking-title">待交易物品</h2></div><button id="managed-auction-tracking-close" class="button ghost" type="button">关闭</button></div>
+    <div class="inventory-auction-content"><p id="managed-auction-tracking-summary" class="inventory-auction-summary" role="status">正在读取…</p><p id="managed-auction-tracking-error" class="inline-error" role="alert"></p><div id="managed-auction-tracking-items" class="inventory-auction-items"></div></div>
+    <div class="inventory-auction-footer"><small>每 2 秒读取本机追踪结果；Steam 卖单约 5 秒、成交记录约 15 秒、库存约 30 秒刷新。底价约每分钟更新，成功价格最多保留 10 分钟，旧价标注缓存；限流时自动退避。点击改价后会重新核验原卖单。</small><button id="managed-auction-native-refresh" class="button ghost" type="button" title="仅在主城、暂停托管且无其他操作时刷新，不上传或出售物品">刷新拍卖行</button><button id="managed-auction-tracking-refresh" class="button ghost" type="button">刷新状态</button></div>
+  </dialog>
+  <dialog id="auction-reprice-dialog" class="inventory-auction-dialog" aria-labelledby="auction-reprice-title">
+    <div class="inventory-auction-heading"><div><span id="auction-reprice-eyebrow" class="eyebrow">在售卖单 · 确认改价</span><h2 id="auction-reprice-title">下架并修改价格重新上架</h2></div><button id="auction-reprice-close" class="button ghost" type="button">关闭</button></div>
+    <div class="inventory-auction-content"><p id="auction-reprice-note" class="inventory-auction-summary" role="status"></p><label class="auction-reprice-field" for="auction-reprice-price">买方支付总价</label><div class="auction-reprice-controls"><input id="auction-reprice-price" type="text" inputmode="decimal" maxlength="13" autocomplete="off" aria-describedby="auction-reprice-price-note" placeholder="默认在售最低价，也可手填"><button id="auction-reprice-retry" class="button ghost" type="button">重新读取价格</button></div><p id="auction-reprice-price-note" class="auction-price-guidance" role="status"></p><p id="auction-reprice-help">确认后实时核验原卖单、登录和钱包，核验通过才撤单；核验物品退回后按新价格重新挂牌。重新挂牌可能需要再次在 Steam 手机应用确认；不会自动降低价格。</p><p id="auction-reprice-error" class="inline-error" role="alert"></p></div>
+    <div class="inventory-auction-footer"><small id="auction-reprice-scope">仅处理当前选中的这一笔卖单。</small><button id="auction-reprice-submit" class="button primary" type="button" disabled>确认下架并按此价格重挂</button></div>
   </dialog>
   <dialog id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-body"><div class="dialog-icon">↗</div><h2 id="confirm-title"></h2><p id="confirm-body"></p><div class="dialog-actions"><button id="confirm-cancel" class="button" type="button" autofocus>取消</button><button id="confirm-ok" class="button danger" type="button">确认</button></div></dialog>
 </body></html>

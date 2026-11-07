@@ -7,7 +7,7 @@ import re
 import threading
 
 
-DEFAULTS = {'steam_acceleration_enabled': False, 'boss_hotkey': ''}
+DEFAULTS = {'steam_acceleration_enabled': True, 'boss_hotkey': ''}
 
 
 def normalize_hotkey(value):
@@ -51,7 +51,10 @@ class AssistantSettings:
                     raise ValueError('设置版本无效')
                 self.value = validate_preferences({k: value[k] for k in DEFAULTS})
         except (OSError, ValueError, KeyError, TypeError):
-            self.load_error = '助手设置未能载入，原文件已保留；当前使用默认设置。'
+            # An unreadable preference is not consent to change this user's
+            # local Steam route. Keep the file and fail closed for acceleration.
+            self.value['steam_acceleration_enabled'] = False
+            self.load_error = '助手设置未能载入，原文件已保留；Steam 社区加速暂时关闭，其他设置使用默认值。'
 
     def snapshot(self):
         with self.lock:

@@ -157,3 +157,15 @@ test('category selection covers all supported families and specific retention al
   assert.equal(auction.policyAllows(config,'LegendaryBoots1'),false);
   assert.deepEqual(auction.normalize({item_keys:['GoldBar']}).categories,[]);
 });
+
+
+test('native Steam requires verified authentication and shows the actual source',()=>{
+  let view=auction.stateView({steam:{local_status:'pending',authenticated:false}});
+  assert.equal(view.authenticated,false);assert.equal(view.loginText,'正在核验本机 Steam');
+  view=auction.stateView({steam:{authenticated:true,source:'local_steam',account_name:'玩家',message:'本机会话已核验',local_message:'重复说明'}});
+  assert.equal(view.loginText,'本机 Steam 已登录 · 玩家');assert.equal(view.loginMessage,'本机会话已核验');
+  view=auction.stateView({steam:{authenticated:true,source:'saved_login',account_name:'玩家',message:'原绑定有效',local_status:'rejected',local_message:'本机社区未通过核验'}});
+  assert.equal(view.loginText,'已登录 · 玩家');assert.match(view.loginMessage,/原绑定有效.*本机社区未通过核验/);
+  view=auction.stateView({steam:{source:'local_steam',authenticated:true,expired:true}});
+  assert.equal(view.authenticated,false);assert.equal(view.loginText,'登录凭证已过期，请重新登录');
+});

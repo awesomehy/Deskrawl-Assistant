@@ -53,6 +53,50 @@ class RoutingTests(unittest.TestCase):
             self.request()
         self.assertEqual([c.args[0] for c in send.call_args_list], [None, *CDN_CANDIDATES])
 
+    def test_following_reads_reuse_working_route_without_repeating_default_timeout(self):
+        with patch.object(self.transport, '_send', side_effect=[ProbeFailure('timeout'), 'ok', 'ok', 'ok']) as send:
+            for _ in range(3): self.request()
+        self.assertEqual([c.args[0] for c in send.call_args_list], [None] + [CDN_CANDIDATES[0]] * 3)
+
+    def test_preferred_route_network_failure_can_fall_back_and_updates_write_route(self):
+        with patch.object(self.transport, '_send', side_effect=[ProbeFailure('timeout'), 'ok',
+                ProbeFailure('drop'), 'default-ok', 'posted']) as send:
+            self.request()
+            self.request()
+            self.request('POST', '/market/sellitem/')
+        self.assertEqual([c.args[0] for c in send.call_args_list],
+                         [None, CDN_CANDIDATES[0], CDN_CANDIDATES[0], None, None])
+
+    def test_old_route_preference_expires_and_proxy_or_toggle_changes_invalidate_it(self):
+        with patch('deskrawl_assistant.steam_network.time.monotonic', return_value=1000) as clock:
+            with patch.object(self.transport, '_send', side_effect=[ProbeFailure('timeout'), 'ok']): self.request()
+            clock.return_value = 1300
+            with patch.object(self.transport, '_send', return_value='ok') as send: self.request()
+            self.assertIsNone(send.call_args.args[0])
+        for change in ('proxy', 'disabled'):
+            with self.subTest(change=change):
+                self.transport.enabled = lambda: True
+                self.proxy.target.getproxies.return_value = {'https': 'http://127.0.0.1:7890'}
+                with patch.object(self.transport, '_send', side_effect=[ProbeFailure('timeout'), 'ok']):
+                    self.transport.local.route = (None, None)
+                    self.request()
+                if change == 'proxy':
+                    self.proxy.target.getproxies.return_value = {'https': 'http://127.0.0.1:7891'}
+                else:
+                    self.transport.enabled = lambda: False
+                with patch.object(self.transport, '_send', return_value='ok') as send: self.request()
+                self.assertIsNone(send.call_args.args[0])
+
+    def test_preferred_route_security_or_http_failure_never_falls_back(self):
+        for error in (ProbeFailure('cert', kind='security'), SteamSessionError('limited', status=429)):
+            with patch.object(self.transport, '_send', side_effect=[ProbeFailure('timeout'), 'ok']):
+                self.transport.local.route = (None, None)
+                self.request()
+            with patch.object(self.transport, '_send', side_effect=error) as send:
+                with self.assertRaises(SteamSessionError): self.request()
+            self.assertEqual(send.call_count, 1)
+            self.assertEqual(send.call_args.args[0], CDN_CANDIDATES[0])
+
     def test_switch_off_preserves_existing_proxy_without_cdn_fallback(self):
         self.transport.enabled = lambda: False
         with patch.object(self.transport, '_send', side_effect=ProbeFailure('drop')) as send:
@@ -109,6 +153,39 @@ class RoutingTests(unittest.TestCase):
             worker.start();worker.join(2)
         self.assertIsNone(send.call_args.args[0])
 
+    def test_native_verification_threads_reuse_read_route_without_sharing_post_affinity(self):
+        results = []
+        with patch.object(self.transport, '_send', side_effect=[ProbeFailure('drop'), 'first', 'second', 'posted']) as send:
+            self.request()
+            def worker():
+                results.append(self.request())
+                results.append(self.request('POST', '/market/sellitem/'))
+            thread = threading.Thread(target=worker)
+            thread.start();thread.join(2)
+        self.assertFalse(thread.is_alive())
+        self.assertEqual(results, ['second', 'posted'])
+        self.assertEqual([c.args[0] for c in send.call_args_list],
+                         [None, CDN_CANDIDATES[0], CDN_CANDIDATES[0], CDN_CANDIDATES[0]])
+
+    def test_native_route_probe_is_public_throttled_and_invalidated_by_proxy_changes(self):
+        with patch('deskrawl_assistant.steam_login_transport.CommunityLoginTransport') as factory:
+            factory.return_value.prepare.return_value = True
+            factory.return_value.preferred = CDN_CANDIDATES[1]
+            self.transport.prepare_local_verification()
+            self.transport.prepare_local_verification()
+            factory.assert_called_once_with(timeout=3)
+            factory.return_value.request.assert_not_called()
+            factory.return_value.close.assert_called_once()
+            with patch.object(self.transport, '_send', return_value='ok') as send:
+                self.request()
+            self.assertEqual(send.call_args.args[0], CDN_CANDIDATES[1])
+            self.proxy.target.getproxies.return_value = {'https': 'http://127.0.0.1:7891'}
+            self.transport.prepare_local_verification()
+            self.assertEqual(factory.call_count, 2)
+            self.transport.enabled = lambda: False
+            self.transport.prepare_local_verification()
+            self.assertEqual(factory.call_count, 2)
+
     def test_changing_proxy_invalidates_selected_route(self):
         with patch.object(self.transport, '_send', side_effect=[ProbeFailure('drop'), 'ok', 'ok']) as send:
             self.request()
@@ -121,6 +198,18 @@ class RoutingTests(unittest.TestCase):
             for path in ('https://other.test/', '//other.test/', '/bad\r\nCookie:', '/\\other.test/', '/market/#fragment'):
                 with self.assertRaises(SteamSessionError): self.request(path=path)
             with self.assertRaises(SteamSessionError): self.request('POST', '/login/')
+            send.assert_not_called()
+
+    def test_cancel_listing_endpoint_is_narrow_and_never_replayed(self):
+        with patch.object(self.transport, '_send', side_effect=ProbeFailure('response lost')) as send:
+            with self.assertRaises(SteamSessionError):
+                self.request('POST', '/market/removelisting/345')
+            self.assertEqual(send.call_count, 1)
+        with patch.object(self.transport, '_send') as send:
+            for path in ('/market/removelisting/0', '/market/removelisting/-1',
+                         '/market/removelisting/345?x=1', '/market/removelisting/345/other'):
+                with self.assertRaises(SteamSessionError):
+                    self.request('POST', path)
             send.assert_not_called()
 
     def test_http_backoff_survives_transport_restart_and_toggle(self):
@@ -350,6 +439,46 @@ class TradingIntegrationTests(unittest.TestCase):
 
 
 class LoginConnectorTests(unittest.TestCase):
+    def test_finalize_origin_can_reach_cdn_only_before_browser_bytes_are_sent(self):
+        connector = LoginTunnelConnector()
+        stream, returned = Mock(), Mock()
+        with patch('deskrawl_assistant.steam_network.getproxies', return_value={'https':'http://localhost:7890'}), \
+             patch.object(connector, '_open', side_effect=[TimeoutError(), TimeoutError(), stream, returned]) as opening, \
+             patch('deskrawl_assistant.steam_network.ssl.create_default_context') as context:
+            self.assertIs(connector.connect('login.steampowered.com'), returned)
+        self.assertEqual([call.args for call in opening.call_args_list], [
+            ('login.steampowered.com', 'http://localhost:7890', None),
+            ('login.steampowered.com', None, None),
+            ('login.steampowered.com', None, CDN_CANDIDATES[0]),
+            ('login.steampowered.com', None, CDN_CANDIDATES[0])])
+        context.return_value.wrap_socket.assert_called_once_with(stream, server_hostname='login.steampowered.com')
+        stream.sendall.assert_not_called()
+
+    def test_proxy_gateway_unavailable_can_fail_over_but_denials_cannot(self):
+        for status in (502, 503, 504, 403, 407):
+            with self.subTest(status=status):
+                connector = LoginTunnelConnector()
+                with patch('deskrawl_assistant.steam_network.getproxies', return_value={'https':'http://localhost:7890'}), \
+                     patch.object(connector, '_open', side_effect=[
+                         ProbeFailure('proxy_connect_rejected', kind='http', status=status), Mock(), Mock()]) as opening, \
+                     patch('deskrawl_assistant.steam_network.ssl.create_default_context'):
+                    if status in (403, 407):
+                        with self.assertRaises(ProbeFailure): connector.connect('login.steampowered.com')
+                        self.assertEqual(opening.call_count, 1)
+                    else:
+                        connector.connect('login.steampowered.com')
+                        self.assertEqual(opening.call_args.args, ('login.steampowered.com', None, None))
+
+    def test_finalize_certificate_failure_does_not_try_other_routes(self):
+        connector = LoginTunnelConnector()
+        with patch('deskrawl_assistant.steam_network.getproxies', return_value={}), \
+             patch.object(connector, '_open', return_value=Mock()) as opening, \
+             patch('deskrawl_assistant.steam_network.ssl.create_default_context') as context:
+            context.return_value.wrap_socket.side_effect = ssl.SSLCertVerificationError()
+            with self.assertRaises(ProbeFailure) as error: connector.connect('login.steampowered.com')
+            self.assertEqual(error.exception.kind, 'security')
+            self.assertEqual(opening.call_count, 1)
+
     def test_proxy_is_first_and_only_network_errors_can_fall_back(self):
         connector = LoginTunnelConnector()
         stream, returned = Mock(), Mock()
@@ -420,6 +549,31 @@ class LoginConnectorTests(unittest.TestCase):
                          {'goto':['market/'],'l':['schinese'],'_cdn':['akamai']})
         self.assertEqual(accelerated_login_url(accelerated_login_url(original)),
                          accelerated_login_url(original))
+
+    def test_only_native_successful_community_post_marks_login_transfer_complete(self):
+        from types import SimpleNamespace
+        from deskrawl_assistant.steam_login_window import SteamLoginWindow
+        cases = [
+            ('https://steamcommunity.com/login/settoken', 'POST', 200, True),
+            ('https://steamcommunity.com/login/settoken/', 'POST', 200, True),
+            ('https://steamcommunity.com/login/settoken', 'POST', 403, False),
+            ('https://steamcommunity.com/login/settoken', 'GET', 200, False),
+            ('https://steamcommunity.com/login/home/', 'POST', 200, False),
+            ('https://store.steampowered.com/login/settoken', 'POST', 200, False),
+            ('https://steamcommunity.com.evil.invalid/login/settoken', 'POST', 200, False),
+            ('http://steamcommunity.com/login/settoken', 'POST', 200, False),
+            ('https://user@steamcommunity.com/login/settoken', 'POST', 200, False),
+            ('https://steamcommunity.com:8443/login/settoken', 'POST', 200, False),
+        ]
+        import threading
+        for url, method, status, expected in cases:
+            with self.subTest(url=url, method=method, status=status):
+                window = SteamLoginWindow.__new__(SteamLoginWindow)
+                window._community_login_complete = threading.Event()
+                event = SimpleNamespace(Request=SimpleNamespace(Uri=url, Method=method),
+                                        Response=SimpleNamespace(StatusCode=status))
+                window._login_response(None, event)
+                self.assertEqual(window.login_complete, expected)
 
     def test_asset_preference_does_not_change_auth_requests_other_origins_or_blank_test_page(self):
         from deskrawl_assistant.steam_login_window import accelerated_login_url
@@ -502,6 +656,27 @@ class TunnelTests(unittest.TestCase):
         self.assertIn(b'502', header)
         self.assertNotIn(b'secret', header)
         self.connector.connect.assert_called_once()
+
+    def test_busy_asset_connections_do_not_block_mobile_confirmation_finalize(self):
+        for _ in range(12): self.assertTrue(self.tunnel.slots.acquire(blocking=False))
+        api_slots = self.tunnel.auth_slots['api.steampowered.com']
+        for _ in range(6): self.assertTrue(api_slots.acquire(blocking=False))
+        try:
+            sock, header = self.connect(b'CONNECT login.steampowered.com:443 HTTP/1.1\r\n\r\n')
+            self.assertIn(b'200 Connection Established', header)
+            self.connector.connect.assert_called_once_with('login.steampowered.com')
+        finally:
+            for _ in range(12): self.tunnel.slots.release()
+            for _ in range(6): api_slots.release()
+
+    def test_tunnel_failure_diagnostics_never_include_proxy_exception_details(self):
+        diagnostics = Mock()
+        self.tunnel.diagnostics = diagnostics
+        self.connector.connect.side_effect = ProbeFailure('user:secret@proxy:8888', kind='security')
+        _, header = self.connect(b'CONNECT login.steampowered.com:443 HTTP/1.1\r\n\r\n')
+        self.assertIn(b'502', header)
+        diagnostics.record.assert_called_once_with('tunnel_error', {'host':'login.steampowered.com'},
+                                                   code='login_tunnel_certificate_rejected')
 
     def test_close_disconnects_existing_stream_and_releases_port(self):
         sock, _ = self.connect()

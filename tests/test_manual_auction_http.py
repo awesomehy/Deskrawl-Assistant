@@ -32,6 +32,37 @@ class ManualAuctionHttpTests(unittest.TestCase):
                                                   body, headers)[0], 403)
             method.assert_not_called()
 
+    def test_managed_tracking_is_local_authenticated_and_query_free(self):
+        self.service.managed_auction_tracking = Mock(return_value={'items': [], 'total': 0})
+        self.assertEqual(self.request('/api/auction/managed/state')[0], 403)
+        self.assertEqual(self.request('/api/auction/managed/state?run=other', headers=self.headers())[0], 400)
+        self.assertEqual(self.request('/api/auction/managed/state', headers=self.headers())[0], 200)
+        self.service.managed_auction_tracking.assert_called_once_with()
+
+    def test_native_list_refresh_requires_origin_session_and_no_query_controls(self):
+        self.service.auction_tracking_refresh = Mock(return_value={'message': '刷新中'})
+        path = '/api/auction/tracking/refresh'
+        self.assertEqual(self.request(path, {}, {'Origin': self.url})[0], 403)
+        self.assertEqual(self.request(path, {}, {'Origin': 'https://outside.example',
+                         'X-Assistant-Token': 'test-session-token'})[0], 403)
+        self.assertEqual(self.request(path + '?steamid=other', {}, self.headers())[0], 400)
+        self.service.auction_tracking_refresh.assert_not_called()
+        self.assertEqual(self.request(path, {}, self.headers())[0], 200)
+        self.service.auction_tracking_refresh.assert_called_once_with({})
+
+    def test_reprice_mutations_require_origin_and_session_and_pass_only_explicit_payload(self):
+        for action, payload in [('preview', {'tracking_id': 'a' * 32}),
+                                ('start', {'token': 'b' * 43, 'price': '2.30'})]:
+            method = Mock(return_value={'running': True})
+            setattr(self.service, 'auction_reprice_' + action, method)
+            path = '/api/auction/reprice/' + action
+            self.assertEqual(self.request(path, payload, {'Origin': self.url})[0], 403)
+            self.assertEqual(self.request(path, payload, {'Origin': 'https://outside.example',
+                             'X-Assistant-Token': 'test-session-token'})[0], 403)
+            method.assert_not_called()
+            self.assertEqual(self.request(path, payload, self.headers())[0], 200)
+            method.assert_called_once_with(payload)
+
     def test_manual_state_is_authenticated_and_has_no_query_controls(self):
         self.service.manual_auction_state = Mock(return_value={
             'running': False, 'phase': 'completed', 'items': [
@@ -70,6 +101,7 @@ class ManualAuctionHttpTests(unittest.TestCase):
 
     def test_manual_assets_are_served_with_correct_mime(self):
         for file, mime in (('inventory-auction.js', 'text/javascript'),
+                           ('auction-tracking.js', 'text/javascript'),
                            ('inventory-auction.css', 'text/css')):
             with self.subTest(file=file):
                 code, headers, body = self.request('/' + file)

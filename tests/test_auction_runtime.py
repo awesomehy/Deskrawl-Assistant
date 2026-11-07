@@ -2,14 +2,15 @@
 from copy import deepcopy
 import json
 import struct
+import time
 from pathlib import Path
 import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
-from deskrawl_assistant.auction_runtime import AuctionRuntime, KINDS, auction_eligibility
-from deskrawl_assistant.game_actions import GameActions, CAPABILITIES
+from deskrawl_assistant.auction_runtime import AuctionRuntime, AuctionUploadPending, KINDS, auction_eligibility
+from deskrawl_assistant.game_actions import GameActions, CAPABILITIES, GameBusyError
 from deskrawl_assistant.native_dispatcher import NativeActionError, load_profile, compile_mailbox, REJECTED
 from deskrawl_assistant.native_memory import MemoryReadError, SnapshotChangedError
 
@@ -25,7 +26,7 @@ def item(**changes):
 def ready(**changes):
     return {**dict(available=True, enabled=True, listings=[], listing_count=0,
                 capacity=8, busy=False, opened=True, needs_refresh=False,
-                selection_occupied=False, pending=False, _ui=100, _slot=200,
+                selection_occupied=False, pending=False, blocked_uids=[], _ui=100, _slot=200,
                 steamid='76561198000000000', steamid_verified=True,
                 _refresh_key=('session-a', 100, '76561198000000000'),
                 _list_versions=((500, 0), (600, 0))), **changes}
@@ -142,6 +143,20 @@ class RuntimeTests(unittest.TestCase):
             self.runtime.execute('auction_upload', {'item': item()})
         self.assertEqual(self.actions.dispatcher.invoke.call_count, 1)
 
+    def test_receipt_timeout_retains_native_failure_and_durable_fence_after_restart(self):
+        self.runtime._refreshed = ready()['_refresh_key']
+        self.runtime._confirm.side_effect = AuctionUploadPending('拍卖行没有响应。 请重试。')
+        with self.assertRaises(AuctionUploadPending) as caught:
+            self.runtime.execute('auction_upload', {'item': item()})
+        self.assertTrue(caught.exception.uncertain)
+        self.assertTrue(caught.exception.mutation_started)
+        self.assertIsNone(self.runtime._refreshed)
+        saved = AuctionRuntime(self.actions, journal_path=self.path)
+        self.assertEqual(saved._pending['instance-a']['last_status'], '拍卖行没有响应。 请重试。')
+        with self.assertRaises(NativeActionError):
+            saved.execute('auction_upload', {'item': item()})
+        self.assertEqual(self.actions.dispatcher.invoke.call_count, 1)
+
     def test_non_mutating_rejections_can_replan_without_pending_consumption(self):
         self.actions.dispatcher.invoke.side_effect = NativeActionError('not tradable', mutation_started=False)
         with self.assertRaises(NativeActionError):
@@ -232,6 +247,309 @@ class RuntimeTests(unittest.TestCase):
             runtime.execute('auction_open', {})
         self.assertEqual(self.path.read_text(), 'not-json')
 
+    def retained_case(self):
+        row = item()
+        self.runtime._pending = {'instance-a': dict(item_uid='uid-a', internal_name=row['internal_name'],
+            steamid=ready()['steamid'])}
+        snapshot = {'complete': True, 'containers': {'inventory': {'slots': [row]}}}
+        return ready(server_checked_at=1000), snapshot
+
+    def test_two_independent_server_responses_and_exact_item_release_failed_upload(self):
+        state, snapshot = self.retained_case()
+        with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1000):
+            self.runtime._reconcile(state, snapshot)
+        self.assertIn('instance-a', self.runtime._pending)
+        with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1015):
+            self.runtime._reconcile(dict(state, server_checked_at=1015), snapshot)
+        self.assertFalse(self.runtime._pending)
+        self.assertFalse(self.runtime._confirmed)  # Retained is not uploaded or sold.
+        restored = AuctionRuntime(self.actions, journal_path=self.path)
+        receipt = restored._retained['instance-a']
+        self.assertEqual(receipt['outcome'], 'retained_in_game')
+        self.assertEqual(receipt['retry_after'], 1315)
+        self.actions.dispatcher.invoke.assert_not_called()
+
+    def test_polling_one_cached_response_never_releases_upload(self):
+        state, snapshot = self.retained_case()
+        with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1000):
+            self.runtime._reconcile(state, snapshot)
+        with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1015):
+            self.runtime._reconcile(state, snapshot)
+        self.assertIn('instance-a', self.runtime._pending)
+
+    def test_snapshot_preserves_first_receipt_while_second_owned_get_is_loading(self):
+        state, snapshot = self.retained_case()
+        self.actions.reader.snapshot.return_value = snapshot
+        self.runtime._refresh_wait = {'key': state['_refresh_key']}
+        self.runtime._state.side_effect = [
+            dict(state, _response_ready=True),
+            dict(state, loading=True, action_busy=False, busy=True, needs_refresh=True,
+                 pending=True, listings=None),
+            dict(state, _response_ready=True)]
+        with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1000):
+            self.runtime.snapshot()
+        with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1014):
+            self.assertTrue(self.runtime.snapshot()['pending'])
+        with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1015):
+            result = self.runtime.snapshot()
+        self.assertFalse(result['pending'])
+        self.assertEqual(result['pending_uploads'], [])
+        self.assertIn('uid-a', result['blocked_uids'])
+        self.assertEqual(result['retained_uploads'][0]['outcome'], 'retained_in_game')
+        self.assertEqual(result['confirmed_uploads'], [])
+        self.actions.dispatcher.invoke.assert_not_called()
+
+    def test_upload_busy_or_unrelated_get_invalidates_first_retained_receipt(self):
+        for action_busy, owned in ((True, True), (False, False)):
+            with self.subTest(action_busy=action_busy, owned=owned):
+                state, snapshot = self.retained_case()
+                self.runtime._negative_checks.clear()
+                self.actions.reader.snapshot.return_value = snapshot
+                self.runtime._refresh_wait = {'key': state['_refresh_key']} if owned else None
+                self.runtime._state.side_effect = [
+                    dict(state, _response_ready=True),
+                    dict(state, loading=True, action_busy=action_busy, busy=True,
+                         needs_refresh=True, pending=True, listings=None),
+                    dict(state, _response_ready=True)]
+                with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1000):
+                    self.runtime.snapshot()
+                with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1014):
+                    self.runtime.snapshot()
+                with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1015):
+                    self.assertTrue(self.runtime.snapshot()['pending'])
+
+    def test_incomplete_conflicting_or_unknown_results_do_not_release_upload(self):
+        variants = [({'busy': True}, {}), ({'needs_refresh': True}, {}),
+            ({'selection_occupied': True}, {}), ({'steamid_verified': False}, {}),
+            ({'steamid': '76561198000000001'}, {}), ({'server_checked_at': 900}, {}),
+            ({'listings': None}, {}), ({'listings': [{'instance_id': 'instance-a'}]}, {}),
+            ({}, {'complete': False}), ({}, {'containers': {}})]
+        for changes, snapshot_changes in variants:
+            with self.subTest(changes=changes, snapshot_changes=snapshot_changes):
+                state, snapshot = self.retained_case()
+                self.runtime._negative_checks.clear()
+                with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1000):
+                    self.runtime._reconcile(state, snapshot)
+                with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1015):
+                    self.runtime._reconcile({**state, 'server_checked_at': 1015, **changes},
+                                            dict(snapshot, **snapshot_changes))
+                self.assertIn('instance-a', self.runtime._pending)
+
+    def test_same_name_uid_or_instance_alone_is_not_retained_identity(self):
+        for changes in ({'item_uid': 'other'}, {'instance_id': 'other'},
+                        {'internal_name': 'other'}, {'count': 2}, {'identity_verified': False},
+                        {'issues': ['incomplete']}):
+            with self.subTest(changes=changes):
+                state, snapshot = self.retained_case()
+                self.runtime._negative_checks.clear()
+                snapshot['containers']['inventory']['slots'][0].update(changes)
+                with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1000):
+                    self.runtime._reconcile(state, snapshot)
+                with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1015):
+                    self.runtime._reconcile(dict(state, server_checked_at=1015), snapshot)
+                self.assertIn('instance-a', self.runtime._pending)
+
+    def test_retained_cooldown_prevents_native_resubmission_after_restart(self):
+        self.runtime._retained['instance-a'] = dict(item_uid='uid-a', instance_id='instance-a',
+            internal_name=item()['internal_name'], steamid=ready()['steamid'],
+            outcome='retained_in_game', checked_at=1000, retry_after=1300)
+        self.runtime._persist()
+        restored = AuctionRuntime(self.actions, journal_path=self.path)
+        restored._open = self.runtime._open
+        restored._context = self.runtime._context
+        restored._state = self.runtime._state
+        restored._selected = self.runtime._selected
+        with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1015):
+            with self.assertRaises(NativeActionError) as caught:
+                restored.execute('auction_upload', {'item': item()})
+        self.assertFalse(caught.exception.mutation_started)
+        self.actions.dispatcher.invoke.assert_not_called()
+
+    def test_pre_submit_list_and_interrupted_proof_cannot_authorize_recovery(self):
+        state, snapshot = self.retained_case()
+        self.runtime._pending['instance-a']['submitted_at'] = 1005
+        with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1005):
+            self.runtime._reconcile(state, snapshot)
+        with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1015):
+            self.runtime._reconcile(dict(state, server_checked_at=1015), snapshot)
+        self.assertIn('instance-a', self.runtime._pending)
+        with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1016):
+            self.runtime._reconcile(dict(state, busy=True, server_checked_at=1015), snapshot)
+        with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1030):
+            self.runtime._reconcile(dict(state, server_checked_at=1030), snapshot)
+        self.assertIn('instance-a', self.runtime._pending)
+
+
+class PendingSelectionRecoveryTests(unittest.TestCase):
+    """A failed native upload leaves its own selection in place."""
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
+        self.path = Path(self.temp.name) / 'pending.json'
+        self.actions = SimpleNamespace(reader=Mock(), profile=load_profile(), dispatcher=Mock())
+        self.runtime = AuctionRuntime(self.actions, journal_path=self.path)
+        self.read = Mock(guards=[])
+        self.read.ptr.return_value = 300
+        self.read.verify.side_effect = lambda pointer, name: pointer
+        self.actions.reader.asset_name.return_value = item()['internal_name']
+        self.runtime._context = Mock(return_value=self.read)
+        self.state = ready(selection_occupied=True, selected_uid='uid-a', pending=True)
+        self.runtime._state = Mock(side_effect=lambda read: dict(self.state))
+        self.row = item()
+        self.snapshot = {'complete': True, 'containers': {'inventory': {'slots': [self.row]}}}
+        self.actions.reader.snapshot.side_effect = lambda: deepcopy(self.snapshot)
+        self.runtime._pending = {'instance-a': dict(item_uid='uid-a',
+            internal_name=self.row['internal_name'], steamid=self.state['steamid'], submitted_at=990)}
+        self.runtime._persist()
+        self.runtime._wait_open = Mock(side_effect=self.fresh_response)
+        self.actions.dispatcher.invoke.side_effect = self.clear_selection
+
+    def fresh_response(self, *args):
+        self.runtime._refreshed = self.state['_refresh_key']
+        self.runtime._refreshed_at = time.time()
+        return dict(self.runtime.snapshot(), kind='auction_open', effect_confirmed=True)
+
+    def clear_selection(self, calls, *args, **kwargs):
+        self.assertEqual(len(calls), 1)
+        self.assertIn(calls[0].method, ('AuctionUI.refresh_list', 'AuctionUploadSlotUI.clear'))
+        if calls[0].method == 'AuctionUploadSlotUI.clear':
+            self.state.update(selection_occupied=False, selected_uid='')
+        return {'completed': True}
+
+    def refresh(self, now):
+        with patch('deskrawl_assistant.auction_runtime.time.time', return_value=now):
+            return self.runtime._open(refresh_only=True)
+
+    def clear_calls(self):
+        return [c for call in self.actions.dispatcher.invoke.call_args_list
+                for c in call.args[0] if c.method == 'AuctionUploadSlotUI.clear']
+
+    def test_two_server_receipts_clear_only_own_failed_selection_then_settle(self):
+        self.assertTrue(self.refresh(1000)['pending'])
+        self.assertFalse(self.clear_calls())
+        result = self.refresh(1015)
+        self.assertFalse(result['pending'])
+        self.assertEqual([c.method for call in self.actions.dispatcher.invoke.call_args_list
+                          for c in call.args[0]],
+                         ['AuctionUI.refresh_list', 'AuctionUI.refresh_list', 'AuctionUploadSlotUI.clear'])
+        self.assertFalse(self.clear_calls()[0].mutates)
+        self.assertEqual(self.clear_calls()[0].instance, self.state['_slot'])
+        self.assertEqual(self.snapshot['containers']['inventory']['slots'], [item()])
+        self.assertFalse(self.runtime._confirmed)
+        restored = AuctionRuntime(self.actions, journal_path=self.path)
+        self.assertFalse(restored._pending)
+        self.assertEqual(restored._retained['instance-a']['outcome'], 'retained_in_game')
+        self.assertEqual(restored._retained['instance-a']['retry_after'], 1315)
+
+    def test_read_only_snapshots_collect_proof_but_never_clear_or_release_occupied_slot(self):
+        for now in (1000, 1015):
+            with patch('deskrawl_assistant.auction_runtime.time.time', return_value=now):
+                result = self.fresh_response()
+                self.assertTrue(result['pending'])
+        self.assertIn('instance-a', self.runtime._pending)
+        self.actions.dispatcher.invoke.assert_not_called()
+
+    def test_one_cached_response_never_authorizes_slot_cleanup(self):
+        self.refresh(1000)
+        self.runtime._wait_open.side_effect = lambda *args: self.fresh_response_at(1000)
+        self.assertTrue(self.refresh(1015)['pending'])
+        self.assertFalse(self.clear_calls())
+
+    def fresh_response_at(self, checked):
+        self.runtime._refreshed = self.state['_refresh_key']
+        self.runtime._refreshed_at = checked
+        return dict(self.runtime.snapshot(), kind='auction_open', effect_confirmed=True)
+
+    def test_conflicting_incomplete_or_missing_identity_never_clears_selection(self):
+        variants = [({'complete': False}, {}, {}),
+            ({}, {'item_uid': 'other'}, {}), ({}, {'instance_id': 'other'}, {}),
+            ({}, {'count': 2}, {}), ({}, {'identity_verified': False}, {}),
+            ({}, {'container': 'equipped'}, {}),
+            ({}, {}, {'listings': [{'instance_id': 'instance-a'}]})]
+        for snapshot_change, item_change, state_change in variants:
+            with self.subTest(change=(snapshot_change, item_change, state_change)):
+                self.runtime._negative_checks.clear()
+                self.snapshot = {'complete': True, 'containers': {'inventory': {'slots': [item()]}}}
+                self.state.update(listings=[])
+                self.refresh(1000)
+                self.snapshot.update(snapshot_change)
+                self.snapshot['containers']['inventory']['slots'][0].update(item_change)
+                self.state.update(state_change)
+                self.assertTrue(self.refresh(1015)['pending'])
+                self.assertFalse(self.clear_calls())
+
+    def test_selection_or_account_changed_before_clear_is_not_touched(self):
+        for change in ({'selected_uid': 'other'}, {'steamid': '76561198000000001'},
+                       {'steamid_verified': False}):
+            with self.subTest(change=change):
+                self.runtime._negative_checks.clear()
+                self.state = ready(selection_occupied=True, selected_uid='uid-a', pending=True)
+                self.refresh(1000)
+                self.state.update(change)
+                with self.assertRaises(GameBusyError):
+                    self.refresh(1015)
+                self.assertFalse(self.clear_calls())
+
+    def test_changed_native_item_or_failed_clear_does_not_settle_receipt(self):
+        self.refresh(1000)
+        self.actions.reader.asset_name.return_value = 'other'
+        with self.assertRaises(GameBusyError):
+            self.refresh(1015)
+        self.assertFalse(self.clear_calls())
+        self.actions.reader.asset_name.return_value = self.row['internal_name']
+        self.actions.dispatcher.invoke.side_effect = lambda *a, **k: {'completed': True}
+        self.assertTrue(self.refresh(1016)['pending'])  # Native slot did not actually clear.
+        self.assertEqual(len(self.clear_calls()), 1)
+        self.assertFalse(self.runtime._retained)
+
+    def test_result_must_still_match_after_clear(self):
+        self.refresh(1000)
+        def clear_and_move(calls, *args, **kwargs):
+            if calls[0].method == 'AuctionUploadSlotUI.clear':
+                self.state.update(selection_occupied=False, selected_uid='')
+                self.snapshot['containers']['inventory']['slots'] = []
+            return {'completed': True}
+        self.actions.dispatcher.invoke.side_effect = clear_and_move
+        self.assertTrue(self.refresh(1015)['pending'])
+        self.assertFalse(self.runtime._retained)
+        self.assertFalse(self.runtime._confirmed)
+
+    def test_delayed_success_is_confirmed_without_clearing_or_repeating_upload(self):
+        self.refresh(1000)
+        self.snapshot['containers']['inventory']['slots'] = []
+        self.state['listings'] = [dict(instance_id='instance-a', internal_name=self.row['internal_name'],
+            received=False, pending=True, listed_at=1005)]
+        result = self.refresh(1015)
+        self.assertFalse(result['pending'])
+        self.assertFalse(self.clear_calls())
+        self.assertIn('instance-a', self.runtime._confirmed)
+        self.assertFalse(self.runtime._retained)
+
+    def test_failed_clear_keeps_durable_fence_across_restart(self):
+        self.refresh(1000)
+        def reject_clear(calls, *args, **kwargs):
+            if calls[0].method == 'AuctionUploadSlotUI.clear':
+                raise NativeActionError('clear unconfirmed', uncertain=True)
+            return {'completed': True}
+        self.actions.dispatcher.invoke.side_effect = reject_clear
+        with self.assertRaises(NativeActionError):
+            self.refresh(1015)
+        restored = AuctionRuntime(self.actions, journal_path=self.path)
+        self.assertIn('instance-a', restored._pending)
+        self.assertFalse(restored._confirmed)
+        self.assertFalse(restored._retained)
+
+    def test_slot_guard_change_before_dispatch_preserves_pending_receipt(self):
+        self.refresh(1000)
+        def changed_item(pointer):
+            self.read.finish.side_effect = SnapshotChangedError('slot changed')
+            return self.row['internal_name']
+        self.actions.reader.asset_name.side_effect = changed_item
+        with self.assertRaises(SnapshotChangedError):
+            self.refresh(1015)
+        self.assertFalse(self.clear_calls())
+        self.assertIn('instance-a', self.runtime._pending)
+        self.assertFalse(self.runtime._retained)
+
 
 class ReadOnlyStateTests(unittest.TestCase):
     def setUp(self):
@@ -279,6 +597,22 @@ class ReadOnlyStateTests(unittest.TestCase):
         self.assertEqual(self.runtime._refreshed, key)
         self.assertFalse(any(key.startswith('_') for key in state))
 
+    def test_read_polling_never_renews_the_last_server_refresh_time(self):
+        self.runtime._refresh_wait = {'key': ('session-a', 1000, '76561198000000000'),
+                                      'versions': ((5000, 0), (6000, 0))}
+        self.runtime._list_versions.return_value = ((5000, 1), (6000, 1))
+        self.read.boolean.side_effect = lambda address: address == 1195
+        self.runtime._context = Mock(return_value=self.read)
+        with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1000):
+            self.assertEqual(self.runtime.snapshot()['server_checked_at'], 1000)
+        self.runtime._refresh_wait = None  # Explicit request has completed.
+        with patch('deskrawl_assistant.auction_runtime.time.time', return_value=1060):
+            self.assertEqual(self.runtime.snapshot()['server_checked_at'], 1000)
+        self.read.boolean.side_effect = lambda address: address in (1194, 1195)
+        self.assertEqual(self.runtime.snapshot()['server_checked_at'], 0)
+        self.read.boolean.side_effect = lambda address: address == 1195
+        self.assertEqual(self.runtime.snapshot()['server_checked_at'], 0)
+
     def test_failure_clearing_loading_cannot_confirm_constructor_lists(self):
         key = ('session-a', 1000, '76561198000000000')
         self.runtime._refresh_wait = {'key': key, 'versions': ((5000, 0), (6000, 0))}
@@ -309,6 +643,18 @@ class ReadOnlyStateTests(unittest.TestCase):
         self.actions.reader.session_id = 'session-a'
         self.actions.reader.string.side_effect = lambda p: '76561198000000001' if p == 4000 else ''
         self.assertTrue(self.runtime._state(self.read)['needs_refresh'])
+
+    def test_switching_away_and_back_cannot_reuse_an_old_server_receipt(self):
+        self.read.boolean.side_effect = lambda address: address == 1195
+        self.runtime._context = Mock(return_value=self.read)
+        self.runtime._refreshed = ('session-a', 1000, '76561198000000000')
+        self.runtime._refreshed_at = 1000
+        self.actions.reader.string.side_effect = lambda p: '76561198000000001' if p == 4000 else ''
+        self.assertEqual(self.runtime.snapshot()['server_checked_at'], 0)
+        self.actions.reader.string.side_effect = lambda p: '76561198000000000' if p == 4000 else ''
+        state = self.runtime.snapshot()
+        self.assertEqual(state['server_checked_at'], 0)
+        self.assertTrue(state['needs_refresh'])
 
     def test_received_history_does_not_consume_eight_active_upload_slots(self):
         self.runtime._refreshed = ('session-a', 1000, '76561198000000000')
@@ -356,6 +702,51 @@ class OpenRefreshTests(unittest.TestCase):
         self.assertIsNone(self.runtime._refresh_wait)
         compile_mailbox(0x10000000, 0x180000000, load_profile(), 0x20000000,
                         0x30000000, 123, calls, [])
+
+    def test_only_list_refresh_may_pass_own_exact_pending_selection(self):
+        self.runtime._pending = {'instance-a': {'item_uid': 'uid-a',
+            'internal_name': 'DivineHelm', 'steamid': ready()['steamid']}}
+        self.runtime._state.return_value = ready(selection_occupied=True, selected_uid='uid-a')
+        self.runtime._open(refresh_only=True)
+        calls = [c.args[0][0] for c in self.runtime._invoke.call_args_list]
+        self.assertEqual([c.method for c in calls], ['AuctionUI.refresh_list'])
+        self.assertFalse(calls[0].mutates)
+        self.assertTrue(self.runtime._pending)
+        self.runtime._invoke.reset_mock()
+        with self.assertRaises(GameBusyError):
+            self.runtime._open()
+        self.runtime._invoke.assert_not_called()
+
+    def test_refresh_never_clears_or_replaces_another_selection_or_account(self):
+        self.runtime._pending = {'instance-a': {'item_uid': 'uid-a',
+            'internal_name': 'DivineHelm', 'steamid': ready()['steamid']}}
+        for change in ({'selected_uid': 'other'}, {'steamid': '76561198000000001'},
+                       {'steamid_verified': False}, {'selected_uid': ''}):
+            with self.subTest(change=change):
+                self.runtime._state.return_value = ready(selection_occupied=True, selected_uid='uid-a')
+                self.runtime._state.return_value.update(change)
+                with self.assertRaises(GameBusyError):
+                    self.runtime._open(refresh_only=True)
+                self.runtime._invoke.assert_not_called()
+
+    def test_background_fetch_always_requests_server_refresh_without_opening_window(self):
+        self.runtime._refreshed = ('session-a', 100, '76561198000000000')
+        self.runtime._open(refresh_only=True)
+        calls = [call.args[0][0] for call in self.runtime._invoke.call_args_list]
+        self.assertEqual([call.method for call in calls], ['AuctionUI.refresh_list'])
+        self.assertFalse(calls[0].mutates)
+        self.runtime._wait_open.assert_called_once()
+        self.assertIsNone(self.runtime._refreshed)
+
+    def test_busy_preflight_also_invalidates_old_server_observation(self):
+        self.runtime._refreshed = ('session-a', 100, '76561198000000000')
+        self.runtime._refreshed_at = 1000
+        self.runtime._state.return_value = ready(busy=True)
+        with self.assertRaises(GameBusyError):
+            self.runtime._open(refresh_only=True)
+        self.assertIsNone(self.runtime._refreshed)
+        self.assertEqual(self.runtime._refreshed_at, 0)
+        self.runtime._invoke.assert_not_called()
 
     def test_only_explicit_false_query_selects_show_full_refresh_chain(self):
         self.runtime._invoke.side_effect = [NativeActionError('false', state=REJECTED,

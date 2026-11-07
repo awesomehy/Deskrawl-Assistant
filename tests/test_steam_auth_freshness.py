@@ -3,6 +3,7 @@ from copy import deepcopy
 import json
 from pathlib import Path
 import tempfile
+import threading
 import unittest
 from unittest.mock import Mock, patch
 
@@ -47,6 +48,8 @@ class SteamFreshnessTests(unittest.TestCase):
             if self.listing_failure:
                 raise self.listing_failure
             return {'success': 1, 'total_count': 1, 'results_html': self.html}
+        if path.startswith('/market/myhistory/'):
+            return {'success': 1, 'total_count': 0, 'events': [], 'listings': {}, 'purchases': {}}
         if method == 'POST' and path == '/market/sellitem/':
             self.sales.append(deepcopy(data))
             return {'success': 1, 'listingid': '345', 'requires_confirmation': True}
@@ -56,9 +59,125 @@ class SteamFreshnessTests(unittest.TestCase):
         self.trading.register_uploaded('1', 'GoldBar', expected_steamid=STEAMID)
         return self.trading.sale_once(self.settings, STEAMID)
 
+    def test_confirmed_upload_survives_real_session_transient_wallet_failure_without_rebinding(self):
+        ticket = self.trading.prepare_upload(STEAMID, 'GoldBar')
+        expired = []
+        coordinator = AuctionCoordinator(self.root, self.trading,
+            lambda: (False, self.settings, STEAMID), start_worker=False, on_auth_expired=expired.append)
+        self.addCleanup(coordinator.close)
+        item = {'item_uid': 'local', 'instance_id': 'native', 'internal_name': 'GoldBar'}
+        identity = coordinator.submitted(item, STEAMID, ticket)
+        coordinator.confirmed(identity, {'uploaded_uid': 'local', 'uploaded_instance_id': 'native',
+                                         'uploaded_internal_name': 'GoldBar'})
+        generation = self.session.state()['binding_generation']
+        self.now += 31
+        self.failure = SteamSessionError('temporary network error')
+        coordinator.process_once()
+        self.assertEqual(coordinator.intents[identity]['phase'], 'confirmed')
+        self.assertIn(ticket, self.trading._tickets)
+        self.assertTrue(self.session.state()['bound'])
+        self.assertFalse(self.session.state()['verified'])
+        self.assertEqual(expired, [])  # A temporary error must not clear the sale setting.
+        self.failure = None
+        original = self.session.transport
+        self.session.transport = lambda method, path, data, values: (
+            inventory(('1', 1, {}), ('2', 1, {})) if path.startswith('/inventory/')
+            else original(method, path, data, values))
+        self.now += 31
+        coordinator.process_once()
+        self.assertEqual(self.session.state()['binding_generation'], generation)
+        self.assertEqual(coordinator.intents[identity]['phase'], 'resolved')
+        self.assertEqual(self.trading._journal[0]['game_instance_id'], 'native')
+        self.assertEqual(self.sales, [])
+        self.assertEqual(expired, [])
+
+    def test_original_baseline_expiry_releases_confirmed_market_gate_without_forging_game_failure(self):
+        ticket = self.trading.prepare_upload(STEAMID, 'GoldBar')
+        coordinator = AuctionCoordinator(self.root, self.trading,
+            lambda: (False, self.settings, STEAMID), start_worker=False)
+        self.addCleanup(coordinator.close)
+        item = {'item_uid': 'local', 'instance_id': 'native', 'internal_name': 'GoldBar'}
+        identity = coordinator.submitted(item, STEAMID, ticket)
+        coordinator.confirmed(identity, {'uploaded_uid': 'local', 'uploaded_instance_id': 'native',
+                                         'uploaded_internal_name': 'GoldBar'})
+        self.now += 600
+        before = len(self.requests)
+        coordinator.process_once()
+        self.assertEqual(coordinator.intents[identity]['phase'], 'resolved')
+        self.assertEqual(coordinator.intents[identity]['market_skip_reason'], 'baseline_expired')
+        self.assertEqual(coordinator.intents[identity]['instance_id'], 'native')
+        self.assertNotIn(ticket, self.trading._tickets)
+        self.assertEqual(coordinator.observe({'steamid': STEAMID})['blocked_keys'], [])
+        self.assertEqual(self.trading._journal, [])
+        self.assertEqual(self.sales, [])
+        self.assertFalse(any(method == 'POST' for method, _ in self.requests[before:]))
+
     def pending_html(self):
         return (f'<a onclick="CancelMarketListingConfirmation(\'mylisting_confirmation\','
                 f'\'345\',\'{APP_ID}\',\'2\',\'1\')">pending</a>')
+
+    def sale_proof(self):
+        self.pending_sale()
+        # Real sale journal plus an internal batch proof: reads must only
+        # observe this receipt, never submit or fetch Steam themselves.
+        proof = 'a' * 32
+        self.trading._journal[0]['proof'] = proof
+        self.trading._save()
+        return proof
+
+    def test_batch_receipt_tracks_phone_confirmation_via_background_read(self):
+        proof = self.sale_proof()
+        before = len(self.requests)
+        self.assertTrue(self.trading.proof_state(proof, STEAMID, wait=False)['confirmation_pending'])
+        self.assertEqual(len(self.requests), before)
+        self.now += 16
+        self.html = (f'<a onclick="RemoveMarketListing(\'mylisting\',\'345\','
+                     f'\'{APP_ID}\',\'2\',\'1\')">listed</a>')
+        self.trading.refresh_confirmation()
+        receipt = self.trading.proof_state(proof, STEAMID, wait=False)
+        self.assertEqual(receipt['status'], 'listed')
+        self.assertNotIn('assetid', receipt)
+        self.assertNotIn('steamid', receipt)
+        self.assertEqual(len(self.sales), 1)
+
+    def test_batch_pending_evidence_expires_and_clears_on_read_failure(self):
+        proof = self.sale_proof()
+        self.now += 15
+        self.assertFalse(self.trading.proof_state(proof, STEAMID)['confirmation_pending'])
+        self.html = self.pending_html()
+        self.trading.refresh_confirmation()
+        self.assertTrue(self.trading.proof_state(proof, STEAMID)['confirmation_pending'])
+        self.now += 15
+        self.listing_failure = SteamSessionError('unreadable')
+        self.trading.refresh_confirmation()
+        self.assertFalse(self.trading.proof_state(proof, STEAMID)['confirmation_pending'])
+        self.assertEqual(len(self.sales), 1)
+
+    def test_batch_receipt_does_not_treat_missing_listing_or_changed_binding_as_pending(self):
+        proof = self.sale_proof()
+        self.now += 16
+        self.trading.refresh_confirmation()
+        self.assertEqual(self.trading.proof_state(proof, STEAMID)['status'], 'pending')
+        self.assertFalse(self.trading.proof_state(proof, STEAMID)['confirmation_pending'])
+        self.assertEqual(self.trading.proof_state(proof, '76561198000000002'), {'status': 'unmatched'})
+        self.html = self.pending_html()
+        self.now += 16
+        self.trading.refresh_confirmation()
+        self.assertTrue(self.trading.proof_state(proof, STEAMID)['confirmation_pending'])
+        self.session.logout()
+        self.assertFalse(self.trading.proof_state(proof, STEAMID)['confirmation_pending'])
+        self.assertEqual(len(self.sales), 1)
+
+    def test_batch_receipt_poll_never_waits_on_steam_network_lock(self):
+        proof = self.sale_proof()
+        before = len(self.requests)
+        with self.trading._operation:
+            receipt = self.trading.proof_state(proof, STEAMID, wait=False)
+            self.assertEqual(receipt['status'], 'pending')
+            self.assertTrue(receipt['confirmation_pending'])
+            self.now += 16
+            self.assertFalse(self.trading.proof_state(proof, STEAMID, wait=False)['confirmation_pending'])
+        self.assertEqual(len(self.requests), before)
 
     def test_confirmed_login_is_rechecked_without_managed_running(self):
         self.trading.refresh_auth()
@@ -206,6 +325,120 @@ class SteamFreshnessTests(unittest.TestCase):
             self.assertEqual(coordinator.state()['sell']['confirmation_count'], 1)
         with patch('deskrawl_assistant.auction_service.time.time', return_value=self.now + 16):
             self.assertEqual(coordinator.state()['sell']['confirmation_count'], 0)
+
+    def test_local_login_progress_is_visible_before_market_worker_updates_cache(self):
+        coordinator = AuctionCoordinator(self.root, self.trading,
+            lambda: (False, deepcopy(DEFAULT_AUCTION), None), start_worker=False)
+        self.addCleanup(coordinator.close)
+        coordinator.cached = {'bound': False, 'verified': False, 'login_open': True}
+        self.session.capture_session(cookies(), verify_now=False)
+        before = len(self.requests)
+        state = coordinator.state()['steam']
+        self.assertTrue(state['bound'])
+        self.assertFalse(state['login_pending'])
+        self.assertFalse(state['authenticated'])
+        self.assertIn('已加密保存', state['message'])
+        self.session.verify()
+        state = coordinator.state()['steam']
+        self.assertTrue(state['authenticated'])
+        self.assertEqual(state['wallet_currency'], 'CNY')
+        self.assertEqual(len(self.requests), before + 1)
+
+    def test_relogin_clears_sale_expiry_before_market_worker_refreshes(self):
+        self.document = 'var g_steamID = false;'
+        self.now += 31
+        expired = self.trading.sale_once(self.settings, STEAMID)
+        self.assertEqual(expired['status'], 'login_required')
+        self.assertTrue(expired['expired'])
+        coordinator = AuctionCoordinator(self.root, self.trading,
+            lambda: (False, deepcopy(DEFAULT_AUCTION), None), start_worker=False)
+        self.addCleanup(coordinator.close)
+        coordinator.cached = deepcopy(expired)
+
+        self.document = page()
+        self.session.capture_session(cookies(), verify_now=False)
+        waiting = coordinator.state()
+        self.assertFalse(waiting['steam']['authenticated'])
+        self.assertIn('核验', waiting['sell']['message'])
+        self.assertNotIn('过期', waiting['sell']['message'])
+        self.session.verify()
+        before = len(self.requests)
+        state = self.trading.state()
+        self.assertEqual(state['status'], 'idle')
+        self.assertNotIn('过期', state['sale_message'])
+        state = coordinator.state()
+        self.assertTrue(state['steam']['authenticated'])
+        self.assertEqual(state['sell']['phase'], 'idle')
+        self.assertNotIn('过期', state['sell']['message'])
+        self.assertEqual(len(self.requests), before)
+        self.assertEqual(self.sales, [])
+
+        # A later successful no-op sale must not retain the old auth error
+        # after its phase changes from login_required back to idle.
+        state = self.trading.sale_once(self.settings, STEAMID)
+        self.assertEqual(state['status'], 'idle')
+        self.assertNotIn('过期', state['sale_message'])
+        self.assertEqual(self.sales, [])
+        self.session.logout()
+        state = coordinator.state()
+        self.assertFalse(state['steam']['authenticated'])
+        self.assertIn('请先登录', state['sell']['message'])
+        self.assertNotIn('过期', state['sell']['message'])
+
+    def test_relogin_keeps_pending_sale_fence_and_other_errors(self):
+        self.pending_sale()
+        self.document = 'var g_steamID = false;'
+        self.now += 31
+        self.assertTrue(self.trading.sale_once(self.settings, STEAMID)['expired'])
+        self.document = page()
+        self.session.capture_session(cookies())
+        state = self.trading.state()
+        self.assertNotIn('过期', state['sale_message'])
+        self.assertEqual(state['counts']['pending'], 1)
+        self.assertFalse(state['confirmation_known'])
+        self.trading.sale_once(self.settings, STEAMID)
+        self.assertEqual(len(self.sales), 1)
+        self.trading._status = 'journal_error'
+        self.trading._message = 'Steam 出售记录损坏；原文件保留，自动出售已暂停。'
+        state = self.trading.state()
+        self.assertEqual(state['status'], 'journal_error')
+        self.assertIn('损坏', state['sale_message'])
+
+    def test_status_does_not_wait_for_market_worker_guard(self):
+        coordinator = AuctionCoordinator(self.root, self.trading,
+            lambda: (False, deepcopy(DEFAULT_AUCTION), None), start_worker=False)
+        self.addCleanup(coordinator.close)
+        coordinator.cached = self.trading.state()
+        for held_lock in (self.trading.guard, self.trading._operation, self.session.guard):
+            with self.subTest(lock=held_lock):
+                done, result = threading.Event(), []
+                def read():
+                    try: result.append(coordinator.state())
+                    finally: done.set()
+                with held_lock:
+                    thread = threading.Thread(target=read, daemon=True)
+                    thread.start()
+                    completed_without_network_lock = done.wait(1)
+                thread.join(2)
+                self.assertTrue(completed_without_network_lock)
+                self.assertTrue(result[0]['steam']['authenticated'])
+
+    def test_old_confirmation_cache_is_hidden_after_relogin_or_logout(self):
+        self.pending_sale()
+        coordinator = AuctionCoordinator(self.root, self.trading,
+            lambda: (False, deepcopy(DEFAULT_AUCTION), None), start_worker=False)
+        self.addCleanup(coordinator.close)
+        coordinator.cached = self.trading.state()
+        with patch('deskrawl_assistant.auction_service.time.time', return_value=self.now):
+            self.assertTrue(coordinator.state()['sell']['confirmation_known'])
+            self.session.capture_session(cookies())
+            state = coordinator.state()
+            self.assertTrue(state['steam']['authenticated'])
+            self.assertFalse(state['sell']['confirmation_known'])
+            self.assertEqual(state['sell']['confirmation_count'], 0)
+            self.session.logout()
+            self.assertFalse(coordinator.state()['steam']['authenticated'])
+            self.assertFalse(coordinator.state()['steam']['bound'])
 
 
 class ExpiryManagedConfigTests(unittest.TestCase):

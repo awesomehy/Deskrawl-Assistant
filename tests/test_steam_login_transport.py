@@ -1,6 +1,7 @@
 """Offline login routing: certificate failures, no POST replay and browser semantics."""
 import http.client
 import ssl
+import threading
 import unittest
 from unittest.mock import Mock
 
@@ -49,6 +50,58 @@ class CommunityLoginTests(unittest.TestCase):
         self.first.request.assert_not_called()
         self.second.request.assert_called_once()
         self.first.close.assert_called_once()
+
+    def test_prepare_selects_first_responsive_http_edge_without_auth_data_or_waiting_for_slow_edge(self):
+        slow_finished = threading.Event()
+        release_slow = threading.Event()
+        def stalled_response():
+            try:
+                release_slow.wait(2)
+                raise TimeoutError('opaque private data must not be retained')
+            finally: slow_finished.set()
+        self.first.getresponse.side_effect = stalled_response
+        self.factory.side_effect = lambda address, timeout: (
+            self.first if address == '1.1.1.1' else self.second)
+        try:
+            self.assertTrue(self.transport.prepare())
+            self.assertEqual(self.transport.preferred, '2.2.2.2')
+            self.assertFalse(release_slow.is_set())
+            for connection in (self.first, self.second):
+                args = connection.request.call_args
+                if args is not None:
+                    self.assertEqual(args.args, ('GET', '/login/home/?_cdn=akamai'))
+                    self.assertNotIn('Cookie', args.kwargs['headers'])
+                    self.assertNotIn('Authorization', args.kwargs['headers'])
+                    self.assertNotIn('body', args.kwargs)
+            self.factory.reset_mock()
+            self.second.request.reset_mock()
+            self.assertEqual(self.request('POST', '/login/settoken', body=b'opaque-token')[0], 200)
+            self.assertEqual(self.factory.call_args.args[0], '2.2.2.2')
+            self.second.request.assert_called_once()
+        finally:
+            release_slow.set()
+            slow_finished.wait(2)
+
+    def test_prepare_failure_preserves_normal_connection_checks(self):
+        self.factory.side_effect = lambda address, timeout: (
+            self.first if address == '1.1.1.1' else self.second)
+        self.first.connect.side_effect = TimeoutError()
+        self.second.getresponse.return_value.status = 503
+        self.assertFalse(self.transport.prepare())
+        self.assertIsNone(self.transport.preferred)
+        self.assertEqual(self.factory.call_count, 2)
+        self.first.request.assert_not_called()
+
+    def test_failed_http_request_does_not_pin_a_route_just_because_tls_worked(self):
+        self.first.getresponse.side_effect = TimeoutError()
+        with self.assertRaises(ProbeFailure): self.request('POST', '/login/settoken')
+        self.assertIsNone(self.transport.preferred)
+        self.assertEqual(self.factory.call_count, 1)
+
+    def test_closed_transport_does_not_start_public_probes(self):
+        self.transport.close()
+        self.assertFalse(self.transport.prepare())
+        self.factory.assert_not_called()
 
     def test_official_same_origin_qr_and_password_authentication_posts_are_allowed_once(self):
         from deskrawl_assistant.steam_login_transport import LOGIN_AUTH_PATHS

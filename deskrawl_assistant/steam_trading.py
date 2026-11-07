@@ -19,8 +19,29 @@ from uuid import uuid4
 from .steam_market import APP_ID, MarketCatalog, MarketItem, parse_listing, MarketDataError
 from .steam_session import SteamSession, SteamSessionError, _atomic_write
 from .auction import CATEGORIES, allows as auction_allows
+from .sale_tracking import SaleTrackingMixin, LISTING_INTERVAL, LISTING_TTL
+from .pending_trades import PendingTradesMixin
 
 JOURNAL_LIMIT = 2000
+
+
+def sale_feedback(auth, phase, message):
+    """Project an old auth failure against the current local login state.
+
+    Login capture can finish independently of the market worker. Only its
+    authentication error is superseded; transaction errors and journals stay.
+    """
+    if phase != 'login_required':
+        return phase, message
+    if auth.get('expired') is True:
+        return phase, 'Steam 登录已过期，请重新登录。'
+    if auth.get('verified') is True:
+        return 'idle', 'Steam 登录有效，等待出售任务。'
+    if auth.get('login_open') is True:
+        return phase, '等待 Steam 登录完成，期间暂停市场出售。'
+    if auth.get('bound') is True:
+        return phase, '等待核验 Steam 登录，期间暂停市场出售。'
+    return phase, '请先登录 Steam，再启用市场出售。'
 
 
 def _int(value, minimum=0, maximum=10**12):
@@ -80,8 +101,8 @@ def buyer_total(receive, parameters):
     return valid_market_amount(receive, parameters) + sum(fees)
 
 
-def receive_for_total(total, parameters):
-    """Only exact representable buyer totals; do not silently lower the price."""
+def buyer_price_candidates(total, parameters):
+    """Neighbouring representable (buyer total, seller receive) pairs."""
     _int(total, 1, parameters['maximum'])
     step = parameters['increment']
     low, high = 0, total // step + 1
@@ -93,10 +114,25 @@ def receive_for_total(total, parameters):
         else:
             high = middle
     candidates = {parameters['minimum'], low * step, max(parameters['minimum'], (low - 1) * step)}
-    for amount in sorted(candidates):
-        if amount > 0 and valid_market_amount(amount, parameters) == amount and buyer_total(amount, parameters) == total:
+    pairs = sorted((buyer_total(amount, parameters), amount) for amount in candidates
+                   if amount > 0 and valid_market_amount(amount, parameters) == amount
+                   and buyer_total(amount, parameters) <= parameters['maximum'])
+    nearest = {total, max((value for value, _ in pairs if value < total), default=None),
+               min((value for value, _ in pairs if value > total), default=None)}
+    return [(value, amount) for value, amount in pairs if value in nearest]
+
+
+def receive_for_total(total, parameters):
+    """Only exact representable buyer totals; do not silently lower the price."""
+    candidates = buyer_price_candidates(total, parameters)
+    for value, amount in candidates:
+        if value == total:
             return amount
-    raise SteamSessionError('目标买方总价不符合 Steam 手续费与币种步长，暂不出售。')
+    nearby = ' 或 '.join(format(Decimal(value) / 100, '.2f') for value in sorted({
+        max((v for v, _ in candidates if v < total), default=0),
+        min((v for v, _ in candidates if v > total), default=0)}) if value)
+    raise SteamSessionError('目标买方总价不符合 Steam 手续费与币种步长，暂不出售。'
+                            + (f'附近可用总价：{nearby}，请修改后确认。' if nearby else ''))
 
 
 def _json(raw):
@@ -118,17 +154,23 @@ def _assetid(value):
     return value
 
 
-class SteamTradingService:
-    def __init__(self, path, catalog=None, *, session=None, transport=None, login_window_factory=None, clock=time.time):
+from .steam_manual_sale import ManualSteamSaleMixin
+
+
+class SteamTradingService(ManualSteamSaleMixin, SaleTrackingMixin, PendingTradesMixin):
+    def __init__(self, path, catalog=None, *, session=None, transport=None, login_window_factory=None, clock=time.time,
+                 local_provider=None):
         self.path = Path(path)
         self.catalog = catalog
         self.clock = clock
         self.session = session or SteamSession(self.path / 'steam-session.dpapi', transport=transport,
-                                             login_window_factory=login_window_factory, clock=clock)
+                                             login_window_factory=login_window_factory, clock=clock,
+                                             local_provider=local_provider)
         self.guard = threading.RLock()
         self._operation = threading.Lock()
         self._journal_path = self.path / 'steam-sale-journal.json'
         self._journal = []
+        self._receipt_rows = ()
         self._tickets = {}
         self._message = 'Steam 市场出售为开发验证功能，尚未进行实机出售验证。'
         self._status = 'idle'
@@ -137,6 +179,10 @@ class SteamTradingService:
         self._reconcile_after = 0
         self._confirmation = None
         self._closed = False
+        # In-process authorization only. Historical cancel/sell fences are
+        # loaded below, but a restart never invents permission to resume writes.
+        self._reprice_recoveries = {}
+        self._reprice_reservations = frozenset()
         if self._journal_path.exists():
             try:
                 raw = json.loads(self._journal_path.read_text(encoding='utf-8'))
@@ -162,7 +208,7 @@ class SteamTradingService:
                         _int(amount, 1, 10**9)
                 for row in self._journal:
                     if (not isinstance(row, dict) or not re.fullmatch(r'7656\d{13}', str(row.get('steamid', '')))
-                            or row.get('status') not in ('captured', 'intent', 'uncertain', 'pending', 'listed', 'missing')
+                            or row.get('status') not in ('captured', 'intent', 'uncertain', 'pending', 'listed', 'missing', 'sold')
                             or not isinstance(row.get('item_key'), str)
                             or row.get('variant') not in ('normal', 'black_mist')):
                         raise ValueError()
@@ -187,14 +233,26 @@ class SteamTradingService:
         _atomic_write(self._journal_path, json.dumps({'schema_version': 1, 'records': self._journal,
                                                    'tickets': self._tickets},
                                                    ensure_ascii=False, allow_nan=False).encode('utf-8'))
+        # Publish one immutable snapshot after the durable state boundary.
+        # UI polling may read it while the worker waits on Steam; freshness
+        # and login generation are still checked on every projection.
+        self._receipt_rows = tuple(deepcopy(self._journal))
 
     def _healthy_journal(self):
         if self._status == 'journal_error':
             raise SteamSessionError('Steam 出售记录损坏；原文件保留，自动出售已暂停。')
 
+    def auth_state(self):
+        """Local login state, independent of the market worker and its I/O lock."""
+        peek = getattr(self.session, 'peek_state', None)
+        return peek() if callable(peek) else self.session.state()
+
     def state(self):
+        # Session.post intentionally keeps its account lock across the HTTP
+        # request. Never hold the local projection lock while waiting for it:
+        # game observations also use guard and must not wait for Steam I/O.
+        state = self.session.state()
         with self.guard:
-            state = self.session.state()
             counts = {key: sum(row.get('status') == key for row in self._journal)
                       for key in ('captured', 'intent', 'uncertain', 'pending', 'listed')}
             confirmation = self._confirmation or {}
@@ -202,12 +260,12 @@ class SteamTradingService:
                      and confirmation.get('steamid') == state.get('steamid')
                      and confirmation.get('generation') == state.get('binding_generation')
                      and self.clock() < confirmation.get('expires_at', 0))
-            message = self._message
-            if counts['pending'] and self._status in ('pending', 'idle') and not fresh:
+            status, message = sale_feedback(state, self._status, self._message)
+            if counts['pending'] and status in ('pending', 'idle') and not fresh:
                 message = '已提交的卖单记录已保留，不重复提交；当前确认状态待读取。'
-            elif counts['pending'] and self._status in ('pending', 'idle') and not confirmation.get('assets'):
+            elif counts['pending'] and status in ('pending', 'idle') and not confirmation.get('assets'):
                 message = '当前卖单未读到待确认记录；已提交的出售记录保留，不重复提交。'
-            return {**state, 'status': self._status, 'sale_message': message,
+            return {**state, 'status': status, 'sale_message': message,
                     'pending_count': len(confirmation['assets']) if fresh else 0,
                     'confirmation_known': fresh,
                     'confirmation_expires_at': confirmation.get('expires_at') if fresh else None,
@@ -220,6 +278,11 @@ class SteamTradingService:
 
     def refresh_auth(self):
         """Read-only verification on the Steam worker, also while managed mode is idle."""
+        if self._closed or self.clock() < max(self._auth_retry_after, self._retry_after):
+            return
+        refresh = getattr(self.session, 'refresh_local', None)
+        if refresh:
+            refresh()
         state = self.session.state()
         if (not state.get('bound') or state.get('expired') or state.get('login_open')
                 or self._closed or self.clock() < max(self._auth_retry_after, self._retry_after)):
@@ -242,6 +305,22 @@ class SteamTradingService:
         except SteamSessionError as exc:
             self._confirmation = None
             self._limited(exc)
+        else:
+            if self.clock() >= self._retry_after:
+                try:
+                    self._observe_steam_inventory(state.get('steamid'))
+                except SteamSessionError as exc:
+                    # An independent inventory read cannot invalidate a
+                    # successfully verified active/confirmation listing.
+                    self._limited(exc)
+            self._retire_cancelled_reprice_displays(state.get('steamid'))
+            self._retire_absent_trades()
+            # Complete the independent current views before slow history and
+            # quote reads. Otherwise their short leases can expire every pass
+            # before the old absent asset ever reaches reconciliation.
+            rows = [r for r in self._journal if r['steamid'] == state.get('steamid')
+                    and r['status'] in ('pending', 'uncertain', 'listed')]
+            self._refresh_tracking(state.get('steamid'), rows)
         finally:
             self._operation.release()
 
@@ -254,11 +333,14 @@ class SteamTradingService:
         # a sale still preparing must not start after logout was requested.
         result = self.session.logout()
         with self._operation:
+            self._reprice_recoveries.clear()
+            self._reprice_reservations = frozenset()
             self._tickets.clear()
             if self._status != 'journal_error':
                 self._save()
             if self._status != 'journal_error':
                 self._status = 'idle'
+                self._message = '已退出 Steam 登录，市场出售暂停。'
             return result
 
     def close(self):
@@ -277,7 +359,23 @@ class SteamTradingService:
             raise
         if wallet['steamid'] != expected:
             raise SteamSessionError('绑定 Steam 与当前游戏账号不同，暂不执行市场出售。')
+        if self._status == 'login_required':
+            self._status, self._message = sale_feedback(self.session.state(), self._status, self._message)
+        # Read-only price guidance reuses this wallet snapshot without Steam
+        # I/O or the transaction lock. Every sale still verifies the live wallet.
+        self._fee_wallet = deepcopy(wallet)
         return wallet
+
+    def _preview_fee_parameters(self, steamid, currency, auth, publisher_fee=None):
+        wallet = getattr(self, '_fee_wallet', {})
+        if (wallet.get('steamid') != steamid or wallet.get('currency_id') != currency
+                or wallet.get('binding_generation') != auth.get('binding_generation')):
+            return None
+        try:
+            value = fee_parameters(wallet, publisher_fee if publisher_fee is not None else wallet.get('publisher_fee'))
+        except SteamSessionError:
+            return None
+        return {k: format(v, 'f') if isinstance(v, Decimal) else v for k, v in value.items()}
 
     def _limited(self, exc):
         if exc.status in (403, 429):
@@ -396,6 +494,44 @@ class SteamTradingService:
                     self._tickets[ticket] = row
                     raise
 
+    def upload_mapping_state(self, ticket, expected_steamid):
+        """Local-only eligibility for retrying an already confirmed upload.
+
+        Preserve the original baseline lifetime and ambiguity fence. Unknown
+        login state is temporary; an explicit logout, account or binding
+        change cannot grant a late inventory delta permission to be sold.
+        """
+        if not self._operation.acquire(blocking=False):
+            return {'status': 'waiting', 'reason': 'operation_busy'}
+        try:
+            self._healthy_journal()
+            row = deepcopy(self._tickets.get(ticket))
+        finally:
+            self._operation.release()
+        if row is None:
+            return {'status': 'terminal', 'reason': 'baseline_missing'}
+        if row.get('steamid') != expected_steamid:
+            return {'status': 'terminal', 'reason': 'account_changed'}
+        if not 0 <= self.clock() - row['created_at'] < 600:
+            return {'status': 'terminal', 'reason': 'baseline_expired'}
+        if row.get('ambiguous'):
+            return {'status': 'terminal', 'reason': 'ambiguous'}
+        auth = self.auth_state()
+        if not isinstance(auth, dict):
+            return {'status': 'waiting', 'reason': 'auth_unknown'}
+        if auth.get('expired') is True or auth.get('bound') is False:
+            return {'status': 'terminal', 'reason': 'login_ended'}
+        if auth.get('verified') is True and auth.get('steamid') != expected_steamid:
+            return {'status': 'terminal', 'reason': 'account_changed'}
+        generation = row.get('binding_generation')
+        current = auth.get('binding_generation')
+        if generation is not None and current is not None and generation != current:
+            return {'status': 'terminal', 'reason': 'binding_changed'}
+        if (auth.get('verified') is not True or auth.get('steamid') != expected_steamid
+                or generation is not None and current is None):
+            return {'status': 'waiting', 'reason': 'auth_unknown'}
+        return {'status': 'ready'}
+
     def complete_upload(self, ticket, count=1, *, expected_instance_id=None):
         with self._operation:
             self._healthy_journal()
@@ -408,9 +544,24 @@ class SteamTradingService:
             if expected_instance_id is not None and (not isinstance(expected_instance_id, str)
                                                      or not 0 < len(expected_instance_id) <= 128):
                 raise SteamSessionError('游戏上传实例身份无效。')
-            self._account(row['steamid'])
+            wallet = self._account(row['steamid'])
+            if (row.get('binding_generation') is not None
+                    and wallet.get('binding_generation') != row['binding_generation']):
+                raise SteamSessionError('上传时的 Steam 登录会话已变化，暂不自动匹配或出售。')
             item = self._item(row['item_key'], row['variant'])
             inventory = self._inventory(row['steamid'])
+            # GET releases the session account lock while I/O is in flight.
+            # Do not let logout/rebinding during that read turn its old result
+            # into a new captured-sale permission. The POST boundary retains
+            # its own stricter account lock and is intentionally unchanged.
+            current = self.session.state()
+            if (self._closed or current.get('bound') is not True
+                    or current.get('verified') is not True or current.get('steamid') != row['steamid']
+                    or wallet.get('binding_generation') is not None
+                    and current.get('binding_generation') != wallet['binding_generation']):
+                raise SteamSessionError('读取库存期间的 Steam 登录会话已变化，暂不自动匹配或出售。')
+            if not 0 <= self.clock() - row['created_at'] < 600:
+                raise SteamSessionError('上传库存基线已失效，暂不自动出售此物品。')
             added = [(asset, asset['amount'] - row['before'].get(identity, 0))
                      for identity, asset in inventory.items() if self._matches(asset, item)
                      and asset['amount'] > row['before'].get(identity, 0)]
@@ -436,6 +587,9 @@ class SteamTradingService:
                     raise SteamSessionError('Steam 新资产的游戏实例与上传回执不同，暂不出售。')
                 self._register(row['steamid'], asset['assetid'], row['item_key'], row['variant'], amount,
                                'verified_upload_delta', proof=ticket, manual_only=row.get('manual_only') is True)
+                registered = next(r for r in self._journal if r.get('proof') == ticket)
+                if expected_instance_id:
+                    registered['game_instance_id'] = expected_instance_id
             self._tickets.pop(ticket, None)
             self._save()
             return self.state()
@@ -459,15 +613,32 @@ class SteamTradingService:
                               'status': 'captured', 'created_at': self.clock()})
         self._save()
 
-    def proof_state(self, proof, expected_steamid):
+    def proof_state(self, proof, expected_steamid, *, wait=True):
         """Narrow internal receipt view; never expose credentials or asset IDs."""
-        with self._operation:
-            matches = [row for row in self._journal
+        acquired = self._operation.acquire(blocking=wait)
+        try:
+            matches = [row for row in (self._journal if acquired else self._receipt_rows)
                        if row.get('proof') == proof and row.get('steamid') == expected_steamid]
             if len(matches) != 1:
-                return {'status': 'unmatched'}
-            row = matches[0]
-            return {k: row[k] for k in ('status', 'buyer_total', 'seller_receive', 'currency_id') if k in row}
+                return {'status': 'unmatched' if acquired else 'checking'}
+            return self._receipt_state(matches[0], expected_steamid)
+        finally:
+            if acquired:
+                self._operation.release()
+
+    def _receipt_state(self, row, expected_steamid):
+        result = {k: row[k] for k in ('status', 'buyer_total', 'seller_receive', 'currency_id', 'assumed_sold') if k in row}
+        result.update(self._tracking_fields(row))
+        if row.get('reprice'):
+            result['status'] = 'uncertain'
+        if row['status'] in ('pending', 'intent', 'uncertain'):
+            auth, confirmation = self.auth_state() or {}, self._confirmation or {}
+            result['confirmation_pending'] = (auth.get('verified') is True and not auth.get('expired')
+                and auth.get('steamid') == expected_steamid == confirmation.get('steamid')
+                and auth.get('binding_generation') == confirmation.get('generation')
+                and self.clock() < confirmation.get('expires_at', 0)
+                and row['assetid'] in confirmation.get('assets', ()))
+        return result
 
     def register_uploaded(self, assetid, item_key, variant='normal', count=1, *, expected_steamid):
         """Native receipt only; HTTP frontend must not expose this method."""
@@ -543,36 +714,96 @@ class SteamTradingService:
     def _reconcile_listings(self, steamid):
         """Positive evidence may confirm a sale; missing evidence never retries it."""
         rows = [r for r in self._journal if r['steamid'] == steamid
-                and r['status'] in ('pending', 'uncertain')]
-        if not rows or self.clock() < self._reconcile_after:
+                and r['status'] in ('pending', 'uncertain', 'listed')]
+        if self.clock() < self._reconcile_after:
             return
-        self._reconcile_after = self.clock() + 15
+        self._reconcile_after = self.clock() + LISTING_INTERVAL
         self._confirmation = None
+        self._active_until = 0
+        self._listing_assets = {}
+        self._observed_listings = {**getattr(self, '_observed_listings', {}), 'fresh': False}
+        checked_at = self.clock()
+        for row in rows:
+            row.pop('active_checked_at', None)
         auth = self.session.state()
+        if (auth.get('verified') is not True or auth.get('expired')
+                or auth.get('steamid') != steamid):
+            raise SteamSessionError('Steam 账号尚未确认，暂不更新卖单。')
         from .steam_listing_receipts import listing_receipts
         changed = False
         pending = set()
+        current_items = []
+        listing_assets = {}
+        current_known = True
+        evidence_total, evidence_ids = None, set()
         complete = False
         for page in range(20):
             response = _json(self.session.request('GET', '/market/mylistings/?' +
                              urlencode({'start': page * 100, 'count': 100, 'l': 'english'})))
+            current = self.session.state()
+            if (current.get('verified') is not True or current.get('expired')
+                    or current.get('steamid') != steamid
+                    or current.get('binding_generation') != auth.get('binding_generation')):
+                raise SteamSessionError('Steam 登录已变化，未采用旧账号的卖单响应。')
             if response.get('success') not in (True, 1):
                 raise SteamSessionError('Steam 卖单列表暂不可读，保留已提交记录。')
             listings = listing_receipts(response.get('results_html'))
+            self._observe_market_listings(response, listings, steamid)
+            assets = response.get('assets', {})
+            assets = assets.get(str(APP_ID), {}).get('2', {}) if isinstance(assets, dict) else {}
+            for listing in listings.values():
+                recognized = False
+                description = assets.get(listing['assetid']) if isinstance(assets, dict) else None
+                if isinstance(description, dict):
+                    asset = {'assetid': listing['assetid'], 'description': description}
+                    listing_assets[listing['listingid']] = deepcopy(asset)
+                    item = self._catalog_asset(asset)
+                    if item:
+                        recognized = True
+                        current_items.append({'item_key': item.key, 'variant': item.variant,
+                            'instance_id': self._native_instance(asset), 'assetid': listing['assetid']})
+                # A recognized exact journal asset is also evidence when
+                # Steam omits its catalog description in this response.
+                for row in self._journal:
+                    if row['steamid'] == steamid and row['assetid'] == listing['assetid']:
+                        recognized = True
+                        current_items.append({'item_key': row['item_key'], 'variant': row['variant'],
+                            'instance_id': row.get('game_instance_id'), 'assetid': row['assetid']})
+                current_known = current_known and recognized
+            rows = [r for r in self._journal if r['steamid'] == steamid
+                    and r['status'] in ('pending', 'uncertain', 'listed')]
             for row in rows:
                 matches = [listing for listing in listings.values()
                            if listing['assetid'] == row['assetid']
                            and (not row.get('listingid') or listing['listingid'] == row['listingid'])]
                 if len(matches) == 1 and not matches[0]['pending']:
-                    row.update(status='listed', listingid=matches[0]['listingid'], confirmed_at=self.clock())
+                    row.update(status='listed', last_confirmed_status='listed', listingid=matches[0]['listingid'], confirmed_at=self.clock(),
+                               active_checked_at=checked_at)
+                    if row.get('reprice', {}).get('phase') == 'sale_submitted':
+                        row.pop('reprice', None)
+                        row['tracking_message'] = ''
                     changed = True
                 elif len(matches) == 1:
+                    row['listingid'] = matches[0]['listingid']
+                    row['last_confirmed_status'] = 'pending_confirmation'
                     pending.add(row['assetid'])
+                    changed = True
+                    if row.get('reprice', {}).get('phase') == 'sale_submitted':
+                        row.pop('reprice', None)
+                        row.update(status='pending', tracking_message='')
             if changed:
                 self._save()
             total = response.get('total_count')
             if type(total) is not int or total < 0:
                 raise SteamSessionError('Steam 卖单分页尚未确认，保留原记录。')
+            # Negative display evidence needs every row, not merely an empty
+            # parser result. Unknown layouts, other-game rows and pagination
+            # changes cannot retire an old upload as if the list were empty.
+            current_known = (current_known and len(listings) == min(100, max(0, total - page * 100))
+                             and (evidence_total is None or evidence_total == total)
+                             and not evidence_ids.intersection(listings))
+            evidence_total = total
+            evidence_ids.update(listings)
             if (page + 1) * 100 >= total:
                 complete = True
                 break
@@ -583,7 +814,17 @@ class SteamTradingService:
                 and current.get('steamid') == steamid
                 and current.get('binding_generation') == auth.get('binding_generation')):
             self._confirmation = {'steamid': steamid, 'generation': current.get('binding_generation'),
-                                  'assets': pending, 'expires_at': self.clock() + 15}
+                                  'assets': pending, 'expires_at': checked_at + LISTING_TTL}
+            self._active_until = checked_at + LISTING_TTL
+            self._active_checked_at = checked_at
+            self._active_generation = current.get('binding_generation')
+            self._listing_assets = listing_assets
+            self._observed_listings = {'steamid': steamid, 'generation': current.get('binding_generation'),
+                'fresh': current_known, 'checked_at': checked_at,
+                'expires': checked_at + LISTING_TTL, 'items': current_items,
+                'listing_ids': sorted(evidence_ids),
+                'absence_expires': self.clock() + 120}
+            self._retire_absent_trades()
         if changed:
             self._message = '已在 Steam 当前卖单中确认上架；是否成交请以 Steam 市场记录为准。'
 
@@ -637,7 +878,8 @@ class SteamTradingService:
                         or proof_scope is None and row.get('manual_only') is True):
                     continue
                 if (row['steamid'] != expected_steamid or row['item_key'] not in whitelist
-                        or row['status'] != 'captured'):
+                        or row['status'] != 'captured'
+                        or self._reprice_reserved(expected_steamid, row['item_key'], row['variant'])):
                     continue
                 entry = self.catalog.items.get(row['item_key'], {}) if self.catalog else {}
                 if not auction_allows(settings, {**entry, 'internal_name': row['item_key'], 'variant': row['variant']}):
@@ -678,7 +920,8 @@ class SteamTradingService:
                 # Persist intent before the request. From here any failure is
                 # ambiguous, including a network timeout or shutdown.
                 row.update(status='intent', buyer_total=int(value), seller_receive=receive,
-                           sale_amount=amount, currency_id=wallet['currency_id'], submitted_at=self.clock())
+                           sale_amount=amount, currency_id=wallet['currency_id'], submitted_at=self.clock(),
+                           publisher_fee=str(fee))
                 self._save()
                 try:
                     if not self._can_submit(validate):
@@ -720,7 +963,7 @@ class SteamTradingService:
                 finally:
                     self._save()
                 self._status = row['status']
-                return self.state()
+                return {**self.state(), 'sale_submitted': row['status'] in ('pending', 'listed')}
             self._status = 'idle'
             return self.state()
         except SteamSessionError as exc:

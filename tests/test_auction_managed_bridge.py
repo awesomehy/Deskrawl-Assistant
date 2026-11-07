@@ -11,6 +11,7 @@ from deskrawl_assistant.auction import DEFAULT_AUCTION, next_action
 from deskrawl_assistant.auction_service import AuctionCoordinator
 from deskrawl_assistant.managed_service import required_capabilities
 from deskrawl_assistant.native_dispatcher import NativeActionError
+from deskrawl_assistant.auction_runtime import AuctionUploadPending
 
 
 class AuctionManagedBridgeTests(unittest.TestCase):
@@ -43,6 +44,186 @@ class AuctionManagedBridgeTests(unittest.TestCase):
         action = next_action(self.service.managed.settings, world)
         self.assertIsNotNone(action)
         return action, world
+
+    def pending_world(self, *, refresh=True):
+        self.enable()
+        row = self.client.items[0]
+        self.intent = self.coordinator.submitted(row, STEAMID, None)
+        self.native.update(pending=True, needs_refresh=refresh, pending_reason='拍卖行没有响应。 请重试。',
+            pending_uploads=[{'instance_id': row['instance_id'], 'item_uid': row['item_uid'],
+                'internal_name': row['internal_name'], 'steamid': STEAMID}])
+        return self.service._managed_observation()
+
+    def test_receipt_timeout_enters_recovery_instead_of_stopping_or_reuploading(self):
+        self.enable()
+        self.client.native_handler = Mock(side_effect=AuctionUploadPending('拍卖行没有响应。 请重试。'))
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=100):
+            self.service._managed_once()
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNotNone(self.service.managed_auction_wait)
+        self.assertIn('没有响应', self.service.managed.status)
+        self.assertEqual([row[0] for row in self.client.actions], ['auction_upload'])
+        self.assertEqual(next(iter(self.coordinator.intents.values()))['phase'], 'submitted')
+
+    def test_pending_upload_only_refreshes_lists_and_fences_all_planner_work(self):
+        world = self.pending_world()
+        self.client.native_handler = lambda kind, payload: dict(self.native)
+        planner = self.service.managed.next_action = Mock(side_effect=AssertionError('must not plan'))
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=100):
+            self.service._managed_once()
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=104):
+            self.service._managed_once()
+        planner.assert_not_called()
+        self.assertTrue(self.service.managed.running)
+        self.assertEqual([r[0] for r in self.client.actions], ['auction_open'])
+        self.assertEqual(self.client.actions[0][1], {'refresh_only': True})
+        self.assertEqual(self.coordinator.intents[self.intent]['phase'], 'submitted')
+        self.assertIsNotNone(self.service.managed_auction_wait)
+
+    def test_delayed_exact_receipt_recovers_and_resolves_coordinator_without_reupload(self):
+        world = self.pending_world(refresh=False)
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=100):
+            self.assertTrue(self.service._managed_wait_auction(world))
+        row = self.client.items.pop()
+        self.native.update(pending=False, pending_uploads=[], confirmed_uploads=[{
+            'steamid': STEAMID, 'uploaded_uid': row['item_uid'],
+            'uploaded_instance_id': row['instance_id'], 'uploaded_internal_name': row['internal_name']}])
+        world = self.service._managed_observation()
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=103):
+            self.assertTrue(self.service._managed_wait_auction(world))
+        self.assertIsNone(self.service.managed_auction_wait)
+        self.assertTrue(self.service.managed.running)
+        self.assertIn('继续托管', self.service.managed.status)
+        self.assertEqual(self.coordinator.intents[self.intent]['phase'], 'resolved')
+        self.assertEqual(self.client.actions, [])
+
+    def test_absent_listing_or_empty_pending_flag_cannot_release_submitted_upload(self):
+        world = self.pending_world(refresh=False)
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=100):
+            self.service._managed_wait_auction(world)
+        self.native.update(pending=False, listings=[], confirmed_uploads=[])
+        world = self.service._managed_observation()
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=103):
+            self.service._managed_wait_auction(world)
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNotNone(self.service.managed_auction_wait)
+        self.assertEqual(self.coordinator.intents[self.intent]['phase'], 'submitted')
+
+    def test_long_unknown_upload_pauses_preserving_stats_intent_and_recovery(self):
+        world = self.pending_world(refresh=False)
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=100):
+            self.service._managed_wait_auction(world)
+        self.service.managed.repeat_completed = 17
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=221):
+            self.service._managed_wait_auction(world)
+        self.assertFalse(self.service.managed.running)
+        self.assertEqual(self.service.managed.phase, 'paused')
+        self.assertTrue(self.service.managed_can_resume)
+        self.assertEqual(self.service.managed.repeat_completed, 17)
+        self.assertIsNotNone(self.service.managed_auction_wait)
+        self.assertEqual(self.coordinator.intents[self.intent]['phase'], 'submitted')
+        self.assertEqual(self.client.actions, [])
+
+    def test_retained_exact_item_continues_managed_without_reupload_or_steam_sale(self):
+        world = self.pending_world(refresh=False)
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=100):
+            self.service._managed_wait_auction(world)
+        wait = self.service.managed_auction_wait
+        row = self.client.items[0]
+        self.native.update(pending=False, pending_uploads=[], retained_uploads=[{
+            'steamid': STEAMID, 'item_uid': row['item_uid'], 'instance_id': row['instance_id'],
+            'internal_name': row['internal_name'], 'outcome': 'retained_in_game',
+            'checked_at': wait['started_at'] + 15, 'retry_after': wait['started_at'] + 315}])
+        world = self.service._managed_observation()
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=115):
+            self.service._managed_wait_auction(world)
+        self.assertIsNone(self.service.managed_auction_wait)
+        self.assertTrue(self.service.managed.running)
+        self.assertIn('仍在游戏内', self.service.managed.status)
+        self.assertNotIn(self.intent, self.coordinator.intents)
+        self.assertEqual(self.client.items, [row])
+        self.assertEqual(self.client.actions, [])
+        self.assertEqual(self.trading.calls, [])
+
+    def test_old_or_wrong_retained_receipt_cannot_release_current_submission(self):
+        self.pending_world(refresh=False)
+        baseline = deepcopy(self.native)
+        for changes in ({'item_uid': 'other'}, {'instance_id': 'other'},
+                        {'internal_name': 'other'}, {'steamid': '76561198000000002'},
+                        {'checked_at': 1}):
+            with self.subTest(changes=changes):
+                self.native = deepcopy(baseline)
+                world = self.service._managed_observation()
+                self.service.managed_auction_wait = None
+                with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=100):
+                    self.service._managed_wait_auction(world)
+                row = self.client.items[0]
+                self.native.update(pending=False, retained_uploads=[{
+                    'steamid': STEAMID, 'item_uid': row['item_uid'], 'instance_id': row['instance_id'],
+                    'internal_name': row['internal_name'], 'outcome': 'retained_in_game',
+                    'checked_at': self.service.managed_auction_wait['started_at'] + 15, **changes}])
+                with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=115):
+                    self.service._managed_wait_auction(self.service._managed_observation())
+                self.assertIsNotNone(self.service.managed_auction_wait)
+                self.assertIn(self.intent, self.coordinator.intents)
+
+    def test_disabled_upload_still_reconciles_existing_submission(self):
+        world = self.pending_world(refresh=False)
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=100):
+            self.service._managed_wait_auction(world)
+        self.service.managed.settings['auction']['upload_enabled'] = False
+        self.service.auction_refresh_after = 99999999
+        self.client.auction_state.reset_mock()
+        self.assertTrue(self.service._managed_observation()['auction']['pending'])
+        self.client.auction_state.assert_called_once()
+
+    def test_changed_account_pauses_without_list_fetch_or_inventory_work(self):
+        world = self.pending_world()
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=100):
+            # Do not refresh before the account switch in this fixture.
+            world['auction']['busy'] = True
+            self.service._managed_wait_auction(world)
+        world['auction'].update(steamid='76561198000000002', busy=False)
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=103):
+            self.service._managed_wait_auction(world)
+        self.assertFalse(self.service.managed.running)
+        self.assertIn('账号变化', self.service.managed.status)
+        self.assertEqual(self.client.actions, [])
+
+    def test_fresh_absent_lists_are_refetched_but_never_authorize_reupload(self):
+        world = self.pending_world(refresh=False)
+        self.client.native_handler = lambda kind, payload: dict(self.native)
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=100):
+            self.service._managed_wait_auction(world)
+        self.assertEqual(self.client.actions, [])
+        for now in (116, 120, 132):
+            with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=now):
+                self.service._managed_wait_auction(world)
+        self.assertEqual([r[0] for r in self.client.actions], ['auction_open', 'auction_open'])
+        self.assertEqual(self.coordinator.intents[self.intent]['phase'], 'submitted')
+
+    def test_unreadable_first_observation_can_recover_original_pending_identities(self):
+        world = self.pending_world(refresh=False)
+        partial = dict(world, auction={'pending': True, 'available': False})
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=100):
+            self.service._managed_wait_auction(partial)
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=103):
+            self.service._managed_wait_auction(world)
+        self.assertEqual(self.service.managed_auction_wait['uploads'], world['auction']['pending_uploads'])
+        self.assertEqual(self.service.managed_auction_wait['steamid'], STEAMID)
+
+    def test_stopped_recovery_never_starts_a_native_refresh(self):
+        world = self.pending_world()
+        self.service.managed.running = False
+        self.assertTrue(self.service._managed_wait_auction(world))
+        self.assertEqual(self.client.actions, [])
+
+    def test_unknown_account_never_authorizes_native_refresh(self):
+        world = self.pending_world()
+        world['auction'].update(steamid=None, steamid_verified=False)
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=100):
+            self.service._managed_wait_auction(world)
+        self.assertEqual(self.client.actions, [])
 
     def test_defaults_never_read_native_auction_or_construct_steam_worker(self):
         self.client.auction_state = Mock(side_effect=AssertionError('optional auction read'))

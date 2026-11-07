@@ -40,6 +40,8 @@ class LootPreviewServiceTests(unittest.TestCase):
         self.assertEqual(second['run']['key'],'second')
         self.assertEqual(raw,original)
         self.assertEqual(self.service.client.loot_preview_snapshot.call_count,2)
+        self.assertNotIn('capture_monitor', first)
+        self.service.client.loot_capture_snapshot.assert_not_called()
         self.assertIsNotNone(datetime.fromisoformat(second['updated_at']).tzinfo)
 
     def test_reader_failure_clears_previous_plan_and_hides_internal_details(self):

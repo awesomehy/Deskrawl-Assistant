@@ -12,6 +12,7 @@ import math
 
 from .models import ValidationError
 from .game_panel_log import DisposalLogCursor
+from .high_value_loot import HighValueDrops
 from .item_protection import divine_equipment, mandatory_storage, disposal_protection, is_rune, is_minion_equipment, town_rewards_clear
 from .storage_preferences import DEFAULT_STORAGE_PAGES, validate_available_storage_pages
 from .mythic import MYTHIC, floor_number
@@ -461,6 +462,7 @@ class ManagedMetrics:
         self.crafted_uids = set()
         self.uid_acquired = set()
         self.uid_outcomes = set()
+        self.high_value = HighValueDrops()
         self.inference_mode = None
         self.native_ledgers = {}
         self.native_bag_uids = set()
@@ -559,6 +561,8 @@ class ManagedMetrics:
         self.rows.setdefault(key, deepcopy(row))
         totals = self.totals.setdefault(key, {'count': 0, 'sold': 0, 'salvaged': 0, 'stored': 0})
         totals[field] += quantity
+        if field == 'count':
+            self.high_value.record(row, key, quantity)
 
     @staticmethod
     def _complete(observation):
@@ -725,6 +729,7 @@ class ManagedMetrics:
             self.seen_uids.update(unique)
             self._panel_observe(observation, rows)
             self._native_observe(observation, rows)
+            self.high_value.observe(unique, locations, self.initial_locations, complete=self._complete(observation))
             return
         for uid, row in unique.items():
             if uid not in self.seen_uids:
@@ -732,11 +737,12 @@ class ManagedMetrics:
         self.seen_uids.update(unique)
         self._panel_observe(observation, rows)
         self._native_observe(observation, rows)
-        if not self._complete(observation): return
-        for key, n in totals.items():
-            increase = max(0, n - self.balances[key])
-            self._record(examples[key], 'count', increase)
-        self.balances = totals
+        if self._complete(observation):
+            for key, n in totals.items():
+                increase = max(0, n - self.balances[key])
+                self._record(examples[key], 'count', increase)
+            self.balances = totals
+        self.high_value.observe(unique, locations, self.initial_locations, complete=self._complete(observation))
 
     def synthesized(self, receipt_id, inputs, outputs):
         """Account only for a confirmed transformation, never rebaseline live loot."""

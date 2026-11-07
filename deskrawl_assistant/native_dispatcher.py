@@ -15,6 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import json
+import os
 import struct
 import threading
 import time
@@ -33,6 +34,9 @@ HEADER_SIZE, CALL_SIZE, MAX_CALLS, MAX_GUARDS, MAX_ARGS = 192, 64, 16, 384, 8
 # holds flags. Keeping a handle at +40 would overlap those flags on x64.
 CALL_GCHANDLE_OFFSET = 56
 REQUIRE_TRUE, SKIP_NULL_FIRST, REQUIRE_FALSE = 1, 2, 4
+# These reserved header bytes survive every invocation. Process creation time
+# distinguishes an exited owner from a new process which reused its PID.
+OWNER_OFFSET, OWNER_MAGIC = 172, b'DKDISP01'
 
 
 class NativeActionError(MemoryReadError):
@@ -41,6 +45,34 @@ class NativeActionError(MemoryReadError):
         self.uncertain, self.state = uncertain, state
         self.last_call, self.failed_method = last_call, failed_method
         self.mutation_started = mutation_started
+
+
+def _process_start_time(pid):
+    """Return a live process's FILETIME, None only for a confirmed exited PID."""
+    import ctypes as C
+    from ctypes import wintypes as W
+    from .native_memory import K
+    handle = K.OpenProcess(0x1000, False, pid)
+    if not handle:
+        if C.get_last_error() == 87:  # ERROR_INVALID_PARAMETER: no such PID.
+            return None
+        raise NativeActionError('无法核验后台指令所属进程，未接管消息接口')
+    try:
+        K.GetProcessTimes.argtypes = (W.HANDLE,) + (C.POINTER(W.FILETIME),) * 4
+        K.GetProcessTimes.restype = W.BOOL
+        creation, exit_time, kernel, user = (W.FILETIME() for _ in range(4))
+        if not K.GetProcessTimes(handle, C.byref(creation), C.byref(exit_time), C.byref(kernel), C.byref(user)):
+            raise NativeActionError('无法核验后台指令所属进程，未接管消息接口')
+        # GetProcessTimes leaves exit_time undefined for a live process. Query
+        # liveness separately; an exited process may still have open handles.
+        exit_code = W.DWORD()
+        if not K.GetExitCodeProcess(handle, C.byref(exit_code)):
+            raise NativeActionError('无法核验后台指令所属进程，未接管消息接口')
+        if exit_code.value != 259:  # STILL_ACTIVE
+            return None
+        return (creation.dwHighDateTime << 32) | creation.dwLowDateTime
+    finally:
+        K.CloseHandle(handle)
 
 
 @dataclass(frozen=True)
@@ -362,7 +394,7 @@ class MainThreadDispatcher:
             raise NativeActionError('后台指令内存权限设置失败')
         return old.value
 
-    def _iat_write(self, value):
+    def _iat_write(self, value, *, before_write=None):
         # A pointer-sized write is brief, but suspending prevents a concurrent
         # indirect load from observing a partial WriteProcessMemory operation.
         from .container_transfer import NT
@@ -373,6 +405,8 @@ class MainThreadDispatcher:
             expected = self.original_peek if value == self.code else self.code
             if current != expected:
                 raise NativeActionError('消息接口在更新前改变，未覆盖其他组件')
+            if before_write is not None:
+                before_write()
             old = self._protect(self.iat, 8, 4)
             try:
                 self._write(self.iat, struct.pack('<Q', value))
@@ -381,6 +415,85 @@ class MainThreadDispatcher:
         finally:
             if NT.NtResumeProcess(self.handle) < 0 and NT.NtResumeProcess(self.handle) < 0:
                 raise NativeActionError('恢复游戏消息线程失败，请停止托管并检查游戏', uncertain=True)
+
+    def _system_peek(self, address):
+        return any(m['base'] <= address < m['base'] + m['size']
+                   for name, m in self.reader.memory.modules.items()
+                   if name in ('user32.dll', 'win32u.dll'))
+
+    def _resident_dispatcher(self, entry):
+        """Identify our exact code and build-bound mailbox without changing it.
+
+        A matching prologue or owner marker alone is insufficient. Legacy hooks
+        without ownership metadata remain a hard stop, never an automatic claim.
+        """
+        memory = self.reader.memory
+        template = build_trampoline(0)
+        try:
+            code = memory.read(entry, len(template))
+            offset = template.index(b'\x49\xbc') + 2
+            mailbox = struct.unpack_from('<Q', code, offset)[0]
+            if code != build_trampoline(mailbox):
+                return None
+            header = memory.read(mailbox, HEADER_SIZE)
+            if header[184:192] != OWNER_MAGIC:
+                return None
+            pid, created = struct.unpack_from('<IQ', header, OWNER_OFFSET)
+            if not pid or not created:
+                return None
+            original = struct.unpack_from('<Q', header, 80)[0]
+            if not self._system_peek(original):
+                return None
+            assembly = self.reader.module['base']
+            for position, name in ((88, 'il2cpp_runtime_invoke'), (96, 'il2cpp_class_get_methods'),
+                                   (104, 'il2cpp_class_from_name'), (112, 'il2cpp_thread_current'),
+                                   (120, 'il2cpp_gchandle_new'), (128, 'il2cpp_gchandle_free')):
+                if struct.unpack_from('<Q', header, position)[0] != assembly + self.profile['exports'][name]['rva']:
+                    return None
+            if (struct.unpack_from('<I', header, 48)[0] != self.thread_id or
+                    struct.unpack_from('<Q', header, 136)[0] != memory.u64(self.reader.classes['Inventory']) or
+                    struct.unpack_from('<Q', header, 152)[0] != mailbox + HEADER_SIZE + MAX_CALLS * CALL_SIZE or
+                    struct.unpack_from('<Q', header, 160)[0] != mailbox + HEADER_SIZE or
+                    struct.unpack_from('<I', header, 168)[0] not in (0, 1) or
+                    struct.unpack_from('<I', header, 52)[0] > MAX_CALLS or
+                    struct.unpack_from('<I', header, 56)[0] > MAX_GUARDS):
+                return None
+            return {'entry': entry, 'mailbox': mailbox, 'original': original,
+                    'owner_pid': pid, 'owner_created': created, 'header': header}
+        except (MemoryReadError, struct.error):
+            return None
+
+    @staticmethod
+    def _require_retired_owner(resident):
+        created = _process_start_time(resident['owner_pid'])
+        if created == resident['owner_created']:
+            raise NativeActionError('游戏后台指令仍由另一个助手组件使用，请退出旧助手后重试')
+        header = resident['header']
+        state = struct.unpack_from('<I', header)[0]
+        completed, submitted = struct.unpack_from('<QQ', header, 8)
+        if state not in (IDLE, DONE, CANCELLED, GUARD_FAILED) or completed != submitted:
+            raise NativeActionError('上次助手异常退出，后台指令结果尚未确认；请重启游戏后重新连接', uncertain=True)
+
+    def _recover_resident(self, resident):
+        self._require_retired_owner(resident)
+        self.code, self.mailbox = resident['entry'], resident['mailbox']
+        self.original_peek = resident['original']
+
+        def recheck():
+            # Runs while the game is briefly suspended, before the first write.
+            fresh = self._resident_dispatcher(resident['entry'])
+            if fresh is None or (fresh['header'][:64] + fresh['header'][80:] !=
+                                 resident['header'][:64] + resident['header'][80:]):
+                raise NativeActionError('残留后台指令状态发生变化，未恢复消息接口')
+            self._require_retired_owner(fresh)
+            self._write(self.mailbox + 168, b'\0' * 4)
+            self._write(self.mailbox + 4, struct.pack('<I', 1))
+
+        self._iat_write(self.original_peek, before_write=recheck)
+        record('game_dispatcher_orphan_recovered', previous_owner_pid=resident['owner_pid'],
+               previous_state=struct.unpack_from('<I', resident['header'])[0])
+        # Never free old allocations: an already-entered hook can return later.
+        self.mailbox = self.code = 0
 
     def install(self):
         with self.lock:
@@ -395,10 +508,11 @@ class MainThreadDispatcher:
                 unity = self.reader.memory.modules['unityplayer.dll']
                 self.iat = unity['base'] + self.profile['iat']['peek_message_w_rva']
                 self.original_peek = self.reader.memory.u64(self.iat)
-                allowed = ('user32.dll', 'win32u.dll')
-                if not any(m['base'] <= self.original_peek < m['base']+m['size']
-                        for n, m in self.reader.memory.modules.items() if n in allowed):
-                    raise NativeActionError('游戏消息接口已被其他组件修改，未安装后台指令')
+                if not self._system_peek(self.original_peek):
+                    resident = self._resident_dispatcher(self.original_peek)
+                    if resident is None:
+                        raise NativeActionError('游戏消息接口已被其他组件修改，或上次助手异常退出留下旧入口；未安装后台指令。请退出其他助手；仍失败时重启游戏后重连')
+                    self._recover_resident(resident)
                 self.mailbox = self.K.VirtualAllocEx(self.handle, None, 16384, 0x3000, 4) or 0
                 self.code = self.K.VirtualAllocEx(self.handle, None, 4096, 0x3000, 4) or 0
                 if not self.mailbox or not self.code:
@@ -408,6 +522,10 @@ class MainThreadDispatcher:
                 empty = bytearray(compile_mailbox(self.mailbox, self.reader.module['base'], self.profile,
                     image, self.original_peek, self.thread_id, [dummy], []))
                 struct.pack_into('<I', empty, 52, 0)  # idle probe has no invocations
+                created = _process_start_time(os.getpid())
+                if not created:
+                    raise NativeActionError('无法记录后台指令所属进程，未安装后台指令')
+                struct.pack_into('<IQ8s', empty, OWNER_OFFSET, os.getpid(), created, OWNER_MAGIC)
                 self._write(self.mailbox, bytes(empty))
                 code = build_trampoline(self.mailbox)
                 self._write(self.code, code)

@@ -114,6 +114,9 @@ class MythicEntryTests(unittest.TestCase):
         self.assertEqual([r['mythic_floor'] for r in floors],[1,2,22])
         self.assertFalse(any(r['can_enter'] for r in floors))
         self.assertEqual(result['mythic_entry_difficulty'],'Inferno')
+        self.assertEqual(result['entry_items'], {'Ticket':2})
+        result['entry_items']['Ticket'] = 999
+        self.assertEqual(progress['entry_items']['Ticket'], 2)
         self.assertEqual(result['maps_by_difficulty']['Normal'],[])
 
 

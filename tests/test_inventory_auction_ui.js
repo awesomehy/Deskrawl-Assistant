@@ -130,6 +130,24 @@ test('refresh restores result and pending confirmation without claiming complete
   assert.equal(p.calls.every(call=>call.path==='auction/manual/state'),true);
 });
 
+test('phone confirmation updates the completed result during polling and on reopening without new submissions',async()=>{
+  const batch={batch_id:'phone-confirmation',running:false,phase:'completed',mode:'sell',total:1,completed:1,
+    items:[{name:'南瓜王',count:1,status:'pending_confirmation'}],message:'等待 Steam 确认'};
+  const p=page(batch);await flush();await p.click('inventory-auction-details');
+  assert.match(p.node('inventory-auction-items').innerHTML,/待 Steam 确认/);
+  p.setBatch({...batch,items:[{name:'南瓜王',count:1,status:'listed',message:'已确认挂牌'}],message:'挂牌结果已更新'});
+  await p.poll();
+  assert.match(p.node('inventory-auction-items').innerHTML,/已上架 Steam/);
+  assert.doesNotMatch(p.node('inventory-auction-items').innerHTML,/待 Steam 确认/);
+  await p.click('inventory-auction-close');await p.click('inventory-auction-details');
+  assert.match(p.node('inventory-auction-summary').textContent,/挂牌结果已更新/);
+  p.setBatch({...batch,items:[{name:'南瓜王',count:1,status:'uncertain',message:'当前确认状态待核验'}]});
+  await p.poll();
+  assert.match(p.node('inventory-auction-items').innerHTML,/结果待核验/);
+  assert.doesNotMatch(p.node('inventory-auction-items').innerHTML,/待 Steam 确认/);
+  assert.equal(p.calls.every(call=>call.path==='auction/manual/state'),true);
+});
+
 test('previous completed result does not replace a fresh preview during status polling',async()=>{
   const p=page({running:false,total:1,completed:1,items:[{name:'上批商品',status:'uploaded'}]});
   await flush();await p.click('inventory-auction-upload');await p.poll();

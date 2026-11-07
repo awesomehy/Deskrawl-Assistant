@@ -83,12 +83,25 @@ def make_handler(service, token):
                         return self.reply({'error':'请重新打开助手页面。','session_expired':True},403)
                     if urlsplit(self.path).query: raise ValueError('批量上架状态不接受查询参数。')
                     return self.reply(service.manual_auction_state())
+                if path=='/api/auction/managed/state':
+                    if self.headers.get('X-Assistant-Token') != token:
+                        return self.reply({'error':'请重新打开助手页面。','session_expired':True},403)
+                    if urlsplit(self.path).query: raise ValueError('托管上架状态不接受查询参数。')
+                    return self.reply(service.managed_auction_tracking())
                 if path=='/api/community':
                     if self.headers.get('X-Assistant-Token') != token:
                         return self.reply({'error':'请重新打开助手页面。','session_expired':True},403)
                     return self.reply(service.community_status())
                 if path=='/api/catalog': return self.reply(service.catalog_payload())
                 if path=='/api/state': return self.reply(service.state())
+                if path=='/api/steam-client/avatar':
+                    query = parse_qs(urlsplit(self.path).query, keep_blank_values=True)
+                    if set(query) != {'v'} or len(query['v']) != 1:
+                        return self.reply({'error':'头像不可用。'},404)
+                    profile = getattr(service, 'steam_client_profile', None)
+                    avatar = profile.avatar(query['v'][0]) if profile else None
+                    if not avatar: return self.reply({'error':'头像不可用。'},404)
+                    return self.reply(avatar, content_type='image/png')
                 if path=='/api/managed':
                     if urlsplit(self.path).query: raise ValueError('托管状态不接受额外查询参数。')
                     return self.reply(service.managed_page())
@@ -187,6 +200,17 @@ def make_handler(service, token):
                     return self.reply(service.auction_state(desktop=desktop is not None))
                 elif path=='/api/auction/manual/preview':
                     return self.reply(service.manual_auction_preview(data))
+                elif path=='/api/auction/tracking/refresh':
+                    if urlsplit(self.path).query: raise ValueError('拍卖行刷新不接受查询参数。')
+                    return self.reply(service.auction_tracking_refresh(data))
+                elif path=='/api/auction/reprice/preview':
+                    return self.reply(service.auction_reprice_preview(data))
+                elif path=='/api/auction/reprice/start':
+                    return self.reply(service.auction_reprice_start(data))
+                elif path=='/api/auction/sale/preview':
+                    return self.reply(service.auction_sale_preview(data))
+                elif path=='/api/auction/sale/start':
+                    return self.reply(service.auction_sale_start(data))
                 elif path=='/api/auction/manual/start':
                     return self.reply(service.manual_auction_start(data))
                 elif path=='/api/auction/manual/cancel':
@@ -228,7 +252,6 @@ def make_handler(service, token):
                     return self.reply(service.copy_rules(data.get('source_key'),data.get('target_key'),
                         data.get('rule_ids'),data.get('replace_existing',False),data.get('expected_target_ids')))
                 elif path=='/api/monitor': service.set_monitoring(data.get('enabled'))
-                elif path=='/api/loot-capture': return self.reply(service.set_loot_capture(data.get('enabled')))
                 elif path=='/api/automation/settings': return self.reply({'settings':service.save_automation(data.get('settings'))})
                 elif path=='/api/automation/run': service.set_automation_running(data.get('enabled'))
                 elif path=='/api/managed/settings':
@@ -241,7 +264,11 @@ def make_handler(service, token):
                 elif path=='/api/stop': service.stop()
                 elif path=='/api/shutdown':
                     service.stop()
+                    # Flush the acknowledgement before closing the native
+                    # window, which may otherwise abort its own fetch socket.
+                    self.reply({'ok':True})
                     threading.Thread(target=self.server.shutdown,daemon=True).start()
+                    return
                 else: return self.reply({'error':'操作不存在。'},404)
                 return self.reply({'ok':True})
             except (ValueError,TypeError,KeyError) as exc: return self.reply({'error':str(exc)},400)
@@ -263,6 +290,7 @@ class AssistantServer:
     """A stoppable server owned by the desktop window, without a browser launch."""
     def __init__(self, port=PORT, service=None, updater=None):
         self.service = service or AssistantService()
+        self.stopping = threading.Event()
         self.finished = threading.Event()
         self.thread = None
         try:
@@ -284,6 +312,9 @@ class AssistantServer:
         def run():
             try: self.server.serve_forever(poll_interval=.1)
             finally:
+                # Notify the window before potentially slow safe cleanup.
+                # finished retains its stronger meaning: all cleanup complete.
+                self.stopping.set()
                 try: self.service.close()
                 finally:
                     self.server.server_close()
@@ -324,6 +355,7 @@ class AssistantServer:
             if not self.finished.is_set(): self.server.shutdown()
             self.thread.join()
         else:
+            self.stopping.set()
             self.service.close()
             self.server.server_close()
             self.finished.set()

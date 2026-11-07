@@ -4,19 +4,38 @@ from __future__ import annotations
 import argparse
 import ctypes
 import os
+import sys
 import traceback
 
 from .paths import runtime_dir
 
 
 def main(argv=None):
+    values = list(sys.argv[1:] if argv is None else argv)
+    if values[:1] == ['--steam-community-hosts']:
+        # The elevated process exposes only a fixed hosts lease, never the
+        # desktop server, updater, arbitrary commands or user-selected paths.
+        from .steam_native_hosts import hosts_worker
+        try:
+            if len(values) != 5: raise ValueError()
+            result = hosts_worker(int(values[1]), int(values[2]), values[3], values[4])
+        except Exception: result = 1
+        raise SystemExit(result)
+    if values[:1] == ['--steam-community-proxy']:
+        # Same-user watchdog can only lease the fixed Community proxy bypass.
+        from .steam_native_proxy import proxy_worker
+        try:
+            if len(values) != 4: raise ValueError()
+            result = proxy_worker(int(values[1]), int(values[2]), values[3])
+        except Exception: result = 1
+        raise SystemExit(result)
     parser = argparse.ArgumentParser(description='Deskrawl 装备助手')
     parser.add_argument('--port', type=int, default=18741)
     parser.add_argument('--no-browser', action='store_true')
     parser.add_argument('--browser', action='store_true')
     parser.add_argument('--test-managed', action='store_true',
         help='启用尚未实机验收的托管动作，供本地测试；不会自动启动托管')
-    args = parser.parse_args(argv)
+    args = parser.parse_args(values)
     try:
         if not 1024 <= args.port <= 65535:
             raise ValueError('本机页面端口必须在 1024 到 65535 之间。')

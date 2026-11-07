@@ -23,6 +23,28 @@ KINDS = ('auction_open', 'auction_upload')
 CAPACITY = 8
 
 
+class AuctionUploadPending(NativeActionError):
+    """The native call completed, but its economic result needs reconciliation."""
+    def __init__(self, native_status=''):
+        self.native_status = str(native_status or '')[:300]
+        message = '拍卖行上传已提交，服务器列表与背包移除结果尚未同时确认；不会重复上传。'
+        if self.native_status:
+            message += ' 游戏提示：' + self.native_status
+        super().__init__(message, uncertain=True, mutation_started=True)
+
+
+def auction_candidate_fields(row, catalog):
+    """Same preliminary identity/eligibility proof for planning and display."""
+    evidence = row.get('read_evidence') or {}
+    verified = (row.get('identity_verified') is True
+        or row.get('identity_verified') is not False and evidence.get('snapshot_consistent') is True
+        and bool(row.get('item_uid')) and bool(row.get('instance_id')))
+    return {'auction_identity_verified': bool(verified),
+            'auction_candidate': bool(catalog and catalog.resolve(row)[0]
+                and auction_eligibility({**row, 'auction_identity_verified': bool(verified)},
+                                        preliminary=True)['eligible'])}
+
+
 def auction_eligibility(row, *, equipped_uids=(), preliminary=False):
     """Conservative copy of ItemData.cge; native cge is checked again in-job.
 
@@ -67,7 +89,10 @@ class AuctionRuntime:
         self.journal_path = Path(journal_path) if journal_path is not None else runtime_dir() / 'auction-pending.json'
         self._pending, self._journal_error = {}, ''
         self._confirmed = {}
+        self._retained = {}
+        self._negative_checks = {}
         self._refreshed = None
+        self._refreshed_at = 0
         self._refresh_wait = None
         self._active_submit = False
         try:
@@ -82,6 +107,12 @@ class AuctionRuntime:
                 self._confirmed = data.get('confirmed', {})
                 if not isinstance(self._confirmed, dict) or any(not isinstance(v, dict) for v in self._confirmed.values()):
                     raise ValueError('拍卖行回执记录格式无效。')
+                self._retained = data.get('retained', {})
+                if (not isinstance(self._retained, dict) or any(not isinstance(v, dict)
+                        or v.get('outcome') != 'retained_in_game'
+                        or type(v.get('retry_after')) not in (int, float)
+                        for v in self._retained.values())):
+                    raise ValueError('拍卖行暂缓记录格式无效。')
         except (OSError, ValueError, TypeError) as exc:
             self._journal_error = str(exc)
 
@@ -89,7 +120,8 @@ class AuctionRuntime:
         self.journal_path.parent.mkdir(parents=True, exist_ok=True)
         temporary = self.journal_path.with_suffix('.tmp')
         with temporary.open('w', encoding='utf-8') as stream:
-            json.dump({'schema': 1, 'pending': self._pending, 'confirmed': self._confirmed}, stream, ensure_ascii=False)
+            json.dump({'schema': 1, 'pending': self._pending, 'confirmed': self._confirmed,
+                       'retained': self._retained}, stream, ensure_ascii=False)
             stream.flush(); os.fsync(stream.fileno())
         os.replace(temporary, self.journal_path)
 
@@ -179,14 +211,19 @@ class AuctionRuntime:
                 'capacity': CAPACITY, 'listing_limit': CAPACITY,
                 # PanelBase+40 is a separate UI property, not visibility.
                 # activeSelf can only be queried in an explicit native action.
-                'busy': busy or loading, 'loading': loading, 'opened': None,
+                'busy': busy or loading, 'action_busy': busy, 'loading': loading, 'opened': None,
                 'needs_refresh': loading or listings is None,
                 'selected_uid': selected, 'selection_occupied': bool(selected_item or selected),
                 'pending': bool(self._pending) or bool(self._journal_error),
+                'pending_uploads': [{**deepcopy(row), 'instance_id': instance}
+                                    for instance, row in self._pending.items()],
+                'pending_reason': self._journal_error or next((row.get('last_status')
+                    for row in self._pending.values() if row.get('last_status')), ''),
                 'blocked_uids': [p.get('item_uid') for p in self._pending.values() if p.get('item_uid')],
                 'steamid': steamid if verified_account else None, 'steamid_verified': verified_account,
                 'account_reason': '' if verified_account else '游戏当前授权 Steam 账号尚未同步，不能推测账号。',
                 'reason': self._journal_error or ('服务器拍卖行暂不可用。' if enabled is False else status if not known else ''),
+                'native_status': status,
                 'native_verified': all(kind in self.actions.profile.get('verified_kinds', []) for kind in KINDS),
                 'identityless_materials_supported': False,
                 '_ui': ui, '_slot': slot, '_refresh_key': key, '_list_versions': versions,
@@ -199,22 +236,44 @@ class AuctionRuntime:
             state = self._state(read); read.finish()
             if state.get('_response_ready'):
                 self._refreshed = state['_refresh_key']
-            elif state.get('loading'):
+                self._refreshed_at = time.time()
+            elif state.get('loading') or self._refreshed != state.get('_refresh_key'):
                 self._refreshed = None
+                self._refreshed_at = 0
+            state['server_checked_at'] = (self._refreshed_at
+                if self._refreshed == state.get('_refresh_key') and not state.get('needs_refresh') else 0)
             if self._pending and state.get('steamid_verified') is True and not state.get('busy'):
                 snapshot = self.reader.snapshot()
+                read.finish()
                 self._reconcile(state, snapshot)
                 state['pending'] = bool(self._pending) or bool(self._journal_error)
                 state['blocked_uids'] = [p.get('item_uid') for p in self._pending.values() if p.get('item_uid')]
+            elif not (self._pending and state.get('loading') is True
+                    and state.get('action_busy') is False and state.get('steamid_verified') is True
+                    and self._refresh_wait and self._refresh_wait['key'] == state.get('_refresh_key')):
+                # Our second list GET necessarily passes through loading. Keep
+                # the first receipt across that GET, but never across an upload
+                # action, account change or an unrelated native refresh.
+                self._negative_checks.clear()
+            state['pending_uploads'] = [{**deepcopy(row), 'instance_id': instance}
+                                       for instance, row in self._pending.items()]
+            state['retained_uploads'] = deepcopy(list(self._retained.values()))
+            state['blocked_uids'] += [p.get('item_uid') for p in self._retained.values()
+                if p.get('steamid') == state.get('steamid') and p['retry_after'] > time.time()]
             state['confirmed_uploads'] = deepcopy(list(self._confirmed.values()))
             for key in ('_ui', '_slot', '_refresh_key', '_list_versions', '_response_ready'):
                 state.pop(key, None)
             return state
         except (MemoryReadError, ValueError, KeyError, UnicodeError, struct.error) as exc:
+            self._negative_checks.clear()
             return {'available': False, 'enabled': None, 'listings': None,
                     'listing_count': None, 'capacity': CAPACITY, 'listing_limit': CAPACITY,
                     'busy': False, 'needs_refresh': True, 'reason': str(exc),
                     'pending': bool(self._pending) or bool(self._journal_error),
+                    'pending_uploads': [{**deepcopy(row), 'instance_id': instance}
+                                        for instance, row in self._pending.items()],
+                    'pending_reason': self._journal_error or next((row.get('last_status')
+                        for row in self._pending.values() if row.get('last_status')), ''),
                     'blocked_uids': [p.get('item_uid') for p in self._pending.values() if p.get('item_uid')],
                     'steamid': None, 'steamid_verified': False, 'native_verified': False}
 
@@ -267,41 +326,101 @@ class AuctionRuntime:
         return self.actions.dispatcher.invoke(calls, guards, cancel_event=cancel_event,
                                                timeout=5, validate=validate)
 
-    def _open(self, *, cancel_event=None, validate=lambda: True):
+    def _refresh_selection_allowed(self, state, refresh_only):
+        # A GET may inspect our exact in-flight upload without clearing its UI
+        # slot. Show/select/submit still reject ALL occupied slots. Clearing a
+        # failed selection requires a separate, twice-proven retained receipt.
+        return bool(refresh_only and state.get('steamid_verified') is True
+            and state.get('selected_uid') and any(
+                row.get('steamid') == state.get('steamid')
+                and row.get('item_uid') == state['selected_uid']
+                for row in self._pending.values()))
+
+    def _open(self, *, cancel_event=None, validate=lambda: True, refresh_only=False):
+        # Every explicit list fetch needs a new server callback. An old open
+        # window (or its in-memory list) never grants a fresh observation.
+        self._refreshed = None
+        self._refreshed_at = 0
+        self._refresh_wait = None
         read = self._context()
         state = self._state(read)
         if state['busy']:
             raise GameBusyError('游戏拍卖行正在同步，请稍后重读。')
-        if state['selection_occupied']:
+        if state['selection_occupied'] and not self._refresh_selection_allowed(state, refresh_only):
             raise GameBusyError('拍卖行槽中已有玩家选择的物品，请先完成或清空。')
-        self._refreshed = None
-        self._refresh_wait = None
         try:
             # Only an explicit action installs the main-thread dispatcher.
             # The native Boolean query is hfz()->GameObject.activeSelf; +40
             # and +41 are not substitutes for this query.
-            try:
-                self._invoke([Invocation('PanelBase.auction_is_open', instance=state['_ui'],
-                                         require_true=True, mutates=False)], read,
-                             cancel_event=cancel_event, validate=validate)
-                method = 'AuctionUI.refresh_list'
-            except NativeActionError as exc:
-                if (exc.state != REJECTED or exc.last_call != 0
-                        or exc.mutation_started is not False or exc.uncertain):
-                    raise
-                method = 'AuctionUI.Show'
+            method = 'AuctionUI.refresh_list'
+            if not refresh_only:
+                try:
+                    self._invoke([Invocation('PanelBase.auction_is_open', instance=state['_ui'],
+                                             require_true=True, mutates=False)], read,
+                                 cancel_event=cancel_event, validate=validate)
+                except NativeActionError as exc:
+                    if (exc.state != REJECTED or exc.last_call != 0
+                            or exc.mutation_started is not False or exc.uncertain):
+                        raise
+                    method = 'AuctionUI.Show'
             read = self._context(); state = self._state(read)
-            if state['busy'] or state['selection_occupied']:
+            if state['busy'] or (state['selection_occupied']
+                    and not self._refresh_selection_allowed(state, refresh_only)):
                 raise GameBusyError('游戏拍卖行状态已变化，未请求刷新。')
             self._refresh_wait = {'key': state['_refresh_key'], 'versions': state['_list_versions']}
             self._invoke([Invocation(method, instance=state['_ui'], mutates=False)], read,
                          cancel_event=cancel_event, validate=validate)
-            return self._wait_open(cancel_event, validate)
+            result = self._wait_open(cancel_event, validate)
+            if refresh_only and self._pending:
+                return self._clear_retained_selection(result, cancel_event=cancel_event, validate=validate)
+            return result
         except Exception:
             self._refreshed = None
+            self._refreshed_at = 0
             raise
         finally:
             self._refresh_wait = None
+
+    def _clear_retained_selection(self, result, *, cancel_event=None, validate=lambda: True):
+        """Clear only our failed upload's UI slot after two server receipts.
+
+        Native upload failures leave the original item selected. Requiring an
+        empty slot before collecting the retained-item proof prevents recovery
+        forever. Read-only snapshots may collect that proof, but only this
+        explicit action may clear the slot. It never submits or removes items.
+        """
+        read = self._context(); state = self._state(read)
+        if not state.get('selection_occupied'):
+            return result
+        state['server_checked_at'] = (self._refreshed_at
+            if self._refreshed == state.get('_refresh_key') and not state.get('needs_refresh') else 0)
+        selected = state.get('selected_uid')
+        match = next(((instance, row) for instance, row in self._pending.items()
+            if selected and row.get('item_uid') == selected
+            and row.get('steamid') == state.get('steamid')), None)
+        if match is None:
+            return result
+        instance, row = match
+        previous = self._negative_checks.get(instance)
+        if previous is None or state['server_checked_at'] - previous < 10:
+            return result
+        snapshot = self.reader.snapshot()
+        read.finish()
+        if not self._retained_receipt(instance, row, state, snapshot, allow_owned_selection=True):
+            return result
+        selected_item = read.ptr(state['_slot'] + 64)
+        if (not selected_item or not read.verify(selected_item, 'ItemData')
+                or self.reader.asset_name(selected_item) != row.get('internal_name')):
+            raise GameBusyError('拍卖行上传槽物品已变化，未清除选择；继续核验原上传。')
+        # The native clear method resets +64/+72 and redraws the slot/buttons.
+        # It contains no upload request or inventory removal. All slot, account,
+        # list and online-state guards are checked again on the game thread.
+        self._invoke([Invocation('AuctionUploadSlotUI.clear', instance=state['_slot'], mutates=False)],
+                     read, cancel_event=cancel_event, validate=validate)
+        # Do not settle on the clear call alone: require the empty slot and the
+        # same complete retained identity again before persisting its cooldown.
+        final = self.snapshot()
+        return dict(final, kind='auction_open', effect_confirmed=final.get('available') is True)
 
     def _wait_open(self, cancel_event, validate):
         deadline = time.monotonic() + 8
@@ -355,7 +474,8 @@ class AuctionRuntime:
         if self._journal_error:
             raise NativeActionError('拍卖行在途记录无法读取，原文件保留；禁止提交操作。', uncertain=True)
         if kind == 'auction_open':
-            return self._open(cancel_event=cancel_event, validate=validate)
+            return self._open(cancel_event=cancel_event, validate=validate,
+                              refresh_only=payload.get('refresh_only') is True)
         if self._pending:
             raise NativeActionError('上一次拍卖行上传仍未核验，禁止重复提交；请先检查游戏拍卖行与 Steam 库存。', uncertain=True)
         requested = payload.get('item', payload.get('row', payload))
@@ -386,6 +506,9 @@ class AuctionRuntime:
         instance = row['instance_id']
         if any(p['instance_id'] == instance for p in state['listings']):
             raise NativeActionError('该实例已存在于游戏拍卖行，禁止重复上传。', uncertain=True)
+        retained = self._retained.get(instance, {})
+        if retained.get('retry_after', 0) > time.time():
+            raise NativeActionError('该物品已核验仍在游戏内，暂缓 5 分钟后再尝试上传；未重复提交。', mutation_started=False)
         calls = [Invocation('PanelBase.auction_is_open', instance=state['_ui'], require_true=True, mutates=False),
                  Invocation('ItemData.auction_tradable', instance=item,
                             arguments=(Argument.reference(generated),), require_true=True, mutates=False),
@@ -395,7 +518,8 @@ class AuctionRuntime:
         read.finish(); copy.finish()
         # Durable intention precedes the native submit, including process exit.
         self._pending[instance] = {'item_uid': row['item_uid'], 'internal_name': row['internal_name'],
-                                   'steamid': state['steamid']}
+                                   'steamid': state['steamid'], 'submitted_at': time.time()}
+        self._retained.pop(instance, None)
         try:
             self._persist()
         except OSError as exc:
@@ -415,7 +539,16 @@ class AuctionRuntime:
             # _invoke checks its copies before publishing any mailbox job.
             del self._pending[instance]; self._persist()
             raise NativeActionError(str(exc), mutation_started=False) from exc
-        receipt = self._confirm(row)
+        try:
+            receipt = self._confirm(dict(row, steamid=state['steamid']))
+        except AuctionUploadPending as exc:
+            self._pending[instance]['last_status'] = exc.native_status
+            self._persist()
+            # Pre-upload list freshness cannot settle an ambiguous POST. A
+            # later recovery must obtain a new native server list callback.
+            self._refreshed = self._refresh_wait = None
+            self._refreshed_at = 0
+            raise
         receipt['steamid'] = state['steamid']
         self._confirmed[instance] = deepcopy(receipt)
         self._confirmed = dict(list(self._confirmed.items())[-256:])
@@ -432,6 +565,7 @@ class AuctionRuntime:
     @staticmethod
     def _receipt(selected, state, snapshot):
         if (snapshot.get('complete') is not True or state.get('busy')
+                or (selected.get('steamid') and selected['steamid'] != state.get('steamid'))
                 or not isinstance(state.get('listings'), list)):
             return None
         listing = next((p for p in state['listings'] if p['instance_id'] == selected['instance_id']), None)
@@ -447,15 +581,31 @@ class AuctionRuntime:
                 'receipt_id': f"auction:{selected['instance_id']}:{listing['listed_at']}"}
 
     def _reconcile(self, state, snapshot):
-        """Recover only exact same-account receipts; absence alone proves nothing."""
+        """Reconcile success, or twice verify the exact item retained in game.
+
+        An absent listing alone is never a result. Retained-item recovery also
+        requires two distinct successful server callbacks, complete guarded
+        inventory reads and an idle native action. Our own remaining selection
+        may collect the proof, but settlement still requires the empty slot.
+        """
         changed = False
         for instance, row in list(self._pending.items()):
             if not row.get('steamid') or row['steamid'] != state.get('steamid'):
+                self._negative_checks.pop(instance, None)
                 continue
             receipt = self._receipt({**row, 'instance_id': instance}, state, snapshot)
             if receipt:
                 self._confirmed[instance] = receipt
                 del self._pending[instance]
+                self._negative_checks.pop(instance, None)
+                changed = True
+            elif (self._retained_receipt(instance, row, state, snapshot, allow_owned_selection=True)
+                    and state.get('selection_occupied') is False):
+                self._retained[instance] = {**deepcopy(row), 'instance_id': instance,
+                    'outcome': 'retained_in_game', 'checked_at': state['server_checked_at'],
+                    'retry_after': time.time() + 300}
+                del self._pending[instance]
+                self._negative_checks.pop(instance, None)
                 changed = True
         if changed:
             # Keep recent receipts across the hand-off/crash boundary. They
@@ -467,17 +617,49 @@ class AuctionRuntime:
                 self._journal_error = '拍卖行回执无法保存，请检查本地存储后继续核验。'
                 raise
 
+    def _retained_receipt(self, instance, row, state, snapshot, *, allow_owned_selection=False):
+        checked, now = state.get('server_checked_at'), time.time()
+        submitted = row.get('submitted_at', 0)  # Older journals predate this field.
+        matches = [r for c in snapshot.get('containers', {}).values() for r in c.get('slots', [])
+                   if r.get('item_uid') == row.get('item_uid') or r.get('instance_id') == instance]
+        valid = (snapshot.get('complete') is True and state.get('available') is True
+            and state.get('steamid_verified') is True and state.get('steamid') == row.get('steamid')
+            and state.get('busy') is False and state.get('needs_refresh') is False
+            and (state.get('selection_occupied') is False
+                or allow_owned_selection and state.get('selection_occupied') is True
+                and bool(row.get('item_uid')) and state.get('selected_uid') == row['item_uid'])
+            and type(checked) in (int, float) and 0 < checked <= now < checked + 30
+            and type(submitted) in (int, float) and 0 <= submitted <= checked
+            and isinstance(state.get('listings'), list)
+            and not any(r.get('instance_id') == instance for r in state['listings'])
+            and len(matches) == 1 and matches[0].get('item_uid') == row.get('item_uid')
+            and matches[0].get('instance_id') == instance
+            and matches[0].get('internal_name') == row.get('internal_name')
+            and matches[0].get('container') in ('inventory', 'storage')
+            and matches[0].get('count') == 1 and matches[0].get('identity_verified') is not False
+            and not matches[0].get('issues'))
+        if not valid:
+            self._negative_checks.pop(instance, None)
+            return False
+        previous = self._negative_checks.get(instance)
+        if previous is None or checked - previous > 60:
+            self._negative_checks[instance] = checked
+            return False
+        return checked - previous >= 10
+
     def _confirm(self, selected):
         deadline = time.monotonic() + 20
+        native_status = ''
         while time.monotonic() < deadline:
             try:
                 read = self._context(after=True); state = self._state(read)
                 snapshot = self.reader.snapshot()
                 read.finish()
+                native_status = state.get('native_status') or native_status
                 receipt = self._receipt(selected, state, snapshot)
                 if receipt:
                     return dict(receipt, listings=deepcopy(state['listings']))
             except (MemoryReadError, ValueError, KeyError, struct.error):
                 pass
             time.sleep(.2)
-        raise NativeActionError('拍卖行上传已提交，但服务器列表与原生背包移除结果尚未同时确认；已禁止重复上传。', uncertain=True)
+        raise AuctionUploadPending(native_status)

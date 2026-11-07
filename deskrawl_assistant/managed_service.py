@@ -21,7 +21,7 @@ from .item_protection import disposal_protection, mandatory_storage, is_minion_e
 from .action_log import record
 from .progression import catalog as growth_catalog, growth_action, next_purchase, NEW_ACTIONS, PURCHASE_BATCH_LIMIT, enabled as growth_enabled
 from .auction import next_action as auction_action, validate_settings as validate_auction
-from .auction_runtime import auction_eligibility
+from .auction_runtime import auction_candidate_fields, AuctionUploadPending
 from .carriage_transfer import CarriageUnavailable
 from .town_cleanup_recovery import cleanup_ready, cleanup_action_allowed
 
@@ -152,6 +152,8 @@ class ManagedServiceMixin:
         # Keep submitted craft receipts across user pause/stop, independently
         # of planner resets. They must settle before any later inventory work.
         self.managed_synthesis_wait = None
+        self.managed_auction_wait = None
+        self.managed_synthesis_deferred = set()
         self.managed_reconnect = ReconnectFlow()
         self._managed_reconnect_read_since = None
         self.managed_elapsed = 0
@@ -258,6 +260,8 @@ class ManagedServiceMixin:
     def _managed_synthesis_state(self, scene):
         """Optional native data never becomes a dependency of normal farming."""
         config = self.managed.settings.get('synthesis', {})
+        if scene.get('in_dungeon') is True and scene.get('available') is True:
+            self.managed_synthesis_deferred.clear()
         enabled = {group: config.get(group, {}).get('enabled') is True for group in ('gems', 'runes')}
         if scene.get('in_town') is not True or not any(enabled.values()): return {}
         reader = getattr(self.client, 'synthesis_snapshot', None)
@@ -267,7 +271,9 @@ class ManagedServiceMixin:
             if not isinstance(value, dict): raise ValidationError('合成状态格式未确认。')
         except (OSError, RuntimeError, ValueError, KeyError, AttributeError) as exc:
             value = {group: {'available': False, 'reason': str(exc)} for group in enabled if enabled[group]}
-        return {group: deepcopy(value.get(group, {'available': False, 'reason': '合成状态尚未完整读取。'}))
+        return {group: ({'available': False, 'recipes': [], 'reason': '断线时合成未生效，本次回城暂不再合成，继续整理。'}
+                       if group in self.managed_synthesis_deferred else
+                       deepcopy(value.get(group, {'available': False, 'reason': '合成状态尚未完整读取。'})))
                 for group in enabled if enabled[group]}
 
     def _managed_observation(self, *, inventory_only=False):
@@ -305,13 +311,7 @@ class ManagedServiceMixin:
             item['base_rarity'] = source.get('base_rarity')
             item['bound'] = source.get('bound')
             item['is_equipped'] = source.get('is_equipped')
-            evidence = source.get('read_evidence', {})
-            item['auction_identity_verified'] = (source.get('identity_verified') is True
-                or source.get('identity_verified') is not False and evidence.get('snapshot_consistent') is True
-                and bool(source.get('item_uid')) and bool(source.get('instance_id')))
-            item['auction_candidate'] = bool(market_catalog and market_catalog.resolve(source)[0]
-                and auction_eligibility({**source, 'auction_identity_verified': item['auction_identity_verified']},
-                    preliminary=True)['eligible'])
+            item.update(auction_candidate_fields(source, market_catalog))
             item['equip_slot'] = source.get('equip_slot')
             if not item['is_equipment']:
                 item['rarity'] = source.get('rarity',source.get('base_rarity'))
@@ -364,6 +364,9 @@ class ManagedServiceMixin:
         # lightweight inventory context may not contain an actual character ID.
         control = value if inventory_only else self.managed_control
         character_id = control.get('character_id') if control.get('available') is True else None
+        from .auction_tracking import observe_candidates
+        observe_candidates(self, payload['items'], payload['complete'],
+                           session=snap.get('bridge_session'), character_id=character_id)
         return {'complete':payload['complete'], 'session':snap.get('bridge_session'), 'loot_plan':loot_plan,
                 'character_id':character_id,
                 'merchant_uids':list(self.managed_merchant_uids),
@@ -562,9 +565,14 @@ class ManagedServiceMixin:
                     # its output as loot, including after a user stop/restart.
                     self.managed.start(observation, observe_metrics=self.managed_synthesis_wait is None)
                     self.managed_started_at = datetime.now(timezone.utc).isoformat()
+                    from .auction_tracking import observe_candidates
+                    observe_candidates(self, observation['items'], observation['complete'],
+                                       session=observation.get('session'), character_id=observation.get('character_id'))
                     self.managed_elapsed = 0
                     self.managed_history = []
                 self.managed_started_clock = time.monotonic()
+                if self.managed_auction_wait:
+                    self.managed_auction_wait.update(started=time.monotonic(), next_at=0, refresh_at=0)
                 self.managed_reconnect = ReconnectFlow()
                 self._managed_reconnect_read_since = None
                 self.managed_scene_wait = None
@@ -909,7 +917,8 @@ class ManagedServiceMixin:
                             'reason': '正在后台核验 Steam 库存基线，核验失败将跳过此物品。'}
                 if not active() or self.managed.finishing:
                     return {'verified': False, 'retryable': True, 'reason': '托管已结束，不再上传物品。'}
-                auction_intent = coordinator.submitted(item, steamid, ticket)
+                auction_intent = coordinator.submitted(item, steamid, ticket,
+                    managed_run=self.managed_started_at)
             if kind=='equip': payload['expected_replaced_uid']=current_score.get('replaced_uid')
             if kind=='enter_dungeon': payload['map_id']=action['dungeon_id']
             if kind=='collect_ground': payload['selection_id']=item['selection_id']
@@ -1202,15 +1211,29 @@ class ManagedServiceMixin:
                 return self.managed.status
         result = wait.get('confirmed')
         if result is None:
+            options = {'reconnected': True} if wait.get('reconnected') else {}
             result = self.client.reconcile_synthesis(character, cancel_event=self.cancelled,
-                validate=lambda: self.managed.running and not self.cancelled.is_set())
+                validate=lambda: self.managed.running and not self.cancelled.is_set(), **options)
         with self.guard:
+            aborted = (wait['stage'] == 'receipt' and wait.get('reconnected')
+                and wait['action']['kind'] == 'synthesize_runes'
+                and isinstance(result, dict) and result.get('synthesis_aborted') is True
+                and result.get('effect_confirmed') is False)
             if wait['stage'] == 'receipt' and (not isinstance(result, dict)
-                    or not (result.get('synthesis_pending') or result.get('effect_confirmed'))):
+                    or not (result.get('synthesis_pending') or result.get('effect_confirmed')
+                            or aborted)):
                 return self._managed_pause_synthesis('原合成核验记录未完整读取，未重复提交合成。')
-            if isinstance(result, dict) and result.get('effect_confirmed'):
+            if isinstance(result, dict) and (result.get('effect_confirmed') or aborted):
                 wait['confirmed'] = result
             if not self.managed.running or self.cancelled.is_set():
+                return self.managed.status
+            if aborted:
+                self.managed_synthesis_deferred.add('runes')
+                self.managed_synthesis_wait = self.managed.pending = None
+                self.managed_retry = None
+                self.managed.phase = 'cleanup'
+                self.managed.status = result['reason'] + ' 本次回城跳过符文合成，继续整理。'
+                record('managed_synthesis_not_applied', kind=wait['action']['kind'])
                 return self.managed.status
             pending = isinstance(result, dict) and (result.get('synthesis_pending')
                 or wait['stage'] == 'cleanup' and result.get('ui_cleanup_pending'))
@@ -1247,12 +1270,131 @@ class ManagedServiceMixin:
         record('managed_synthesis_recovery_paused', stage=self.managed_synthesis_wait['stage'])
         return self.managed.status
 
+    def _managed_wait_auction(self, observation):
+        """Fence all inventory/travel work while a submitted upload is unknown.
+
+        Recovery only refreshes the native list. Neither an error label nor
+        absence from a fresh list authorizes retrying the economic operation.
+        """
+        state = observation.get('auction', {})
+        wait = self.managed_auction_wait
+        if wait is None and state.get('pending') is not True:
+            return False
+        now = time.monotonic()
+        if wait is None:
+            wait = self.managed_auction_wait = {
+                'session': observation.get('session'),
+                'character_id': self.managed._control_character_id(observation),
+                'steamid': state.get('steamid') if state.get('steamid_verified') is True else None,
+                'started': now, 'started_at': time.time(),
+                'refresh_at': now + (0 if state.get('needs_refresh') else 15), 'next_at': 0,
+                'uploads': deepcopy(state.get('pending_uploads', [])),
+                'reason': state.get('pending_reason') or state.get('native_status', '')}
+        with self.guard:
+            if not self.managed.running or self.cancelled.is_set():
+                return True
+            if not self._managed_identity_ok(observation, require_character=True):
+                return True
+            if (wait['session'] != observation.get('session')
+                    or wait['character_id'] != self.managed._control_character_id(observation)):
+                self.managed._pause('拍卖行上传核验期间连接或角色变化，请核验原角色物品；未重复上传。')
+                self.managed_can_resume = True
+                self._managed_freeze_clock()
+                return True
+            if now < wait['next_at']:
+                return True
+        account = state.get('steamid') if state.get('steamid_verified') is True else None
+        if wait['steamid'] and account and account != wait['steamid']:
+            self.managed._pause('拍卖行上传核验期间 Steam 账号变化，请核验原账号物品；未重复上传。')
+            self.managed_can_resume = True
+            self._managed_freeze_clock()
+            return True
+        if account and not wait['steamid']:
+            wait['steamid'] = account
+        if not wait['uploads'] and state.get('pending_uploads'):
+            wait['uploads'] = deepcopy(state['pending_uploads'])
+        if account and any(row.get('steamid') != account for row in wait['uploads']):
+            self.managed._pause('待核验上传属于其他 Steam 账号，请核验原账号物品；未重复上传。')
+            self.managed_can_resume = True
+            self._managed_freeze_clock()
+            return True
+        receipts = state.get('confirmed_uploads', [])
+        confirmed = bool(wait['uploads']) and all(any(
+            receipt.get('steamid') == wait['steamid'] == row.get('steamid')
+            and receipt.get('uploaded_instance_id') == row.get('instance_id')
+            and receipt.get('uploaded_uid') == row.get('item_uid')
+            and receipt.get('uploaded_internal_name') == row.get('internal_name')
+            for receipt in receipts) for row in wait['uploads'])
+        if (confirmed and state.get('available') is True and not state.get('busy')
+                and state.get('pending') is False and account == wait['steamid']):
+            self.managed_auction_wait = self.managed.pending = None
+            self.managed_retry = None
+            self.managed.phase = 'cleanup'
+            self.managed.status = '拍卖行上传结果已核验，继续托管。'
+            record('managed_auction_receipt_recovered', count=len(wait['uploads']))
+            return True
+        retained = bool(wait['uploads']) and all(any(
+            receipt.get('steamid') == wait['steamid'] == row.get('steamid')
+            and receipt.get('instance_id') == row.get('instance_id')
+            and receipt.get('item_uid') == row.get('item_uid')
+            and receipt.get('internal_name') == row.get('internal_name')
+            and receipt.get('outcome') == 'retained_in_game'
+            and type(receipt.get('checked_at')) in (int, float)
+            and receipt['checked_at'] >= wait.get('started_at', float('inf'))
+            for receipt in state.get('retained_uploads', [])) for row in wait['uploads'])
+        if (retained and state.get('available') is True and state.get('busy') is False
+                and state.get('pending') is False and account == wait['steamid']):
+            self.managed_auction_wait = self.managed.pending = None
+            self.managed_retry = None
+            self.managed.phase = 'cleanup'
+            self.managed.status = '已核验上传物品仍在游戏内，暂缓该物品 5 分钟，继续托管。'
+            record('managed_auction_item_retained', count=len(wait['uploads']))
+            return True
+        wait['reason'] = state.get('pending_reason') or wait['reason']
+        if now - wait['started'] >= 120:
+            reason = '拍卖行上传连续 2 分钟未核验，托管已暂停；物品和统计保留，继续时先核验原操作，不重复上传。'
+            if wait['reason']:
+                reason += ' 游戏提示：' + wait['reason']
+            self.managed._pause(reason)
+            self.managed_can_resume = True
+            self._managed_freeze_clock()
+            record('managed_auction_receipt_paused', native_status=state.get('native_status'),
+                busy=state.get('busy'), needs_refresh=state.get('needs_refresh'),
+                server_checked_at=state.get('server_checked_at'), listing_count=state.get('listing_count'),
+                selection_occupied=state.get('selection_occupied'))
+            return True
+        wait['next_at'] = now + 2
+        # This remains an in-flight recovery even after the feature is disabled
+        # or return-after-cleanup is requested. Only the list GET is permitted.
+        if (account and account == wait['steamid'] and state.get('available') is True
+                and state.get('busy') is False
+                and now >= wait['refresh_at']):
+            wait['refresh_at'] = now + 15
+            try:
+                result = self.client.execute_game_action('auction_open', {'refresh_only': True},
+                    self.cancelled, validate=lambda: self.managed.running and not self.cancelled.is_set())
+                self._auction_service().observe(result)
+            except (MemoryError, KeyboardInterrupt, SystemExit):
+                raise
+            except Exception as exc:
+                record('managed_auction_reconcile_deferred', error_type=type(exc).__name__, reason=str(exc)[:300])
+        with self.guard:
+            if not self.managed.running or self.cancelled.is_set():
+                return True
+            self.managed.phase = 'auction'
+            self.managed.status = '拍卖行上传结果待核验，正在重查服务器列表；不搬运该物品，不重复上传。'
+            if wait['reason']:
+                self.managed.status += ' 游戏提示：' + wait['reason']
+        return True
+
     def _managed_once(self):
         self.managed_fast_followup = False
         if self._managed_reconnect_once(): return self.managed.status
         observation = self._managed_observation()
         if self.managed_synthesis_wait:
             return self._managed_wait_synthesis(observation)
+        if self._managed_wait_auction(observation):
+            return self.managed.status
         with self.guard:
             # The same bridge connection can remain alive across role changes.
             # Reject them before retry/transition paths update counts or receipts.
@@ -1396,6 +1538,25 @@ class ManagedServiceMixin:
                 return self._managed_defer(action,str(exc),'death_recovery_pending')
             return self._managed_defer(action,str(exc),'game_busy')
         except NativeActionError as exc:
+            if action['kind'] == 'auction_upload' and isinstance(exc, AuctionUploadPending):
+                with self.guard:
+                    item = action['item']
+                    self.managed_auction_wait = {
+                        'session': observation.get('session'),
+                        'character_id': self.managed._control_character_id(observation),
+                        'steamid': observation.get('auction', {}).get('steamid'),
+                        'started': time.monotonic(), 'started_at': time.time(), 'next_at': 0, 'refresh_at': 0,
+                        'uploads': [dict(item_uid=item['item_uid'], instance_id=item['instance_id'],
+                            internal_name=item['internal_name'],
+                            steamid=observation.get('auction', {}).get('steamid'))],
+                        'reason': exc.native_status}
+                    self.managed.pending = None
+                    self.managed_retry = None
+                    if self.managed.running and not self.cancelled.is_set():
+                        self.managed.phase = 'auction'
+                        self.managed.status = str(exc) + ' 正在核验原操作。'
+                    record('managed_auction_receipt_pending')
+                return self.managed.status
             if (action['kind'] == 'equip' and exc.state == REJECTED
                     and getattr(exc, 'mutation_started', None) is False):
                 # Equipment's native qualification checks are read-only. A
@@ -1561,6 +1722,8 @@ class ManagedServiceMixin:
                     return True
                 self.managed_transition = self.managed_retry = self.managed_return_recovery = None
                 self.managed.pending = None
+                if self.managed_synthesis_wait and self.managed_synthesis_wait['stage'] == 'receipt':
+                    self.managed_synthesis_wait.update(reconnected=True, started=time.monotonic(), next_at=0)
                 if self.managed.await_effect and self.managed.await_effect['kind'] in (
                         'return_town', 'enter_dungeon', 'merchant_open', 'merchant_close'):
                     self.managed.await_effect = None

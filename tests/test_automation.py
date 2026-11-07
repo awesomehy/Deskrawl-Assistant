@@ -28,16 +28,19 @@ class AutomationClient(FakeClient):
         snap['containers']['inventory']['slot_count']=self.capacity
         snap['transfer']={'available':True,'page_size':50,'storage_indices':list(self.storage_indices)}
         return snap
-    def move_items(self,expected,target,validate,*,target_indices=None):
+    def move_items(self,expected,target,validate,*,target_indices=None,allow_partial=False):
         if self.storage_full: raise MemoryReadError('目标堆叠容量及可用空格不足；未移动任何物品')
         if not validate(): raise MemoryReadError('移动已取消，未更改物品')
-        row=next(r for r in self.items if r['transfer_key']==expected[0]['transfer_key'])
         used={r['slot_index'] for r in self.items if r['container']==target}
-        destination=next((n for n in (target_indices if target_indices is not None else range(250)) if n not in used),None)
-        if destination is None: raise MemoryReadError('目标堆叠容量及可用空格不足；未移动任何物品')
-        self.events.append(('move',row['internal_name']));self.destinations.append(destination)
-        row['container']=target;row['slot_index']=destination
-        return {'moved':1,'stacked_count':0}
+        destinations=[n for n in (target_indices if target_indices is not None else range(250)) if n not in used]
+        if len(destinations)<len(expected) and not allow_partial:
+            raise MemoryReadError('目标堆叠容量及可用空格不足；未移动任何物品')
+        selected=[next(r for r in self.items if r['transfer_key']==s['transfer_key']) for s in expected]
+        moved=min(len(selected),len(destinations))
+        for row,destination in zip(selected,destinations):
+            self.events.append(('move',row['internal_name']));self.destinations.append(destination)
+            row['container']=target;row['slot_index']=destination
+        return {'moved':moved,'remaining':len(expected)-moved,'stacked_count':0}
     def carriage_snapshot(self):return {'available':True,'count':len(self.drops),'items':copy.deepcopy(self.drops)}
     def collect_carriage(self,token,validate):
         assert validate()
@@ -93,6 +96,94 @@ class AutomationTests(unittest.TestCase):
         self.service._automation_once();self.assertEqual(len(self.client.events),8)
         self.service._automation_once();self.assertEqual(len(self.client.events),14)
         self.assertFalse(self.service.pressure_active)
+
+    def test_eight_gems_share_one_transfer_and_two_fresh_reads(self):
+        self.client.items=[gem(n) for n in range(9)]
+        self.enable(gems={'enabled':True})
+        with patch.object(self.client,'move_items',wraps=self.client.move_items) as move, \
+             patch.object(self.client,'snapshot',wraps=self.client.snapshot) as read, \
+             patch.object(self.service,'_publish',wraps=self.service._publish) as publish:
+            self.service._automation_once()
+        self.assertEqual(move.call_count,1)
+        self.assertEqual(len(move.call_args.args[0]),8)
+        self.assertTrue(move.call_args.kwargs['allow_partial'])
+        self.assertEqual(read.call_count,2)
+        self.assertEqual(publish.call_count,2)
+        self.assertEqual(sum(r['container']=='inventory' for r in self.client.items),1)
+
+    def test_partial_batch_moves_only_fitting_prefix_on_selected_page(self):
+        self.client.items=[gem(n) for n in range(4)]+[dict(gem(n),container='storage') for n in range(48)]
+        self.enable(gems={'enabled':True,'pages':[1]})
+        self.service._automation_once()
+        self.assertEqual(self.client.destinations,[48,49])
+        self.assertEqual([r['slot_index'] for r in self.client.items if r['container']=='inventory'],[2,3])
+        self.assertTrue(self.service.automation_running)
+        self.assertIn('空格不足',self.service.automation_status)
+
+    def test_batch_cancellation_before_write_keeps_every_source_stack(self):
+        self.client.items=[gem(n,count=3) for n in range(3)]
+        self.enable(gems={'enabled':True})
+        original=self.client.move_items
+        def cancel(*args,**kwargs):
+            self.service.stop()
+            return original(*args,**kwargs)
+        with patch.object(self.client,'move_items',side_effect=cancel):
+            self.service._automation_once()
+        self.assertFalse(self.client.events)
+        self.assertTrue(all(r['container']=='inventory' and r['count']==3 for r in self.client.items))
+
+    def test_stop_after_atomic_batch_does_not_start_runes_or_carriage(self):
+        self.client.items=[gem(0),gem(1),dict(gem(2,'Rune3'),item_class='RuneData',item_type=7)]
+        self.client.drops=[dict(gem(0),selection_id='drop',collectable=True)]
+        self.enable(gems={'enabled':True},runes={'enabled':True},carriage={'enabled':True,'types':['gem']})
+        original=self.client.move_items
+        def cancel_after(*args,**kwargs):
+            result=original(*args,**kwargs)
+            self.service.stop()
+            return result
+        with patch.object(self.client,'move_items',side_effect=cancel_after):
+            self.service._automation_once()
+        self.assertEqual(self.client.events,[('move','GemEmerald4')]*2)
+        self.assertEqual(len(self.client.drops),1)
+        self.assertEqual(self.client.items[2]['container'],'inventory')
+
+    def test_incomplete_post_batch_read_defers_remaining_work(self):
+        from deskrawl_assistant.carriage_transfer import CarriageUnavailable
+        self.client.items=[gem(0),gem(1),dict(gem(2,'Rune3'),item_class='RuneData',item_type=7)]
+        self.enable(gems={'enabled':True},runes={'enabled':True})
+        original=self.client.snapshot
+        def incomplete_after():
+            result=original()
+            if self.client.events:result['complete']=False
+            return result
+        with patch.object(self.client,'snapshot',side_effect=incomplete_after),self.assertRaises(CarriageUnavailable):
+            self.service._automation_once()
+        self.assertEqual(self.client.events,[('move','GemEmerald4')]*2)
+        self.assertEqual(self.client.items[2]['container'],'inventory')
+
+    def test_invalid_batch_receipt_stops_before_another_action(self):
+        self.client.items=[gem(0),gem(1)]
+        self.enable(gems={'enabled':True})
+        with patch.object(self.client,'move_items',return_value={'moved':True}) as move, \
+             self.assertRaisesRegex(MemoryReadError,'数量未核验'):
+            self.service._automation_once()
+        self.assertEqual(move.call_count,1)
+
+    def test_background_noop_has_no_diagnostic_start_finish_noise(self):
+        with patch.object(self.service,'_monitor_once',return_value='等待物品'), \
+             patch.object(self.service,'_managed_refresh_control'), \
+             patch.object(self.service,'_refresh_trade_tracking_if_needed'), \
+             patch('deskrawl_assistant.web_service.record') as log:
+            self.service._work('monitor',{})
+        self.assertFalse(any(c.args[0] in ('web_operation_started','web_operation_finished') for c in log.call_args_list))
+
+    def test_manual_read_retains_diagnostic_start_and_finish(self):
+        with patch.object(self.service,'_managed_refresh_control'), \
+             patch.object(self.service,'_refresh_trade_tracking_if_needed'), \
+             patch('deskrawl_assistant.web_service.record') as log:
+            self.service._work('read',{})
+        self.assertIn('web_operation_started',[c.args[0] for c in log.call_args_list])
+        self.assertIn('web_operation_finished',[c.args[0] for c in log.call_args_list])
     def test_capacity_does_not_trigger_early_and_respects_locked_filter(self):
         self.client.capacity=6;self.client.items=[item(0),item(1,locked=True)]
         self.enable(pressure={'enabled':True,'threshold':2,'target_free':4,'equipment_filter':'locked'})

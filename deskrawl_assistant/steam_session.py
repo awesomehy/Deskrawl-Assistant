@@ -1,7 +1,8 @@
 """Local Steam Community login, with no credential bridge to the assistant UI.
 
-Cookies are captured only by the native login window, stored with current-user
-Windows DPAPI, and sent only to the exact HTTPS Steam Community origin.
+Manually captured cookies use current-user Windows DPAPI. An optional native
+Steam provider supplies active-account cookies in memory only. Both sources
+are verified before use and sent only to the exact HTTPS Community origin.
 """
 from __future__ import annotations
 
@@ -218,7 +219,8 @@ class _NoRedirect(HTTPRedirectHandler):
 
 
 class SteamSession:
-    def __init__(self, path, *, transport=None, login_window_factory=None, protector=_dpapi, clock=time.time):
+    def __init__(self, path, *, transport=None, login_window_factory=None, protector=_dpapi, clock=time.time,
+                 local_provider=None, local_verify_timeout=30):
         self.path = Path(path)
         self.transport = transport
         self.login_window_factory = login_window_factory
@@ -234,6 +236,18 @@ class SteamSession:
         self._generation = 0
         self._window_epoch = 0
         self._closed = False
+        self.local_provider = local_provider
+        self._local_verify_timeout = local_verify_timeout
+        self._local_request = None
+        self._local_lock = threading.Lock()
+        self._local_check_after = 0
+        self._local_rejected = None
+        self._local_rejected_until = 0
+        self._local_suppressed = False
+        self._local_identity = None
+        self._local_status = 'pending' if local_provider else 'unavailable'
+        self._local_message = ''
+        self._source = 'none'
         self._message = '未绑定 Steam；绑定后仍可能需要手机确认。'
         if self.path.exists():
             try:
@@ -243,6 +257,7 @@ class SteamSession:
                 values = _validated_values(data.get('cookies'))
                 # Saved data is never considered verified until Steam is read.
                 self._cookies = values
+                self._source = 'saved_login'
                 self._persisted_fingerprint = self._cookie_fingerprint(values)
                 self._message = '已保存 Steam 绑定，等待核验登录状态。'
             except Exception:
@@ -256,10 +271,133 @@ class SteamSession:
                     'steamid': wallet.get('steamid'), 'wallet_currency': wallet.get('currency'),
                     'wallet_currency_id': wallet.get('currency_id'), 'login_open': self._login_busy,
                     'binding_generation': self._generation,
-                    'message': self._message, 'live_verified': False}
+                    'message': self._message, 'live_verified': False,
+                    'source': self._source, 'local_status': self._local_status,
+                    'local_message': self._local_message}
+
+    def refresh_local(self, *, force=False):
+        """Worker-only discovery. Verify a candidate before replacing any saved login.
+
+        Reads never create a session on disk and a rejected native cookie never
+        deletes the user's manually saved login. No economic request is issued.
+        """
+        if not self.local_provider or not self._local_lock.acquire(blocking=False):
+            return
+        try:
+            with self.guard:
+                if (self._closed or self._local_suppressed or self._login_busy
+                        or not force and self.clock() < self._local_check_after):
+                    return
+                self._local_check_after = self.clock() + 60
+                generation = self._generation
+            candidate = None
+            try:
+                snapshot = self.local_provider.snapshot()
+                values = _validated_values(dict(snapshot.cookies))
+                candidate = (snapshot.identity, self._cookie_fingerprint(values))
+                with self.guard:
+                    if not force and candidate == self._local_rejected and self.clock() < self._local_rejected_until:
+                        return  # Do not repeatedly delay a working manual fallback.
+                steamid = unquote(values['steamLoginSecure']).split('||', 1)[0]
+                wallet = self._verify_native_wallet(values, steamid)
+                if self.local_provider.current_identity() != snapshot.identity:
+                    raise SteamSessionError('本机 Steam 账号正在切换，暂不采用该会话。')
+            except Exception as exc:
+                from .steam_local_session import LocalSessionUnavailable
+                with self.guard:
+                    if generation != self._generation or self._closed:
+                        return
+                    if candidate and isinstance(exc, SteamSessionError) and exc.auth_expired:
+                        self._local_rejected, self._local_rejected_until = candidate, self.clock() + 300
+                    self._local_status = ('rejected' if isinstance(exc, SteamSessionError)
+                                          and exc.auth_expired else 'unavailable')
+                    self._local_message = (str(exc) if isinstance(exc, LocalSessionUnavailable) else
+                        '本机 Steam 社区凭证已过期，请在 Steam 中打开社区续期，或使用助手登录。'
+                        if isinstance(exc, SteamSessionError) and exc.auth_expired else
+                        '本机 Steam 社区核验暂未完成，将自动重试；保留原有登录方式。')
+                    if (self._source == 'local_steam' and isinstance(exc, SteamSessionError)
+                            and exc.auth_expired):
+                        self._expire(generation)
+                    # A changed native identity is revoked at every request
+                    # boundary as well; do not silently switch an existing sale.
+                return
+            with self.guard:
+                if (generation != self._generation or self._closed or self._local_suppressed
+                        or self._login_busy):
+                    return
+                changed = (self._source != 'local_steam' or self._cookies != values
+                           or self._local_identity != snapshot.identity or self._expired)
+                if changed:
+                    self._generation += 1
+                self._cookies, self._local_identity = values, snapshot.identity
+                self._source, self._expired = 'local_steam', False
+                wallet['verified_at'], wallet['binding_generation'] = self.clock(), self._generation
+                self._wallet = wallet
+                self._local_rejected, self._local_rejected_until = None, 0
+                self._local_status, self._local_message = 'verified', '已核验本机 Steam 社区账号与钱包。'
+                self._message = '正在使用本机 Steam 登录态；市场操作使用助手配置的社区线路。'
+        finally:
+            self._local_lock.release()
+
+    def _verify_native_wallet(self, values, steamid):
+        """Bound discovery latency; late read replies cannot adopt or persist a login.
+
+        urllib socket timeouts alone do not bound multiple redirects/body reads.
+        At most one discovery GET may remain in flight after timeout. No economic
+        request is sent here, and completed abandoned results are never reused.
+        """
+        if self._local_request and self._local_request[0].is_alive():
+            raise SteamSessionError('本机 Steam 社区核验仍在结束中，暂用原登录方式。')
+        completed, result = threading.Event(), {}
+        def read():
+            try:
+                prepare = getattr(type(self.transport), 'prepare_local_verification', None)
+                if prepare is not None:
+                    prepare(self.transport)
+                result['wallet'] = parse_wallet(self._request('GET', '/market/', cookies=values), steamid)
+            except Exception as exc:
+                result['error'] = exc
+            finally:
+                completed.set()
+        thread = threading.Thread(target=read, name='Steam-native-wallet-read', daemon=True)
+        self._local_request = (thread, completed)
+        thread.start()
+        if not completed.wait(self._local_verify_timeout):
+            raise SteamSessionError('本机 Steam 社区核验超时，暂用原登录方式。')
+        self._local_request = None
+        if 'error' in result:
+            raise result['error']
+        return result['wallet']
+
+    def _assert_local_identity(self):
+        if self._source != 'local_steam' or self._expired:
+            return
+        try:
+            same = self.local_provider.current_identity() == self._local_identity
+        except Exception:
+            same = False
+        if not same:
+            self._generation += 1
+            self._expired, self._wallet = True, None
+            self._local_status = 'changed'
+            self._message = '本机 Steam 已退出或切换账号，市场操作已暂停；等待重新核验。'
+            raise SteamSessionError(self._message, status=401, auth_expired=True)
+
+    def peek_state(self):
+        # A sell POST pins this lock across submission to prevent account
+        # switching. Status polling must not wait behind that network request.
+        if not self.guard.acquire(blocking=False):
+            return None
+        try:
+            return self.state()
+        finally:
+            self.guard.release()
 
     def logout(self):
         with self.guard:
+            self._local_suppressed = True
+            self._local_identity = None
+            self._source = 'none'
             self._generation += 1
             self._window_epoch += 1
             window = self._window
@@ -280,6 +418,7 @@ class SteamSession:
 
     def request(self, method, path, data=None):
         with self.guard:
+            self._assert_local_identity()
             if self._expired:
                 raise SteamSessionError('Steam 登录已过期，请重新登录。', status=401, auth_expired=True)
             if set(self._cookies) != COOKIE_NAMES:
@@ -306,7 +445,7 @@ class SteamSession:
             self._expired = True
             self._wallet = None
             self._message = 'Steam 登录已过期，请重新登录；自动出售已取消，游戏拍卖行上传不受影响。'
-            if self._persisted_fingerprint == self._cookie_fingerprint(self._cookies):
+            if self._source != 'local_steam' and self._persisted_fingerprint == self._cookie_fingerprint(self._cookies):
                 try:
                     self.path.unlink(missing_ok=True)
                     self._persisted_fingerprint = None
@@ -357,6 +496,7 @@ class SteamSession:
 
     def post(self, path, data, *, expected_steamid=None, expected_generation=None):
         with self.guard:
+            self._assert_local_identity()
             if expected_generation is not None and expected_generation != self._generation:
                 raise SteamSessionError('Steam 登录会话已变化，未继续提交。', status=401)
             steamid = unquote(self._cookies.get('steamLoginSecure', '')).split('||', 1)[0]
@@ -370,6 +510,7 @@ class SteamSession:
 
     def verify(self, *, force=False):
         with self.guard:
+            self._assert_local_identity()
             if self._wallet and not force and self.clock() - self._wallet['verified_at'] < 30:
                 return deepcopy(self._wallet)
             cookie = self._cookies.get('steamLoginSecure', '')
@@ -393,7 +534,8 @@ class SteamSession:
             if generation != self._generation or self._cookies.get('steamLoginSecure') != cookie:
                 raise SteamSessionError('Steam 登录绑定已变化，请重新核验。', status=401)
             self._wallet = wallet
-            self._message = 'Steam 登录和钱包已核验；实机出售尚待验证。'
+            self._message = ('正在使用本机 Steam 登录态；市场操作使用助手配置的社区线路。'
+                if self._source == 'local_steam' else 'Steam 登录和钱包已核验；实机出售尚待验证。')
         return deepcopy(wallet)
 
     def capture_session(self, cookies, *, window_epoch=None, verify_now=True):
@@ -404,6 +546,10 @@ class SteamSession:
                 raise SteamSessionError('Steam 登录窗口已关闭或取消，未保存绑定。')
             previous = self._cookies
             previous_expired = self._expired
+            previous_source = self._source
+            previous_suppressed = self._local_suppressed
+            self._local_suppressed = True
+            self._source = 'saved_login'
             self._generation += 1
             generation = self._generation
             self._cookies = values
@@ -427,6 +573,8 @@ class SteamSession:
                     self._cookies = previous
                     self._wallet = None
                     self._expired = previous_expired
+                    self._source = previous_source
+                    self._local_suppressed = previous_suppressed
                     if previous and not previous_expired:
                         self._message = '新登录暂未核验，已保留原绑定，等待重新核验。'
                 elif self._cookies is values:
@@ -492,7 +640,8 @@ class SteamSession:
                         if (current.scheme != 'https' or current.hostname != 'steamcommunity.com'
                                 or current.port not in (None, 443) or current.username or current.password):
                             continue
-                        if current.path.startswith('/login'):
+                        if (current.path.startswith('/login')
+                                and getattr(window, 'login_complete', False) is not True):
                             continue
                         cookies = window.get_cookies()
                         try:

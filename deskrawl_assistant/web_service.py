@@ -29,6 +29,7 @@ from .managed_service import ManagedServiceMixin
 from .item_protection import is_minion_equipment
 from .chests import is_chest
 from . import features
+from .projection_cache import ProjectionCache, inventory_projection_key, without_sample_time
 
 BASE = RESOURCE_ROOT
 SLOT_LABELS = {'Weapon':'武器','Helm':'头盔','Chest':'胸甲','Pants':'裤子','Boots':'靴子','Belt':'腰带',
@@ -56,10 +57,12 @@ def item_kind(row):
 
 from .auction_service import AuctionServiceMixin
 from .manual_auction import ManualAuctionServiceMixin
+from .auction_tracking import AuctionTrackingMixin
+from .tray_status import TrayStatusMixin
 
 
-class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedServiceMixin):
-    def __init__(self, client=None, config=None, *, game_lifecycle=None):
+class AssistantService(TrayStatusMixin, AuctionTrackingMixin, ManualAuctionServiceMixin, AuctionServiceMixin, ManagedServiceMixin):
+    def __init__(self, client=None, config=None, *, game_lifecycle=None, steam_client_profile=None):
         self.catalog = load_catalog(BASE / 'data/game-catalog.json')
         tables = json.loads((BASE / 'data/game-catalog.json').read_text(encoding='utf-8'))['tables']
         self.item_names = {key:entry for table in ('Equipments','Items') for key,entry in tables[table]['entries'].items()}
@@ -79,6 +82,7 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
         self.market_config = self.config.with_name('steam-market.json')
         from .assistant_settings import AssistantSettings
         self.assistant_preferences = AssistantSettings(self.config.with_name('assistant-settings.json'))
+        self.native_steam_acceleration = None  # Activated only by the desktop host.
         from .paths import data_root
         self.settings_data_dir = self.config.parent if config else data_root()
         self.market_currency_id = 0
@@ -104,6 +108,8 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
         self.operation_kind = None
         from .game_lifecycle import GameLifecycle
         self.game_lifecycle = game_lifecycle or GameLifecycle()
+        from .steam_client_profile import SteamClientProfile
+        self.steam_client_profile = steam_client_profile or SteamClientProfile()
         self.game_transition = False
         self.automation_config = self.config.with_name('automation.json')
         self.automation_settings = deepcopy(DEFAULT_SETTINGS)
@@ -132,6 +138,8 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
         self.snapshot = None
         self.character = {'available':False,'reason':'连接游戏后读取当前角色。','equipment':[]}
         self.revision = 0
+        self._inventory_projection_cache = ProjectionCache()
+        self._character_projection_cache = ProjectionCache()
         self.busy = False
         self.updating = False
         self.monitoring = False
@@ -149,10 +157,6 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
             self.recommendation_live = {'available': False, 'reason': '连接游戏后可自动推荐刷图。'}
             self.recommendation_thread = threading.Thread(target=self._recommendation_loop, daemon=True)
             self.recommendation_thread.start()
-        from .loot_capture import LootCaptureMonitor
-        self.loot_capture = LootCaptureMonitor((self.config.parent if config else runtime_dir()) / 'loot-captures')
-        self.loot_capture_thread = threading.Thread(target=self._loot_capture_loop, daemon=True)
-        self.loot_capture_thread.start()
         from .community_stats import CommunityStats
         self.community = CommunityStats((self.config.parent if config else runtime_dir()) / 'community-stats.sqlite3',
             VERSION, provider=lambda: self.client.connected and not self.closed.is_set(),
@@ -167,6 +171,9 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
                     'data_directory': str(self.settings_data_dir.resolve()),
                     'config_directory': str(self.config.parent.resolve()),
                     'load_error': self.assistant_preferences.load_error,
+                    'native_steam_acceleration': (self.native_steam_acceleration.snapshot()
+                        if self.native_steam_acceleration is not None else {
+                            'status': 'unavailable', 'message': '本机 Steam 加速仅在助手独立窗口中启用。'}),
                     'desktop_supported': desktop is not None,
                     'hotkey': desktop.hotkey_state() if desktop is not None else {
                         'active': False, 'error': '老板键仅在助手独立窗口中可用。'},
@@ -182,7 +189,16 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
                 apply_hotkey=desktop.apply_hotkey if desktop is not None else None)
             if previous != self.assistant_preferences.acceleration_enabled() and self.market is not None:
                 self.market.refresh_failed()
+            if self.native_steam_acceleration is not None:
+                self.native_steam_acceleration.configure(self.assistant_preferences.acceleration_enabled())
             return self.assistant_settings_info(desktop)
+
+    def enable_native_steam_acceleration(self):
+        from .steam_native_acceleration import NativeSteamAcceleration
+        with self.guard:
+            if self.closed.is_set() or self.native_steam_acceleration is not None: return
+            self.native_steam_acceleration = NativeSteamAcceleration()
+            self.native_steam_acceleration.configure(self.assistant_preferences.acceleration_enabled())
 
 
     def open_assistant_data_directory(self):
@@ -355,32 +371,8 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
             from .loot_preview import decorate_equipment
             for wave in value['waves']:
                 for item in wave['items']: decorate_equipment(item,rules,self.adapter,self.catalog)
-        if hasattr(self,'loot_capture'): value['capture_monitor'] = self.loot_capture.status()
         value['updated_at'] = datetime.now(timezone.utc).isoformat()
         return value
-
-    def set_loot_capture(self, enabled):
-        if self.closed.is_set(): raise ValidationError('助手已退出。')
-        return self.loot_capture.set_enabled(enabled)
-
-    def _loot_capture_loop(self):
-        while not self.closed.wait(2):
-            if not self.loot_capture.status()['enabled']: continue
-            if self.updating or not self.client.connected:
-                self.loot_capture.waiting('等待连接游戏。' if not self.client.connected else '等待程序更新完成。')
-                continue
-            try:
-                bundle = self.client.loot_capture_snapshot()
-                if self.closed.is_set() or self.updating or not self.client.connected: continue
-                with self.guard:
-                    bundle['merchant_uids'] = list(self.managed_merchant_uids)
-                    # Wait for the confirmed purchase UID receipt before
-                    # associating newly observed bag items with a dungeon.
-                    if (self.managed.pending or {}).get('kind') == 'merchant_buy':
-                        bundle['observations_complete'] = False
-                self.loot_capture.feed(bundle)
-            except Exception:
-                self.loot_capture.failed()
 
     def experience_live(self):
         if not features.REPORTING_ENABLED: return features.reporting_disabled()
@@ -748,11 +740,45 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
                 character = {'available':False,'reason':'角色读取暂不可用：'+str(exc),'equipment':[]}
         if snapshot and character.get('available') and character.get('session') != snapshot.get('bridge_session'):
             character = {'available':False,'reason':'角色连接已变化，等待下一次读取。','equipment':[]}
+        trade_context = {}
+        if snapshot and character.get('available') and hasattr(self.client, 'steam_identity_snapshot'):
+            try:
+                identity = self.client.steam_identity_snapshot()
+                if (identity.get('available') is True and identity.get('steamid_verified') is True
+                        and identity.get('session') == snapshot.get('bridge_session')
+                        and identity.get('character_id') == character.get('character_id')):
+                    trade_context = {**identity, 'read_at': time.monotonic()}
+                    previous = getattr(self, 'pending_trade_context', {})
+                    if (previous.get('steamid') == identity.get('steamid')
+                            and previous.get('session') == identity.get('session')
+                            and time.monotonic() - previous.get('native_read_at', 0) < 5):
+                        trade_context.update(native=previous.get('native', {}),
+                                             native_read_at=previous.get('native_read_at', 0))
+                    elif hasattr(self.client, 'auction_state'):
+                        trade_context.update(native=self.client.auction_state(), native_read_at=time.monotonic())
+            except Exception:
+                # Preserve only this account's previously verified native
+                # observations; their own age still marks them unverified.
+                previous = getattr(self, 'pending_trade_context', {})
+                if (trade_context and previous.get('steamid') == trade_context.get('steamid')
+                        and previous.get('session') == trade_context.get('session')):
+                    trade_context.update(native=previous.get('native', {}),
+                                         native_read_at=previous.get('native_read_at', 0))
+        previous = getattr(self, 'pending_trade_context', {})
+        if (not trade_context and snapshot and character.get('available') is True
+                and previous.get('session') == snapshot.get('bridge_session')
+                and previous.get('character_id') == character.get('character_id')):
+            trade_context = {**previous, 'identity_fresh': False}
         with self.guard:
             self.snapshot = snapshot
             self.character = character
+            self.pending_trade_context = trade_context
             if carriage is not None: self.carriage = carriage
             self.revision += 1
+        if trade_context:
+            from .auction_tracking import observe_candidates
+            observe_candidates(self, all_rows(snapshot), snapshot.get('complete') is True,
+                               session=trade_context['session'], character_id=trade_context['character_id'])
 
     def _equipment_facts(self, row):
         effects = self.loot_item_ui['items'].get(row.get('name_key') or row.get('internal_name'), {})
@@ -828,15 +854,33 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
             result['automation'] = {'settings':deepcopy(self.automation_settings),'running':self.automation_running,
                 'status':self.automation_status,'carriage':self._carriage_payload()}
             result['app_version'] = VERSION
-            if hasattr(self,'loot_capture'): result['loot_capture'] = self.loot_capture.status()
-            result['character'] = self._character_payload(character)
             result['compatibility'] = dict(getattr(self.client,'compatibility',{'phase':'idle','message':'连接时自动检测游戏兼容性'}))
             result['managed'] = {'running':self.managed.running,'phase':self.managed.phase,'status':self.managed.status}
             result['manual_auction_availability'] = self.manual_auction_availability()
+        # Projection work must not hold the service lock. Native operations
+        # still read and validate fresh identities, slots and receipts.
+        result['character'] = self._character_projection_cache.get(
+            without_sample_time(character), lambda: self._character_payload(character))
+        if 'captured_at' in character:
+            result['character']['captured_at'] = character['captured_at']
         result['game'] = (self.game_lifecycle.state(known_running_pid=result['pid'] if result['connected'] else None)
                           if hasattr(self,'game_lifecycle') else {})
-        if not snap: return result
+        result['steam_client'] = (self.steam_client_profile.state() if hasattr(self,'steam_client_profile')
+                                  else {'status':'unknown','nickname':'','avatar_url':''})
+        if not snap:
+            self._inventory_projection_cache.clear()
+            return result
         market_catalog = self._market_catalog()
+        cache_key = inventory_projection_key(snap, character, rules,
+            (id(self.catalog), id(self.adapter), id(self.ui), id(self.item_ui),
+             id(self.loot_item_ui), id(market_catalog)))
+        result.update(self._inventory_projection_cache.get(cache_key,
+            lambda: self._inventory_projection(snap, character, rules, market_catalog)))
+        return result
+
+    def _inventory_projection(self, snap, character, rules, market_catalog):
+        result = {'items': [], 'counts': {}, 'complete': bool(snap.get('complete')),
+                  'transfer': snap.get('transfer', {'available': False})}
         adapted = self.adapter.adapt_snapshot(snap)
         observations = {(i.container,i.index):i for i in adapted.items}
         planner = LockPlanner(self.catalog)
@@ -906,6 +950,8 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
                 'occupied':snap['containers'].get(container,{}).get('occupied_count',0),
                 'capacity':snap['containers'].get(container,{}).get('slot_count',0)}
         result['issues'] = snap.get('issues', [])
+        # The caller uses the current snapshot's envelope, not cached metadata.
+        del result['complete'], result['transfer']
         return result
 
     def start(self, kind, payload=None):
@@ -917,9 +963,13 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
                 raise ValidationError('游戏正在启动或退出，请稍候。')
             if self.busy: raise ValidationError('当前操作尚未完成，请稍候或停止操作。')
             if self.managed.running: raise ValidationError('请先暂停托管，再执行手动背包操作。')
-            if kind not in ('connect','disconnect','read','lock_selected','lock_rules','unlock_all','move_items'):
+            if kind not in ('connect','disconnect','read','lock_selected','lock_rules','unlock_all','move_items','auction_refresh'):
                 raise ValidationError('不支持的操作。')
             if kind!='connect' and not self.client.connected: raise ValidationError('请先连接游戏。')
+            if kind=='auction_refresh':
+                availability = self.manual_auction_availability()
+                if not availability['available']:
+                    raise ValidationError(availability['reason'])
             if kind in ('disconnect','unlock_all'):
                 self.monitoring = False
                 self.automation_running = False
@@ -955,19 +1005,20 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
             self.progress = None
             self.cancelled.clear()
             self.message = {'connect':'正在连接游戏…','disconnect':'正在断开连接…','read':'正在刷新装备…',
-                'lock_selected':'正在锁定所选装备…','lock_rules':'正在按规则锁定装备…','unlock_all':'正在解锁装备，监控已暂停…','move_items':'正在核验物品和目标空格…'}[kind]
+                'lock_selected':'正在锁定所选装备…','lock_rules':'正在按规则锁定装备…','unlock_all':'正在解锁装备，监控已暂停…','move_items':'正在核验物品和目标空格…',
+                'auction_refresh':'正在刷新拍卖行当前列表…'}[kind]
             self.worker = threading.Thread(target=self._work, args=(kind,payload), daemon=True)
             self.worker.start()
 
     def _work(self, kind, payload):
         with self.guard: self.operation_kind = kind
         try:
-            if kind!='observe': record('web_operation_started', kind=kind)
+            if kind not in ('observe','monitor','managed'): record('web_operation_started', kind=kind)
             if kind not in ('observe','monitor','managed'):
                 self.journal.append('system','operation_started',{
                     'connect':'连接游戏','disconnect':'断开游戏','read':'刷新物品清单',
                     'lock_selected':'锁定所选装备','lock_rules':'按规则锁定装备','unlock_all':'全部解锁装备',
-                    'move_items':'移动所选物品'}[kind]+'：开始',context={'operation':kind,'scope':payload.get('scope','all')})
+                    'move_items':'移动所选物品','auction_refresh':'刷新拍卖行当前列表'}[kind]+'：开始',context={'operation':kind,'scope':payload.get('scope','all')})
             if kind=='connect':
                 self.client.connect()
                 self.activity.reset()
@@ -987,6 +1038,8 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
                 self._managed_refresh_control()
             elif kind=='managed':
                 message = self._managed_once()
+            elif kind=='auction_refresh':
+                message = self._refresh_native_trades()
             elif kind=='move_items':
                 self._publish(self.client.snapshot())
                 with self.guard: self.progress = {'done':0,'total':len(payload['expected'])}
@@ -1020,6 +1073,8 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
                 self._publish(self.client.snapshot())
                 label = '解锁' if kind=='unlock_all' else '锁定'
                 message = f'已后台{label} {count} 件装备'+('；已停止后续操作。' if self.cancelled.is_set() else '；已回读锁状态并请求游戏保存。')
+            if kind in ('connect', 'read', 'observe', 'monitor', 'managed'):
+                self._refresh_trade_tracking_if_needed()
             with self.guard:
                 if kind!='observe': self.message = message
                 if kind not in ('read','monitor','observe') or ('锁定' in message) or ('自动整理：' in message):
@@ -1027,7 +1082,7 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
                     self.history = self.history[:12]
             if kind not in ('observe','monitor','managed'):
                 self.journal.append('system','operation_finished',message,context={'operation':kind,'cancelled':self.cancelled.is_set()})
-            if kind!='observe': record('web_operation_finished', kind=kind)
+            if kind not in ('observe','monitor','managed'): record('web_operation_finished', kind=kind)
         except Exception as exc:
             failure_traceback = traceback.format_exc()
             if kind=='managed' and isinstance(exc,GameBusyError):
@@ -1263,11 +1318,10 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
         snapshot=self.client.snapshot()
         self._publish(snapshot)
         if not snapshot.get('complete'):
-            self._publish(snapshot)
             with self.guard: self.automation_status='物品正在变化，等待下一次完整读取。'
             return self.automation_status
         changes=[];waiting=[];budget=8
-        def move_one(row,pages):
+        def move_rows(selected,pages):
             nonlocal snapshot,budget
             if not active(): return False
             if not snapshot.get('transfer',{}).get('available'):
@@ -1278,17 +1332,29 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
             if not targets:
                 waiting.append('所选仓库页尚未开放，物品保留在背包；请检查存放页。');return False
             try:
-                result=self.client.move_items([row],'storage',active,target_indices=targets)
+                # Same policy/page, bounded by the original eight-item budget.
+                # Native planning validates ALL identities before atomically
+                # moving the fitting prefix. Each source stack stays whole.
+                options = {'allow_partial': True} if len(selected) > 1 else {}
+                result=self.client.move_items(selected,'storage',active,target_indices=targets,**options)
+                moved=result.get('moved')
+                if type(moved) is not int or not 0 <= moved <= len(selected):
+                    raise MemoryReadError('搬运结果数量未核验，已停止后续整理。')
+                if not moved:
+                    waiting.append('目标堆叠容量及可用空格不足，物品保留在背包。');return False
                 self._record_item_commit('items_transferred',result)
             except MemoryReadError as exc:
                 if any(v in str(exc) for v in ('空格不足','发生变化','正在变化','已取消')):
                     waiting.append(str(exc));return False
-                self._record_transfer_failure(row,'storage',exc,automatic=True)
+                self._record_transfer_failure(selected[0],'storage',exc,automatic=True)
                 raise
-            budget-=1
-            name=self.item_names.get(row['internal_name'],{}).get('Chinese (Simplified)') or row['internal_name']
-            suffix='（合并堆叠）' if result.get('stacked_count') else ''
-            changes.append('移入仓库 '+name+suffix)
+            budget-=moved
+            for row in selected[:moved]:
+                name=self.item_names.get(row['internal_name'],{}).get('Chinese (Simplified)') or row['internal_name']
+                merged=any(m.get('merged') and m.get('source',{}).get('slot_index')==row['slot_index']
+                           for m in result.get('movements',[]))
+                suffix='（合并堆叠）' if merged or len(selected)==1 and result.get('stacked_count') else ''
+                changes.append('移入仓库 '+name+suffix)
             snapshot=self.client.snapshot()
             self._publish(snapshot)
             if not snapshot.get('complete'): raise CarriageUnavailable('搬运后物品正在变化，等待下一次读取。')
@@ -1299,14 +1365,16 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
             while budget and active():
                 selected=[r for r in snapshot['containers']['inventory']['slots'] if item_kind(r)[0]==kind and not r.get('issues') and r.get('transfer_key') and r['transfer_key'] not in blocked]
                 if not selected: break
-                if not move_one(selected[0],settings[group]['pages']):
+                if not move_rows(selected[:budget],settings[group]['pages']):
                     blocked.add(selected[0]['transfer_key'])
                     budget-=1
         if settings['pressure']['enabled'] and budget and active():
             candidates,self.pressure_active=pressure_candidates(snapshot,settings['pressure'],self.pressure_active)
             if self.pressure_active and not candidates: waiting.append('背包空间紧张，当前没有符合入库范围的装备。')
             while candidates and budget and active():
-                if not move_one(candidates[0],settings['pressure']['pages']): break
+                # Pressure goals are recalculated after EACH equipment item;
+                # batching this branch could overshoot the user's free-slot goal.
+                if not move_rows([candidates[0]],settings['pressure']['pages']): break
                 candidates,self.pressure_active=pressure_candidates(snapshot,settings['pressure'],self.pressure_active)
         if settings['carriage']['enabled'] and budget and active():
             carriage=self.client.carriage_snapshot()
@@ -1332,7 +1400,6 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
                     budget-=1;snapshot=self.client.snapshot()
                     self._publish(snapshot)
                     if not snapshot.get('complete'): break
-        self._publish(snapshot)
         message='自动整理：'+'；'.join(changes) if changes else '自动整理运行中，等待符合设置的物品。'
         with self.guard:
             if self.automation_running: self.automation_status='；'.join(waiting) if waiting else message
@@ -1394,9 +1461,9 @@ class AssistantService(ManualAuctionServiceMixin, AuctionServiceMixin, ManagedSe
         if worker and worker is not threading.current_thread(): worker.join()
         if self.recommendation_thread and self.recommendation_thread is not threading.current_thread():
             self.recommendation_thread.join()
-        if self.loot_capture_thread is not threading.current_thread(): self.loot_capture_thread.join()
         if getattr(self, 'community', None) is not None: self.community.close()
         if getattr(self, 'market', None) is not None: self.market.close()
         if getattr(self, 'market_currency', None) is not None: self.market_currency.close()
         if getattr(self, 'auction_coordinator', None) is not None: self.auction_coordinator.close()
+        if getattr(self, 'native_steam_acceleration', None) is not None: self.native_steam_acceleration.close()
         self.client.close()

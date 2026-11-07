@@ -8,6 +8,7 @@ import time
 from .auction import CATEGORIES, key
 from .auction_runtime import auction_eligibility
 from .models import ValidationError
+from .sale_tracking import project_receipt
 
 
 def _rows(snapshot):
@@ -175,9 +176,35 @@ class ManualAuctionServiceMixin:
 
     def manual_auction_state(self):
         with self.guard:
-            return deepcopy(getattr(self, 'manual_auction_value', {
+            value = deepcopy(getattr(self, 'manual_auction_value', {
                 'running': False, 'phase': 'idle', 'message': '', 'completed': 0,
                 'total': 0, 'items': [], 'can_cancel': False}))
+            receipts = dict(getattr(self, 'manual_auction_receipts', {}))
+            coordinator = getattr(self, 'auction_coordinator', None)
+        # Project the worker's latest exact-asset receipt onto this batch. GET
+        # never submits or requests Steam, and never waits on network I/O while
+        # holding the service lock. Proof/account associations stay private.
+        if coordinator is None or not receipts:
+            return value
+        for index, (proof, steamid) in receipts.items():
+            row = value['items'][index]
+            if row['status'] not in ('uploaded', 'pending_confirmation', 'uncertain', 'listed', 'sold'):
+                continue
+            receipt = coordinator.trading.proof_state(proof, steamid, wait=False)
+            if receipt.get('status') in ('listed', 'sold', 'captured') or receipt.get('confirmation_pending') is True:
+                row.update(project_receipt(receipt))
+            elif row['status'] != 'uploaded' or receipt.get('status') in ('pending', 'intent', 'uncertain'):
+                row.update(status='uncertain', message='卖单已提交，当前确认状态待核验；稍后自动刷新，不会重复提交。')
+        if not value['running'] and value['phase'] == 'completed':
+            statuses = {row['status'] for row in value['items']}
+            if 'uncertain' in statuses:
+                value['message'] = '本次所选物品已处理完成；部分 Steam 卖单状态待核验，不会重复提交。'
+            elif 'pending_confirmation' in statuses:
+                value['message'] = '本次所选物品已处理完成；待确认的卖单请在 Steam 中确认，完成后会自动核验。'
+            elif 'listed' in statuses:
+                value['message'] = '本次所选物品已处理完成；Steam 挂牌结果已更新，是否成交请以市场记录为准。'
+        value['reprice'] = deepcopy(getattr(self, 'auction_reprice_job', {}))
+        return value
 
     def manual_auction_start(self, payload):
         if (not isinstance(payload, dict) or set(payload) != {'token'} or not isinstance(payload['token'], str)
@@ -198,6 +225,7 @@ class ManualAuctionServiceMixin:
                 'can_cancel': True, 'mode': plan['mode'],
                 'items': [{**row, 'status': 'queued' if row['status'] == 'ready' else 'skipped',
                            'message': row['reason']} for row in plan['items']]}
+            self.manual_auction_receipts = {}
             self.busy = True
             self.operation_kind = 'manual_auction'
             self.cancelled.clear()
@@ -362,6 +390,8 @@ class ManualAuctionServiceMixin:
             return
         settings = {'sell_enabled': True, 'categories': list(CATEGORIES), 'excluded_keys': [],
                     'price_rule': plan['price_rule']}
+        with self.guard:
+            self.manual_auction_receipts[index] = (ticket, steamid)
         value = coordinator.trading.sale_once(settings, steamid,
             validate=lambda: self._manual_auction_active(plan, identity=True), proof_scope=frozenset({ticket}))
         receipt = coordinator.trading.proof_state(ticket, steamid)

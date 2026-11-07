@@ -10,6 +10,8 @@ import uuid
 
 
 CATEGORIES = {'loot', 'lock', 'transfer', 'settings', 'system', 'error'}
+PROVENANCE_BATCH_SIZE = 256
+_PROVENANCE_MIGRATION = 'merchant_provenance_v1'
 
 
 class ActivityJournal:
@@ -26,6 +28,15 @@ class ActivityJournal:
                 quantity INTEGER, source TEXT, destination TEXT, context TEXT NOT NULL,
                 event_key TEXT UNIQUE)''')
             db.execute('CREATE INDEX IF NOT EXISTS events_category_id ON events(category,id)')
+            # Purchase identity is durable evidence, not a recent-log cache.
+            # Keep every confirmed UID while avoiding full receipt decoding at
+            # every startup. The original activity/transaction history stays intact.
+            db.execute('''CREATE TABLE IF NOT EXISTS merchant_item_provenance (
+                item_uid TEXT PRIMARY KEY, event_id INTEGER NOT NULL) WITHOUT ROWID''')
+            db.execute('''CREATE TABLE IF NOT EXISTS journal_migrations (
+                name TEXT PRIMARY KEY, last_event_id INTEGER NOT NULL) WITHOUT ROWID''')
+            db.execute('INSERT OR IGNORE INTO journal_migrations VALUES (?,0)',
+                       (_PROVENANCE_MIGRATION,))
 
     @contextmanager
     def _connect(self):
@@ -41,17 +52,52 @@ class ActivityJournal:
 
     def merchant_item_uids(self):
         """Recover purchase provenance from confirmed receipts after a restart."""
+        self._backfill_merchant_provenance()
         with self.guard, self._connect() as db:
-            rows=db.execute("SELECT context FROM events WHERE event='managed_action'").fetchall()
-        uids=set()
-        for (raw,) in rows:
-            try:
-                context=json.loads(raw);action=context.get('action') or {};result=context.get('result') or {}
-                if action.get('kind')!='merchant_buy' or result.get('verified') is not True:continue
-                values=result.get('received_uids') or [result.get('received_uid')]
-                if isinstance(values,list):uids.update(v for v in values if isinstance(v,str) and v)
-            except (ValueError,AttributeError,TypeError):continue
-        return uids
+            return {row[0] for row in db.execute('SELECT item_uid FROM merchant_item_provenance')}
+
+    @staticmethod
+    def _index_merchant_receipt(db, event_id, event, raw):
+        if event != 'managed_action':
+            return
+        try:
+            context = json.loads(raw)
+            action, result = context.get('action') or {}, context.get('result') or {}
+            if action.get('kind') != 'merchant_buy' or result.get('verified') is not True:
+                return
+            values = result.get('received_uids') or [result.get('received_uid')]
+            if not isinstance(values, list):
+                return
+            uids = {value for value in values if isinstance(value, str) and value}
+        except (ValueError, AttributeError, TypeError):
+            return  # Preserve the old reader's handling of malformed legacy rows.
+        db.executemany('''INSERT INTO merchant_item_provenance VALUES (?,?)
+            ON CONFLICT(item_uid) DO UPDATE SET
+                event_id=MIN(merchant_item_provenance.event_id,excluded.event_id)''',
+                       ((uid, event_id) for uid in uids))
+
+    def _backfill_merchant_provenance(self):
+        # Each batch commits its evidence and cursor together. Interrupted
+        # upgrades resume without skipping receipts; an older version can also
+        # append events and the next read will catch up from this same cursor.
+        while True:
+            with self.guard, self._connect() as db:
+                db.execute('BEGIN IMMEDIATE')
+                cursor = db.execute('SELECT last_event_id FROM journal_migrations WHERE name=?',
+                                    (_PROVENANCE_MIGRATION,)).fetchone()[0]
+                latest = db.execute('SELECT COALESCE(MAX(id),0) FROM events').fetchone()[0]
+                if cursor >= latest:
+                    return
+                # Walk the primary key, including unrelated events, so each
+                # transaction scans at most one batch; do not load their JSON.
+                rows = db.execute('''SELECT id,event,
+                    CASE WHEN event='managed_action' THEN context END
+                    FROM events WHERE id>? ORDER BY id LIMIT ?''',
+                    (cursor, PROVENANCE_BATCH_SIZE)).fetchall()
+                for event_id, event, raw in rows:
+                    self._index_merchant_receipt(db, event_id, event, raw)
+                db.execute('UPDATE journal_migrations SET last_event_id=? WHERE name=?',
+                           (rows[-1][0], _PROVENANCE_MIGRATION))
 
     def append_many(self, entries):
         if not entries:
@@ -59,6 +105,8 @@ class ActivityJournal:
         now = datetime.now(timezone.utc).isoformat()
         ids = []
         with self.guard, self._connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            previous = db.execute('SELECT COALESCE(MAX(id),0) FROM events').fetchone()[0]
             for row in entries:
                 if row['category'] not in CATEGORIES:
                     raise ValueError('无效的日志分类')
@@ -66,15 +114,23 @@ class ActivityJournal:
                 if quantity is not None and (type(quantity) is not int or quantity < 0):
                     raise ValueError('日志数量必须为非负整数')
                 encode = lambda value: json.dumps(value, ensure_ascii=False) if value is not None else None
+                context = encode(row.get('context', {}))
                 cursor = db.execute('''INSERT OR IGNORE INTO events
                     (time,category,event,message,item_key,item_name,item_kind,quantity,
                     source,destination,context,event_key) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''',
                     (row.get('time') or now, row['category'], row['event'], row['message'],
                      row.get('item_key', ''), row.get('item_name', ''), row.get('item_kind', ''),
                      quantity, encode(row.get('source')), encode(row.get('destination')),
-                     encode(row.get('context', {})), row.get('event_key')))
+                     context, row.get('event_key')))
                 if cursor.rowcount:
                     ids.append(cursor.lastrowid)
+                    self._index_merchant_receipt(db, cursor.lastrowid, row['event'], context)
+            if ids:
+                # Advance only if the older history was already indexed. A new
+                # append must never jump over an unfinished legacy migration.
+                db.execute('''UPDATE journal_migrations SET last_event_id=?
+                    WHERE name=? AND last_event_id=?''',
+                    (ids[-1], _PROVENANCE_MIGRATION, previous))
         return ids
 
     def page(self, *, category='', query='', before=None, limit=50):

@@ -52,6 +52,7 @@ class SteamLoginWindow:
         self.events = SimpleNamespace(closed=_ClosedEvent())
         self.form = self.browser = None
         self.ready = False
+        self._community_login_complete = threading.Event()
         root = Path(profile_directory).resolve()
         root.mkdir(parents=True, exist_ok=True)
         self.profile = TemporaryDirectory(prefix='login-', dir=root, ignore_cleanup_errors=True)
@@ -62,6 +63,7 @@ class SteamLoginWindow:
         self.community_transport = community_transport or CommunityLoginTransport()
         from .steam_login_diagnostics import LoginDiagnostics
         self.diagnostics = LoginDiagnostics(root.parent / 'steam-login-diagnostic.json')
+        self.tunnel.diagnostics = self.diagnostics
         try:
             self.tunnel.start()
             self._invoke(lambda: self._create(title, url, width, height, min_size, visible))
@@ -128,11 +130,24 @@ class SteamLoginWindow:
             browser.CoreWebView2.Settings.IsGeneralAutofillEnabled = False
             browser.CoreWebView2.NewWindowRequested += popup
             browser.CoreWebView2.NavigationStarting += navigate
+            browser.CoreWebView2.WebResourceResponseReceived += self._login_response
             attach_community_transport(self, self.community_transport)
             from .steam_login_diagnostics import attach_login_diagnostics
             try: attach_login_diagnostics(self, self.diagnostics)
             except Exception: pass  # Optional diagnostics must not block login.
-            browser.CoreWebView2.Navigate(accelerated_login_url(url))
+            def prepare_navigation():
+                try:
+                    prepare = getattr(self.community_transport, 'prepare', None)
+                    if prepare is not None: prepare()
+                except Exception:
+                    pass  # Probing must not prevent a normal official login.
+                def navigate_ready():
+                    if self.ready and not form.IsDisposed:
+                        browser.CoreWebView2.Navigate(accelerated_login_url(url))
+                try: self._invoke(navigate_ready)
+                except Exception: pass  # The user may close the window while probing.
+            threading.Thread(target=prepare_navigation,
+                             name='steam-login-route-prepare', daemon=True).start()
 
         def closed(*_):
             self.ready = False
@@ -153,6 +168,27 @@ class SteamLoginWindow:
             _ = browser.Handle
         browser.EnsureCoreWebView2Async(None)
         if visible: form.Show()
+
+    @property
+    def login_complete(self):
+        return self._community_login_complete.is_set()
+
+    def _login_response(self, _, event):
+        """Native receipt only; cookies and wallet still require validation.
+
+        Steam can finish Community's cookie transfer while navigation waits on
+        another host. This isolated profile starts empty, so the receipt lets
+        the observer inspect fresh cookies without waiting for that navigation.
+        """
+        try:
+            target = urlsplit(str(event.Request.Uri))
+            if (target.scheme == 'https' and target.hostname == 'steamcommunity.com'
+                    and target.port in (None, 443) and not target.username and not target.password
+                    and target.path.rstrip('/') == '/login/settoken'
+                    and str(event.Request.Method) == 'POST' and event.Response.StatusCode == 200):
+                self._community_login_complete.set()
+        except Exception:
+            return  # An unreadable receipt never authorizes capture.
 
     def show(self):
         def show():

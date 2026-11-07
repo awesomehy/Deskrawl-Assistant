@@ -764,6 +764,7 @@ class GameActions:
                 'loot_ledger':loot_ledger,
                 'system_log':system_log,
                 'gold_ledger':gold_ledger,
+                'entry_items':dict(progress['entry_items']),
                 'map_id':map_id, 'difficulty':scene_difficulty, 'world_difficulty':difficulty,'mythic_entry_difficulty':entry_difficulty, 'run':run,
                 'maps':maps_by_difficulty[scene_difficulty], 'maps_by_difficulty':maps_by_difficulty,'difficulties':difficulties,
                 'ground':[{k:v for k,v in row.items() if not k.startswith('_')} for row in ground],

@@ -8,7 +8,8 @@ from unittest.mock import patch
 from unittest.mock import Mock
 from types import SimpleNamespace
 
-from deskrawl_assistant.loot_capture import LootCaptureMonitor, plan_hash, planned_hits, high_value_reason, _market_catalog
+from deskrawl_assistant.loot_capture import LootCaptureMonitor, plan_hash, planned_hits
+from deskrawl_assistant.high_value_loot import high_value_reason, _market_catalog
 from deskrawl_assistant.loot_plan_reader import read_loot_plan
 from tests.test_loot_plan_reader import Fixture
 
@@ -90,7 +91,7 @@ class LootCaptureTests(unittest.TestCase):
 
     def test_market_definition_not_a_fixed_material_allowlist(self):
         entry = {'kind':'material', 'rarity':3, 'normal':{'definition_id':9999}}
-        with patch('deskrawl_assistant.loot_capture._market_catalog', return_value=SimpleNamespace(items={'FutureMarketMaterial':entry})):
+        with patch('deskrawl_assistant.high_value_loot._market_catalog', return_value=SimpleNamespace(items={'FutureMarketMaterial':entry})):
             self.assertEqual(high_value_reason({'internal_name':'FutureMarketMaterial'}), '可交易物品')
 
     def test_uidless_material_observation_and_ground_carriage_transfer(self):
@@ -468,24 +469,6 @@ class LootCaptureTests(unittest.TestCase):
         data['observations'][0]['capture_source']='storage'
         self.monitor.feed(data)
         self.assertEqual(len(self.saved()['observed_high_value']),1)
-
-    def test_capture_loop_waits_for_purchase_receipt_before_classifying_new_items(self):
-        import threading
-        from deskrawl_assistant.web_service import AssistantService
-        data=bundle();self.monitor.feed(data)
-        data['observations']=[observed()]
-        service=SimpleNamespace(closed=Mock(),updating=False,loot_capture=self.monitor,
-            guard=threading.RLock(),managed_merchant_uids=set(),
-            managed=SimpleNamespace(pending={'kind':'merchant_buy'}),
-            client=SimpleNamespace(connected=True,loot_capture_snapshot=lambda:deepcopy(data)))
-        service.closed.wait.side_effect=[False,True]
-        service.closed.is_set.return_value=False
-        AssistantService._loot_capture_loop(service)
-        self.assertFalse(self.files())
-        service.managed.pending=None;service.managed_merchant_uids.add('actual-drop')
-        service.closed.wait.side_effect=[False,True]
-        AssistantService._loot_capture_loop(service)
-        self.assertEqual(self.saved()['association'],'merchant_purchase')
 
     def test_only_same_name_is_not_proof_of_plan_membership(self):
         data = bundle('LegendaryBelt1','Divine')

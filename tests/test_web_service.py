@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from deskrawl_assistant.web_service import AssistantService, BASE
 from deskrawl_assistant.rules import rules_from_dict
 from deskrawl_assistant.models import ValidationError
@@ -54,7 +54,9 @@ class WebServiceTests(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.config=Path(self.tmp.name)/'rules.json'
         self.client=FakeClient([item(1,locked=True),item(2,'storage',locked=True),item(3)])
-        self.service=AssistantService(self.client,self.config)
+        self.steam_profile=Mock()
+        self.steam_profile.state.return_value={'status':'online','nickname':'本机昵称','avatar_url':''}
+        self.service=AssistantService(self.client,self.config,steam_client_profile=self.steam_profile)
         self.service._publish(self.client.snapshot())
         self.addCleanup(self.service.close)
         self.log=patch('deskrawl_assistant.web_service.record')
@@ -64,11 +66,76 @@ class WebServiceTests(unittest.TestCase):
         return {'id':'test-rule','name':'战饮腰带','equipment_keys':['LegendaryBelt3'],'enabled':True,
             'groups':{'primary':{'selected_stats':['Stats.CooldownReduction'],'operator':'>=','count':1}},'group_mode':'all'}
 
+    def test_service_does_not_start_local_loot_archiving(self):
+        self.assertFalse(hasattr(self.service, 'loot_capture'))
+        self.assertFalse(hasattr(self.service, 'loot_capture_thread'))
+        self.assertFalse((self.config.parent / 'loot-captures').exists())
+        self.assertNotIn('loot_capture', self.service.state())
+
+    def test_local_steam_profile_is_visible_without_game_or_market_login(self):
+        self.client.connected=False
+        self.assertEqual(self.service.state()['steam_client'],self.steam_profile.state.return_value)
+        self.steam_profile.state.return_value={'status':'logged_out','nickname':'','avatar_url':''}
+        self.assertEqual(self.service.state()['steam_client']['status'],'logged_out')
+
+    def test_pending_trade_inventory_follows_verified_game_identity_without_enabling_automation(self):
+        identity = {'available': True, 'steamid_verified': True, 'steamid': '76561198000000001',
+                    'session': 'test-session', 'character_id': 'hero'}
+        self.client.character_snapshot = Mock(return_value={'available': True, 'session': 'test-session',
+                                                            'character_id': 'hero', 'equipment': []})
+        self.client.steam_identity_snapshot = Mock(return_value=identity)
+        self.client.auction_state = Mock(return_value={'available': True, 'steamid': identity['steamid'],
+                                                      'steamid_verified': True, 'listings': []})
+        self.client.items = [{'name_key': 'GoldBar', 'rarity': 3, 'container': 'inventory',
+                              'item_uid': 'gold', 'slot_index': 0, 'count': 1}]
+        self.service._publish(self.client.snapshot())
+        value = self.service.managed_auction_tracking()
+        self.assertEqual(value['total'], 1)
+        self.assertEqual(value['items'][0]['status'], 'waiting_town')
+        self.assertEqual(self.client.actions, [])
+        self.assertFalse(self.service.managed.running)
+        # A transient identity failure retains its prior stage, marked unverified.
+        self.client.steam_identity_snapshot.side_effect = RuntimeError('temporary read')
+        self.service._publish(self.client.snapshot())
+        row = self.service.managed_auction_tracking()['items'][0]
+        self.assertEqual((row['status'], row['previous_status']), ('uncertain', 'waiting_town'))
+        # Switching to an unverified account must never inherit the old list.
+        self.client.character_snapshot.return_value['character_id'] = 'different-hero'
+        self.service._publish(self.client.snapshot())
+        self.assertEqual(self.service.managed_auction_tracking()['items'], [])
+
     def run_action(self,kind,**payload):
         self.service.start(kind,payload)
         self.service.worker.join(3)
         self.assertFalse(self.service.busy)
         self.assertFalse(self.service.error,self.service.error)
+
+    def test_native_auction_refresh_uses_the_serial_worker_and_does_not_sell_or_move(self):
+        with patch.object(self.service, 'manual_auction_availability', return_value={'available': True}), \
+             patch.object(self.service, '_refresh_native_trades', return_value='已重新读取拍卖行。') as refresh:
+            self.service.auction_tracking_refresh({})
+            self.service.worker.join(3)
+        refresh.assert_called_once_with()
+        self.assertFalse(self.service.busy)
+        self.assertFalse(self.service.error, self.service.error)
+        self.assertEqual(self.service.message, '已重新读取拍卖行。')
+        self.assertEqual(self.client.actions, [])
+
+    def test_native_auction_refresh_blocks_busy_managed_or_unavailable_scene(self):
+        with patch.object(self.service, '_refresh_native_trades') as refresh:
+            with patch.object(self.service, 'manual_auction_availability',
+                              return_value={'available': False, 'reason': '请先回城。'}):
+                with self.assertRaisesRegex(ValidationError, '回城'):
+                    self.service.auction_tracking_refresh({})
+            for field, obj in [('busy', self.service), ('running', self.service.managed)]:
+                with patch.object(obj, field, True):
+                    with self.assertRaises(ValidationError):
+                        self.service.auction_tracking_refresh({})
+            for payload in ({'steamid': 'other'}, {'url': 'https://outside.example'}, None):
+                with self.assertRaises(ValidationError):
+                    self.service.auction_tracking_refresh(payload)
+        refresh.assert_not_called()
+        self.assertFalse(self.service.busy)
 
     def test_catalog_has_all_64_legendary_icons_and_real_class_masks(self):
         catalog=self.service.catalog_payload()

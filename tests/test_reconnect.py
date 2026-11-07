@@ -219,6 +219,24 @@ class ManagedReconnectTests(unittest.TestCase):
         self.assertEqual(self.service.managed.phase, 'paused')
         self.assertEqual(self.client.actions, [])
 
+    def test_reloaded_same_character_marks_pending_synthesis_for_read_only_reconciliation(self):
+        self.ready()
+        wait = {'stage': 'receipt', 'started': 1, 'next_at': 99}
+        self.service.managed_synthesis_wait = wait
+        self.service._managed_reconnect_once()
+        self.assertNotIn('reconnected', wait)
+        self.client.reconnect_snapshot.return_value = {'in_game': True}
+        observation = self.service._managed_observation()
+        observation['character_id'] = CHARACTER
+        with patch.object(self.service, '_managed_observation', return_value=observation), \
+                patch('deskrawl_assistant.managed_service.time.monotonic', return_value=200):
+            self.service._managed_reconnect_once()
+        self.assertIs(self.service.managed_synthesis_wait, wait)
+        self.assertTrue(wait['reconnected'])
+        self.assertEqual(wait['started'], 200)
+        self.assertEqual(wait['next_at'], 0)
+        self.assertEqual(self.client.actions, [])
+
     def test_loaded_town_with_live_scene_flag_does_not_clear_travel_or_item_fences(self):
         self.ready()
         self.service._managed_once()

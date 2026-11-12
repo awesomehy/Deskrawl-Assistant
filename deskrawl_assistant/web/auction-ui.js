@@ -63,7 +63,7 @@
     const confirmationKnown=authenticated&&sell.confirmation_known===true&&Number.isFinite(sell.confirmation_expires_at)&&Date.now()<sell.confirmation_expires_at*1000;
     return {authenticated,expired,bound:steam.bound===true,loginAvailable:state.login_available===true,loginPending:steam.login_pending===true,
       loginReason:state.login_reason||'请在桌面助手中登录 Steam；普通浏览器不能打开桌面登录窗口。',
-      loginText:authenticated?`${steam.source==='local_steam'?'本机 Steam 已登录':'已登录'}${steam.account_name?' · '+steam.account_name:''}`:steam.login_pending?'等待 Steam 登录完成':expired?'登录凭证已过期，请重新登录':steam.bound?'登录凭证已保存，等待核验':steam.local_status==='pending'?'正在核验本机 Steam':'尚未登录 Steam',
+      loginText:authenticated?`${steam.source==='local_steam'?'本机 Steam 已登录':'已登录'}${steam.account_name?' · '+steam.account_name:''}`:steam.login_pending?'等待 Steam 登录完成':steam.renewing?'本机 Steam 凭证自动续期中':expired?'登录凭证已过期，请重新登录':steam.bound?'登录凭证已保存，等待核验':steam.local_status==='pending'?'正在核验本机 Steam':'尚未登录 Steam',
       loginMessage:[typeof steam.message==='string'?steam.message:'',steam.source!=='local_steam'&&typeof steam.local_message==='string'?steam.local_message:''].filter(Boolean).join(' '),
       currency:authenticated&&typeof steam.wallet_currency==='string'&&steam.wallet_currency?steam.wallet_currency:'等待读取 Steam 钱包币种',
       uploadText:upload.message||(upload.pending?'上传结果待确认':upload.phase==='disabled'?'上传未启用':'等待上传状态'),

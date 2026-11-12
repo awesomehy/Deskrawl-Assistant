@@ -35,6 +35,30 @@ function growthUI(){
   const ui=window.ManagedGrowthUI;ui.init();return {node,document,ui,rows};
 }
 
+test('growth polling retains unchanged summary and waiting nodes but updates money, ranks and connection transitions',()=>{
+  const {ui,node}=growthUI(),settings=growth.normalize(),ids=['growth-life-summary','managed-talent-tree','managed-skill-stages'];
+  const writes=Object.fromEntries(ids.map(id=>[id,0]));
+  for(const id of ids){let html='';Object.defineProperty(node(id),'innerHTML',{get:()=>html,set:value=>{html=value;writes[id]++;}});}
+  const paint=(state,connected)=>ui.render(settings,data,state,false,()=>{},connected);
+  paint(null,false);const initial={...writes};
+  for(let n=0;n<100;n++)paint(null,false);
+  assert.deepEqual(writes,initial);
+  paint({available:false},true);assert.match(node('managed-talent-tree').innerHTML,/正在读取当前角色职业/);
+  const state={available:true,class_mask:4,level:70,gold:10000,soul_shards:{current:20,maximum:100},
+    talents:{ranks:{},unspent:70},life_skills:{ranks:{}},skills:{equipped:[null,null,null,null],available:[]}};
+  paint(state,true);const connectedWrites={...writes};
+  for(let n=0;n<100;n++)paint(JSON.parse(JSON.stringify(state)),true);
+  assert.deepEqual(writes,connectedWrites);
+  state.gold=54321;paint(state,true);
+  assert.equal(writes['growth-life-summary'],connectedWrites['growth-life-summary']+1);
+  assert.match(node('growth-life-summary').innerHTML,/54,321/);
+  state.life_skills.ranks[data.life_skills[0].id]=data.life_skills[0].max_points;paint(state,true);
+  assert.match(node('growth-life-summary').innerHTML,/已学习 <b>1<\/b>/);
+  paint(state,false);assert.match(node('managed-talent-tree').innerHTML,/请先连接游戏/);
+  paint(state,true);assert.match(node('managed-talent-tree').innerHTML,/data-talent-node/);
+  assert.match(node('managed-skill-stages').innerHTML,/data-skill-id/);
+});
+
 test('icon selection retains numeric budgets and does not overwrite other class plans',()=>{
   const {node,document,ui,rows}=growthUI();let saved=growth.normalize();
   let shopBuilds=0,shopHtml='';Object.defineProperty(node('managed-shop-weights'),'innerHTML',{
@@ -79,8 +103,8 @@ test('icon selection retains numeric budgets and does not overwrite other class 
   assert.equal(node('managed-talent-tree.growth-tree-canvas').style.height,'899px');
   assert.equal(new Set(talentNodes.map(n=>n.style.left+','+n.style.top)).size,41);
   const lifeNodes=node('managed-life-nodes').querySelectorAll('[data-life-node]');
-  assert.equal(lifeNodes.length,87);
-  assert.equal(new Set(lifeNodes.map(n=>n.style.left+','+n.style.top)).size,87);
+  assert.equal(lifeNodes.length,89);
+  assert.equal(new Set(lifeNodes.map(n=>n.style.left+','+n.style.top)).size,89);
   assert.ok(parseFloat(node('managed-life-nodes.growth-life-canvas').style.width)>1000);
   assert.equal(node('managed-life-nodes.growth-life-canvas').style.transform,'scale(0.42)');
   // Only a new actual character snapshot can select another class.
@@ -124,7 +148,7 @@ test('unloaded skill controller preserves live growth data and editable presets 
   assert.match(node('growth-life-summary').innerHTML,/已学习 <b>1<\/b>/);
   assert.match(node('growth-life-summary').innerHTML,/当前金币 <b>12,345<\/b>/);
   assert.equal(node('managed-talent-tree').querySelectorAll('[data-talent-node]').length,41);
-  assert.equal(node('managed-life-nodes').querySelectorAll('[data-life-node]').length,87);
+  assert.equal(node('managed-life-nodes').querySelectorAll('[data-life-node]').length,89);
   assert.match(node('growth-skill-status').textContent,/猎人 · 当前 70 级 · 技能状态待读取/);
   assert.match(node('growth-skills-note').textContent,/PlayerAbilityController 尚未加载。/);
   assert.match(node('managed-skills').title,/技能栏读取完成后切换/);
@@ -228,7 +252,7 @@ test('reducing early talents trims targets that no longer satisfy the spend gate
 });
 
 test('shipped layout coordinates and localized effect values are used in previews',()=>{
-  assert.equal(new Set(data.life_skills.map(n=>n.id)).size,87);
+  assert.equal(new Set(data.life_skills.map(n=>n.id)).size,89);
   for(const n of data.life_skills){assert.ok(Number.isFinite(n.x)&&Number.isFinite(n.y));assert.ok(!growth.description(n).includes('{'));}
   assert.equal(growth.description(data.heroes['4'].talents.find(n=>n.id==='HunterTalent0'),3),'+15 敏捷');
   const n=data.life_skills.find(n=>n.id==='LifeSkill 1');assert.match(growth.description(n),/10%/);

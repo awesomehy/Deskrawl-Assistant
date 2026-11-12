@@ -5,7 +5,7 @@ import struct
 import unittest
 from unittest.mock import Mock, patch
 
-from deskrawl_assistant.native_dispatcher import NativeActionError, load_profile
+from deskrawl_assistant.native_dispatcher import Argument, NativeActionError, load_profile
 from deskrawl_assistant.native_memory import MemoryReadError, GameBusyError
 from deskrawl_assistant.synthesis_runtime import (SynthesisRuntime, SynthesisReceiptPending,
                                                 gem_inputs, gem_recipes, rune_inputs)
@@ -31,10 +31,10 @@ class InputSafetyTests(unittest.TestCase):
 
     def test_catalog_has_every_color_quality_with_known_costs(self):
         recipes = gem_recipes()
-        self.assertEqual(len(recipes), 30)
-        self.assertEqual(len({r['recipe_id'] for r in recipes}), 30)
+        self.assertEqual(len(recipes), 36)
+        self.assertEqual(len({r['recipe_id'] for r in recipes}), 36)
         self.assertEqual({r['input_count'] for r in recipes}, {10})
-        self.assertEqual({r['gold_cost'] for r in recipes}, {300, 1300, 5500, 23000, 100000})
+        self.assertEqual({r['gold_cost'] for r in recipes}, {300, 1300, 5500, 23000, 100000, 1000000})
 
     def test_gem_selection_matches_native_reverse_removal(self):
         rows = [gem(1, 9), gem(3, 15), gem(5, 6)]
@@ -120,14 +120,15 @@ class SnapshotAndReceiptTests(unittest.TestCase):
         self.assertNotIn('runes', state)
 
     def test_110_online_and_local_recipes_read_gold_and_ignore_equipment_exchange(self):
-        cases = [(online, source, target, source_kind, target_kind, highest, cost)
+        cases = [(online, source, target, source_kind, target_kind, highest, cost, equipment_pair)
                  for online in (False, True)
+                 for equipment_pair in ((4, 5), (5, 6), (7, 4))
                  for source, target, source_kind, target_kind, highest, cost in (
                      ('Uncommon', 'Rare', 0, 1, 0, 100000),
                      ('Legendary', 'RuneSet', 2, 3, 1, 500000),
                      ('Legendary', 'RuneSet', 2, 3, 2, 500000))]
-        for online, source, target, source_kind, target_kind, highest, cost in cases:
-            with self.subTest(online=online, source=source, highest=highest):
+        for online, source, target, source_kind, target_kind, highest, cost, equipment_pair in cases:
+            with self.subTest(online=online, source=source, highest=highest, equipment_pair=equipment_pair):
                 runtime, actions = self.runtime()
                 actions.reader.module = {'base':0}
                 runtime._singleton = Mock(side_effect=lambda copy,name: {'CloudClient':2000,'RuneManager':7000}[name])
@@ -141,12 +142,13 @@ class SnapshotAndReceiptTests(unittest.TestCase):
                 copy.ptr.side_effect = pointers.__getitem__
                 integers = {232:int(online),3024:39,9004:highest,6160:2,
                     4016:source_kind,4020:9,4024:target_kind,4032:cost,4036:9,4040:cost,
-                    5016:4,5020:1,5024:5,5032:500000,5036:1,5040:500000}
+                    5016:equipment_pair[0],5020:1,5024:equipment_pair[1],5032:500000,5036:1,5040:500000}
                 copy.integer.side_effect = integers.__getitem__
                 copy.number.side_effect = {4028:1.,4032:1.,5028:1.,5032:1.}.__getitem__
                 copy.array.side_effect = lambda obj,*a,**k: [struct.pack('<Q',p) for p in (4000,5000)] if obj==13000 else []
                 actions.reader.string.side_effect = {12000:'rules-110',15000:source,16000:target,
-                    17000:'BlackMist',18000:'Divine'}.__getitem__
+                    17000:{4:'BlackMist',5:'Divine',7:'AncientLegendary'}[equipment_pair[0]],
+                    18000:{4:'BlackMist',5:'Divine',6:'AncientDivine'}[equipment_pair[1]]}.__getitem__
                 snapshot = runtime._runes(copy,100,200)
                 self.assertEqual(snapshot['gold'],1000000)
                 self.assertEqual(len(snapshot['recipes']),1)
@@ -172,7 +174,7 @@ class SnapshotAndReceiptTests(unittest.TestCase):
         with patch('deskrawl_assistant.synthesis_runtime.gem_recipes', return_value=[recipe]):
             state = runtime._gems(copy, 300)
         self.assertEqual(state['recipes'][0]['output_max_stack'], 99)
-        copy.integer.assert_called_with(352)
+        copy.integer.assert_called_with(360)
         actions.reader.memory.write.assert_not_called()
         self.assertNotIn('output_max_stack', recipe)
 
@@ -320,7 +322,7 @@ class SnapshotAndReceiptTests(unittest.TestCase):
 
         read.ptr.side_effect = pointer
         read.boolean.side_effect = lambda address: {
-            700 + 40: state['visible'], 700 + 252: state['animating']}.get(address, False)
+            700 + 40: state['visible'], 700 + 292: state['animating']}.get(address, False)
         runtime.reader.string.side_effect = lambda address: (
             state['selections'][address - 30000][1] if 30000 <= address < 30009 else '')
         return state
@@ -611,6 +613,8 @@ class SnapshotAndReceiptTests(unittest.TestCase):
         names = [c.method for c in calls]
         self.assertLess(names.index('CubePanelUI.Open'), names.index('CubePanelUI.gbh'))
         self.assertEqual(names.count('CubePanelUI.gbp'), 1)
+        submit = next(c for c in calls if c.method == 'CubePanelUI.gbp')
+        self.assertEqual(submit.arguments, (Argument.boolean(False),))
         self.assertNotIn('CubePanelUI.gbf', names)  # Native Open resets the old references.
 
     def test_existing_or_unknown_cube_selections_block_a_fresh_craft(self):

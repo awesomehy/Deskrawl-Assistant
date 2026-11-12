@@ -243,6 +243,8 @@ class SteamSession:
         self._local_check_after = 0
         self._local_rejected = None
         self._local_rejected_until = 0
+        self._local_renew_after = 0
+        self._renewing = False
         self._local_suppressed = False
         self._local_identity = None
         self._local_status = 'pending' if local_provider else 'unavailable'
@@ -266,8 +268,11 @@ class SteamSession:
     def state(self):
         with self.guard:
             wallet = self._wallet or {}
-            return {'bound': bool(self._cookies) and not self._expired, 'verified': bool(self._wallet) and not self._expired,
-                    'expired': self._expired,
+            # Temporary native renewal is not a user logout. Keep the binding
+            # fence alive; verified=False and request() prohibit market writes.
+            return {'bound': bool(self._cookies) and not self._expired,
+                    'verified': bool(self._wallet) and not self._expired and not self._renewing,
+                    'expired': self._expired, 'renewing': self._renewing,
                     'steamid': wallet.get('steamid'), 'wallet_currency': wallet.get('currency'),
                     'wallet_currency_id': wallet.get('currency_id'), 'login_open': self._login_busy,
                     'binding_generation': self._generation,
@@ -291,15 +296,52 @@ class SteamSession:
                 self._local_check_after = self.clock() + 60
                 generation = self._generation
             candidate = None
+            renewal_failure = None
             try:
-                snapshot = self.local_provider.snapshot()
+                from .steam_local_renewal import cookie_expiry
+                try:
+                    snapshot = self.local_provider.snapshot()
+                except Exception:
+                    # A cold/locked CEF cache is not a reason to require a new
+                    # login when the active Steam client can renew over IPC.
+                    identity = self.local_provider.current_identity()
+                    snapshot = self._renew_local(identity, generation)
                 values = _validated_values(dict(snapshot.cookies))
+                expiry = cookie_expiry(values)
+                if expiry is not None and expiry < self.clock() + 600 and self.clock() >= self._local_renew_after:
+                    try:
+                        snapshot = self._renew_local(snapshot.identity, generation)
+                        values = _validated_values(dict(snapshot.cookies))
+                    except Exception:
+                        if expiry <= self.clock(): raise
+                        # Still-valid cookies remain usable if an early renewal
+                        # is delayed by an offline Steam CM connection.
                 candidate = (snapshot.identity, self._cookie_fingerprint(values))
                 with self.guard:
-                    if not force and candidate == self._local_rejected and self.clock() < self._local_rejected_until:
+                    if (not force and candidate == self._local_rejected and self.clock() < self._local_rejected_until
+                            and self.clock() < self._local_renew_after):
                         return  # Do not repeatedly delay a working manual fallback.
                 steamid = unquote(values['steamLoginSecure']).split('||', 1)[0]
-                wallet = self._verify_native_wallet(values, steamid)
+                try:
+                    wallet = self._verify_native_wallet(values, steamid)
+                except SteamSessionError as exc:
+                    if not exc.auth_expired: raise
+                    with self.guard:
+                        self._local_rejected, self._local_rejected_until = candidate, self.clock() + 300
+                        if (self._source == 'local_steam' and self._cookies == values
+                                and generation == self._generation):
+                            self._expire(generation)
+                    # Authentication-only recovery. Never replay a failed POST;
+                    # the next worker pass reconciles its existing transaction.
+                    try:
+                        snapshot = self._renew_local(snapshot.identity, generation)
+                        values = _validated_values(dict(snapshot.cookies))
+                    except Exception as failure:
+                        renewal_failure = failure
+                        raise exc from None
+                    candidate = (snapshot.identity, self._cookie_fingerprint(values))
+                    steamid = unquote(values['steamLoginSecure']).split('||', 1)[0]
+                    wallet = self._verify_native_wallet(values, steamid)
                 if self.local_provider.current_identity() != snapshot.identity:
                     raise SteamSessionError('本机 Steam 账号正在切换，暂不采用该会话。')
             except Exception as exc:
@@ -318,6 +360,19 @@ class SteamSession:
                     if (self._source == 'local_steam' and isinstance(exc, SteamSessionError)
                             and exc.auth_expired):
                         self._expire(generation)
+                    if self._renewing:
+                        self._local_status = 'renewing'
+                        self._message = '本机 Steam 社区凭证正在自动续期，期间暂停市场操作；无需重复登录。'
+                        # A real account switch/logout is different from an
+                        # expired web cookie. It revokes prepared transactions.
+                        try: self._assert_local_identity()
+                        except SteamSessionError: pass
+                    failure = renewal_failure or exc
+                    if (self._source == 'local_steam' and isinstance(failure, LocalSessionUnavailable)
+                            and failure.retryable is False):
+                        self._expired, self._renewing, self._wallet = True, False, None
+                        self._local_status = 'unsupported'
+                        self._message = self._local_message = str(failure)
                     # A changed native identity is revoked at every request
                     # boundary as well; do not silently switch an existing sale.
                 return
@@ -326,11 +381,11 @@ class SteamSession:
                         or self._login_busy):
                     return
                 changed = (self._source != 'local_steam' or self._cookies != values
-                           or self._local_identity != snapshot.identity or self._expired)
+                           or self._local_identity != snapshot.identity or self._expired or self._renewing)
                 if changed:
                     self._generation += 1
                 self._cookies, self._local_identity = values, snapshot.identity
-                self._source, self._expired = 'local_steam', False
+                self._source, self._expired, self._renewing = 'local_steam', False, False
                 wallet['verified_at'], wallet['binding_generation'] = self.clock(), self._generation
                 self._wallet = wallet
                 self._local_rejected, self._local_rejected_until = None, 0
@@ -338,6 +393,20 @@ class SteamSession:
                 self._message = '正在使用本机 Steam 登录态；市场操作使用助手配置的社区线路。'
         finally:
             self._local_lock.release()
+
+    def _renew_local(self, identity, generation):
+        from .steam_local_session import LocalSessionUnavailable
+        with self.guard:
+            if (generation != self._generation or self._closed or self._local_suppressed or self._login_busy
+                    or identity.status != 'online' or self.clock() < self._local_renew_after):
+                raise LocalSessionUnavailable('本机 Steam 自动续期等待重试，期间暂停市场操作。')
+            # Bounded single-flight renewal; even force-refresh cannot spam the
+            # CM auth service. Normal wallet GETs retain their own cooldowns.
+            self._local_renew_after = self.clock() + 300
+        snapshot = self.local_provider.renew(identity)
+        if self.local_provider.current_identity() != identity:
+            raise LocalSessionUnavailable('本机 Steam 账号已变化，未采用续期凭证。')
+        return snapshot
 
     def _verify_native_wallet(self, values, steamid):
         """Bound discovery latency; late read replies cannot adopt or persist a login.
@@ -379,6 +448,7 @@ class SteamSession:
         if not same:
             self._generation += 1
             self._expired, self._wallet = True, None
+            self._renewing = False
             self._local_status = 'changed'
             self._message = '本机 Steam 已退出或切换账号，市场操作已暂停；等待重新核验。'
             raise SteamSessionError(self._message, status=401, auth_expired=True)
@@ -406,6 +476,7 @@ class SteamSession:
             self._cookies.clear()
             self._wallet = None
             self._expired = False
+            self._renewing = False
             self._persisted_fingerprint = None
             self._message = '已解除本机 Steam 绑定。'
             self.path.unlink(missing_ok=True)
@@ -419,6 +490,8 @@ class SteamSession:
     def request(self, method, path, data=None):
         with self.guard:
             self._assert_local_identity()
+            if self._renewing:
+                raise SteamSessionError('本机 Steam 社区凭证正在自动续期，暂不提交市场操作。')
             if self._expired:
                 raise SteamSessionError('Steam 登录已过期，请重新登录。', status=401, auth_expired=True)
             if set(self._cookies) != COOKIE_NAMES:
@@ -442,9 +515,14 @@ class SteamSession:
         with self.guard:
             if generation != self._generation:
                 return
-            self._expired = True
+            self._renewing = self._source == 'local_steam' and self.local_provider is not None
+            self._expired = not self._renewing
             self._wallet = None
-            self._message = 'Steam 登录已过期，请重新登录；自动出售已取消，游戏拍卖行上传不受影响。'
+            self._message = ('本机 Steam 社区凭证正在自动续期，期间暂停市场操作；无需重复登录。'
+                if self._renewing else 'Steam 登录已过期，请重新登录；自动出售已取消，游戏拍卖行上传不受影响。')
+            if self._renewing:
+                self._local_check_after = 0
+                self._local_status = 'renewing'
             if self._source != 'local_steam' and self._persisted_fingerprint == self._cookie_fingerprint(self._cookies):
                 try:
                     self.path.unlink(missing_ok=True)
@@ -546,6 +624,7 @@ class SteamSession:
                 raise SteamSessionError('Steam 登录窗口已关闭或取消，未保存绑定。')
             previous = self._cookies
             previous_expired = self._expired
+            previous_renewing = self._renewing
             previous_source = self._source
             previous_suppressed = self._local_suppressed
             self._local_suppressed = True
@@ -555,6 +634,7 @@ class SteamSession:
             self._cookies = values
             self._wallet = None
             self._expired = False
+            self._renewing = False
         try:
             if verify_now:
                 self.verify(force=True)
@@ -573,6 +653,7 @@ class SteamSession:
                     self._cookies = previous
                     self._wallet = None
                     self._expired = previous_expired
+                    self._renewing = previous_renewing
                     self._source = previous_source
                     self._local_suppressed = previous_suppressed
                     if previous and not previous_expired:

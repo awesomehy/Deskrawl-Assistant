@@ -27,11 +27,11 @@ def read_minions(reader):
     maximum = copy.integer(config + 24)
     if not 1 <= maximum <= 1000:
         raise MemoryReadError('仆从等级上限未确认。')
-    progress = copy.dictionary(copy.ptr(manager + 80), 'pointer', 'object')
-    owned = [struct.unpack('<Q', raw)[0] for raw in copy.list(copy.ptr(manager + 88), element='SlaveData', limit=1024)]
+    progress = copy.dictionary(copy.ptr(manager + 88), 'pointer', 'object')
+    owned = [struct.unpack('<Q', raw)[0] for raw in copy.list(copy.ptr(manager + 96), element='SlaveData', limit=1024)]
     if len(owned) != len(set(owned)):
         raise MemoryReadError('已解锁仆从列表重复。')
-    active = copy.ptr(manager + 96)
+    active = copy.ptr(manager + 104)
     rows = []
     for slave in owned:
         copy.verify(slave, 'SlaveData')
@@ -52,16 +52,16 @@ def read_minions(reader):
                      'species': copy.integer(slave + 24), 'rarity': copy.integer(slave + 28),
                      'level': level, 'xp': xp, 'passive_levels': passive_levels,
                      'ability_levels': ability_levels})
-    unlocked = [raw[0] for raw in copy.array(copy.ptr(manager + 128), 1, 'Boolean', limit=16)]
+    unlocked = [raw[0] for raw in copy.array(copy.ptr(manager + 160), 1, 'Boolean', limit=16)]
     if any(n not in (0, 1) for n in unlocked):
         raise MemoryReadError('仆从继承槽位状态未确认。')
-    borrowed = copy.ptr(manager + 136)
+    borrowed = copy.ptr(manager + 168)
     borrowed_key = reader.asset_name(copy.verify(borrowed, 'SlaveData')) if borrowed else None
     result = {'available': True, 'max_level': maximum, 'minions': rows,
               'slot_unlocks': [bool(n) for n in unlocked],
               'skill_unlock_level': copy.integer(config + 100),
               'equipment_unlock_level': copy.integer(config + 96),
-              'borrowed_skill': {'minion_id': borrowed_key, 'kind': copy.integer(manager + 144),
-                                 'index': copy.integer(manager + 148)}}
+              'borrowed_skill': {'minion_id': borrowed_key, 'kind': copy.integer(manager + 176),
+                                 'index': copy.integer(manager + 180)}}
     copy.finish()
     return result

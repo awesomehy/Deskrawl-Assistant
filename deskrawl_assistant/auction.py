@@ -3,6 +3,7 @@ from copy import deepcopy
 
 from .models import ValidationError
 from .item_protection import is_minion_equipment
+from .auction_commodities import is_commodity
 
 CATEGORIES = {
     'minion_equipment': '黑雾传说仆从装备',
@@ -94,6 +95,11 @@ def quantity(row):
 
 def eligible(row, settings):
     config = settings.get('auction', settings)
+    if row.get('auction_commodity_candidate') is True and is_commodity(row):
+        return (config.get('upload_enabled') is True and allows(config, row)
+                and row.get('auction_candidate') is True and bool(row.get('transfer_key'))
+                and row.get('container') in ('inventory', 'storage')
+                and row.get('is_equipped') is not True and not row.get('issues') and quantity(row) > 0)
     return (config.get('upload_enabled') is True and allows(config, row)
             and row.get('auction_candidate') is True
             and row.get('auction_identity_verified', row.get('identity_verified')) is True
@@ -120,7 +126,7 @@ def next_action(settings, observation):
     items = observation.get('items', [])
     blocked = set(state.get('blocked_uids', []))
     blocked_keys = set(state.get('blocked_keys', []))
-    candidates = [r for r in items if eligible(r, config) and r['item_uid'] not in blocked and key(r) not in blocked_keys]
+    candidates = [r for r in items if eligible(r, config) and r.get('item_uid') not in blocked and key(r) not in blocked_keys]
     if state.get('needs_refresh') is True:
         if candidates:
             return {'kind': 'auction_open', 'reason_code': 'auction_refresh',

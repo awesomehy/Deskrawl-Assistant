@@ -84,9 +84,9 @@ class RecommendationReaderTests(unittest.TestCase):
             plan_difficulty='Normal'
             reader=SimpleNamespace(string=lambda value:value, asset_name=lambda obj:'Map')
             def ptr(self,address):
-                return {1120:3000,1112:4000,2088:3000,3016:'run',3032:'Map',3056:self.plan_difficulty,3064:5000,
+                return {1128:3000,1120:4000,2088:3000,3016:'run',3032:'Map',3056:self.plan_difficulty,3064:5000,
                         3104:9000,6024:'Normal',6040:9200,7024:'Boss',7040:9300,
-                        8016:'NormalMob',8116:'BossMob',8216:'Minion',1200:0}[address]
+                        8016:'NormalMob',8116:'BossMob',8216:'Minion',1208:0}[address]
             def verify(self,obj,name):return obj
             def integer(self,address):
                 if address==2048:return self.wave_index

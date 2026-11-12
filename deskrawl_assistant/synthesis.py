@@ -24,7 +24,7 @@ def validate_settings(value):
         if not isinstance(group, dict) or set(group) != set(defaults) or type(group['enabled']) is not bool:
             raise ValidationError('自动合成配置字段无效：' + name)
     gems, runes = result['gems'], result['runes']
-    if type(gems['max_quality']) is not int or gems['max_quality'] not in range(1, 7):
+    if type(gems['max_quality']) is not int or gems['max_quality'] not in range(1, 8):
         raise ValidationError('宝石最高合成品质无效。')
     if runes['max_quality'] not in RUNE_QUALITIES:
         raise ValidationError('符文最高合成品质无效。')

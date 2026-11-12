@@ -139,7 +139,9 @@ class ProgressionRuntime:
 
     def _ranks(self, copy, book, offset, expected, type_name):
         ranks = {}; pointers = {}
-        for obj, rank in copy.dictionary(copy.ptr(book + offset), 'int', 'object').items():
+        from .recommendation_reader import talent_ranks
+        values = talent_ranks(copy, book) if type_name == 'TalentData' else copy.dictionary(copy.ptr(book + offset), 'int', 'object')
+        for obj, rank in values.items():
             with copy.copied_only(): copy.verify(obj, type_name)
             key = self.reader.asset_name(obj)
             if key not in expected or key in ranks or not 0 <= rank <= expected[key]['max_points']:
@@ -193,7 +195,7 @@ class ProgressionRuntime:
         mask = copy.integer(hero + 48); definition = data['heroes'].get(str(mask))
         if not definition or self.reader.asset_name(hero) != definition['id']:
             raise MemoryReadError('当前职业成长资源未确认。')
-        combat = copy.verify(copy.ptr(manager + 64), 'PlayerCombatController')
+        combat = copy.verify(copy.ptr(manager + 72), 'PlayerCombatController')
         player = copy.verify(copy.ptr(combat + 32), 'Player')
         copy.klass(copy.ptr(copy.ptr(player) + 88), 'Character')
         level = decode_obscured_int(copy.read(player + 32, 16))
@@ -231,7 +233,7 @@ class ProgressionRuntime:
         if self.reader.asset_name(soul) != 'SoulShard': raise MemoryReadError('灵魂碎片资源身份未确认。')
         amounts = copy.dictionary(copy.ptr(inventory + 64), 'int', 'object')
         bonuses = copy.dictionary(copy.ptr(player + 664), 'int', 'object')
-        capacity = copy.integer(soul + 156) + bonuses.get(soul, 0)
+        capacity = copy.integer(soul + 164) + bonuses.get(soul, 0)
         expected_capacity = data['soul_maximum'] + sum(n['soul_capacity_per_rank'] * life.get(n['id'], 0) for n in data['life_skills'])
         balance = amounts.get(soul, 0)
         maximum_capacity = data['soul_maximum'] + sum(n['soul_capacity_per_rank'] * n['max_points'] for n in data['life_skills'])
@@ -266,7 +268,7 @@ class ProgressionRuntime:
                 for entry in data['shop']:
                     obj = item_map.get(entry['id'])
                     copy.verify(obj, 'RandomEquipment')
-                    if self.reader.asset_name(obj) != entry['id'] or copy.integer(obj + 232) != entry['slot']:
+                    if self.reader.asset_name(obj) != entry['id'] or copy.integer(obj + 248) != entry['slot']:
                         raise MemoryReadError('商人随机装备部位未确认。')
             rows,preview=merchant_prices(data['shop'],stocks,level,difficulty,online)
             shop.update(available=scene==1,stock=rows if scene==1 else [],preview=preview,
@@ -433,7 +435,7 @@ class ProgressionRuntime:
             abilities = {self.reader.asset_name(copy.verify(struct.unpack('<Q', raw)[0], 'AbilityData')):struct.unpack('<Q', raw)[0]
                 for raw in copy.list(copy.ptr(hero + 80), 8, 'AbilityData')}
             known = {s['id']: s for s in catalog()['heroes'][str(before['class_mask'])]['abilities']}
-            combat = copy.verify(copy.ptr(manager + 64), 'PlayerCombatController')
+            combat = copy.verify(copy.ptr(manager + 72), 'PlayerCombatController')
             controller = copy.verify(copy.ptr(combat + 112), 'PlayerAbilityController'); book = self._singleton(copy, 'PlayerAbilityBook')
             target = payload.get('skill_slots')
             if not isinstance(target, list) or len(target) != 4 or len(set(k for k in target if k)) != len([k for k in target if k]):
@@ -497,7 +499,7 @@ class ProgressionRuntime:
                 before_uids = {r.get('item_uid') for r in bag['slots'] if r.get('item_uid')}
                 item = before['_item_map'][quote['id']]
                 copy.verify(item, 'RandomEquipment')
-                if copy.integer(item+232)!=quote['slot']:
+                if copy.integer(item+248)!=quote['slot']:
                     raise SnapshotChangedError('购买装备部位已变化。')
                 # Random equipment ignores gzr's quantity argument. Invoke the
                 # original one-item purchase repeatedly on the same main-thread

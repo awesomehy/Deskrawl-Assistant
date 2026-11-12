@@ -12,11 +12,11 @@
   const storageMaterials=[['gold_bar','金条'],['legendary_rein','传说缰绳']];
   const storageKinds=['equipment','minion_equipment','rune','gem',...storageMaterials.map(([key])=>key)];
   const capabilityNames={transfer:'物品转移',lock:'装备保护',equip:'后台换装',travel:'回城 / 进入关卡',difficulty:'主城切换难度',sell:'出售',salvage:'分解',chests:'开启宝箱',ground_pickup:'地面拾取',merchant:'神秘商人消费',talents:'职业天赋加点',life_skills:'生活技能学习',skills:'技能切换',gem_synthesis:'宝石合成',rune_synthesis:'符文合成',auction_upload:'游戏拍卖行上传'};
-  const gemQualities=['粗糙','碎裂','粗砺','抛光','无瑕','璀璨'];
+  const gemQualities=['粗糙','碎裂','粗砺','抛光','无瑕','璀璨','完美之星'];
   const runeQualities={uncommon:'优秀',rare:'稀有',grand:'宏伟',set:'符文套装'};
   function normalizeSynthesis(value={}){
     const gems=value?.gems||{},runes=value?.runes||{};
-    return {gems:{enabled:gems.enabled===true,max_quality:Number.isInteger(gems.max_quality)&&gems.max_quality>=1&&gems.max_quality<=6?gems.max_quality:5},
+    return {gems:{enabled:gems.enabled===true,max_quality:Number.isInteger(gems.max_quality)&&gems.max_quality>=1&&gems.max_quality<=7?gems.max_quality:5},
       runes:{enabled:runes.enabled===true,max_quality:Object.hasOwn(runeQualities,runes.max_quality)?runes.max_quality:'rare',
         excluded_keys:[...new Set((Array.isArray(runes.excluded_keys)?runes.excluded_keys:[]).filter(key=>typeof key==='string'&&key.trim()).map(key=>key.trim()))].sort()}};
   }
@@ -31,7 +31,7 @@
   }
   function synthesisRunes(catalog={},query='',excluded=[]){
     const source=catalog.synthesis_runes||catalog.collectibles||[],rows=Array.isArray(source)?source:Object.entries(source).map(([key,row])=>({key,...row})),all=new Map();
-    for(const row of rows){const key=row.key??row.internal_name;if(typeof key==='string'&&(row.kind==='rune'||/Rune/.test(key))){const quality=runeQuality({...row,key});all.set(key,{...row,key,name:row.name||key,quality,quality_name:runeQualities[quality],icon:row.icon||'/icons/'+encodeURIComponent(key)+'.png'});}}
+    for(const row of rows){const key=row.key??row.internal_name;if(typeof key==='string'&&(row.kind==='rune'||!row.kind&&/Rune/.test(key))){const quality=runeQuality({...row,key});all.set(key,{...row,key,name:row.name||key,quality,quality_name:runeQualities[quality],icon:row.icon||'/icons/'+encodeURIComponent(key)+'.png'});}}
     for(const key of excluded)if(!all.has(key))all.set(key,{key,name:key,quality:'uncommon',quality_name:'未收录符文',icon:'',unknown:true});
     const search=query.trim().toLowerCase();
     return [...all.values()].filter(row=>!search||[row.name,row.key,row.quality_name].some(text=>String(text).toLowerCase().includes(search)))
@@ -250,6 +250,9 @@
   if(typeof module!=='undefined'&&module.exports)module.exports=helpers;
   if(!root.document)return;
   const $=id=>root.document.getElementById(id);
+  const setText=(id,value)=>{const node=$(id),text=String(value??'');if(node.textContent!==text)node.textContent=text;};
+  const markupCache=new WeakMap();
+  const setHTML=(id,markup)=>{const node=$(id);if(markupCache.get(node)!==markup){node.innerHTML=markup;markupCache.set(node,markup);}};
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let context=null,packet=null,draft=null,dirty=false,connected=false,busy=false,polling=false,active=false,initialized=false;
   let receivedAt=0,pageSignature='',mapSignature='',slotSignature='',statsSignature='',historySignature='',actionVersion=0;
@@ -262,7 +265,7 @@
   const maps=()=>availableMaps(packet,draft||normalizeSettings());
   const mapId=row=>row.id??row.dungeon_id;
   const phaseLabel=()=>packet?.phase_label||phaseNames[packet?.phase]||packet?.phase||'尚未启动';
-  function markDirty(value=true){dirty=value;if(value)actionError='';const text=dirty?'有未保存的托管设置':'设置已保存';for(const id of ['managed-draft-state','managed-growth-save-state','managed-shop-save-state'])$(id).textContent=text;context?.onDirty?.();}
+  function markDirty(value=true){dirty=value;if(value)actionError='';const text=dirty?'有未保存的托管设置':'设置已保存';for(const id of ['managed-draft-state','managed-growth-save-state','managed-shop-save-state'])setText(id,text);context?.onDirty?.();}
   function applySharedPages(){
     if(!draft)return;
     draft=root.AutomationTools.withSharedPages(draft,context?.sharedStorage?.current,true);
@@ -270,7 +273,7 @@
       const baseline=root.AutomationTools.withSharedPages(normalizeSettings(packet.settings),context?.sharedStorage?.saved,true);
       markDirty(JSON.stringify(draft)!==JSON.stringify(baseline));
     }
-    pageSignature='';renderPages();
+    renderPages();
   }
   function report(error){actionError=error?.message||String(error);renderControls();context?.toast?.(actionError,true);}
   function readForm(){
@@ -379,11 +382,11 @@
     $('managed-synthesis-gems-max').disabled=disabled||!s.gems.enabled;
     $('managed-synthesis-runes-max').disabled=disabled||!s.runes.enabled;
     $('managed-synthesis-rune-search').disabled=disabled;
-    $('managed-synthesis-gems-note').textContent=s.gems.max_quality===1?'粗糙是最低品质，没有可执行的合成配方。':`最多消耗${gemQualities[s.gems.max_quality-2]}合成至${gemQualities[s.gems.max_quality-1]}，不消耗${gemQualities[s.gems.max_quality-1]}。`;
+    setText('managed-synthesis-gems-note',s.gems.max_quality===1?'粗糙是最低品质，没有可执行的合成配方。':`最多消耗${gemQualities[s.gems.max_quality-2]}合成至${gemQualities[s.gems.max_quality-1]}，不消耗${gemQualities[s.gems.max_quality-1]}。`);
     const runeKeys=Object.keys(runeQualities),index=runeKeys.indexOf(s.runes.max_quality);
-    $('managed-synthesis-runes-note').textContent=index===0?'优秀是最低品质，没有可执行的合成配方。':`最多消耗${runeQualities[runeKeys[index-1]]}合成至${runeQualities[s.runes.max_quality]}，不消耗${runeQualities[s.runes.max_quality]}。`+(index===3?' 消耗宏伟符文需要已解锁炼狱。':'');
+    setText('managed-synthesis-runes-note',index===0?'优秀是最低品质，没有可执行的合成配方。':`最多消耗${runeQualities[runeKeys[index-1]]}合成至${runeQualities[s.runes.max_quality]}，不消耗${runeQualities[s.runes.max_quality]}。`+(index===3?' 消耗宏伟符文需要已解锁炼狱。':''));
     const options=synthesisRunes(catalog(),query,s.runes.excluded_keys),signature=JSON.stringify([options,s.runes.excluded_keys,disabled]);
-    $('managed-synthesis-rune-count').textContent=`已跳过 ${s.runes.excluded_keys.length} 种 · 当前显示 ${options.length} 种`;
+    setText('managed-synthesis-rune-count',`已跳过 ${s.runes.excluded_keys.length} 种 · 当前显示 ${options.length} 种`);
     if(signature===synthesisSignature)return;synthesisSignature=signature;
     const selected=new Set(s.runes.excluded_keys),focusedKey=root.document.activeElement?.dataset?.synthesisRuneKey;
     $('managed-synthesis-rune-options').innerHTML=options.map(row=>`<label class="synthesis-rune-choice ${selected.has(row.key)?'selected':''}" data-quality="${row.quality}" title="${esc(row.key)}"><input type="checkbox" data-synthesis-rune-key="${esc(row.key)}" ${selected.has(row.key)?'checked':''} ${disabled?'disabled':''}><span class="synthesis-rune-icon">${row.icon?`<img src="${esc(row.icon)}" alt="" loading="lazy">`:'◇'}</span><span class="synthesis-rune-label"><strong>${esc(row.name)}</strong><small>${esc(row.quality_name)} · 所有等级</small></span></label>`).join('')||'<p class="synthesis-empty">没有符合搜索条件的符文</p>';
@@ -391,24 +394,24 @@
   }
   function renderMaps(){
     for(const id of ['managed-difficulty','managed-difficulty-two','managed-pumpkin-difficulty'])for(const option of $(id).options){
-      if(option.value==='current'){option.textContent='沿用启动时当前难度'+(difficultyNames[packet?.current_difficulty]?' · '+difficultyNames[packet.current_difficulty]:'');continue;}
+      if(option.value==='current'){const text='沿用启动时当前难度'+(difficultyNames[packet?.current_difficulty]?' · '+difficultyNames[packet.current_difficulty]:'');if(option.textContent!==text)option.textContent=text;continue;}
       const native=packet?.difficulties?.find(row=>row.id===option.value);
       option.disabled=native?.unlocked===false||(option.value==='Mythic'&&native?.unlocked!==true);
-      option.textContent=difficultyNames[option.value]+(native?.unlocked===false?' · 未解锁':'');
+      const text=difficultyNames[option.value]+(native?.unlocked===false?' · 未解锁':'');if(option.textContent!==text)option.textContent=text;
     }
     const target=packet?.automatic_start,tier=difficultyNames[target?.difficulty],name=target?availableMaps(packet,draft,target.difficulty).find(r=>String(mapId(r))===String(target.dungeon_id))?.name:null;
-    $('managed-push-target').textContent=target?`${tier} · ${name||target.dungeon_id}`:connected?'等待读取已解锁关卡':'连接后读取';
-    $('managed-pumpkin-status').textContent=pumpkinLabel(packet,draft)+(packet?.pumpkin?.reason?' · '+packet.pumpkin.reason:'');
+    setText('managed-push-target',target?`${tier} · ${name||target.dungeon_id}`:connected?'等待读取已解锁关卡':'连接后读取');
+    setText('managed-pumpkin-status',pumpkinLabel(packet,draft)+(packet?.pumpkin?.reason?' · '+packet.pumpkin.reason:''));
     const progress=$('managed-farm-progress'),showProgress=(packet?.running||packet?.paused)&&packet?.settings&&farmingEnabled(packet.settings);
     progress.hidden=!showProgress;
     if(showProgress){
       const liveName=packet.pumpkin?.active?'南瓜王':availableMaps(packet,draft,packet.target_difficulty).find(r=>String(mapId(r))===String(packet.target_dungeon))?.name||packet.target_dungeon||'等待每日次数';
       const repeat=!packet.pumpkin?.active&&packet.settings.farming.enabled&&packet.settings.farming.mode==='repeat'&&packet.repeat_maps?.[packet.repeat_index];
-      progress.textContent=`当前目标：${difficultyNames[packet.target_difficulty]||'当前难度'} · ${liveName}${packet.pumpkin?.active?` · 本次已通关 ${packet.pumpkin.completed} 局`:repeat?` · 图 ${packet.repeat_index+1} 本轮已完成 ${packet.repeat_completed} / ${repeat.runs} 局`:''}`;
+      setText('managed-farm-progress',`当前目标：${difficultyNames[packet.target_difficulty]||'当前难度'} · ${liveName}${packet.pumpkin?.active?` · 本次已通关 ${packet.pumpkin.completed} 局`:repeat?` · 图 ${packet.repeat_index+1} 本轮已完成 ${packet.repeat_completed} / ${repeat.runs} 局`:''}`);
     }
     const star=$('managed-stargazing-status'),live=packet?.stargazing;
     star.hidden=!showProgress||packet?.pumpkin?.active||!packet?.settings?.farming?.enabled||!packet.settings.farming.stargazing.enabled||packet.settings.farming.mode!=='repeat';
-    star.textContent=`观星已跳过 ${safeNumber(live?.skipped)} 局 · ${live?.reason||'等待本局掉落计划'}${live?.hits?.length?' 命中：'+live.hits.map(hit=>`${hit.name}（${hit.labels.join('、')}）`).join('；'):''}`;
+    setText('managed-stargazing-status',`观星已跳过 ${safeNumber(live?.skipped)} 局 · ${live?.reason||'等待本局掉落计划'}${live?.hits?.length?' 命中：'+live.hits.map(hit=>`${hit.name}（${hit.labels.join('、')}）`).join('；'):''}`);
     const signature=JSON.stringify([packet?.maps_by_difficulty,packet?.maps,draft?.farming.repeat_maps,connected,packet?.control_error]);if(signature===mapSignature)return;mapSignature=signature;
     for(const [i,id] of [[0,'managed-map'],[1,'managed-map-two']]){
       const point=draft?.farming.repeat_maps[i],selected=point?.dungeon_id,rows=availableMaps(packet,draft,point?.difficulty||(i===0?draft.farming.difficulty:'current')),unknown=selected!==null&&selected!==undefined&&!rows.some(row=>String(mapId(row))===String(selected));
@@ -416,7 +419,7 @@
       $(id).innerHTML='<option value="">'+(rows.length?(point?.difficulty==='Mythic'?'请选择层数':'请选择关卡'):point?.difficulty==='Mythic'&&connected?'暂无已解锁层数':!connected?'连接后读取关卡':packet?.control_error?'关卡暂不可读':'正在读取关卡…')+'</option>'+(unknown&&point?.difficulty!=='Mythic'?`<option value="${esc(selected)}" selected>关卡 ${esc(selected)} · 待读取</option>`:'')+rows.map(row=>`<option value="${esc(mapId(row))}" ${String(mapId(row))===String(selected)?'selected':''} ${row.automation_supported===false||row.unlocked===false||(row.map_type===4&&row.can_enter===false)?'disabled':''}>${esc(mapOptionLabel(row))}</option>`).join('');
     }
   }
-  function writeForm(){
+  function writeForm(renderNow=true){
     if(!draft)return;
     $('managed-reconnect').checked=draft.reconnect.enabled;$('managed-reconnect-index').value=draft.reconnect.character_index;
     $('managed-rule-monitoring').checked=draft.background.rule_monitoring;$('managed-inventory-automation').checked=draft.background.inventory_automation;
@@ -433,7 +436,7 @@
     $('managed-synthesis-runes').checked=draft.synthesis.runes.enabled;$('managed-synthesis-runes-max').value=draft.synthesis.runes.max_quality;
     for(const [key] of disposalRarities)for(const field of ['action','fallback'])$(`managed-equipment-${key}-${field}`).value=draft.cleanup.equipment_policies[key][field];
     for(const [key] of minionRarities)$(`managed-minion-equipment-${key}-action`).value=draft.cleanup.minion_equipment_policies[key];
-    renderSlots();renderMaps();renderPages();renderDependencies();
+    if(renderNow){renderSlots();renderMaps();renderPages();renderDependencies();}
   }
   function renderDependencies(){
     const running=!!packet?.running;
@@ -453,7 +456,7 @@
     $('managed-stargazing-options').hidden=!$('managed-stargazing').checked;
     for(const key of stargazingRewards)$('managed-stargazing-'+key).disabled=fixedStargazing.has(key)||running||busy||!$('managed-farming').checked||!$('managed-stargazing').checked;
     root.document.querySelector('.managed-repeat-count-label').hidden=!two;
-    $('managed-farm-note').textContent=push?'从最高已解锁难度的最后一张已解锁图开始；通关前进一关，失败后退一关，上一关通关后再次挑战。普通通关后进入噩梦，噩梦通关后进入炼狱。':two?'依次打满图 1、图 2 的成功通关局数后循环；失败和途中回城均不计数。':'重复进入选定关卡，仅成功通关计数；神话裂隙只显示已解锁层数，每次入场消耗游戏要求的材料；背包空格不足时先回城整理，再继续刷图。';
+    setText('managed-farm-note',push?'从最高已解锁难度的最后一张已解锁图开始；通关前进一关，失败后退一关，上一关通关后再次挑战。普通通关后进入噩梦，噩梦通关后进入炼狱。':two?'依次打满图 1、图 2 的成功通关局数后循环；失败和途中回城均不计数。':'重复进入选定关卡，仅成功通关计数；神话裂隙只显示已解锁层数，每次入场消耗游戏要求的材料；背包空格不足时先回城整理，再继续刷图。');
     root.ManagedGrowthUI?.render(draft,packet?.progression_catalog,packet?.progression_state,running||busy,(next,renderNow=true)=>{
       draft={...readForm(),...next};markDirty();if(renderNow){renderDependencies();renderCapabilities();}else {renderFoldSummaries();renderControls();}
     },connected);
@@ -464,35 +467,36 @@
     const rows=foldSummaries(draft||normalizeSettings(),connected?packet:null);
     for(const key of foldKeys){
       const row=rows[key],summary=root.document.querySelector(`[data-managed-fold-summary="${key}"]`),status=root.document.querySelector(`[data-managed-fold-status="${key}"]`);
-      if(summary)summary.textContent=row.summary;
-      if(status){status.textContent=row.status;status.classList.toggle('enabled',row.enabled);}
+      if(summary&&summary.textContent!==row.summary)summary.textContent=row.summary;
+      if(status){if(status.textContent!==row.status)status.textContent=row.status;status.classList.toggle('enabled',row.enabled);}
     }
   }
   function renderControls(){
     const controls=controlState(packet,draft||normalizeSettings(),connected,busy);
-    $('managed-stop').textContent=controls.stopLabel;$('managed-stop').title=packet?.finishing?'立即中止整理，等待当前已提交动作结束。':'返回主城，整理背包、马车和地面奖励后停止。';
-    $('managed-start').disabled=!controls.canStart;$('managed-start').hidden=!!packet?.running;$('managed-start').textContent=packet?.paused?'继续托管':'启动托管';
+    setText('managed-stop',controls.stopLabel);$('managed-stop').title=packet?.finishing?'立即中止整理，等待当前已提交动作结束。':'返回主城，整理背包、马车和地面奖励后停止。';
+    $('managed-start').disabled=!controls.canStart;$('managed-start').hidden=!!packet?.running;setText('managed-start',packet?.paused?'继续托管':'启动托管');
     $('managed-pause').hidden=!packet?.running;$('managed-pause').disabled=!controls.canPause;$('managed-stop').disabled=!controls.canStop;$('managed-reset-stats').disabled=!controls.canReset;
     const reason=controls.configurationError||(controls.missing.length?'尚未通过验证：'+controls.missing.map(key=>capabilityNames[key]).join('、'):'')||controls.startDisabledReason||(packet?.can_start===false?'启动条件尚未满足，请刷新状态。':'');
     $('managed-start').title=!connected?'请先连接游戏':reason||'按保存的设置开始托管';
     let error=actionError||packet?.error||(connected&&!packet?.running?reason:'');
     if(error&&!actionError&&!packet?.error&&dirty&&packet?.can_start===false&&!controls.configurationError)error+=' 如已修改相关功能，请先保存托管设置。';
-    $('managed-error').textContent=String(error||'');$('managed-error').hidden=!error;
+    setText('managed-error',error||'');$('managed-error').hidden=!error;
   }
   function renderCapabilities(){
     const requirements=requiredCapabilities(draft||normalizeSettings());
     $('managed-test-notice').hidden=packet?.capabilities?.test_mode!==true;
-    $('managed-capabilities').innerHTML=requirements.map(key=>{const value=packet?.capabilities?.[key],available=capabilityAvailable(value),testing=available&&value?.test_enabled===true,reason=typeof value==='object'?value?.reason:'';return `<span class="managed-capability ${available?'available':'unavailable'}" title="${esc(reason||(available?'已验证可用':'尚未验证，启动前需要完成适配'))}"><i></i>${esc(capabilityNames[key])}<small>${testing?'测试可用':available?'可用':'待验证'}</small></span>`;}).join('');
+    const markup=requirements.map(key=>{const value=packet?.capabilities?.[key],available=capabilityAvailable(value),testing=available&&value?.test_enabled===true,reason=typeof value==='object'?value?.reason:'';return `<span class="managed-capability ${available?'available':'unavailable'}" title="${esc(reason||(available?'已验证可用':'尚未验证，启动前需要完成适配'))}"><i></i>${esc(capabilityNames[key])}<small>${testing?'测试可用':available?'可用':'待验证'}</small></span>`;}).join('');
+    setHTML('managed-capabilities',markup);
   }
   function renderStats(){
     const signature=JSON.stringify(packet?.stats||{});if(signature===statsSignature)return;statsSignature=signature;
-    const data=statistics(packet?.stats);$('managed-loot-total').textContent=data.total.toLocaleString('zh-CN')+' 件';
-    $('managed-gold-total').textContent=data.gold.toLocaleString('zh-CN');
+    const data=statistics(packet?.stats);setText('managed-loot-total',data.total.toLocaleString('zh-CN')+' 件');
+    setText('managed-gold-total',data.gold.toLocaleString('zh-CN'));
     $('managed-gold-total').title=data.goldAvailable?'本次托管实际拾取的金币；不含出售收入，不受金币消费影响。':(data.goldReason||'等待读取游戏金币掉落统计。')+' 已累计的数量保留，读取恢复后继续累计。';
-    $('managed-equipment-stats').innerHTML=data.equipment.map(row=>`<tr class="managed-rarity-${row.key}"><td>${esc(row.name)}</td><td>${row.count.toLocaleString('zh-CN')}</td><td title="${row.estimatedSold||row.estimatedSalvaged?'包含按稳定马车策略估算的低品质处置数量':'已核验的助手回执、游戏马车记录或系统日志'}"><span>${row.estimatedSold?'≈ ':''}${row.sold.toLocaleString('zh-CN')}</span><small> / </small><span>${row.estimatedSalvaged?'≈ ':''}${row.salvaged.toLocaleString('zh-CN')}</span></td></tr>`).join('');
+    setHTML('managed-equipment-stats',data.equipment.map(row=>`<tr class="managed-rarity-${row.key}"><td>${esc(row.name)}</td><td>${row.count.toLocaleString('zh-CN')}</td><td title="${row.estimatedSold||row.estimatedSalvaged?'包含按稳定马车策略估算的低品质处置数量':'已核验的助手回执、游戏马车记录或系统日志'}"><span>${row.estimatedSold?'≈ ':''}${row.sold.toLocaleString('zh-CN')}</span><small> / </small><span>${row.estimatedSalvaged?'≈ ':''}${row.salvaged.toLocaleString('zh-CN')}</span></td></tr>`).join(''));
     for(const [kind,label,rows,count] of [['minion','仆从装备',data.minions,data.minionCount],['rune','符文',data.runes,data.runeCount],['gem','宝石',data.gems,data.gemCount],['other','其他物品',data.others,data.otherCount]]){
-      $('managed-'+kind+'-total').textContent=count.toLocaleString('zh-CN')+(kind==='minion'?' 件':' 个');
-      $('managed-'+kind+'-stats').innerHTML=rows.length?rows.map(row=>`<div data-bucket="${esc(row.bucket||'')}" data-rarity="${kind!=='gem'&&Number.isInteger(row.rarity)?row.rarity:''}"><span title="${esc(row.name||row.name_key||row.key)}">${kind==='minion'&&row.icon?.startsWith('/icons/')?`<img class="managed-loot-icon" src="${esc(row.icon)}" alt="">`:''}${esc(row.name||row.name_key||row.key||'未命名物品')}${row.quality_name?` <small>${esc(row.quality_name)}</small>`:''}${row.level?` <small>Lv.${esc(row.level)}</small>`:''}</span><strong>${row.count.toLocaleString('zh-CN')}</strong><small>已出售 ${Math.max(0,safeNumber(row.sold)).toLocaleString('zh-CN')}${kind==='minion'?` · 已分解 ${Math.max(0,safeNumber(row.salvaged)).toLocaleString('zh-CN')}`:''} · 已存入 ${Math.max(0,safeNumber(row.stored)).toLocaleString('zh-CN')}</small></div>`).join(''):'<p class="managed-stat-empty">尚无'+label+'掉落</p>';
+      setText('managed-'+kind+'-total',count.toLocaleString('zh-CN')+(kind==='minion'?' 件':' 个'));
+      setHTML('managed-'+kind+'-stats',rows.length?rows.map(row=>`<div data-bucket="${esc(row.bucket||'')}" data-rarity="${kind!=='gem'&&Number.isInteger(row.rarity)?row.rarity:''}"><span title="${esc(row.name||row.name_key||row.key)}">${kind==='minion'&&row.icon?.startsWith('/icons/')?`<img class="managed-loot-icon" src="${esc(row.icon)}" alt="">`:''}${esc(row.name||row.name_key||row.key||'未命名物品')}${row.quality_name?` <small>${esc(row.quality_name)}</small>`:''}${row.level?` <small>Lv.${esc(row.level)}</small>`:''}</span><strong>${row.count.toLocaleString('zh-CN')}</strong><small>已出售 ${Math.max(0,safeNumber(row.sold)).toLocaleString('zh-CN')}${kind==='minion'?` · 已分解 ${Math.max(0,safeNumber(row.salvaged)).toLocaleString('zh-CN')}`:''} · 已存入 ${Math.max(0,safeNumber(row.stored)).toLocaleString('zh-CN')}</small></div>`).join(''):'<p class="managed-stat-empty">尚无'+label+'掉落</p>');
     }
     if(packet?.stats?.note)$('managed-stats-note').textContent=packet.stats.note;
   }
@@ -504,18 +508,18 @@
       return `<li class="${row.level==='error'?'managed-history-error':''}"><time>${esc(label)}</time><p>${esc(row.message||row.text||'')}</p></li>`;
     }).join(''):'<li class="managed-history-empty">尚未启动托管</li>';
   }
-  function renderTime(){const stats=packet?.stats||{},extra=packet?.running?Math.max(0,(Date.now()-receivedAt)/1000):0;$('managed-elapsed').textContent=duration(safeNumber(stats.elapsed_seconds??packet?.elapsed_seconds)+extra);}
+  function renderTime(){const stats=packet?.stats||{},extra=packet?.running?Math.max(0,(Date.now()-receivedAt)/1000):0;setText('managed-elapsed',duration(safeNumber(stats.elapsed_seconds??packet?.elapsed_seconds)+extra));}
   function render(){
-    $('managed-phase').textContent=packet?.finishing?'结束中 · '+phaseLabel():phaseLabel();$('managed-message').textContent=packet?.message||(!connected?'请先连接游戏，读取关卡和仓库页签。':'配置托管策略后，点击启动。');
+    setText('managed-phase',packet?.finishing?'结束中 · '+phaseLabel():phaseLabel());setText('managed-message',packet?.message||(!connected?'请先连接游戏，读取关卡和仓库页签。':'配置托管策略后，点击启动。'));
     $('managed-status-dot').className='managed-status-dot '+(packet?.running?'running':packet?.phase==='error'||packet?.phase==='blocked'?'error':'');
     renderMaps();renderPages();renderSlots();renderDependencies();renderCapabilities();renderStats();renderHistory();renderTime();
   }
   function applyPacket(value){
     if(!value||typeof value!=='object')return;
     const next=value.managed||value;packet={...next,stats:next.stats||next.statistics,message:next.message||next.status,paused:next.paused??next.phase==='paused'};receivedAt=Date.now();actionError='';
-    if(!dirty&&packet.settings){draft=normalizeSettings(packet.settings);writeForm();}
+    if(!dirty&&packet.settings){draft=normalizeSettings(packet.settings);writeForm(false);}
     if(packet.settings)folds?.apply(draft||packet.settings);
-    if(!draft){draft=normalizeSettings();writeForm();}applySharedPages();render();
+    if(!draft){draft=normalizeSettings();writeForm(false);}applySharedPages();render();
   }
   async function refresh(){
     if(!context||polling)return;polling=true;
@@ -622,10 +626,11 @@
     root.setInterval(()=>{renderTime();if(active||packet?.running)refresh();},1500);
   }
   function setConnection(value){
-    connected=!!value;
+    const changed=connected!==!!value;connected=!!value;
     // Reconnecting must wait for a fresh character snapshot, rather than
     // temporarily resurrecting the previous connection's profession.
     if(!connected&&packet)packet={...packet,progression_state:{available:false,reason:'连接游戏后读取成长状态。'}};
+    if(!changed)return;
     renderPages();renderDependencies();renderSlots();renderControls();
   }
   function setCharacter(value){currentCharacter={available:value?.available===true,class_mask:value?.class_mask};renderSlots();}

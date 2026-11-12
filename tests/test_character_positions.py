@@ -52,9 +52,9 @@ class PositionTests(unittest.TestCase):
 class ConditionsTests(unittest.TestCase):
     def copy(self, tuples=(), status_tuples=(), stacks=()):
         c=Mock();c.types={'bk':{'name':'bk'}}
-        c.ptr.side_effect=lambda at:9000 if at==1064 else at
-        lists={2032:[struct.pack('<Q',x) for x in stacks],920+100:[struct.pack('<ifiidQ',*x) for x in tuples],
-            928+100:[struct.pack('<i4xQiid',*x) for x in status_tuples],1200:[struct.pack('<Q',3000),struct.pack('<Q',4000),struct.pack('<Q',5000)]}
+        c.ptr.side_effect=lambda at:9000 if at==1072 else at
+        lists={2032:[struct.pack('<Q',x) for x in stacks],936+100:[struct.pack('<ifiidQ',*x) for x in tuples],
+            944+100:[struct.pack('<i4xQiidQ',*x,0) for x in status_tuples],1208:[struct.pack('<Q',3000),struct.pack('<Q',4000),struct.pack('<Q',5000)]}
         c.list.side_effect=lambda at,*args,**kw:lists.get(at,[])
         c.verify.side_effect=lambda obj,*args:obj
         c.boolean.side_effect=lambda at:at==9080
@@ -75,6 +75,17 @@ class ConditionsTests(unittest.TestCase):
         self.assertEqual({},_conditional(c,100,1000,2000,80,100,[])[0][0])
         self.assertEqual({6:1},_conditional(c,100,1000,2000,81,100,[])[0][0])
 
+    def test_at_most_one_nearby_enemy_condition_uses_two_enemy_cutoff(self):
+        for count in (0,1,2,3):
+            c=self.copy([(6,6,65,0,.5,0)])
+            with patch('deskrawl_assistant.character_reader.Positions') as positions:
+                positions.return_value.nearby_count.return_value=count
+                layers,_=_conditional(c,100,1000,2000,100,100,[])
+                self.assertEqual({65:.5} if count<=1 else {},layers[0])
+                self.assertEqual(2,positions.return_value.nearby_count.call_args.args[-1])
+        c=self.copy([(6,6,65,0,.5,0)])
+        self.assertEqual({65:.5},_conditional(c,100,1000,2000,100,100,[],7)[0][0])
+
     def test_unknown_condition_or_distance_failure_does_not_supply_zero_stat(self):
         c=self.copy([(999,6,6,0,.8,0)])
         with self.assertRaisesRegex(MemoryReadError,'尚未适配'):_conditional(c,100,1000,2000,100,100,[])
@@ -89,7 +100,7 @@ class ConditionsTests(unittest.TestCase):
             layers,_=_conditional(c,100,1000,2000,0,100,[],7)
         self.assertEqual({3:1,5:1,6:1,65:1},layers[0])
         addresses=[call.args[0] for call in c.list.call_args_list]
-        self.assertNotIn(2032,addresses);self.assertNotIn(1200,addresses)
+        self.assertNotIn(2032,addresses);self.assertNotIn(1208,addresses)
 
     def test_fixed_boss_radius_boundary_and_role_distance(self):
         self.assertEqual([2,7,7,2],[boss_distance(mask) for mask in (1,2,4,8)])
@@ -100,8 +111,8 @@ class ConditionsTests(unittest.TestCase):
     def test_fixed_boss_excludes_status_stacks_gated_conversion_and_ability_bonus(self):
         c=self.copy([(1,0,65,0,5,5000)],[(1,5000,6,0,2)])
         normal_list=c.list.side_effect
-        extra={892:[struct.pack('<iidQ',1,3,.5,0),struct.pack('<iidQ',1,3,5,5000)],
-            972:[struct.pack('<Qi4xd',5000,3,2)],1044:[struct.pack('<Qiid',5000,6,0,3)]}
+        extra={908:[struct.pack('<iidQ',1,3,.5,0),struct.pack('<iidQ',1,3,5,5000)],
+            988:[struct.pack('<Qi4xd',5000,3,2)],1060:[struct.pack('<Qiid',5000,6,0,3)]}
         c.list.side_effect=lambda at,*args,**kw:extra.get(at,normal_list(at,*args,**kw))
         layers,conversions=_conditional(c,100,1000,2000,100,100,[],7)
         self.assertEqual([(1,3,.5)],conversions)
@@ -111,14 +122,14 @@ class ConditionsTests(unittest.TestCase):
     def test_new_player_conversion_layout_does_not_read_reused_old_field(self):
         c=self.copy([(1,0,66,0,.2,0)])
         normal_list=c.list.side_effect
-        extra={964:[struct.pack('<iidQ',1,66,.1,0)],
-            908:[b'new non-conversion field']}
+        extra={980:[struct.pack('<iidQ',1,66,.1,0)],
+            964:[b'new non-conversion field']}
         c.list.side_effect=lambda at,*args,**kw:extra.get(at,normal_list(at,*args,**kw))
         layers,conversions=_conditional(c,100,1000,2000,100,100,[],7)
         self.assertEqual([(1,66,.1)],conversions)
         self.assertEqual({66:.2},layers[0])
         addresses=[call.args[0] for call in c.list.call_args_list]
-        self.assertNotIn(908,addresses)
+        self.assertNotIn(964,addresses)
 
     def test_fixed_boss_rejects_unknown_conditions_and_invalid_radius(self):
         for kind,radius in ((999,6),(2,float('nan')),(2,-1)):

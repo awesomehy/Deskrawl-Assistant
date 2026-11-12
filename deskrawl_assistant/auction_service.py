@@ -6,9 +6,11 @@ import os
 import re
 import threading
 import time
+from uuid import uuid4
 
 from .auction import enabled, key
 from .models import ValidationError
+from .auction_commodities import COMMODITIES, is_commodity, operation_id, upload_reference, upload_receipt_matches
 
 
 class AuctionCoordinator:
@@ -36,7 +38,9 @@ class AuctionCoordinator:
                     raise ValueError('invalid journal')
                 self.intents = raw['intents']
                 if any(not isinstance(v, dict) or v.get('phase') not in ('submitted', 'confirmed', 'resolved', 'uncertain')
-                       or not isinstance(v.get('uid'), str) or not 0 < len(v['uid']) <= 256
+                       or not (isinstance(v.get('uid'), str) and 0 < len(v['uid']) <= 256
+                               or v.get('uid') is None and v.get('item_key') in COMMODITIES
+                               and operation_id(v.get('auction_operation_id')))
                        or not isinstance(v.get('item_key'), str) or not 0 < len(v['item_key']) <= 256
                        or v.get('instance_id') is not None and (not isinstance(v['instance_id'], str)
                            or not 0 < len(v['instance_id']) <= 256)
@@ -83,7 +87,7 @@ class AuctionCoordinator:
                 for receipt in native.get('confirmed_uploads', []):
                     if not isinstance(receipt, dict) or receipt.get('steamid') != steamid:
                         continue
-                    identity = self.identity(steamid, receipt.get('uploaded_uid'))
+                    identity = self.identity(steamid, receipt.get('uploaded_operation_id') or receipt.get('uploaded_uid'))
                     intent = self.intents.get(identity)
                     if intent and intent['phase'] in ('submitted', 'uncertain'):
                         self.confirmed(identity, receipt)
@@ -139,9 +143,12 @@ class AuctionCoordinator:
                 if row.get('steamid') == steamid and row.get('phase') == 'failed'
                 and row.get('retry_at', 0) > time.monotonic()
                 and not (row.get('failure_stage') == 'prepare' and not self.market_preparation_required(steamid))]
-            result['blocked_uids'] = sorted(set(result['blocked_uids']))
+            result['blocked_uids'] = sorted({uid for uid in result['blocked_uids'] if uid})
             result['blocked_keys'] = sorted(set(native.get('blocked_keys', [])) | {row['item_key'] for row in self.intents.values()
-                if row.get('ticket') and row.get('phase') != 'resolved'})
+                if (row.get('ticket') or row.get('auction_operation_id')) and row.get('phase') != 'resolved'})
+            result['blocked_keys'] = sorted(set(result['blocked_keys']) | {row['item_key'] for row in self.jobs.values()
+                if row.get('auction_operation_id') and row.get('phase') == 'failed'
+                and row.get('retry_at', 0) > time.monotonic()})
             if self.journal_error:
                 result.update(available=False, reason=self.error)
             return result
@@ -172,6 +179,7 @@ class AuctionCoordinator:
             return {'steam': {'authenticated': value.get('verified') is True,
                     'bound': value.get('bound') is True,
                     'expired': value.get('expired') is True,
+                    'renewing': value.get('renewing') is True,
                     'login_pending': value.get('login_open') is True,
                     'account_name': value.get('steamid') or '', 'wallet_currency': value.get('wallet_currency'),
                     'source': value.get('source') or 'none',
@@ -179,7 +187,7 @@ class AuctionCoordinator:
                     'local_message': value.get('local_message') or '',
                     'message': value.get('message') or ''},
                 'upload': {'phase': 'pending' if pending else 'needs_review' if unresolved else 'idle',
-                    'message': self.error or native.get('reason') or '仅上传白名单内已核验的单件物品。',
+                    'message': self.error or native.get('reason') or '按允许类别上传已核验物品，每次上传一个。',
                     'listing_count': native.get('listing_count'), 'listing_limit': 8, 'pending': pending},
                 'sell': {'phase': sale_phase, 'message': sale_message,
                     'pending': value.get('queued_count', 0),
@@ -200,9 +208,25 @@ class AuctionCoordinator:
             return not self.cached or (self.cached.get('verified') is True
                                        and self.cached.get('steamid') == steamid)
 
+    def materialize_upload(self, row, steamid):
+        """Local fence for a stack; never used as a native UID or instance ID."""
+        row = deepcopy(row)
+        if not is_commodity(row):
+            return row
+        source = json.dumps([steamid, key(row), row.get('container'), row.get('slot_index'),
+                             row.get('transfer_key'), row.get('count')], separators=(',', ':'))
+        with self.guard:
+            existing = next((job for job in self.jobs.values()
+                if job.get('commodity_source') == source and job.get('steamid') == steamid
+                and job.get('phase') in ('prepare', 'preparing', 'ready', 'failed')), None)
+            row['auction_operation_id'] = (existing['auction_operation_id'] if existing
+                else 'commodity:' + uuid4().hex)
+        row['commodity_source'] = source
+        return row
+
     def prepare(self, row, steamid, config):
         """Return ready ticket or enqueue I/O; called outside the game lock."""
-        identity = self.identity(steamid, row['item_uid'])
+        identity = self.identity(steamid, upload_reference(row))
         with self.guard:
             if self.journal_error or identity in self.intents:
                 return None
@@ -216,7 +240,8 @@ class AuctionCoordinator:
                     old['phase'] = 'failed'
                 if old['phase'] != 'failed' or old.get('retry_at', 0) > time.monotonic():
                     return None
-            self.jobs[identity] = {'phase': 'prepare', 'uid': row['item_uid'], 'steamid': steamid,
+            self.jobs[identity] = {'phase': 'prepare', 'uid': row.get('item_uid'), 'steamid': steamid,
+                'auction_operation_id': row.get('auction_operation_id'), 'commodity_source': row.get('commodity_source'),
                 'instance_id': row.get('instance_id'),
                 'item_key': key(row), 'variant': 'black_mist' if row.get('is_black_mist') is True else 'normal',
                 'signature': signature, 'created': time.monotonic()}
@@ -224,11 +249,15 @@ class AuctionCoordinator:
             return None
 
     def submitted(self, row, steamid, ticket=None, *, managed_run=None):
-        identity = self.identity(steamid, row['item_uid'])
+        reference = upload_reference(row)
+        if not reference or not row.get('item_uid') and not is_commodity(row):
+            raise ValidationError('上传物品身份或商品操作记录无效，未提交。')
+        identity = self.identity(steamid, reference)
         with self.guard:
             if identity in self.intents:
                 raise ValidationError('该物品已有上传请求记录，禁止重复上传。')
-            self.intents[identity] = {'uid': row['item_uid'], 'steamid': steamid, 'phase': 'submitted',
+            self.intents[identity] = {'uid': row.get('item_uid'), 'steamid': steamid, 'phase': 'submitted',
+                'auction_operation_id': row.get('auction_operation_id'),
                 'instance_id': row.get('instance_id'),
                 'item_key': key(row), 'variant': 'black_mist' if row.get('is_black_mist') is True else 'normal',
                 'created_at': time.time(), 'ticket': ticket}
@@ -263,13 +292,12 @@ class AuctionCoordinator:
             # The local inventory UID and server GeneratedItemData instance ID
             # are different identifiers. Only the native exact receipt can
             # authorize mapping a newly uploaded Steam asset.
-            if (not row.get('instance_id') or not isinstance(receipt, dict)
-                    or receipt.get('uploaded_uid') != row['uid']
-                    or receipt.get('uploaded_instance_id') != row['instance_id']
-                    or receipt.get('uploaded_internal_name') != row['item_key']):
+            if not isinstance(receipt, dict) or not upload_receipt_matches(row, receipt):
                 row['phase'] = 'uncertain'
                 self._save()
                 raise ValidationError('拍卖上传回执与物品身份不一致，保留在途记录；请核验后继续。')
+            if row.get('auction_operation_id'):
+                row['instance_id'] = receipt['uploaded_instance_id']
             row['phase'] = 'confirmed' if row.get('ticket') else 'resolved'
             self._save()
             job = self.jobs.get(identity)
@@ -619,5 +647,5 @@ class AuctionServiceMixin:
                     else 'divine' if entry.get('kind') == 'equipment' else 'set' if entry.get('rarity') == 5
                     else 'grand' if entry.get('kind') == 'rune' else 'legendary'),
                 'support_reason':
-                    '无实例 ID 的金条／开光石暂需手动上传。' if material else ''})
+                    '金条／开光石由托管逐个上传并核验同步结果。' if material else ''})
         return result

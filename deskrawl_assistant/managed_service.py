@@ -22,6 +22,7 @@ from .action_log import record
 from .progression import catalog as growth_catalog, growth_action, next_purchase, NEW_ACTIONS, PURCHASE_BATCH_LIMIT, enabled as growth_enabled
 from .auction import next_action as auction_action, validate_settings as validate_auction
 from .auction_runtime import auction_candidate_fields, AuctionUploadPending
+from .auction_commodities import upload_receipt_matches
 from .carriage_transfer import CarriageUnavailable
 from .town_cleanup_recovery import cleanup_ready, cleanup_action_allowed
 
@@ -305,6 +306,7 @@ class ManagedServiceMixin:
             source = raw.get((item['container'],item['slot_index']),{})
             item['issues'] = list(source.get('issues',[]))
             item['item_type'] = source.get('item_type')
+            item['transfer_key'] = source.get('transfer_key')
             item['item_class'] = source.get('item_class')
             item['slot_locked'] = source.get('slot_locked')
             item['identity_verified'] = source.get('identity_verified')
@@ -709,7 +711,7 @@ class ManagedServiceMixin:
                 return {'verified': False, 'retryable': True, 'reason': self.managed.status}
             planned = auction_action(self.managed.settings, observation)
             if (not planned or planned['kind'] != kind
-                    or planned.get('item', {}).get('item_uid') != (item or {}).get('item_uid')):
+                    or identity(planned.get('item', {})) != identity(item or {})):
                 return {'verified': False, 'retryable': True, 'reason': '拍卖白名单、保留数量或物品状态已变化，重新规划。'}
         pending = scene.get('online_pending_requests')
         if kind == 'enter_dungeon' and action.get('dungeon_id') == PUMPKIN:
@@ -909,6 +911,9 @@ class ManagedServiceMixin:
                 auction_state = observation.get('auction', {})
                 steamid = auction_state.get('steamid') if auction_state.get('steamid_verified') is True else None
                 payload['expected_steamid'] = steamid
+                item = coordinator.materialize_upload(item, steamid)
+                action['item'] = item
+                payload['item'] = {**(source or item), 'auction_operation_id': item.get('auction_operation_id')}
                 ticket = None
                 if config['sell_enabled'] and coordinator.market_preparation_required(steamid):
                     ticket = coordinator.prepare(item, steamid, config)
@@ -986,6 +991,13 @@ class ManagedServiceMixin:
             now = time.monotonic()
             action = action or {}
             key = (code,action.get('kind'))
+            source_run_id = (action.get('source_run_id') if action.get('kind') == 'enter_dungeon'
+                             and action.get('reason_code') == 'pumpkin_replay' else None)
+            if source_run_id:
+                # Native replay can finish another run between two preflight
+                # waits. Its new settlement must not inherit the old deadline.
+                key += (action.get('reason_code'), source_run_id,
+                        action.get('dungeon_id'), action.get('difficulty'))
             old = self.managed_retry
             attempts = old['attempts']+1 if old and old['key']==key else 1
             started = old['started'] if old and old['key']==key else now
@@ -1013,7 +1025,8 @@ class ManagedServiceMixin:
             if code == 'stargazing_entry_rejected': delay = min(3, attempts)
             self.managed_retry = {'key':key,'started':started,'attempts':attempts,
                 'next_at':now+delay,'action_kind':action.get('kind'),'reason':reason,
-                'target':action.get('target'),'reason_code':action.get('reason_code')}
+                'target':action.get('target'),'reason_code':action.get('reason_code'),
+                'source_run_id':source_run_id}
             self.managed.status = reason+f' {delay} 秒后重新检查，托管继续运行。'
             if online_wait and elapsed >= 120:
                 self.managed.status = reason+f' 已等待 {int(elapsed)} 秒，尚未提交切换请求；同步恢复后自动继续。'
@@ -1321,9 +1334,7 @@ class ManagedServiceMixin:
         receipts = state.get('confirmed_uploads', [])
         confirmed = bool(wait['uploads']) and all(any(
             receipt.get('steamid') == wait['steamid'] == row.get('steamid')
-            and receipt.get('uploaded_instance_id') == row.get('instance_id')
-            and receipt.get('uploaded_uid') == row.get('item_uid')
-            and receipt.get('uploaded_internal_name') == row.get('internal_name')
+            and upload_receipt_matches(row, receipt)
             for receipt in receipts) for row in wait['uploads'])
         if (confirmed and state.get('available') is True and not state.get('busy')
                 and state.get('pending') is False and account == wait['steamid']):
@@ -1412,6 +1423,19 @@ class ManagedServiceMixin:
             if self.managed_transition is None and self._managed_wait_scene(observation):
                 return self.managed.status
             retry = self.managed_retry
+            if retry and retry.get('source_run_id') and self.managed_transition is None:
+                scene = observation['scene']
+                run = run_record(scene.get('run'))
+                if (scene.get('available') is True and scene.get('in_dungeon') is True
+                        and all(scene.get(key) is False for key in ('scene_changing','teleporting'))
+                        and run.get('id') and run['id'] != retry['source_run_id']
+                        and not run.get('retained_terminal')
+                        and run.get('status') in ('running','settling','success','failed')):
+                    # Only discard an unsubmitted intent. Accepted transitions
+                    # and uncertain item receipts retain their own fences.
+                    self.managed_retry = retry = None
+                    self.managed.pending = None
+                    record('managed_run_retry_replanned',scene=self._transition_scene(scene))
             if self.managed_transition is None and cleanup_ready(observation):
                 # A verified stable town closes the old return wait, while
                 # submitted transitions and item receipts keep their protocols.
@@ -1546,7 +1570,8 @@ class ManagedServiceMixin:
                         'character_id': self.managed._control_character_id(observation),
                         'steamid': observation.get('auction', {}).get('steamid'),
                         'started': time.monotonic(), 'started_at': time.time(), 'next_at': 0, 'refresh_at': 0,
-                        'uploads': [dict(item_uid=item['item_uid'], instance_id=item['instance_id'],
+                        'uploads': [dict(item_uid=item.get('item_uid'), instance_id=item.get('instance_id'),
+                            auction_operation_id=item.get('auction_operation_id'),
                             internal_name=item['internal_name'],
                             steamid=observation.get('auction', {}).get('steamid'))],
                         'reason': exc.native_status}

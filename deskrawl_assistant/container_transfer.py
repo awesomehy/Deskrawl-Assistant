@@ -172,7 +172,7 @@ def access_state(reader):
         return verify(obj,name)
 
     manager = singleton(native_rva(reader,'game_manager_rva',GAME_MANAGER_RVA),'GameManager')
-    controller = verify(pointer(manager+64),'PlayerCombatController')
+    controller = verify(pointer(manager+72),'PlayerCombatController')
     player = verify(pointer(controller+32),'Player')
     pages = struct.unpack('<i',observe(player+616,4))[0]
     if not 0 <= pages <= 3: raise MemoryReadError('仓库开放页数尚未核验')
@@ -186,13 +186,18 @@ def access_state(reader):
         cloud = singleton(native_rva(reader,'cloud_client_rva',CLOUD_CLIENT_RVA),'CloudClient')
         dlc = pointer(cloud+432)
         owned = observe(verify(dlc,'DlcState')+16,1) if dlc else b'\0'
+        storage_pack = observe(dlc+18,1) if dlc else b'\0'
     else:
-        dlc = pointer(save+232)
+        dlc = pointer(save+240)
         owned = observe(verify(dlc,'LocalDlcEntitlement')+28,1) if dlc else b'\0'
-    if owned not in (b'\0',b'\1'): raise MemoryReadError('仓库扩展页状态异常')
+        pack = pointer(save+248)
+        storage_pack = observe(verify(pack,'LocalDlcEntitlement')+28,1) if pack else b'\0'
+    if owned not in (b'\0',b'\1') or storage_pack not in (b'\0',b'\1'):
+        raise MemoryReadError('仓库扩展页状态异常')
     allowed = list(range((pages+1)*50))
     if owned == b'\1': allowed.extend(range(200,250))
-    return {'available':True,'storage_indices':allowed,'storage_pages':pages+1+(owned==b'\1'),
+    if storage_pack == b'\1': allowed.extend(range(250,400))
+    return {'available':True,'storage_indices':allowed,'storage_pages':pages+1+(owned==b'\1')+3*(storage_pack==b'\1'),
             'page_size':50}, guards
 
 
@@ -372,8 +377,8 @@ def move_items(reader,expected,target,validate=lambda:True,on_commit=None,*,targ
             raise SnapshotChangedError('来源物品发生变化，请刷新后重试')
         stackable = row.get('item_type')==6 and row.get('item_class')=='GemData' and not row.get('item_uid') and not row.get('is_equipment')
         item = struct.unpack_from('<Q',head,16)[0]
-        maximum = p.i32(item+152) if stackable else 1
-        if stackable: guards.append((item+152,struct.pack('<i',maximum)))
+        maximum = p.i32(item+160) if stackable else 1
+        if stackable: guards.append((item+160,struct.pack('<i',maximum)))
         sources.append({'address':source,'header':head,'name':row['internal_name'],
                         'slot_index':row['slot_index'],'identity':row.get('item_uid') or row.get('instance_id') or '',
                         'stackable':stackable,'max_stack':maximum,'has_unique_uid':bool(row.get('item_uid'))})

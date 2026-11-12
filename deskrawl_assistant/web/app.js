@@ -1,5 +1,6 @@
 'use strict';
 const $ = (id) => document.getElementById(id);
+const setText=(id,value)=>{const node=$(id),text=String(value??'');if(node.textContent!==text)node.textContent=text;};
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const desktopMode=new URLSearchParams(location.search).get('desktop')==='1';
 let token = document.querySelector('meta[name="assistant-token"]').content;
@@ -7,7 +8,7 @@ let catalog, state, gearKey, draft, dirty=false, selectedClass=0, detailId=null;
 let affixClass=null;
 let selectedItems=new Set(), itemSignature='', catalogSignature='', polling=false, toastTimer, exiting=false;
 const gearMap=new Map(), statMap=new Map();
-let lastRules='';
+let lastRules='',connectionMarkup='',historyMarkup='';
 let automationDraft=null, automationDirty=false, collectionSignature='';
 let automationPageSignature='';
 let activeTab='rules', logBefore=null, logNext=null, logRequest=0, logTimer;
@@ -499,13 +500,14 @@ function renderState(){
   const compatibility=state.compatibility||{phase:'idle',message:'连接时自动检测游戏兼容性'};
   if(!state.connected)clearLootPreview('连接游戏并进入在线关卡，查看这趟会掉落什么。');
   else if(['blocked','changed','error'].includes(compatibility.phase))clearLootPreview(compatibility.message||'当前游戏版本暂不支持读取掉落计划。','unsupported');
-  $('compatibility-message').textContent=compatibility.message;
+  setText('compatibility-message',compatibility.message);
   $('compatibility-bar').dataset.phase=compatibility.phase;
   const connection=$('connection-state');connection.className='status-pill'+(state.connected?' online':'')+(state.busy?' busy':'');
-  connection.innerHTML='<i></i>'+ (state.connected?`已连接${state.busy?' · 处理中':''}`:state.busy?'正在连接…':'未连接游戏');
+  const nextConnection='<i></i>'+ (state.connected?`已连接${state.busy?' · 处理中':''}`:state.busy?'正在连接…':'未连接游戏');
+  if(nextConnection!==connectionMarkup){connectionMarkup=nextConnection;connection.innerHTML=nextConnection;}
   connection.title=state.pid?`游戏进程 ${state.pid}`:'';
   const game=state.game||{},gameLabels={running:'游戏运行中',stopped:'游戏未运行',starting:'Steam 启动中…',closing:'游戏退出中…',unknown:'游戏状态未确认'};
-  $('game-state').textContent=game.status==='running'&&game.control_unavailable?'游戏运行中 · 控制暂不可用':gameLabels[game.status]||'检测游戏中…';
+  setText('game-state',game.status==='running'&&game.control_unavailable?'游戏运行中 · 控制暂不可用':gameLabels[game.status]||'检测游戏中…');
   $('game-state').dataset.status=game.status||'unknown';
   $('game-state').title=game.error||(game.count>1?'检测到多个游戏进程，请在游戏窗口中退出。':'');
   $('game-start').hidden=game.running===true||game.status==='closing';
@@ -513,24 +515,25 @@ function renderState(){
   $('game-close').hidden=game.running!==true;
   $('game-close').disabled=game.can_close!==true;
   $('game-close').title=game.can_close===true?'关闭游戏前需要再次确认':game.error||(game.count>1?'检测到多个游戏进程，请在游戏窗口中退出。':'等待重新核验游戏进程后关闭。');
-  $('rule-count').textContent=state.rules.filter(r=>r.enabled).length;
-  $('operation-message').textContent=state.message+(state.connected&&!state.complete&&!state.busy?' 本次读取不完整，请稍后刷新。':'');
+  setText('rule-count',state.rules.filter(r=>r.enabled).length);
+  setText('operation-message',state.message+(state.connected&&!state.complete&&!state.busy?' 本次读取不完整，请稍后刷新。':''));
   document.querySelector('.operation-notice').classList.toggle('error',!!state.error);
-  $('footer-state').textContent=state.error?state.message:state.connected?'已连接游戏 · 无需切回游戏前台':'本机运行 · 无需切回游戏前台';
-  $('last-read').textContent=state.captured_at?`上次读取 ${new Date(state.captured_at).toLocaleTimeString('zh-CN',{hour12:false})}`:'自动监控默认关闭';
+  setText('footer-state',state.error?state.message:state.connected?'已连接游戏 · 无需切回游戏前台':'本机运行 · 无需切回游戏前台');
+  setText('last-read',state.captured_at?`上次读取 ${new Date(state.captured_at).toLocaleTimeString('zh-CN',{hour12:false})}`:'自动监控默认关闭');
   for(const c of ['inventory','storage']){
-    const counts=state.counts[c];$(c+'-count').textContent=counts?counts.equipment:'—';
-    $(c+'-capacity').textContent=counts?`物品占用 ${counts.occupied} / ${counts.capacity} 格${counts.minion_equipment?` · 仆从装备 ${counts.minion_equipment} 件`:""}`:'连接后读取';
+    const counts=state.counts[c];setText(c+'-count',counts?counts.equipment:'—');
+    setText(c+'-capacity',counts?`物品占用 ${counts.occupied} / ${counts.capacity} 格${counts.minion_equipment?` · 仆从装备 ${counts.minion_equipment} 件`:""}`:'连接后读取');
   }
-  $('locked-count').textContent=state.items.length?state.items.filter(i=>i.is_equipment&&i.locked===true).length:'—';
-  $('match-count').textContent=state.items.length?state.items.filter(i=>i.matches&&i.locked===false).length:'—';
+  setText('locked-count',state.items.length?state.items.filter(i=>i.is_equipment&&i.locked===true).length:'—');
+  setText('match-count',state.items.length?state.items.filter(i=>i.matches&&i.locked===false).length:'—');
   $('progress-wrap').hidden=!state.busy||!state.progress;
-  if(state.progress){$('operation-progress').max=Math.max(1,state.progress.total);$('operation-progress').value=state.progress.done;$('progress-label').textContent=`${state.progress.done} / ${state.progress.total}`;}
-  $('history-list').innerHTML=state.history.length?state.history.map(h=>`<div><time>${esc(h.time)}</time><span>${esc(h.text)}</span></div>`).join(''):'<div class="note">尚无操作记录</div>';
+  if(state.progress){$('operation-progress').max=Math.max(1,state.progress.total);$('operation-progress').value=state.progress.done;setText('progress-label',`${state.progress.done} / ${state.progress.total}`);}
+  const nextHistory=state.history.length?state.history.map(h=>`<div><time>${esc(h.time)}</time><span>${esc(h.text)}</span></div>`).join(''):'<div class="note">尚无操作记录</div>';
+  if(nextHistory!==historyMarkup){historyMarkup=nextHistory;$('history-list').innerHTML=nextHistory;}
   const rulesSignature=JSON.stringify(state.rules);
   if(rulesSignature!==lastRules){lastRules=rulesSignature;renderCatalog();if(gearKey&&!dirty){const r=rulesFor(gearKey).find(r=>r.id===draft?.id);if(r){draft=makeDraft(r);renderEditor();}}}
   renderEquippedPreview();renderInventory();updateControls();renderAutomation();
-  $('logging-state').textContent=state.connected?'已连接 · 每 2 秒记录物品变化':'连接游戏后开始记录物品变化';
+  setText('logging-state',state.connected?'已连接 · 每 2 秒记录物品变化':'连接游戏后开始记录物品变化');
 }
 async function pollState(){
   if(polling||exiting)return;

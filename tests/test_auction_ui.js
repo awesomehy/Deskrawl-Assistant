@@ -168,4 +168,7 @@ test('native Steam requires verified authentication and shows the actual source'
   assert.equal(view.loginText,'已登录 · 玩家');assert.match(view.loginMessage,/原绑定有效.*本机社区未通过核验/);
   view=auction.stateView({steam:{source:'local_steam',authenticated:true,expired:true}});
   assert.equal(view.authenticated,false);assert.equal(view.loginText,'登录凭证已过期，请重新登录');
+  view=auction.stateView({steam:{source:'local_steam',authenticated:false,renewing:true}});
+  assert.equal(view.authenticated,false);assert.equal(view.expired,false);
+  assert.equal(view.loginText,'本机 Steam 凭证自动续期中');
 });

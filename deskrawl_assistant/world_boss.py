@@ -96,7 +96,7 @@ def read_entry(read, map_object):
     read.verify(state, 'WorldBossEntryState')
     day = struct.unpack('<q',read.read(state+16,8))[0]
     used = read.integer(state+24)
-    return entry_status(day, used, _text(read,map_object,120), _text(read,map_object,128), now=now)
+    return entry_status(day, used, _text(read,map_object,136), _text(read,map_object,144), now=now)
 
 
 def target_blocked(scene, map_id, difficulty):

@@ -1,4 +1,4 @@
-"""Warehouse page entitlement guards for the verified 1.1.0 layout."""
+"""Warehouse page entitlement guards for the verified 1.1.11 layout."""
 import json
 from types import SimpleNamespace
 import struct
@@ -30,14 +30,14 @@ class StorageAccessTests(unittest.TestCase):
             self.pointer(obj+0x200000,obj)
         for rva,name in ((GAME_MANAGER_RVA,'GameManager'),(CLOUD_CLIENT_RVA,'CloudClient')):
             self.pointer(self.base+rva,self.classes[name])
-        self.pointer(self.objects['GameManager']+64,self.objects['PlayerCombatController'])
+        self.pointer(self.objects['GameManager']+72,self.objects['PlayerCombatController'])
         self.pointer(self.objects['PlayerCombatController']+32,self.objects['Player'])
         self.integer(self.objects['Player']+616,3)
         self.integer(self.objects['SaveSystem']+32,1)
         self.pointer(self.objects['CloudClient']+424,0xDEAD0000)  # Previous build's field is not a DLC object.
         self.pointer(self.objects['CloudClient']+432,self.objects['DlcState'])
         self.p.put(self.objects['DlcState']+16,b'\1')
-        self.pointer(self.objects['SaveSystem']+232,self.objects['LocalDlcEntitlement'])
+        self.pointer(self.objects['SaveSystem']+240,self.objects['LocalDlcEntitlement'])
         self.p.put(self.objects['LocalDlcEntitlement']+28,b'\1')
 
     def pointer(self,address,value): self.p.put(address,struct.pack('<Q',value))
@@ -68,6 +68,32 @@ class StorageAccessTests(unittest.TestCase):
 
     def test_invalid_entitlement_byte_stops_operation(self):
         self.p.put(self.objects['DlcState']+16,b'\2')
+        with self.assertRaisesRegex(MemoryReadError,'状态异常'):
+            access_state(self.reader)
+
+    def test_both_dlc_entitlements_are_independent_online(self):
+        for first in (0, 1):
+            for pack in (0, 1):
+                with self.subTest(first=first, pack=pack):
+                    self.p.put(self.objects['DlcState']+16,bytes([first]))
+                    self.p.put(self.objects['DlcState']+18,bytes([pack]))
+                    state, guards = access_state(self.reader)
+                    expected = list(range(200))
+                    if first: expected += list(range(200,250))
+                    if pack: expected += list(range(250,400))
+                    self.assertEqual(state['storage_indices'],expected)
+                    self.assertEqual(state['storage_pages'],4+first+3*pack)
+                    self.assertIn(self.objects['DlcState']+18,dict(guards))
+
+    def test_storage_pack_is_guarded_offline_and_invalid_flags_fail_closed(self):
+        self.integer(self.objects['SaveSystem']+32,0)
+        self.pointer(self.objects['SaveSystem']+248,self.objects['LocalDlcEntitlement'])
+        state, guards = access_state(self.reader)
+        self.assertEqual(state['storage_indices'],list(range(400)))
+        self.assertIn(self.objects['SaveSystem']+248,dict(guards))
+        self.assertIn(self.objects['LocalDlcEntitlement']+28,dict(guards))
+        self.integer(self.objects['SaveSystem']+32,1)
+        self.p.put(self.objects['DlcState']+18,b'\2')
         with self.assertRaisesRegex(MemoryReadError,'状态异常'):
             access_state(self.reader)
 

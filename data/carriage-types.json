@@ -2,13 +2,13 @@
   {
     "name": "LootDrop",
     "namespace": "",
-    "typeDefinitionIndex": 6005,
+    "typeDefinitionIndex": 6019,
     "fields": [
       {
         "name": "EjectForce",
-        "fieldIndex": 25629,
-        "token": "0x04000B6C",
-        "typeIndex": 29459,
+        "fieldIndex": 25763,
+        "token": "0x04000BEB",
+        "typeIndex": 29554,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -19,9 +19,9 @@
       },
       {
         "name": "EjectUpForce",
-        "fieldIndex": 25630,
-        "token": "0x04000B6D",
-        "typeIndex": 29459,
+        "fieldIndex": 25764,
+        "token": "0x04000BEC",
+        "typeIndex": 29554,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -32,9 +32,9 @@
       },
       {
         "name": "EjectZSpread",
-        "fieldIndex": 25631,
-        "token": "0x04000B6E",
-        "typeIndex": 29459,
+        "fieldIndex": 25765,
+        "token": "0x04000BED",
+        "typeIndex": 29554,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -45,9 +45,9 @@
       },
       {
         "name": "Gravity",
-        "fieldIndex": 25632,
-        "token": "0x04000B6F",
-        "typeIndex": 29459,
+        "fieldIndex": 25766,
+        "token": "0x04000BEE",
+        "typeIndex": 29554,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -58,9 +58,9 @@
       },
       {
         "name": "GroundY",
-        "fieldIndex": 25633,
-        "token": "0x04000B70",
-        "typeIndex": 29459,
+        "fieldIndex": 25767,
+        "token": "0x04000BEF",
+        "typeIndex": 29554,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -71,9 +71,9 @@
       },
       {
         "name": "HighRarityUpForceMultiplier",
-        "fieldIndex": 25634,
-        "token": "0x04000B71",
-        "typeIndex": 29459,
+        "fieldIndex": 25768,
+        "token": "0x04000BF0",
+        "typeIndex": 29554,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -84,9 +84,9 @@
       },
       {
         "name": "HighRaritySpinSpeed",
-        "fieldIndex": 25635,
-        "token": "0x04000B72",
-        "typeIndex": 29459,
+        "fieldIndex": 25769,
+        "token": "0x04000BF1",
+        "typeIndex": 29554,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -97,9 +97,9 @@
       },
       {
         "name": "SpriteRenderer",
-        "fieldIndex": 25636,
-        "token": "0x04000B73",
-        "typeIndex": 29800,
+        "fieldIndex": 25770,
+        "token": "0x04000BF2",
+        "typeIndex": 29902,
         "resolvedType": "UnityEngine.SpriteRenderer",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -110,9 +110,9 @@
       },
       {
         "name": "ShadowRenderer",
-        "fieldIndex": 25637,
-        "token": "0x04000B74",
-        "typeIndex": 29800,
+        "fieldIndex": 25771,
+        "token": "0x04000BF3",
+        "typeIndex": 29902,
         "resolvedType": "UnityEngine.SpriteRenderer",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -123,9 +123,9 @@
       },
       {
         "name": "LootBeam",
-        "fieldIndex": 25638,
-        "token": "0x04000B75",
-        "typeIndex": 22349,
+        "fieldIndex": 25772,
+        "token": "0x04000BF4",
+        "typeIndex": 22436,
         "resolvedType": "UnityEngine.GameObject",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -136,9 +136,9 @@
       },
       {
         "name": "DivineLootBeam",
-        "fieldIndex": 25639,
-        "token": "0x04000B76",
-        "typeIndex": 22349,
+        "fieldIndex": 25773,
+        "token": "0x04000BF5",
+        "typeIndex": 22436,
         "resolvedType": "UnityEngine.GameObject",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -149,9 +149,9 @@
       },
       {
         "name": "RuneSetLootBeam",
-        "fieldIndex": 25640,
-        "token": "0x04000B77",
-        "typeIndex": 22349,
+        "fieldIndex": 25774,
+        "token": "0x04000BF6",
+        "typeIndex": 22436,
         "resolvedType": "UnityEngine.GameObject",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -162,9 +162,9 @@
       },
       {
         "name": "BlackMistLootBeam",
-        "fieldIndex": 25641,
-        "token": "0x04000B78",
-        "typeIndex": 22349,
+        "fieldIndex": 25775,
+        "token": "0x04000BF7",
+        "typeIndex": 22436,
         "resolvedType": "UnityEngine.GameObject",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -175,9 +175,9 @@
       },
       {
         "name": "CoinPrefabs",
-        "fieldIndex": 25642,
-        "token": "0x04000B79",
-        "typeIndex": 16076,
+        "fieldIndex": 25776,
+        "token": "0x04000BF8",
+        "typeIndex": 16147,
         "resolvedType": "UnityEngine.GameObject[]",
         "typeKind": 29,
         "attributes": "0x0006",
@@ -187,10 +187,10 @@
         "rawRegistrationOffset": 112
       },
       {
-        "name": "nly",
-        "fieldIndex": 25643,
-        "token": "0x04000B7A",
-        "typeIndex": 24482,
+        "name": "nxg",
+        "fieldIndex": 25777,
+        "token": "0x04000BF9",
+        "typeIndex": 24572,
         "resolvedType": "ItemData",
         "typeKind": 18,
         "attributes": "0x0001",
@@ -200,10 +200,10 @@
         "rawRegistrationOffset": 120
       },
       {
-        "name": "nlz",
-        "fieldIndex": 25644,
-        "token": "0x04000B7B",
-        "typeIndex": 24215,
+        "name": "nxh",
+        "fieldIndex": 25778,
+        "token": "0x04000BFA",
+        "typeIndex": 24304,
         "resolvedType": "System.Int32",
         "typeKind": 8,
         "attributes": "0x0001",
@@ -213,10 +213,10 @@
         "rawRegistrationOffset": 128
       },
       {
-        "name": "nma",
-        "fieldIndex": 25645,
-        "token": "0x04000B7C",
-        "typeIndex": 18370,
+        "name": "nxi",
+        "fieldIndex": 25779,
+        "token": "0x04000BFB",
+        "typeIndex": 18443,
         "resolvedType": "System.Boolean",
         "typeKind": 2,
         "attributes": "0x0001",
@@ -226,10 +226,10 @@
         "rawRegistrationOffset": 132
       },
       {
-        "name": "nmb",
-        "fieldIndex": 25646,
-        "token": "0x04000B7D",
-        "typeIndex": 18370,
+        "name": "nxj",
+        "fieldIndex": 25780,
+        "token": "0x04000BFC",
+        "typeIndex": 18443,
         "resolvedType": "System.Boolean",
         "typeKind": 2,
         "attributes": "0x0001",
@@ -239,10 +239,10 @@
         "rawRegistrationOffset": 133
       },
       {
-        "name": "nmc",
-        "fieldIndex": 25647,
-        "token": "0x04000B7E",
-        "typeIndex": 30102,
+        "name": "nxk",
+        "fieldIndex": 25781,
+        "token": "0x04000BFD",
+        "typeIndex": 30205,
         "resolvedType": "System.String",
         "typeKind": 14,
         "attributes": "0x0001",
@@ -252,10 +252,10 @@
         "rawRegistrationOffset": 136
       },
       {
-        "name": "nmd",
-        "fieldIndex": 25648,
-        "token": "0x04000B7F",
-        "typeIndex": 24491,
+        "name": "nxl",
+        "fieldIndex": 25782,
+        "token": "0x04000BFE",
+        "typeIndex": 24581,
         "resolvedType": "ItemRarity",
         "typeKind": 17,
         "attributes": "0x0001",
@@ -265,10 +265,10 @@
         "rawRegistrationOffset": 144
       },
       {
-        "name": "<nme>k__BackingField",
-        "fieldIndex": 25649,
-        "token": "0x04000B80",
-        "typeIndex": 18370,
+        "name": "<nxm>k__BackingField",
+        "fieldIndex": 25783,
+        "token": "0x04000BFF",
+        "typeIndex": 18443,
         "resolvedType": "System.Boolean",
         "typeKind": 2,
         "attributes": "0x0001",
@@ -278,10 +278,10 @@
         "rawRegistrationOffset": 148
       },
       {
-        "name": "<nmf>k__BackingField",
-        "fieldIndex": 25650,
-        "token": "0x04000B81",
-        "typeIndex": 18370,
+        "name": "<nxn>k__BackingField",
+        "fieldIndex": 25784,
+        "token": "0x04000C00",
+        "typeIndex": 18443,
         "resolvedType": "System.Boolean",
         "typeKind": 2,
         "attributes": "0x0001",
@@ -291,10 +291,10 @@
         "rawRegistrationOffset": 149
       },
       {
-        "name": "<nmg>k__BackingField",
-        "fieldIndex": 25651,
-        "token": "0x04000B82",
-        "typeIndex": 30102,
+        "name": "<nxo>k__BackingField",
+        "fieldIndex": 25785,
+        "token": "0x04000C01",
+        "typeIndex": 30205,
         "resolvedType": "System.String",
         "typeKind": 14,
         "attributes": "0x0001",
@@ -304,10 +304,10 @@
         "rawRegistrationOffset": 152
       },
       {
-        "name": "<nmh>k__BackingField",
-        "fieldIndex": 25652,
-        "token": "0x04000B83",
-        "typeIndex": 29454,
+        "name": "<nxp>k__BackingField",
+        "fieldIndex": 25786,
+        "token": "0x04000C02",
+        "typeIndex": 29549,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0001",
@@ -317,10 +317,10 @@
         "rawRegistrationOffset": 160
       },
       {
-        "name": "<nmi>k__BackingField",
-        "fieldIndex": 25653,
-        "token": "0x04000B84",
-        "typeIndex": 24215,
+        "name": "<nxq>k__BackingField",
+        "fieldIndex": 25787,
+        "token": "0x04000C03",
+        "typeIndex": 24304,
         "resolvedType": "System.Int32",
         "typeKind": 8,
         "attributes": "0x0001",
@@ -330,10 +330,10 @@
         "rawRegistrationOffset": 164
       },
       {
-        "name": "<nmj>k__BackingField",
-        "fieldIndex": 25654,
-        "token": "0x04000B85",
-        "typeIndex": 24215,
+        "name": "<nxr>k__BackingField",
+        "fieldIndex": 25788,
+        "token": "0x04000C04",
+        "typeIndex": 24304,
         "resolvedType": "System.Int32",
         "typeKind": 8,
         "attributes": "0x0001",
@@ -343,10 +343,10 @@
         "rawRegistrationOffset": 168
       },
       {
-        "name": "nmk",
-        "fieldIndex": 25655,
-        "token": "0x04000B86",
-        "typeIndex": 32326,
+        "name": "nxs",
+        "fieldIndex": 25789,
+        "token": "0x04000C05",
+        "typeIndex": 32430,
         "resolvedType": "UnityEngine.Vector3",
         "typeKind": 17,
         "attributes": "0x0001",
@@ -356,10 +356,10 @@
         "rawRegistrationOffset": 172
       },
       {
-        "name": "nml",
-        "fieldIndex": 25656,
-        "token": "0x04000B87",
-        "typeIndex": 18370,
+        "name": "nxt",
+        "fieldIndex": 25790,
+        "token": "0x04000C06",
+        "typeIndex": 18443,
         "resolvedType": "System.Boolean",
         "typeKind": 2,
         "attributes": "0x0001",
@@ -369,10 +369,10 @@
         "rawRegistrationOffset": 184
       },
       {
-        "name": "nmm",
-        "fieldIndex": 25657,
-        "token": "0x04000B88",
-        "typeIndex": 18370,
+        "name": "nxu",
+        "fieldIndex": 25791,
+        "token": "0x04000C07",
+        "typeIndex": 18443,
         "resolvedType": "System.Boolean",
         "typeKind": 2,
         "attributes": "0x0001",
@@ -382,10 +382,10 @@
         "rawRegistrationOffset": 185
       },
       {
-        "name": "nmn",
-        "fieldIndex": 25658,
-        "token": "0x04000B89",
-        "typeIndex": 25288,
+        "name": "nxv",
+        "fieldIndex": 25792,
+        "token": "0x04000C08",
+        "typeIndex": 25380,
         "resolvedType": "LootLabelUI",
         "typeKind": 18,
         "attributes": "0x0001",
@@ -395,10 +395,10 @@
         "rawRegistrationOffset": 192
       },
       {
-        "name": "nmo",
-        "fieldIndex": 25659,
-        "token": "0x04000B8A",
-        "typeIndex": 30102,
+        "name": "nxw",
+        "fieldIndex": 25793,
+        "token": "0x04000C09",
+        "typeIndex": 30205,
         "resolvedType": "System.String",
         "typeKind": 14,
         "attributes": "0x0001",
@@ -408,10 +408,10 @@
         "rawRegistrationOffset": 200
       },
       {
-        "name": "nmp",
-        "fieldIndex": 25660,
-        "token": "0x04000B8B",
-        "typeIndex": 18370,
+        "name": "nxx",
+        "fieldIndex": 25794,
+        "token": "0x04000C0A",
+        "typeIndex": 18443,
         "resolvedType": "System.Boolean",
         "typeKind": 2,
         "attributes": "0x0001",
@@ -421,10 +421,10 @@
         "rawRegistrationOffset": 208
       },
       {
-        "name": "nmq",
-        "fieldIndex": 25661,
-        "token": "0x04000B8C",
-        "typeIndex": 18370,
+        "name": "nxy",
+        "fieldIndex": 25795,
+        "token": "0x04000C0B",
+        "typeIndex": 18443,
         "resolvedType": "System.Boolean",
         "typeKind": 2,
         "attributes": "0x0001",
@@ -436,367 +436,367 @@
     ],
     "methods": [
       {
-        "name": "czw",
-        "token": "0x06000958",
+        "name": "dcn",
+        "token": "0x060009AE",
         "isStatic": false,
         "returnType": "ItemData",
         "parameters": []
       },
       {
-        "name": "czx",
-        "token": "0x06000959",
+        "name": "dco",
+        "token": "0x060009AF",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": []
       },
       {
-        "name": "czy",
-        "token": "0x0600095A",
+        "name": "dcp",
+        "token": "0x060009B0",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": []
       },
       {
-        "name": "czz",
-        "token": "0x0600095B",
+        "name": "dcq",
+        "token": "0x060009B1",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": []
       },
       {
-        "name": "daa",
-        "token": "0x0600095C",
+        "name": "dcr",
+        "token": "0x060009B2",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": []
       },
       {
-        "name": "dab",
-        "token": "0x0600095D",
+        "name": "dcs",
+        "token": "0x060009B3",
         "isStatic": false,
         "returnType": "System.String",
         "parameters": []
       },
       {
-        "name": "dac",
-        "token": "0x0600095E",
+        "name": "dct",
+        "token": "0x060009B4",
         "isStatic": false,
         "returnType": "ItemRarity",
         "parameters": []
       },
       {
-        "name": "dad",
-        "token": "0x0600095F",
+        "name": "dcu",
+        "token": "0x060009B5",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": []
       },
       {
-        "name": "dae",
-        "token": "0x06000960",
+        "name": "dcv",
+        "token": "0x060009B6",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 18369,
+            "typeIndex": 18442,
             "resolvedType": "System.Boolean"
           }
         ]
       },
       {
-        "name": "daf",
-        "token": "0x06000961",
+        "name": "dcw",
+        "token": "0x060009B7",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": []
       },
       {
-        "name": "dag",
-        "token": "0x06000962",
+        "name": "dcx",
+        "token": "0x060009B8",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 18369,
+            "typeIndex": 18442,
             "resolvedType": "System.Boolean"
           }
         ]
       },
       {
-        "name": "dah",
-        "token": "0x06000963",
+        "name": "dcy",
+        "token": "0x060009B9",
         "isStatic": false,
         "returnType": "System.String",
         "parameters": []
       },
       {
-        "name": "dai",
-        "token": "0x06000964",
+        "name": "dcz",
+        "token": "0x060009BA",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 30101,
+            "typeIndex": 30204,
             "resolvedType": "System.String"
           }
         ]
       },
       {
-        "name": "daj",
-        "token": "0x06000965",
+        "name": "dda",
+        "token": "0x060009BB",
         "isStatic": false,
         "returnType": "System.Single",
         "parameters": []
       },
       {
-        "name": "dak",
-        "token": "0x06000966",
+        "name": "ddb",
+        "token": "0x060009BC",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 29453,
+            "typeIndex": 29548,
             "resolvedType": "System.Single"
           }
         ]
       },
       {
-        "name": "dal",
-        "token": "0x06000967",
+        "name": "ddc",
+        "token": "0x060009BD",
         "isStatic": false,
         "returnType": "System.Int32",
         "parameters": []
       },
       {
-        "name": "dam",
-        "token": "0x06000968",
+        "name": "ddd",
+        "token": "0x060009BE",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24214,
+            "typeIndex": 24303,
             "resolvedType": "System.Int32"
           }
         ]
       },
       {
-        "name": "dan",
-        "token": "0x06000969",
+        "name": "dde",
+        "token": "0x060009BF",
         "isStatic": false,
         "returnType": "System.Int32",
         "parameters": []
       },
       {
-        "name": "dao",
-        "token": "0x0600096A",
+        "name": "ddf",
+        "token": "0x060009C0",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24214,
+            "typeIndex": 24303,
             "resolvedType": "System.Int32"
           }
         ]
       },
       {
-        "name": "dap",
-        "token": "0x0600096B",
+        "name": "ddg",
+        "token": "0x060009C1",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": []
       },
       {
-        "name": "daq",
-        "token": "0x0600096C",
+        "name": "ddh",
+        "token": "0x060009C2",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24214,
+            "typeIndex": 24303,
             "resolvedType": "System.Int32"
           }
         ]
       },
       {
-        "name": "dar",
-        "token": "0x0600096D",
+        "name": "ddi",
+        "token": "0x060009C3",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "das",
-        "token": "0x0600096E",
+        "name": "ddj",
+        "token": "0x060009C4",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24481,
+            "typeIndex": 24571,
             "resolvedType": "ItemData"
           }
         ]
       },
       {
-        "name": "dat",
-        "token": "0x0600096F",
+        "name": "ddk",
+        "token": "0x060009C5",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": []
       },
       {
-        "name": "dau",
-        "token": "0x06000970",
+        "name": "ddl",
+        "token": "0x060009C6",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 30101,
+            "typeIndex": 30204,
             "resolvedType": "System.String"
           }
         ]
       },
       {
-        "name": "dav",
-        "token": "0x06000971",
+        "name": "ddm",
+        "token": "0x060009C7",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24214,
+            "typeIndex": 24303,
             "resolvedType": "System.Int32"
           }
         ]
       },
       {
-        "name": "daw",
-        "token": "0x06000972",
+        "name": "ddn",
+        "token": "0x060009C8",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "dax",
-        "token": "0x06000973",
+        "name": "ddo",
+        "token": "0x060009C9",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24490,
+            "typeIndex": 24580,
             "resolvedType": "ItemRarity"
           }
         ]
       },
       {
-        "name": "daz",
-        "token": "0x06000974",
+        "name": "ddp",
+        "token": "0x060009CA",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "dba",
-        "token": "0x06000975",
+        "name": "ddq",
+        "token": "0x060009CB",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "dbb",
-        "token": "0x06000976",
+        "name": "ddr",
+        "token": "0x060009CC",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "dbc",
-        "token": "0x06000977",
+        "name": "dds",
+        "token": "0x060009CD",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 29775,
+            "typeIndex": 29877,
             "resolvedType": "UnityEngine.Sprite"
           }
         ]
       },
       {
         "name": "Awake",
-        "token": "0x06000978",
+        "token": "0x060009CE",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "Start",
-        "token": "0x06000979",
+        "token": "0x060009CF",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "Update",
-        "token": "0x0600097A",
+        "token": "0x060009D0",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "dbd",
-        "token": "0x0600097B",
+        "name": "ddt",
+        "token": "0x060009D1",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "dbe",
-        "token": "0x0600097C",
+        "name": "ddu",
+        "token": "0x060009D2",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "dbf",
-        "token": "0x0600097D",
+        "name": "ddv",
+        "token": "0x060009D3",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "OnDestroy",
-        "token": "0x0600097E",
+        "token": "0x060009D4",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "dbg",
-        "token": "0x0600097F",
+        "name": "ddw",
+        "token": "0x060009D5",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "dbh",
-        "token": "0x06000980",
+        "name": "ddx",
+        "token": "0x060009D6",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": ".ctor",
-        "token": "0x06000981",
+        "token": "0x060009D7",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
@@ -804,18 +804,18 @@
     ],
     "logicalName": "LootDrop",
     "isValueType": false,
-    "byvalTypeIndex": 25282
+    "byvalTypeIndex": 25374
   },
   {
     "name": "GameManager",
     "namespace": "",
-    "typeDefinitionIndex": 6077,
+    "typeDefinitionIndex": 6092,
     "fields": [
       {
-        "name": "<nxi>k__BackingField",
-        "fieldIndex": 25955,
-        "token": "0x04000CB2",
-        "typeIndex": 22345,
+        "name": "<oiw>k__BackingField",
+        "fieldIndex": 26089,
+        "token": "0x04000D31",
+        "typeIndex": 22432,
         "resolvedType": "GameManager",
         "typeKind": 18,
         "attributes": "0x0011",
@@ -826,9 +826,9 @@
       },
       {
         "name": "Config",
-        "fieldIndex": 25956,
-        "token": "0x04000CB3",
-        "typeIndex": 22342,
+        "fieldIndex": 26090,
+        "token": "0x04000D32",
+        "typeIndex": 22429,
         "resolvedType": "GameConfig",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -839,9 +839,9 @@
       },
       {
         "name": "Graphics",
-        "fieldIndex": 25957,
-        "token": "0x04000CB4",
-        "typeIndex": 22578,
+        "fieldIndex": 26091,
+        "token": "0x04000D33",
+        "typeIndex": 22665,
         "resolvedType": "GraphicsConfig",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -852,9 +852,9 @@
       },
       {
         "name": "AvailableHeroes",
-        "fieldIndex": 25958,
-        "token": "0x04000CB5",
-        "typeIndex": 10187,
+        "fieldIndex": 26092,
+        "token": "0x04000D34",
+        "typeIndex": 10240,
         "resolvedType": "System.Collections.Generic.List`1<HeroData>",
         "typeKind": 21,
         "attributes": "0x0006",
@@ -864,10 +864,10 @@
         "rawRegistrationOffset": 48
       },
       {
-        "name": "<nxj>k__BackingField",
-        "fieldIndex": 25959,
-        "token": "0x04000CB6",
-        "typeIndex": 22807,
+        "name": "<oix>k__BackingField",
+        "fieldIndex": 26093,
+        "token": "0x04000D35",
+        "typeIndex": 22896,
         "resolvedType": "HeroData",
         "typeKind": 18,
         "attributes": "0x0001",
@@ -877,24 +877,24 @@
         "rawRegistrationOffset": 56
       },
       {
-        "name": "PlayerCombatController",
-        "fieldIndex": 25960,
-        "token": "0x04000CB7",
-        "typeIndex": 27256,
-        "resolvedType": "PlayerCombatController",
-        "typeKind": 18,
-        "attributes": "0x0006",
+        "name": "oiy",
+        "fieldIndex": 26094,
+        "token": "0x04000D36",
+        "typeIndex": 18443,
+        "resolvedType": "System.Boolean",
+        "typeKind": 2,
+        "attributes": "0x0001",
         "isStatic": false,
         "isLiteral": false,
         "isInitOnly": false,
         "rawRegistrationOffset": 64
       },
       {
-        "name": "PlayerTownController",
-        "fieldIndex": 25961,
-        "token": "0x04000CB8",
-        "typeIndex": 27287,
-        "resolvedType": "PlayerTownController",
+        "name": "PlayerCombatController",
+        "fieldIndex": 26095,
+        "token": "0x04000D37",
+        "typeIndex": 27348,
+        "resolvedType": "PlayerCombatController",
         "typeKind": 18,
         "attributes": "0x0006",
         "isStatic": false,
@@ -903,11 +903,11 @@
         "rawRegistrationOffset": 72
       },
       {
-        "name": "PlayerFishingController",
-        "fieldIndex": 25962,
-        "token": "0x04000CB9",
-        "typeIndex": 27270,
-        "resolvedType": "PlayerFishingController",
+        "name": "PlayerTownController",
+        "fieldIndex": 26096,
+        "token": "0x04000D38",
+        "typeIndex": 27379,
+        "resolvedType": "PlayerTownController",
         "typeKind": 18,
         "attributes": "0x0006",
         "isStatic": false,
@@ -916,11 +916,11 @@
         "rawRegistrationOffset": 80
       },
       {
-        "name": "HorseCarriage",
-        "fieldIndex": 25963,
-        "token": "0x04000CBA",
-        "typeIndex": 22933,
-        "resolvedType": "HorseCarriage",
+        "name": "PlayerFishingController",
+        "fieldIndex": 26097,
+        "token": "0x04000D39",
+        "typeIndex": 27362,
+        "resolvedType": "PlayerFishingController",
         "typeKind": 18,
         "attributes": "0x0006",
         "isStatic": false,
@@ -929,11 +929,11 @@
         "rawRegistrationOffset": 88
       },
       {
-        "name": "Spawner",
-        "fieldIndex": 25964,
-        "token": "0x04000CBB",
-        "typeIndex": 21265,
-        "resolvedType": "EnemySpawner",
+        "name": "HorseCarriage",
+        "fieldIndex": 26098,
+        "token": "0x04000D3A",
+        "typeIndex": 23022,
+        "resolvedType": "HorseCarriage",
         "typeKind": 18,
         "attributes": "0x0006",
         "isStatic": false,
@@ -942,11 +942,11 @@
         "rawRegistrationOffset": 96
       },
       {
-        "name": "WaveManager",
-        "fieldIndex": 25965,
-        "token": "0x04000CBC",
-        "typeIndex": 32627,
-        "resolvedType": "WaveManager",
+        "name": "Spawner",
+        "fieldIndex": 26099,
+        "token": "0x04000D3B",
+        "typeIndex": 21342,
+        "resolvedType": "EnemySpawner",
         "typeKind": 18,
         "attributes": "0x0006",
         "isStatic": false,
@@ -955,11 +955,11 @@
         "rawRegistrationOffset": 104
       },
       {
-        "name": "ActiveMap",
-        "fieldIndex": 25966,
-        "token": "0x04000CBD",
-        "typeIndex": 25396,
-        "resolvedType": "MapData",
+        "name": "WaveManager",
+        "fieldIndex": 26100,
+        "token": "0x04000D3C",
+        "typeIndex": 32731,
+        "resolvedType": "WaveManager",
         "typeKind": 18,
         "attributes": "0x0006",
         "isStatic": false,
@@ -968,25 +968,25 @@
         "rawRegistrationOffset": 112
       },
       {
-        "name": "<nxk>k__BackingField",
-        "fieldIndex": 25967,
-        "token": "0x04000CBE",
-        "typeIndex": 28576,
-        "resolvedType": "RunPlan",
+        "name": "ActiveMap",
+        "fieldIndex": 26101,
+        "token": "0x04000D3D",
+        "typeIndex": 25488,
+        "resolvedType": "MapData",
         "typeKind": 18,
-        "attributes": "0x0001",
+        "attributes": "0x0006",
         "isStatic": false,
         "isLiteral": false,
         "isInitOnly": false,
         "rawRegistrationOffset": 120
       },
       {
-        "name": "<nxl>k__BackingField",
-        "fieldIndex": 25968,
-        "token": "0x04000CBF",
-        "typeIndex": 11393,
-        "resolvedType": "System.Nullable`1<System.Int32>",
-        "typeKind": 21,
+        "name": "<oiz>k__BackingField",
+        "fieldIndex": 26102,
+        "token": "0x04000D3E",
+        "typeIndex": 28668,
+        "resolvedType": "RunPlan",
+        "typeKind": 18,
         "attributes": "0x0001",
         "isStatic": false,
         "isLiteral": false,
@@ -994,38 +994,38 @@
         "rawRegistrationOffset": 128
       },
       {
-        "name": "nxm",
-        "fieldIndex": 25969,
-        "token": "0x04000CC0",
-        "typeIndex": 5386,
+        "name": "<oja>k__BackingField",
+        "fieldIndex": 26103,
+        "token": "0x04000D3F",
+        "typeIndex": 11451,
+        "resolvedType": "System.Nullable`1<System.Int32>",
+        "typeKind": 21,
+        "attributes": "0x0001",
+        "isStatic": false,
+        "isLiteral": false,
+        "isInitOnly": false,
+        "rawRegistrationOffset": 136
+      },
+      {
+        "name": "ojb",
+        "fieldIndex": 26104,
+        "token": "0x04000D40",
+        "typeIndex": 5414,
         "resolvedType": "System.Collections.Generic.Dictionary`2<System.String, System.String>",
         "typeKind": 21,
         "attributes": "0x0021",
         "isStatic": false,
         "isLiteral": false,
         "isInitOnly": true,
-        "rawRegistrationOffset": 136
-      },
-      {
-        "name": "nxn",
-        "fieldIndex": 25970,
-        "token": "0x04000CC1",
-        "typeIndex": 24215,
-        "resolvedType": "System.Int32",
-        "typeKind": 8,
-        "attributes": "0x0001",
-        "isStatic": false,
-        "isLiteral": false,
-        "isInitOnly": false,
         "rawRegistrationOffset": 144
       },
       {
-        "name": "nxo",
-        "fieldIndex": 25971,
-        "token": "0x04000CC2",
-        "typeIndex": 24252,
-        "resolvedType": "System.Int64",
-        "typeKind": 10,
+        "name": "ojc",
+        "fieldIndex": 26105,
+        "token": "0x04000D41",
+        "typeIndex": 24304,
+        "resolvedType": "System.Int32",
+        "typeKind": 8,
         "attributes": "0x0001",
         "isStatic": false,
         "isLiteral": false,
@@ -1033,25 +1033,25 @@
         "rawRegistrationOffset": 152
       },
       {
-        "name": "DeathUIDelay",
-        "fieldIndex": 25972,
-        "token": "0x04000CC3",
-        "typeIndex": 29459,
-        "resolvedType": "System.Single",
-        "typeKind": 12,
-        "attributes": "0x0006",
+        "name": "ojd",
+        "fieldIndex": 26106,
+        "token": "0x04000D42",
+        "typeIndex": 24341,
+        "resolvedType": "System.Int64",
+        "typeKind": 10,
+        "attributes": "0x0001",
         "isStatic": false,
         "isLiteral": false,
         "isInitOnly": false,
         "rawRegistrationOffset": 160
       },
       {
-        "name": "NewGameCutscene",
-        "fieldIndex": 25973,
-        "token": "0x04000CC4",
-        "typeIndex": 19940,
-        "resolvedType": "Cutscene",
-        "typeKind": 18,
+        "name": "DeathUIDelay",
+        "fieldIndex": 26107,
+        "token": "0x04000D43",
+        "typeIndex": 29554,
+        "resolvedType": "System.Single",
+        "typeKind": 12,
         "attributes": "0x0006",
         "isStatic": false,
         "isLiteral": false,
@@ -1059,38 +1059,25 @@
         "rawRegistrationOffset": 168
       },
       {
-        "name": "nxp",
-        "fieldIndex": 25974,
-        "token": "0x04000CC5",
-        "typeIndex": 22360,
-        "resolvedType": "GameState",
-        "typeKind": 17,
-        "attributes": "0x0001",
+        "name": "NewGameCutscene",
+        "fieldIndex": 26108,
+        "token": "0x04000D44",
+        "typeIndex": 20019,
+        "resolvedType": "Cutscene",
+        "typeKind": 18,
+        "attributes": "0x0006",
         "isStatic": false,
         "isLiteral": false,
         "isInitOnly": false,
         "rawRegistrationOffset": 176
       },
       {
-        "name": "<nxq>k__BackingField",
-        "fieldIndex": 25975,
-        "token": "0x04000CC6",
-        "typeIndex": 18370,
-        "resolvedType": "System.Boolean",
-        "typeKind": 2,
-        "attributes": "0x0001",
-        "isStatic": false,
-        "isLiteral": false,
-        "isInitOnly": false,
-        "rawRegistrationOffset": 180
-      },
-      {
-        "name": "<nxr>k__BackingField",
-        "fieldIndex": 25976,
-        "token": "0x04000CC7",
-        "typeIndex": 29454,
-        "resolvedType": "System.Single",
-        "typeKind": 12,
+        "name": "oje",
+        "fieldIndex": 26109,
+        "token": "0x04000D45",
+        "typeIndex": 22447,
+        "resolvedType": "GameState",
+        "typeKind": 17,
         "attributes": "0x0001",
         "isStatic": false,
         "isLiteral": false,
@@ -1098,10 +1085,10 @@
         "rawRegistrationOffset": 184
       },
       {
-        "name": "<nxs>k__BackingField",
-        "fieldIndex": 25977,
-        "token": "0x04000CC8",
-        "typeIndex": 18370,
+        "name": "<ojf>k__BackingField",
+        "fieldIndex": 26110,
+        "token": "0x04000D46",
+        "typeIndex": 18443,
         "resolvedType": "System.Boolean",
         "typeKind": 2,
         "attributes": "0x0001",
@@ -1111,10 +1098,10 @@
         "rawRegistrationOffset": 188
       },
       {
-        "name": "nxt",
-        "fieldIndex": 25978,
-        "token": "0x04000CC9",
-        "typeIndex": 29454,
+        "name": "<ojg>k__BackingField",
+        "fieldIndex": 26111,
+        "token": "0x04000D47",
+        "typeIndex": 29549,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0001",
@@ -1124,12 +1111,12 @@
         "rawRegistrationOffset": 192
       },
       {
-        "name": "nxu",
-        "fieldIndex": 25979,
-        "token": "0x04000CCA",
-        "typeIndex": 29454,
-        "resolvedType": "System.Single",
-        "typeKind": 12,
+        "name": "<ojh>k__BackingField",
+        "fieldIndex": 26112,
+        "token": "0x04000D48",
+        "typeIndex": 18443,
+        "resolvedType": "System.Boolean",
+        "typeKind": 2,
         "attributes": "0x0001",
         "isStatic": false,
         "isLiteral": false,
@@ -1137,50 +1124,63 @@
         "rawRegistrationOffset": 196
       },
       {
-        "name": "nxv",
-        "fieldIndex": 25980,
-        "token": "0x04000CCB",
-        "typeIndex": 10130,
+        "name": "oji",
+        "fieldIndex": 26113,
+        "token": "0x04000D49",
+        "typeIndex": 29549,
+        "resolvedType": "System.Single",
+        "typeKind": 12,
+        "attributes": "0x0001",
+        "isStatic": false,
+        "isLiteral": false,
+        "isInitOnly": false,
+        "rawRegistrationOffset": 200
+      },
+      {
+        "name": "ojj",
+        "fieldIndex": 26114,
+        "token": "0x04000D4A",
+        "typeIndex": 29549,
+        "resolvedType": "System.Single",
+        "typeKind": 12,
+        "attributes": "0x0001",
+        "isStatic": false,
+        "isLiteral": false,
+        "isInitOnly": false,
+        "rawRegistrationOffset": 204
+      },
+      {
+        "name": "ojk",
+        "fieldIndex": 26115,
+        "token": "0x04000D4B",
+        "typeIndex": 10183,
         "resolvedType": "System.Collections.Generic.List`1<Enemy>",
         "typeKind": 21,
         "attributes": "0x0021",
         "isStatic": false,
         "isLiteral": false,
         "isInitOnly": true,
-        "rawRegistrationOffset": 200
+        "rawRegistrationOffset": 208
       },
       {
-        "name": "nxw",
-        "fieldIndex": 25981,
-        "token": "0x04000CCC",
-        "typeIndex": 17197,
+        "name": "ojl",
+        "fieldIndex": 26116,
+        "token": "0x04000D4C",
+        "typeIndex": 17270,
         "resolvedType": "System.Action",
         "typeKind": 18,
         "attributes": "0x0001",
         "isStatic": false,
         "isLiteral": false,
         "isInitOnly": false,
-        "rawRegistrationOffset": 208
-      },
-      {
-        "name": "nxx",
-        "fieldIndex": 25982,
-        "token": "0x04000CCD",
-        "typeIndex": 10163,
-        "resolvedType": "System.Collections.Generic.List`1<Gatherable>",
-        "typeKind": 21,
-        "attributes": "0x0021",
-        "isStatic": false,
-        "isLiteral": false,
-        "isInitOnly": true,
         "rawRegistrationOffset": 216
       },
       {
-        "name": "nxy",
-        "fieldIndex": 25983,
-        "token": "0x04000CCE",
-        "typeIndex": 10268,
-        "resolvedType": "System.Collections.Generic.List`1<LootDrop>",
+        "name": "ojm",
+        "fieldIndex": 26117,
+        "token": "0x04000D4D",
+        "typeIndex": 10216,
+        "resolvedType": "System.Collections.Generic.List`1<Gatherable>",
         "typeKind": 21,
         "attributes": "0x0021",
         "isStatic": false,
@@ -1189,11 +1189,11 @@
         "rawRegistrationOffset": 224
       },
       {
-        "name": "nxz",
-        "fieldIndex": 25984,
-        "token": "0x04000CCF",
-        "typeIndex": 10487,
-        "resolvedType": "System.Collections.Generic.List`1<StatusDialogueUI>",
+        "name": "ojn",
+        "fieldIndex": 26118,
+        "token": "0x04000D4E",
+        "typeIndex": 10321,
+        "resolvedType": "System.Collections.Generic.List`1<LootDrop>",
         "typeKind": 21,
         "attributes": "0x0021",
         "isStatic": false,
@@ -1202,36 +1202,36 @@
         "rawRegistrationOffset": 232
       },
       {
-        "name": "nya",
-        "fieldIndex": 25985,
-        "token": "0x04000CD0",
-        "typeIndex": 18370,
+        "name": "ojo",
+        "fieldIndex": 26119,
+        "token": "0x04000D4F",
+        "typeIndex": 10545,
+        "resolvedType": "System.Collections.Generic.List`1<StatusDialogueUI>",
+        "typeKind": 21,
+        "attributes": "0x0021",
+        "isStatic": false,
+        "isLiteral": false,
+        "isInitOnly": true,
+        "rawRegistrationOffset": 240
+      },
+      {
+        "name": "ojp",
+        "fieldIndex": 26120,
+        "token": "0x04000D50",
+        "typeIndex": 18443,
         "resolvedType": "System.Boolean",
         "typeKind": 2,
         "attributes": "0x0001",
         "isStatic": false,
         "isLiteral": false,
         "isInitOnly": false,
-        "rawRegistrationOffset": 240
-      },
-      {
-        "name": "nyb",
-        "fieldIndex": 25986,
-        "token": "0x04000CD1",
-        "typeIndex": 6806,
-        "resolvedType": "System.Collections.Generic.HashSet`1<System.String>",
-        "typeKind": 21,
-        "attributes": "0x0021",
-        "isStatic": false,
-        "isLiteral": false,
-        "isInitOnly": true,
         "rawRegistrationOffset": 248
       },
       {
-        "name": "nyc",
-        "fieldIndex": 25987,
-        "token": "0x04000CD2",
-        "typeIndex": 6806,
+        "name": "ojq",
+        "fieldIndex": 26121,
+        "token": "0x04000D51",
+        "typeIndex": 6850,
         "resolvedType": "System.Collections.Generic.HashSet`1<System.String>",
         "typeKind": 21,
         "attributes": "0x0021",
@@ -1241,11 +1241,11 @@
         "rawRegistrationOffset": 256
       },
       {
-        "name": "nyd",
-        "fieldIndex": 25988,
-        "token": "0x04000CD3",
-        "typeIndex": 5355,
-        "resolvedType": "System.Collections.Generic.Dictionary`2<System.String, System.Int32>",
+        "name": "ojr",
+        "fieldIndex": 26122,
+        "token": "0x04000D52",
+        "typeIndex": 6850,
+        "resolvedType": "System.Collections.Generic.HashSet`1<System.String>",
         "typeKind": 21,
         "attributes": "0x0021",
         "isStatic": false,
@@ -1254,51 +1254,25 @@
         "rawRegistrationOffset": 264
       },
       {
-        "name": "nye",
-        "fieldIndex": 25989,
-        "token": "0x04000CD4",
-        "typeIndex": 24215,
-        "resolvedType": "System.Int32",
-        "typeKind": 8,
-        "attributes": "0x0001",
+        "name": "ojs",
+        "fieldIndex": 26123,
+        "token": "0x04000D53",
+        "typeIndex": 5383,
+        "resolvedType": "System.Collections.Generic.Dictionary`2<System.String, System.Int32>",
+        "typeKind": 21,
+        "attributes": "0x0021",
         "isStatic": false,
         "isLiteral": false,
-        "isInitOnly": false,
+        "isInitOnly": true,
         "rawRegistrationOffset": 272
       },
       {
-        "name": "nyf",
-        "fieldIndex": 25990,
-        "token": "0x04000CD5",
-        "typeIndex": 18370,
-        "resolvedType": "System.Boolean",
-        "typeKind": 2,
-        "attributes": "0x0001",
-        "isStatic": false,
-        "isLiteral": false,
-        "isInitOnly": false,
-        "rawRegistrationOffset": 276
-      },
-      {
-        "name": "nyg",
-        "fieldIndex": 25991,
-        "token": "0x04000CD6",
-        "typeIndex": 18370,
-        "resolvedType": "System.Boolean",
-        "typeKind": 2,
-        "attributes": "0x0001",
-        "isStatic": false,
-        "isLiteral": false,
-        "isInitOnly": false,
-        "rawRegistrationOffset": 277
-      },
-      {
-        "name": "nyh",
-        "fieldIndex": 25992,
-        "token": "0x04000CD7",
-        "typeIndex": 36056,
-        "resolvedType": "fm",
-        "typeKind": 18,
+        "name": "ojt",
+        "fieldIndex": 26124,
+        "token": "0x04000D54",
+        "typeIndex": 24304,
+        "resolvedType": "System.Int32",
+        "typeKind": 8,
         "attributes": "0x0001",
         "isStatic": false,
         "isLiteral": false,
@@ -1306,10 +1280,49 @@
         "rawRegistrationOffset": 280
       },
       {
-        "name": "nyi",
-        "fieldIndex": 25993,
-        "token": "0x04000CD8",
-        "typeIndex": 29474,
+        "name": "oju",
+        "fieldIndex": 26125,
+        "token": "0x04000D55",
+        "typeIndex": 18443,
+        "resolvedType": "System.Boolean",
+        "typeKind": 2,
+        "attributes": "0x0001",
+        "isStatic": false,
+        "isLiteral": false,
+        "isInitOnly": false,
+        "rawRegistrationOffset": 284
+      },
+      {
+        "name": "ojv",
+        "fieldIndex": 26126,
+        "token": "0x04000D56",
+        "typeIndex": 18443,
+        "resolvedType": "System.Boolean",
+        "typeKind": 2,
+        "attributes": "0x0001",
+        "isStatic": false,
+        "isLiteral": false,
+        "isInitOnly": false,
+        "rawRegistrationOffset": 285
+      },
+      {
+        "name": "ojw",
+        "fieldIndex": 26127,
+        "token": "0x04000D57",
+        "typeIndex": 36169,
+        "resolvedType": "fr",
+        "typeKind": 18,
+        "attributes": "0x0001",
+        "isStatic": false,
+        "isLiteral": false,
+        "isInitOnly": false,
+        "rawRegistrationOffset": 288
+      },
+      {
+        "name": "ojx",
+        "fieldIndex": 26128,
+        "token": "0x04000D58",
+        "typeIndex": 29569,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x8051",
@@ -1319,1250 +1332,1280 @@
         "rawRegistrationOffset": 0
       },
       {
-        "name": "nyj",
-        "fieldIndex": 25994,
-        "token": "0x04000CD9",
-        "typeIndex": 18370,
+        "name": "ojy",
+        "fieldIndex": 26129,
+        "token": "0x04000D59",
+        "typeIndex": 18443,
         "resolvedType": "System.Boolean",
         "typeKind": 2,
         "attributes": "0x0001",
         "isStatic": false,
         "isLiteral": false,
         "isInitOnly": false,
-        "rawRegistrationOffset": 288
+        "rawRegistrationOffset": 296
       }
     ],
     "methods": [
       {
-        "name": "dpq",
-        "token": "0x06000ADE",
+        "name": "dsl",
+        "token": "0x06000B34",
         "isStatic": true,
         "returnType": "GameManager",
         "parameters": []
       },
       {
-        "name": "dpr",
-        "token": "0x06000ADF",
+        "name": "dsm",
+        "token": "0x06000B35",
         "isStatic": true,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 22343,
+            "typeIndex": 22430,
             "resolvedType": "GameManager"
           }
         ]
       },
       {
-        "name": "dps",
-        "token": "0x06000AE0",
+        "name": "dsn",
+        "token": "0x06000B36",
         "isStatic": false,
         "returnType": "HeroData",
         "parameters": []
       },
       {
-        "name": "dpt",
-        "token": "0x06000AE1",
+        "name": "dso",
+        "token": "0x06000B37",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 22806,
+            "typeIndex": 22895,
             "resolvedType": "HeroData"
           }
         ]
       },
       {
-        "name": "dpu",
-        "token": "0x06000AE2",
+        "name": "dsp",
+        "token": "0x06000B38",
         "isStatic": false,
         "returnType": "RunPlan",
         "parameters": []
       },
       {
-        "name": "dpv",
-        "token": "0x06000AE3",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 28575,
-            "resolvedType": "RunPlan"
-          }
-        ]
-      },
-      {
-        "name": "dpw",
-        "token": "0x06000AE4",
-        "isStatic": false,
-        "returnType": "System.Nullable`1<System.Int32>",
-        "parameters": []
-      },
-      {
-        "name": "dpx",
-        "token": "0x06000AE5",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 11392,
-            "resolvedType": "System.Nullable`1<System.Int32>"
-          }
-        ]
-      },
-      {
-        "name": "dpy",
-        "token": "0x06000AE6",
-        "isStatic": false,
-        "returnType": "Player",
-        "parameters": []
-      },
-      {
-        "name": "dpz",
-        "token": "0x06000AE7",
-        "isStatic": false,
-        "returnType": "GameState",
-        "parameters": []
-      },
-      {
-        "name": "dqa",
-        "token": "0x06000AE8",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 22359,
-            "resolvedType": "GameState"
-          }
-        ]
-      },
-      {
-        "name": "dqb",
-        "token": "0x06000AE9",
-        "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": []
-      },
-      {
-        "name": "dqc",
-        "token": "0x06000AEA",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 18369,
-            "resolvedType": "System.Boolean"
-          }
-        ]
-      },
-      {
-        "name": "dqd",
-        "token": "0x06000AEB",
-        "isStatic": false,
-        "returnType": "System.Single",
-        "parameters": []
-      },
-      {
-        "name": "dqe",
-        "token": "0x06000AEC",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 29453,
-            "resolvedType": "System.Single"
-          }
-        ]
-      },
-      {
-        "name": "dqf",
-        "token": "0x06000AED",
-        "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": []
-      },
-      {
-        "name": "dqg",
-        "token": "0x06000AEE",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 18369,
-            "resolvedType": "System.Boolean"
-          }
-        ]
-      },
-      {
-        "name": "dqh",
-        "token": "0x06000AEF",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 29453,
-            "resolvedType": "System.Single"
-          },
-          {
-            "name": "b",
-            "typeIndex": 29473,
-            "resolvedType": "System.Single"
-          }
-        ]
-      },
-      {
-        "name": "dqi",
-        "token": "0x06000AF0",
-        "isStatic": false,
-        "returnType": "System.Collections.Generic.IReadOnlyList`1<Enemy>",
-        "parameters": []
-      },
-      {
-        "name": "dqj",
-        "token": "0x06000AF1",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 17196,
-            "resolvedType": "System.Action"
-          }
-        ]
-      },
-      {
-        "name": "dqk",
-        "token": "0x06000AF2",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 17196,
-            "resolvedType": "System.Action"
-          }
-        ]
-      },
-      {
-        "name": "dql",
-        "token": "0x06000AF3",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 21258,
-            "resolvedType": "Enemy"
-          }
-        ]
-      },
-      {
-        "name": "dqm",
-        "token": "0x06000AF4",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 21258,
-            "resolvedType": "Enemy"
-          }
-        ]
-      },
-      {
-        "name": "dqn",
-        "token": "0x06000AF5",
-        "isStatic": false,
-        "returnType": "System.Collections.Generic.IReadOnlyList`1<Gatherable>",
-        "parameters": []
-      },
-      {
-        "name": "dqo",
-        "token": "0x06000AF6",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 22374,
-            "resolvedType": "Gatherable"
-          }
-        ]
-      },
-      {
-        "name": "dqp",
-        "token": "0x06000AF7",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 22374,
-            "resolvedType": "Gatherable"
-          }
-        ]
-      },
-      {
-        "name": "dqq",
-        "token": "0x06000AF8",
-        "isStatic": false,
-        "returnType": "System.Collections.Generic.IReadOnlyList`1<LootDrop>",
-        "parameters": []
-      },
-      {
-        "name": "dqr",
-        "token": "0x06000AF9",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 25282,
-            "resolvedType": "LootDrop"
-          }
-        ]
-      },
-      {
-        "name": "dqs",
-        "token": "0x06000AFA",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 25282,
-            "resolvedType": "LootDrop"
-          }
-        ]
-      },
-      {
-        "name": "dqt",
-        "token": "0x06000AFB",
-        "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": []
-      },
-      {
-        "name": "dqu",
-        "token": "0x06000AFC",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 29962,
-            "resolvedType": "StatusDialogueUI"
-          }
-        ]
-      },
-      {
-        "name": "dqv",
-        "token": "0x06000AFD",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 29962,
-            "resolvedType": "StatusDialogueUI"
-          }
-        ]
-      },
-      {
-        "name": "dqw",
-        "token": "0x06000AFE",
-        "isStatic": false,
-        "returnType": "System.Collections.Generic.IEnumerable`1<LootDrop>",
-        "parameters": []
-      },
-      {
-        "name": "Awake",
-        "token": "0x06000AFF",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "OnEnable",
-        "token": "0x06000B00",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "OnDisable",
-        "token": "0x06000B01",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "dqx",
-        "token": "0x06000B02",
-        "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": []
-      },
-      {
-        "name": "dqy",
-        "token": "0x06000B03",
-        "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": []
-      },
-      {
-        "name": "dqz",
-        "token": "0x06000B04",
-        "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": []
-      },
-      {
-        "name": "dra",
-        "token": "0x06000B05",
-        "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": []
-      },
-      {
-        "name": "Update",
-        "token": "0x06000B06",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "LateUpdate",
-        "token": "0x06000B07",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "drb",
-        "token": "0x06000B08",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 18369,
-            "resolvedType": "System.Boolean"
-          }
-        ]
-      },
-      {
-        "name": "drc",
-        "token": "0x06000B09",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 18369,
-            "resolvedType": "System.Boolean"
-          },
-          {
-            "name": "b",
-            "typeIndex": 18890,
-            "resolvedType": "CharacterMode"
-          }
-        ]
-      },
-      {
-        "name": "drd",
-        "token": "0x06000B0A",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 18369,
-            "resolvedType": "System.Boolean"
-          },
-          {
-            "name": "b",
-            "typeIndex": 18890,
-            "resolvedType": "CharacterMode"
-          },
-          {
-            "name": "c",
-            "typeIndex": 24214,
-            "resolvedType": "System.Int32"
-          }
-        ]
-      },
-      {
-        "name": "dre",
-        "token": "0x06000B0B",
-        "isStatic": false,
-        "returnType": "System.Collections.IEnumerator",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 18369,
-            "resolvedType": "System.Boolean"
-          },
-          {
-            "name": "b",
-            "typeIndex": 18890,
-            "resolvedType": "CharacterMode"
-          },
-          {
-            "name": "c",
-            "typeIndex": 24214,
-            "resolvedType": "System.Int32"
-          }
-        ]
-      },
-      {
-        "name": "drf",
-        "token": "0x06000B0C",
-        "isStatic": false,
-        "returnType": "System.Collections.IEnumerator",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 18369,
-            "resolvedType": "System.Boolean"
-          },
-          {
-            "name": "b",
-            "typeIndex": 18890,
-            "resolvedType": "CharacterMode"
-          },
-          {
-            "name": "c",
-            "typeIndex": 24214,
-            "resolvedType": "System.Int32"
-          }
-        ]
-      },
-      {
-        "name": "drg",
-        "token": "0x06000B0D",
-        "isStatic": false,
-        "returnType": "System.Collections.IEnumerator",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 30101,
-            "resolvedType": "System.String"
-          },
-          {
-            "name": "b",
-            "typeIndex": 18394,
-            "resolvedType": "System.Boolean"
-          }
-        ]
-      },
-      {
-        "name": "drh",
-        "token": "0x06000B0E",
-        "isStatic": true,
-        "returnType": "System.Boolean",
-        "parameters": []
-      },
-      {
-        "name": "dri",
-        "token": "0x06000B0F",
-        "isStatic": true,
-        "returnType": "System.Boolean",
-        "parameters": []
-      },
-      {
-        "name": "drj",
-        "token": "0x06000B10",
-        "isStatic": true,
-        "returnType": "System.Boolean",
-        "parameters": []
-      },
-      {
-        "name": "drk",
-        "token": "0x06000B11",
-        "isStatic": true,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "drl",
-        "token": "0x06000B12",
-        "isStatic": true,
-        "returnType": "System.Boolean",
-        "parameters": []
-      },
-      {
-        "name": "drm",
-        "token": "0x06000B13",
-        "isStatic": true,
-        "returnType": "System.Boolean",
-        "parameters": []
-      },
-      {
-        "name": "drn",
-        "token": "0x06000B14",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 25394,
-            "resolvedType": "MapData"
-          }
-        ]
-      },
-      {
-        "name": "dro",
-        "token": "0x06000B15",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 25394,
-            "resolvedType": "MapData"
-          },
-          {
-            "name": "b",
-            "typeIndex": 24214,
-            "resolvedType": "System.Int32"
-          }
-        ]
-      },
-      {
-        "name": "drp",
-        "token": "0x06000B16",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 31301,
-            "resolvedType": "TownData"
-          }
-        ]
-      },
-      {
-        "name": "drq",
-        "token": "0x06000B17",
-        "isStatic": false,
-        "returnType": "System.Collections.IEnumerator",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 31301,
-            "resolvedType": "TownData"
-          }
-        ]
-      },
-      {
-        "name": "drr",
-        "token": "0x06000B18",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 21940,
-            "resolvedType": "FishingMapData"
-          }
-        ]
-      },
-      {
-        "name": "drs",
-        "token": "0x06000B19",
-        "isStatic": false,
-        "returnType": "System.Collections.IEnumerator",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 21940,
-            "resolvedType": "FishingMapData"
-          }
-        ]
-      },
-      {
-        "name": "drt",
-        "token": "0x06000B1A",
-        "isStatic": false,
-        "returnType": "System.Collections.IEnumerator",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 28578,
-            "resolvedType": "RunPlan"
-          }
-        ]
-      },
-      {
-        "name": "dru",
-        "token": "0x06000B1B",
-        "isStatic": false,
-        "returnType": "System.Collections.IEnumerator",
-        "parameters": []
-      },
-      {
-        "name": "drv",
-        "token": "0x06000B1C",
-        "isStatic": false,
-        "returnType": "System.Collections.IEnumerator",
-        "parameters": []
-      },
-      {
-        "name": "drw",
-        "token": "0x06000B1D",
-        "isStatic": false,
-        "returnType": "System.Collections.IEnumerator",
-        "parameters": []
-      },
-      {
-        "name": "drx",
-        "token": "0x06000B1E",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "dry",
-        "token": "0x06000B1F",
-        "isStatic": false,
-        "returnType": "System.Collections.IEnumerator",
-        "parameters": []
-      },
-      {
-        "name": "drz",
-        "token": "0x06000B20",
-        "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 30101,
-            "resolvedType": "System.String"
-          },
-          {
-            "name": "b",
-            "typeIndex": 30101,
-            "resolvedType": "System.String"
-          }
-        ]
-      },
-      {
-        "name": "dsa",
-        "token": "0x06000B21",
-        "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 30101,
-            "resolvedType": "System.String"
-          }
-        ]
-      },
-      {
-        "name": "dsb",
-        "token": "0x06000B22",
-        "isStatic": false,
-        "returnType": "System.String",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 30101,
-            "resolvedType": "System.String"
-          }
-        ]
-      },
-      {
-        "name": "dsc",
-        "token": "0x06000B23",
-        "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 30101,
-            "resolvedType": "System.String"
-          }
-        ]
-      },
-      {
-        "name": "dsd",
-        "token": "0x06000B24",
-        "isStatic": false,
-        "returnType": "System.String",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 30101,
-            "resolvedType": "System.String"
-          }
-        ]
-      },
-      {
-        "name": "dse",
-        "token": "0x06000B25",
-        "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 30101,
-            "resolvedType": "System.String"
-          },
-          {
-            "name": "b",
-            "typeIndex": 24481,
-            "resolvedType": "ItemData"
-          },
-          {
-            "name": "c",
-            "typeIndex": 24214,
-            "resolvedType": "System.Int32"
-          }
-        ]
-      },
-      {
-        "name": "dsf",
-        "token": "0x06000B26",
-        "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 25394,
-            "resolvedType": "MapData"
-          },
-          {
-            "name": "b",
-            "typeIndex": 14768,
-            "resolvedType": "System.String&"
-          }
-        ]
-      },
-      {
-        "name": "dsg",
-        "token": "0x06000B27",
-        "isStatic": false,
-        "returnType": "System.Collections.Generic.HashSet`1<System.String>",
-        "parameters": []
-      },
-      {
-        "name": "dsh",
-        "token": "0x06000B28",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 24214,
-            "resolvedType": "System.Int32"
-          }
-        ]
-      },
-      {
-        "name": "dsi",
-        "token": "0x06000B29",
-        "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": []
-      },
-      {
-        "name": "dsj",
-        "token": "0x06000B2A",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "dsk",
-        "token": "0x06000B2B",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 18369,
-            "resolvedType": "System.Boolean"
-          }
-        ]
-      },
-      {
-        "name": "dsl",
-        "token": "0x06000B2C",
-        "isStatic": true,
-        "returnType": "System.Boolean",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 30101,
-            "resolvedType": "System.String"
-          }
-        ]
-      },
-      {
-        "name": "dsm",
-        "token": "0x06000B2D",
-        "isStatic": false,
-        "returnType": "System.Collections.IEnumerator",
-        "parameters": []
-      },
-      {
-        "name": "dsn",
-        "token": "0x06000B2E",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "dso",
-        "token": "0x06000B2F",
-        "isStatic": true,
-        "returnType": "DropUid[]",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 5382,
-            "resolvedType": "System.Collections.Generic.Dictionary`2<System.String, System.String>"
-          }
-        ]
-      },
-      {
-        "name": "dsp",
-        "token": "0x06000B30",
-        "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 14768,
-            "resolvedType": "System.String&"
-          },
-          {
-            "name": "b",
-            "typeIndex": 14143,
-            "resolvedType": "System.String[]&"
-          },
-          {
-            "name": "c",
-            "typeIndex": 14450,
-            "resolvedType": "System.Int32&"
-          },
-          {
-            "name": "d",
-            "typeIndex": 14452,
-            "resolvedType": "System.Int64&"
-          },
-          {
-            "name": "e",
-            "typeIndex": 14450,
-            "resolvedType": "System.Int32&"
-          },
-          {
-            "name": "f",
-            "typeIndex": 13899,
-            "resolvedType": "System.Collections.Generic.Dictionary`2<System.String, System.String>&"
-          },
-          {
-            "name": "g",
-            "typeIndex": 14143,
-            "resolvedType": "System.String[]&"
-          },
-          {
-            "name": "h",
-            "typeIndex": 14143,
-            "resolvedType": "System.String[]&"
-          },
-          {
-            "name": "i",
-            "typeIndex": 14127,
-            "resolvedType": "GatheredMaterial[]&"
-          }
-        ]
-      },
-      {
         "name": "dsq",
-        "token": "0x06000B31",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 19351,
-            "resolvedType": "CommitResponse"
-          },
-          {
-            "name": "b",
-            "typeIndex": 5382,
-            "resolvedType": "System.Collections.Generic.Dictionary`2<System.String, System.String>"
-          },
-          {
-            "name": "c",
-            "typeIndex": 18369,
-            "resolvedType": "System.Boolean"
-          }
-        ]
-      },
-      {
-        "name": "dsr",
-        "token": "0x06000B32",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 19351,
-            "resolvedType": "CommitResponse"
-          }
-        ]
-      },
-      {
-        "name": "dss",
-        "token": "0x06000B33",
-        "isStatic": false,
-        "returnType": "System.Collections.Generic.IEnumerable`1<LootDrop>",
-        "parameters": []
-      },
-      {
-        "name": "dst",
-        "token": "0x06000B34",
-        "isStatic": false,
-        "returnType": "System.Boolean",
-        "parameters": []
-      },
-      {
-        "name": "dsu",
-        "token": "0x06000B35",
-        "isStatic": false,
-        "returnType": "System.Int32",
-        "parameters": []
-      },
-      {
-        "name": "dsv",
-        "token": "0x06000B36",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 19351,
-            "resolvedType": "CommitResponse"
-          },
-          {
-            "name": "b",
-            "typeIndex": 5382,
-            "resolvedType": "System.Collections.Generic.Dictionary`2<System.String, System.String>"
-          }
-        ]
-      },
-      {
-        "name": "dsw",
-        "token": "0x06000B37",
-        "isStatic": true,
-        "returnType": "ChestContent[]",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 15917,
-            "resolvedType": "CommittedChestContent[]"
-          }
-        ]
-      },
-      {
-        "name": "dsx",
-        "token": "0x06000B38",
-        "isStatic": false,
-        "returnType": "System.Void",
-        "parameters": []
-      },
-      {
-        "name": "dsy",
         "token": "0x06000B39",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 18369,
-            "resolvedType": "System.Boolean"
+            "typeIndex": 28667,
+            "resolvedType": "RunPlan"
           }
         ]
       },
       {
-        "name": "dsz",
+        "name": "dsr",
         "token": "0x06000B3A",
         "isStatic": false,
-        "returnType": "System.Collections.IEnumerator",
+        "returnType": "System.Nullable`1<System.Int32>",
         "parameters": []
       },
       {
-        "name": "dta",
+        "name": "dss",
         "token": "0x06000B3B",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 18394,
-            "resolvedType": "System.Boolean"
+            "typeIndex": 11450,
+            "resolvedType": "System.Nullable`1<System.Int32>"
           }
         ]
       },
       {
-        "name": "ReturnToMainMenu",
+        "name": "dst",
         "token": "0x06000B3C",
         "isStatic": false,
-        "returnType": "System.Void",
+        "returnType": "Player",
         "parameters": []
       },
       {
-        "name": "dtb",
+        "name": "dsu",
         "token": "0x06000B3D",
         "isStatic": false,
-        "returnType": "System.Collections.IEnumerator",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 18369,
-            "resolvedType": "System.Boolean"
-          }
-        ]
+        "returnType": "GameState",
+        "parameters": []
       },
       {
-        "name": "dtc",
+        "name": "dsv",
         "token": "0x06000B3E",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 30101,
-            "resolvedType": "System.String"
+            "typeIndex": 22446,
+            "resolvedType": "GameState"
+          }
+        ]
+      },
+      {
+        "name": "dsw",
+        "token": "0x06000B3F",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": []
+      },
+      {
+        "name": "dsx",
+        "token": "0x06000B40",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 18442,
+            "resolvedType": "System.Boolean"
+          }
+        ]
+      },
+      {
+        "name": "dsy",
+        "token": "0x06000B41",
+        "isStatic": false,
+        "returnType": "System.Single",
+        "parameters": []
+      },
+      {
+        "name": "dsz",
+        "token": "0x06000B42",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 29548,
+            "resolvedType": "System.Single"
+          }
+        ]
+      },
+      {
+        "name": "dta",
+        "token": "0x06000B43",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": []
+      },
+      {
+        "name": "dtb",
+        "token": "0x06000B44",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 18442,
+            "resolvedType": "System.Boolean"
+          }
+        ]
+      },
+      {
+        "name": "dtc",
+        "token": "0x06000B45",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 29548,
+            "resolvedType": "System.Single"
           },
           {
             "name": "b",
-            "typeIndex": 30101,
-            "resolvedType": "System.String"
-          },
-          {
-            "name": "c",
-            "typeIndex": 30121,
-            "resolvedType": "System.String"
+            "typeIndex": 29568,
+            "resolvedType": "System.Single"
           }
         ]
       },
       {
         "name": "dtd",
-        "token": "0x06000B3F",
-        "isStatic": true,
-        "returnType": "System.String",
-        "parameters": [
-          {
-            "name": "a",
-            "typeIndex": 30101,
-            "resolvedType": "System.String"
-          }
-        ]
+        "token": "0x06000B46",
+        "isStatic": false,
+        "returnType": "System.Collections.Generic.IReadOnlyList`1<Enemy>",
+        "parameters": []
       },
       {
         "name": "dte",
-        "token": "0x06000B40",
+        "token": "0x06000B47",
         "isStatic": false,
-        "returnType": "System.Collections.IEnumerator",
+        "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 30101,
-            "resolvedType": "System.String"
+            "typeIndex": 17269,
+            "resolvedType": "System.Action"
           }
         ]
       },
       {
         "name": "dtf",
-        "token": "0x06000B41",
+        "token": "0x06000B48",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 21258,
-            "resolvedType": "Enemy"
+            "typeIndex": 17269,
+            "resolvedType": "System.Action"
           }
         ]
       },
       {
         "name": "dtg",
-        "token": "0x06000B42",
+        "token": "0x06000B49",
         "isStatic": false,
-        "returnType": "System.Single",
+        "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24214,
-            "resolvedType": "System.Int32"
+            "typeIndex": 21335,
+            "resolvedType": "Enemy"
           }
         ]
       },
       {
         "name": "dth",
-        "token": "0x06000B43",
+        "token": "0x06000B4A",
         "isStatic": false,
         "returnType": "System.Void",
-        "parameters": []
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 21335,
+            "resolvedType": "Enemy"
+          }
+        ]
       },
       {
         "name": "dti",
-        "token": "0x06000B44",
+        "token": "0x06000B4B",
         "isStatic": false,
-        "returnType": "System.Collections.IEnumerator",
+        "returnType": "System.Collections.Generic.IReadOnlyList`1<Gatherable>",
         "parameters": []
       },
       {
         "name": "dtj",
-        "token": "0x06000B45",
+        "token": "0x06000B4C",
         "isStatic": false,
         "returnType": "System.Void",
-        "parameters": []
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 22461,
+            "resolvedType": "Gatherable"
+          }
+        ]
       },
       {
         "name": "dtk",
-        "token": "0x06000B46",
+        "token": "0x06000B4D",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 22461,
+            "resolvedType": "Gatherable"
+          }
+        ]
+      },
+      {
+        "name": "dtl",
+        "token": "0x06000B4E",
+        "isStatic": false,
+        "returnType": "System.Collections.Generic.IReadOnlyList`1<LootDrop>",
+        "parameters": []
+      },
+      {
+        "name": "dtm",
+        "token": "0x06000B4F",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 25374,
+            "resolvedType": "LootDrop"
+          }
+        ]
+      },
+      {
+        "name": "dtn",
+        "token": "0x06000B50",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 25374,
+            "resolvedType": "LootDrop"
+          }
+        ]
+      },
+      {
+        "name": "dto",
+        "token": "0x06000B51",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": []
+      },
+      {
+        "name": "dtp",
+        "token": "0x06000B52",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 30064,
+            "resolvedType": "StatusDialogueUI"
+          }
+        ]
+      },
+      {
+        "name": "dtq",
+        "token": "0x06000B53",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 30064,
+            "resolvedType": "StatusDialogueUI"
+          }
+        ]
+      },
+      {
+        "name": "dtr",
+        "token": "0x06000B54",
+        "isStatic": false,
+        "returnType": "System.Collections.Generic.IEnumerable`1<LootDrop>",
+        "parameters": []
+      },
+      {
+        "name": "Awake",
+        "token": "0x06000B55",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "dtl",
-        "token": "0x06000B47",
+        "name": "OnEnable",
+        "token": "0x06000B56",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "OnDisable",
+        "token": "0x06000B57",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "dts",
+        "token": "0x06000B58",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": []
+      },
+      {
+        "name": "dtt",
+        "token": "0x06000B59",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": []
+      },
+      {
+        "name": "dtu",
+        "token": "0x06000B5A",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": []
+      },
+      {
+        "name": "dtv",
+        "token": "0x06000B5B",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": []
+      },
+      {
+        "name": "dtw",
+        "token": "0x06000B5C",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": []
+      },
+      {
+        "name": "Update",
+        "token": "0x06000B5D",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "LateUpdate",
+        "token": "0x06000B5E",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "dtx",
+        "token": "0x06000B5F",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 18442,
+            "resolvedType": "System.Boolean"
+          }
+        ]
+      },
+      {
+        "name": "dty",
+        "token": "0x06000B60",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 18442,
+            "resolvedType": "System.Boolean"
+          },
+          {
+            "name": "b",
+            "typeIndex": 18963,
+            "resolvedType": "CharacterMode"
+          }
+        ]
+      },
+      {
+        "name": "dtz",
+        "token": "0x06000B61",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 18442,
+            "resolvedType": "System.Boolean"
+          },
+          {
+            "name": "b",
+            "typeIndex": 18963,
+            "resolvedType": "CharacterMode"
+          },
+          {
+            "name": "c",
+            "typeIndex": 24303,
+            "resolvedType": "System.Int32"
+          }
+        ]
+      },
+      {
+        "name": "dua",
+        "token": "0x06000B62",
+        "isStatic": false,
+        "returnType": "System.Collections.IEnumerator",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 18442,
+            "resolvedType": "System.Boolean"
+          },
+          {
+            "name": "b",
+            "typeIndex": 18963,
+            "resolvedType": "CharacterMode"
+          },
+          {
+            "name": "c",
+            "typeIndex": 24303,
+            "resolvedType": "System.Int32"
+          }
+        ]
+      },
+      {
+        "name": "dub",
+        "token": "0x06000B63",
+        "isStatic": false,
+        "returnType": "System.Collections.IEnumerator",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 18442,
+            "resolvedType": "System.Boolean"
+          },
+          {
+            "name": "b",
+            "typeIndex": 18963,
+            "resolvedType": "CharacterMode"
+          },
+          {
+            "name": "c",
+            "typeIndex": 24303,
+            "resolvedType": "System.Int32"
+          }
+        ]
+      },
+      {
+        "name": "duc",
+        "token": "0x06000B64",
+        "isStatic": false,
+        "returnType": "System.Collections.IEnumerator",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 18442,
+            "resolvedType": "System.Boolean"
+          },
+          {
+            "name": "b",
+            "typeIndex": 18963,
+            "resolvedType": "CharacterMode"
+          },
+          {
+            "name": "c",
+            "typeIndex": 24303,
+            "resolvedType": "System.Int32"
+          }
+        ]
+      },
+      {
+        "name": "dud",
+        "token": "0x06000B65",
+        "isStatic": false,
+        "returnType": "System.Collections.IEnumerator",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 30204,
+            "resolvedType": "System.String"
+          },
+          {
+            "name": "b",
+            "typeIndex": 18467,
+            "resolvedType": "System.Boolean"
+          }
+        ]
+      },
+      {
+        "name": "due",
+        "token": "0x06000B66",
+        "isStatic": true,
+        "returnType": "System.Boolean",
+        "parameters": []
+      },
+      {
+        "name": "duf",
+        "token": "0x06000B67",
+        "isStatic": true,
+        "returnType": "System.Boolean",
+        "parameters": []
+      },
+      {
+        "name": "dug",
+        "token": "0x06000B68",
+        "isStatic": true,
+        "returnType": "System.Boolean",
+        "parameters": []
+      },
+      {
+        "name": "duh",
+        "token": "0x06000B69",
+        "isStatic": true,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "dui",
+        "token": "0x06000B6A",
+        "isStatic": true,
+        "returnType": "System.Boolean",
+        "parameters": []
+      },
+      {
+        "name": "duj",
+        "token": "0x06000B6B",
+        "isStatic": true,
+        "returnType": "System.Boolean",
+        "parameters": []
+      },
+      {
+        "name": "duk",
+        "token": "0x06000B6C",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 25486,
+            "resolvedType": "MapData"
+          }
+        ]
+      },
+      {
+        "name": "dul",
+        "token": "0x06000B6D",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 25486,
+            "resolvedType": "MapData"
+          },
+          {
+            "name": "b",
+            "typeIndex": 24303,
+            "resolvedType": "System.Int32"
+          }
+        ]
+      },
+      {
+        "name": "dum",
+        "token": "0x06000B6E",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 31404,
+            "resolvedType": "TownData"
+          }
+        ]
+      },
+      {
+        "name": "dun",
+        "token": "0x06000B6F",
+        "isStatic": false,
+        "returnType": "System.Collections.IEnumerator",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 31404,
+            "resolvedType": "TownData"
+          }
+        ]
+      },
+      {
+        "name": "duo",
+        "token": "0x06000B70",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 22027,
+            "resolvedType": "FishingMapData"
+          }
+        ]
+      },
+      {
+        "name": "dup",
+        "token": "0x06000B71",
+        "isStatic": false,
+        "returnType": "System.Collections.IEnumerator",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 22027,
+            "resolvedType": "FishingMapData"
+          }
+        ]
+      },
+      {
+        "name": "duq",
+        "token": "0x06000B72",
+        "isStatic": false,
+        "returnType": "System.Collections.IEnumerator",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 28670,
+            "resolvedType": "RunPlan"
+          }
+        ]
+      },
+      {
+        "name": "dur",
+        "token": "0x06000B73",
         "isStatic": false,
         "returnType": "System.Collections.IEnumerator",
         "parameters": []
       },
       {
-        "name": "dtm",
-        "token": "0x06000B48",
+        "name": "dus",
+        "token": "0x06000B74",
+        "isStatic": false,
+        "returnType": "System.Collections.IEnumerator",
+        "parameters": []
+      },
+      {
+        "name": "dut",
+        "token": "0x06000B75",
+        "isStatic": false,
+        "returnType": "System.Collections.IEnumerator",
+        "parameters": []
+      },
+      {
+        "name": "duu",
+        "token": "0x06000B76",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "duv",
+        "token": "0x06000B77",
+        "isStatic": false,
+        "returnType": "System.Collections.IEnumerator",
+        "parameters": []
+      },
+      {
+        "name": "duw",
+        "token": "0x06000B78",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 30204,
+            "resolvedType": "System.String"
+          },
+          {
+            "name": "b",
+            "typeIndex": 30204,
+            "resolvedType": "System.String"
+          }
+        ]
+      },
+      {
+        "name": "dux",
+        "token": "0x06000B79",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 30204,
+            "resolvedType": "System.String"
+          }
+        ]
+      },
+      {
+        "name": "duy",
+        "token": "0x06000B7A",
+        "isStatic": false,
+        "returnType": "System.String",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 30204,
+            "resolvedType": "System.String"
+          }
+        ]
+      },
+      {
+        "name": "duz",
+        "token": "0x06000B7B",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 30204,
+            "resolvedType": "System.String"
+          }
+        ]
+      },
+      {
+        "name": "dva",
+        "token": "0x06000B7C",
+        "isStatic": false,
+        "returnType": "System.String",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 30204,
+            "resolvedType": "System.String"
+          }
+        ]
+      },
+      {
+        "name": "dvb",
+        "token": "0x06000B7D",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 30204,
+            "resolvedType": "System.String"
+          },
+          {
+            "name": "b",
+            "typeIndex": 24571,
+            "resolvedType": "ItemData"
+          },
+          {
+            "name": "c",
+            "typeIndex": 24303,
+            "resolvedType": "System.Int32"
+          }
+        ]
+      },
+      {
+        "name": "dvc",
+        "token": "0x06000B7E",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 25486,
+            "resolvedType": "MapData"
+          },
+          {
+            "name": "b",
+            "typeIndex": 14833,
+            "resolvedType": "System.String&"
+          }
+        ]
+      },
+      {
+        "name": "dvd",
+        "token": "0x06000B7F",
+        "isStatic": false,
+        "returnType": "System.Collections.Generic.HashSet`1<System.String>",
+        "parameters": []
+      },
+      {
+        "name": "dve",
+        "token": "0x06000B80",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 24303,
+            "resolvedType": "System.Int32"
+          }
+        ]
+      },
+      {
+        "name": "dvf",
+        "token": "0x06000B81",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": []
+      },
+      {
+        "name": "dvg",
+        "token": "0x06000B82",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "dvh",
+        "token": "0x06000B83",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 18442,
+            "resolvedType": "System.Boolean"
+          }
+        ]
+      },
+      {
+        "name": "dvi",
+        "token": "0x06000B84",
+        "isStatic": true,
+        "returnType": "System.Boolean",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 30204,
+            "resolvedType": "System.String"
+          }
+        ]
+      },
+      {
+        "name": "dvj",
+        "token": "0x06000B85",
+        "isStatic": false,
+        "returnType": "System.Collections.IEnumerator",
+        "parameters": []
+      },
+      {
+        "name": "dvk",
+        "token": "0x06000B86",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "dvl",
+        "token": "0x06000B87",
+        "isStatic": true,
+        "returnType": "DropUid[]",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 5410,
+            "resolvedType": "System.Collections.Generic.Dictionary`2<System.String, System.String>"
+          }
+        ]
+      },
+      {
+        "name": "dvm",
+        "token": "0x06000B88",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 14833,
+            "resolvedType": "System.String&"
+          },
+          {
+            "name": "b",
+            "typeIndex": 14208,
+            "resolvedType": "System.String[]&"
+          },
+          {
+            "name": "c",
+            "typeIndex": 14515,
+            "resolvedType": "System.Int32&"
+          },
+          {
+            "name": "d",
+            "typeIndex": 14517,
+            "resolvedType": "System.Int64&"
+          },
+          {
+            "name": "e",
+            "typeIndex": 14515,
+            "resolvedType": "System.Int32&"
+          },
+          {
+            "name": "f",
+            "typeIndex": 13964,
+            "resolvedType": "System.Collections.Generic.Dictionary`2<System.String, System.String>&"
+          },
+          {
+            "name": "g",
+            "typeIndex": 14208,
+            "resolvedType": "System.String[]&"
+          },
+          {
+            "name": "h",
+            "typeIndex": 14208,
+            "resolvedType": "System.String[]&"
+          },
+          {
+            "name": "i",
+            "typeIndex": 14192,
+            "resolvedType": "GatheredMaterial[]&"
+          }
+        ]
+      },
+      {
+        "name": "dvn",
+        "token": "0x06000B89",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 19425,
+            "resolvedType": "CommitResponse"
+          },
+          {
+            "name": "b",
+            "typeIndex": 5410,
+            "resolvedType": "System.Collections.Generic.Dictionary`2<System.String, System.String>"
+          },
+          {
+            "name": "c",
+            "typeIndex": 18442,
+            "resolvedType": "System.Boolean"
+          }
+        ]
+      },
+      {
+        "name": "dvo",
+        "token": "0x06000B8A",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 19425,
+            "resolvedType": "CommitResponse"
+          }
+        ]
+      },
+      {
+        "name": "dvp",
+        "token": "0x06000B8B",
+        "isStatic": false,
+        "returnType": "System.Collections.Generic.IEnumerable`1<LootDrop>",
+        "parameters": []
+      },
+      {
+        "name": "dvq",
+        "token": "0x06000B8C",
+        "isStatic": false,
+        "returnType": "System.Boolean",
+        "parameters": []
+      },
+      {
+        "name": "dvr",
+        "token": "0x06000B8D",
+        "isStatic": false,
+        "returnType": "System.Int32",
+        "parameters": []
+      },
+      {
+        "name": "dvs",
+        "token": "0x06000B8E",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 19425,
+            "resolvedType": "CommitResponse"
+          },
+          {
+            "name": "b",
+            "typeIndex": 5410,
+            "resolvedType": "System.Collections.Generic.Dictionary`2<System.String, System.String>"
+          }
+        ]
+      },
+      {
+        "name": "dvt",
+        "token": "0x06000B8F",
+        "isStatic": true,
+        "returnType": "ChestContent[]",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 15988,
+            "resolvedType": "CommittedChestContent[]"
+          }
+        ]
+      },
+      {
+        "name": "dvu",
+        "token": "0x06000B90",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "dvv",
+        "token": "0x06000B91",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 18442,
+            "resolvedType": "System.Boolean"
+          }
+        ]
+      },
+      {
+        "name": "dvw",
+        "token": "0x06000B92",
+        "isStatic": false,
+        "returnType": "System.Collections.IEnumerator",
+        "parameters": []
+      },
+      {
+        "name": "dvx",
+        "token": "0x06000B93",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 18467,
+            "resolvedType": "System.Boolean"
+          }
+        ]
+      },
+      {
+        "name": "ReturnToMainMenu",
+        "token": "0x06000B94",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "dvy",
+        "token": "0x06000B95",
+        "isStatic": false,
+        "returnType": "System.Collections.IEnumerator",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 18442,
+            "resolvedType": "System.Boolean"
+          }
+        ]
+      },
+      {
+        "name": "dvz",
+        "token": "0x06000B96",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 30204,
+            "resolvedType": "System.String"
+          },
+          {
+            "name": "b",
+            "typeIndex": 30204,
+            "resolvedType": "System.String"
+          },
+          {
+            "name": "c",
+            "typeIndex": 30224,
+            "resolvedType": "System.String"
+          }
+        ]
+      },
+      {
+        "name": "dwa",
+        "token": "0x06000B97",
+        "isStatic": true,
+        "returnType": "System.String",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 30204,
+            "resolvedType": "System.String"
+          }
+        ]
+      },
+      {
+        "name": "dwb",
+        "token": "0x06000B98",
+        "isStatic": false,
+        "returnType": "System.Collections.IEnumerator",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 30204,
+            "resolvedType": "System.String"
+          }
+        ]
+      },
+      {
+        "name": "dwc",
+        "token": "0x06000B99",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 21335,
+            "resolvedType": "Enemy"
+          }
+        ]
+      },
+      {
+        "name": "dwd",
+        "token": "0x06000B9A",
+        "isStatic": false,
+        "returnType": "System.Single",
+        "parameters": [
+          {
+            "name": "a",
+            "typeIndex": 24303,
+            "resolvedType": "System.Int32"
+          }
+        ]
+      },
+      {
+        "name": "dwe",
+        "token": "0x06000B9B",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "dwf",
+        "token": "0x06000B9C",
+        "isStatic": false,
+        "returnType": "System.Collections.IEnumerator",
+        "parameters": []
+      },
+      {
+        "name": "dwg",
+        "token": "0x06000B9D",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "dwh",
+        "token": "0x06000B9E",
+        "isStatic": false,
+        "returnType": "System.Void",
+        "parameters": []
+      },
+      {
+        "name": "dwi",
+        "token": "0x06000B9F",
+        "isStatic": false,
+        "returnType": "System.Collections.IEnumerator",
+        "parameters": []
+      },
+      {
+        "name": "dwj",
+        "token": "0x06000BA0",
         "isStatic": false,
         "returnType": "System.Collections.IEnumerator",
         "parameters": []
       },
       {
         "name": ".ctor",
-        "token": "0x06000B49",
+        "token": "0x06000BA1",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "dtn",
-        "token": "0x06000B4A",
+        "name": "dwk",
+        "token": "0x06000BA2",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": []
@@ -2570,18 +2613,18 @@
     ],
     "logicalName": "GameManager",
     "isValueType": false,
-    "byvalTypeIndex": 22343
+    "byvalTypeIndex": 22430
   },
   {
     "name": "HorseCarriage",
     "namespace": "",
-    "typeDefinitionIndex": 6281,
+    "typeDefinitionIndex": 6308,
     "fields": [
       {
-        "name": "oxt",
-        "fieldIndex": 27224,
-        "token": "0x040011A7",
-        "typeIndex": 17500,
+        "name": "plc",
+        "fieldIndex": 27432,
+        "token": "0x04001270",
+        "typeIndex": 17573,
         "resolvedType": "UnityEngine.Animator",
         "typeKind": 18,
         "attributes": "0x0001",
@@ -2591,10 +2634,10 @@
         "rawRegistrationOffset": 32
       },
       {
-        "name": "oxu",
-        "fieldIndex": 27225,
-        "token": "0x040011A8",
-        "typeIndex": 29504,
+        "name": "pld",
+        "fieldIndex": 27433,
+        "token": "0x04001271",
+        "typeIndex": 29599,
         "resolvedType": "SlaveAbilityController",
         "typeKind": 18,
         "attributes": "0x0001",
@@ -2605,9 +2648,9 @@
       },
       {
         "name": "CollectOffsetX",
-        "fieldIndex": 27226,
-        "token": "0x040011A9",
-        "typeIndex": 29459,
+        "fieldIndex": 27434,
+        "token": "0x04001272",
+        "typeIndex": 29554,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -2618,9 +2661,9 @@
       },
       {
         "name": "Container",
-        "fieldIndex": 27227,
-        "token": "0x040011AA",
-        "typeIndex": 31369,
+        "fieldIndex": 27435,
+        "token": "0x04001273",
+        "typeIndex": 31472,
         "resolvedType": "UnityEngine.Transform",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -2631,9 +2674,9 @@
       },
       {
         "name": "Capacity",
-        "fieldIndex": 27228,
-        "token": "0x040011AB",
-        "typeIndex": 24220,
+        "fieldIndex": 27436,
+        "token": "0x04001274",
+        "typeIndex": 24309,
         "resolvedType": "System.Int32",
         "typeKind": 8,
         "attributes": "0x0006",
@@ -2644,9 +2687,9 @@
       },
       {
         "name": "PileScatter",
-        "fieldIndex": 27229,
-        "token": "0x040011AC",
-        "typeIndex": 32292,
+        "fieldIndex": 27437,
+        "token": "0x04001275",
+        "typeIndex": 32396,
         "resolvedType": "UnityEngine.Vector2",
         "typeKind": 17,
         "attributes": "0x0006",
@@ -2657,9 +2700,9 @@
       },
       {
         "name": "PileStackHeight",
-        "fieldIndex": 27230,
-        "token": "0x040011AD",
-        "typeIndex": 29459,
+        "fieldIndex": 27438,
+        "token": "0x04001276",
+        "typeIndex": 29554,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -2670,9 +2713,9 @@
       },
       {
         "name": "NameHoverCollider",
-        "fieldIndex": 27231,
-        "token": "0x040011AE",
-        "typeIndex": 19164,
+        "fieldIndex": 27439,
+        "token": "0x04001277",
+        "typeIndex": 19237,
         "resolvedType": "UnityEngine.Collider",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -2683,9 +2726,9 @@
       },
       {
         "name": "LootHoverCollider",
-        "fieldIndex": 27232,
-        "token": "0x040011AF",
-        "typeIndex": 19164,
+        "fieldIndex": 27440,
+        "token": "0x04001278",
+        "typeIndex": 19237,
         "resolvedType": "UnityEngine.Collider",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -2696,9 +2739,9 @@
       },
       {
         "name": "SpringJoint",
-        "fieldIndex": 27233,
-        "token": "0x040011B0",
-        "typeIndex": 29774,
+        "fieldIndex": 27441,
+        "token": "0x04001279",
+        "typeIndex": 29876,
         "resolvedType": "UnityEngine.SpringJoint",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -2709,9 +2752,9 @@
       },
       {
         "name": "JointBodyPrefab",
-        "fieldIndex": 27234,
-        "token": "0x040011B1",
-        "typeIndex": 28539,
+        "fieldIndex": 27442,
+        "token": "0x0400127A",
+        "typeIndex": 28631,
         "resolvedType": "UnityEngine.Rigidbody",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -2722,9 +2765,9 @@
       },
       {
         "name": "JointBody",
-        "fieldIndex": 27235,
-        "token": "0x040011B2",
-        "typeIndex": 28539,
+        "fieldIndex": 27443,
+        "token": "0x0400127B",
+        "typeIndex": 28631,
         "resolvedType": "UnityEngine.Rigidbody",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -2735,9 +2778,9 @@
       },
       {
         "name": "TownOffloadPoint",
-        "fieldIndex": 27236,
-        "token": "0x040011B3",
-        "typeIndex": 31369,
+        "fieldIndex": 27444,
+        "token": "0x0400127C",
+        "typeIndex": 31472,
         "resolvedType": "UnityEngine.Transform",
         "typeKind": 18,
         "attributes": "0x0006",
@@ -2748,9 +2791,9 @@
       },
       {
         "name": "OffloadScatter",
-        "fieldIndex": 27237,
-        "token": "0x040011B4",
-        "typeIndex": 29459,
+        "fieldIndex": 27445,
+        "token": "0x0400127D",
+        "typeIndex": 29554,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -2761,9 +2804,9 @@
       },
       {
         "name": "OffloadArcDuration",
-        "fieldIndex": 27238,
-        "token": "0x040011B5",
-        "typeIndex": 29459,
+        "fieldIndex": 27446,
+        "token": "0x0400127E",
+        "typeIndex": 29554,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -2774,9 +2817,9 @@
       },
       {
         "name": "OffloadArcHeight",
-        "fieldIndex": 27239,
-        "token": "0x040011B6",
-        "typeIndex": 29459,
+        "fieldIndex": 27447,
+        "token": "0x0400127F",
+        "typeIndex": 29554,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -2787,9 +2830,9 @@
       },
       {
         "name": "OffloadStagger",
-        "fieldIndex": 27240,
-        "token": "0x040011B7",
-        "typeIndex": 29459,
+        "fieldIndex": 27448,
+        "token": "0x04001280",
+        "typeIndex": 29554,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -2800,9 +2843,9 @@
       },
       {
         "name": "OffloadDelay",
-        "fieldIndex": 27241,
-        "token": "0x040011B8",
-        "typeIndex": 29459,
+        "fieldIndex": 27449,
+        "token": "0x04001281",
+        "typeIndex": 29554,
         "resolvedType": "System.Single",
         "typeKind": 12,
         "attributes": "0x0006",
@@ -2812,10 +2855,10 @@
         "rawRegistrationOffset": 144
       },
       {
-        "name": "oxv",
-        "fieldIndex": 27242,
-        "token": "0x040011B9",
-        "typeIndex": 24230,
+        "name": "ple",
+        "fieldIndex": 27450,
+        "token": "0x04001282",
+        "typeIndex": 24319,
         "resolvedType": "System.Int32",
         "typeKind": 8,
         "attributes": "0x0031",
@@ -2825,10 +2868,10 @@
         "rawRegistrationOffset": 0
       },
       {
-        "name": "oxw",
-        "fieldIndex": 27243,
-        "token": "0x040011BA",
-        "typeIndex": 10268,
+        "name": "plf",
+        "fieldIndex": 27451,
+        "token": "0x04001283",
+        "typeIndex": 10321,
         "resolvedType": "System.Collections.Generic.List`1<LootDrop>",
         "typeKind": 21,
         "attributes": "0x0021",
@@ -2838,10 +2881,10 @@
         "rawRegistrationOffset": 152
       },
       {
-        "name": "oxx",
-        "fieldIndex": 27244,
-        "token": "0x040011BB",
-        "typeIndex": 10717,
+        "name": "plg",
+        "fieldIndex": 27452,
+        "token": "0x04001284",
+        "typeIndex": 10775,
         "resolvedType": "System.Collections.Generic.List`1<OffloadFlight>",
         "typeKind": 21,
         "attributes": "0x0021",
@@ -2851,10 +2894,10 @@
         "rawRegistrationOffset": 160
       },
       {
-        "name": "oxy",
-        "fieldIndex": 27245,
-        "token": "0x040011BC",
-        "typeIndex": 10268,
+        "name": "plh",
+        "fieldIndex": 27453,
+        "token": "0x04001285",
+        "typeIndex": 10321,
         "resolvedType": "System.Collections.Generic.List`1<LootDrop>",
         "typeKind": 21,
         "attributes": "0x0021",
@@ -2864,10 +2907,10 @@
         "rawRegistrationOffset": 168
       },
       {
-        "name": "oxz",
-        "fieldIndex": 27246,
-        "token": "0x040011BD",
-        "typeIndex": 19755,
+        "name": "pli",
+        "fieldIndex": 27454,
+        "token": "0x04001286",
+        "typeIndex": 19830,
         "resolvedType": "UnityEngine.Coroutine",
         "typeKind": 18,
         "attributes": "0x0001",
@@ -2877,10 +2920,10 @@
         "rawRegistrationOffset": 176
       },
       {
-        "name": "<oya>k__BackingField",
-        "fieldIndex": 27247,
-        "token": "0x040011BE",
-        "typeIndex": 18370,
+        "name": "<plj>k__BackingField",
+        "fieldIndex": 27455,
+        "token": "0x04001287",
+        "typeIndex": 18443,
         "resolvedType": "System.Boolean",
         "typeKind": 2,
         "attributes": "0x0001",
@@ -2890,10 +2933,10 @@
         "rawRegistrationOffset": 184
       },
       {
-        "name": "<oyb>k__BackingField",
-        "fieldIndex": 27248,
-        "token": "0x040011BF",
-        "typeIndex": 18370,
+        "name": "<plk>k__BackingField",
+        "fieldIndex": 27456,
+        "token": "0x04001288",
+        "typeIndex": 18443,
         "resolvedType": "System.Boolean",
         "typeKind": 2,
         "attributes": "0x0001",
@@ -2905,360 +2948,360 @@
     ],
     "methods": [
       {
-        "name": "fme",
-        "token": "0x0600116C",
+        "name": "frz",
+        "token": "0x06001225",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": []
       },
       {
-        "name": "fmf",
-        "token": "0x0600116D",
+        "name": "fsa",
+        "token": "0x06001226",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 18369,
+            "typeIndex": 18442,
             "resolvedType": "System.Boolean"
           }
         ]
       },
       {
-        "name": "fmg",
-        "token": "0x0600116E",
+        "name": "fsb",
+        "token": "0x06001227",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": []
       },
       {
-        "name": "fmh",
-        "token": "0x0600116F",
+        "name": "fsc",
+        "token": "0x06001228",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 18369,
+            "typeIndex": 18442,
             "resolvedType": "System.Boolean"
           }
         ]
       },
       {
         "name": "Start",
-        "token": "0x06001170",
+        "token": "0x06001229",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "fmi",
-        "token": "0x06001171",
+        "name": "fsd",
+        "token": "0x0600122A",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": "Update",
-        "token": "0x06001172",
+        "token": "0x0600122B",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "fmj",
-        "token": "0x06001173",
+        "name": "fse",
+        "token": "0x0600122C",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "fmk",
-        "token": "0x06001174",
+        "name": "fsf",
+        "token": "0x0600122D",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "fml",
-        "token": "0x06001175",
+        "name": "fsg",
+        "token": "0x0600122E",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "fmm",
-        "token": "0x06001176",
+        "name": "fsh",
+        "token": "0x0600122F",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 25282,
+            "typeIndex": 25374,
             "resolvedType": "LootDrop"
           }
         ]
       },
       {
-        "name": "fmn",
-        "token": "0x06001177",
+        "name": "fsi",
+        "token": "0x06001230",
         "isStatic": false,
         "returnType": "System.Collections.Generic.IReadOnlyList`1<LootDrop>",
         "parameters": []
       },
       {
-        "name": "fmo",
-        "token": "0x06001178",
+        "name": "fsj",
+        "token": "0x06001231",
         "isStatic": false,
         "returnType": "System.Int32",
         "parameters": []
       },
       {
-        "name": "fmp",
-        "token": "0x06001179",
+        "name": "fsk",
+        "token": "0x06001232",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": []
       },
       {
-        "name": "fmq",
-        "token": "0x0600117A",
+        "name": "fsl",
+        "token": "0x06001233",
         "isStatic": false,
         "returnType": "System.Int32",
         "parameters": []
       },
       {
-        "name": "fmr",
-        "token": "0x0600117B",
+        "name": "fsm",
+        "token": "0x06001234",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": []
       },
       {
-        "name": "fms",
-        "token": "0x0600117C",
+        "name": "fsn",
+        "token": "0x06001235",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 25282,
+            "typeIndex": 25374,
             "resolvedType": "LootDrop"
           }
         ]
       },
       {
-        "name": "fmt",
-        "token": "0x0600117D",
+        "name": "fso",
+        "token": "0x06001236",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 29509,
+            "typeIndex": 29604,
             "resolvedType": "SlaveData"
           }
         ]
       },
       {
-        "name": "fmu",
-        "token": "0x0600117E",
+        "name": "fsp",
+        "token": "0x06001237",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "fmv",
-        "token": "0x0600117F",
+        "name": "fsq",
+        "token": "0x06001238",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 25282,
+            "typeIndex": 25374,
             "resolvedType": "LootDrop"
           }
         ]
       },
       {
-        "name": "fmw",
-        "token": "0x06001180",
+        "name": "fsr",
+        "token": "0x06001239",
         "isStatic": false,
         "returnType": "CarriageRarityAction",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 25282,
+            "typeIndex": 25374,
             "resolvedType": "LootDrop"
           }
         ]
       },
       {
-        "name": "fmx",
-        "token": "0x06001181",
+        "name": "fss",
+        "token": "0x0600123A",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 25282,
+            "typeIndex": 25374,
             "resolvedType": "LootDrop"
           }
         ]
       },
       {
-        "name": "fmy",
-        "token": "0x06001182",
+        "name": "fst",
+        "token": "0x0600123B",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 25282,
+            "typeIndex": 25374,
             "resolvedType": "LootDrop"
           }
         ]
       },
       {
-        "name": "fmz",
-        "token": "0x06001183",
+        "name": "fsu",
+        "token": "0x0600123C",
         "isStatic": false,
         "returnType": "LootDrop",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 24481,
+            "typeIndex": 24571,
             "resolvedType": "ItemData"
           },
           {
             "name": "b",
-            "typeIndex": 25282,
+            "typeIndex": 25374,
             "resolvedType": "LootDrop"
           }
         ]
       },
       {
-        "name": "fna",
-        "token": "0x06001184",
+        "name": "fsv",
+        "token": "0x0600123D",
         "isStatic": false,
         "returnType": "System.Boolean",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 25282,
+            "typeIndex": 25374,
             "resolvedType": "LootDrop"
           }
         ]
       },
       {
-        "name": "fnb",
-        "token": "0x06001185",
+        "name": "fsw",
+        "token": "0x0600123E",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 25282,
+            "typeIndex": 25374,
             "resolvedType": "LootDrop"
           }
         ]
       },
       {
-        "name": "fnc",
-        "token": "0x06001186",
+        "name": "fsx",
+        "token": "0x0600123F",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 25282,
+            "typeIndex": 25374,
             "resolvedType": "LootDrop"
           }
         ]
       },
       {
-        "name": "fnd",
-        "token": "0x06001187",
+        "name": "fsy",
+        "token": "0x06001240",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 18369,
+            "typeIndex": 18442,
             "resolvedType": "System.Boolean"
           },
           {
             "name": "b",
-            "typeIndex": 18369,
+            "typeIndex": 18442,
             "resolvedType": "System.Boolean"
           }
         ]
       },
       {
         "name": "OnDisable",
-        "token": "0x06001188",
+        "token": "0x06001241",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "fne",
-        "token": "0x06001189",
+        "name": "fsz",
+        "token": "0x06001242",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "fnf",
-        "token": "0x0600118A",
+        "name": "fta",
+        "token": "0x06001243",
         "isStatic": false,
         "returnType": "System.Collections.IEnumerator",
         "parameters": []
       },
       {
-        "name": "fng",
-        "token": "0x0600118B",
+        "name": "ftb",
+        "token": "0x06001244",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "fnh",
-        "token": "0x0600118C",
+        "name": "ftc",
+        "token": "0x06001245",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": [
           {
             "name": "a",
-            "typeIndex": 25282,
+            "typeIndex": 25374,
             "resolvedType": "LootDrop"
           }
         ]
       },
       {
-        "name": "fni",
-        "token": "0x0600118D",
+        "name": "ftd",
+        "token": "0x06001246",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
-        "name": "fnj",
-        "token": "0x0600118E",
+        "name": "fte",
+        "token": "0x06001247",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": ".ctor",
-        "token": "0x0600118F",
+        "token": "0x06001248",
         "isStatic": false,
         "returnType": "System.Void",
         "parameters": []
       },
       {
         "name": ".cctor",
-        "token": "0x06001190",
+        "token": "0x06001249",
         "isStatic": true,
         "returnType": "System.Void",
         "parameters": []
@@ -3266,6 +3309,6 @@
     ],
     "logicalName": "HorseCarriage",
     "isValueType": false,
-    "byvalTypeIndex": 22932
+    "byvalTypeIndex": 23021
   }
 ]

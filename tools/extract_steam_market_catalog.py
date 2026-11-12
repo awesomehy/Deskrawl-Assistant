@@ -45,7 +45,10 @@ def extract(root: Path) -> dict:
         key, data = payload(obj)
         c = Cursor(data, item_layout(data)['effects'])
         # EquipmentEffects, AbilityLevels and FixedStats precede the Steam IDs.
-        for stride in (12, 24, 36):
+        for stride in (12, 24, None, 36):
+            if stride is None:
+                c.take('iq')  # AncientOf, before FixedStats
+                continue
             count = c.count()
             c.pos += count * stride
         definition_id, retired, mist_definition_id = c.take('iii')

@@ -12,7 +12,7 @@ test('synthesis is opt-in and quality caps and exclusions survive configuration 
   assert.deepEqual(saved,settings);assert.deepEqual(saved.auto_equip.slot_locks,old.auto_equip.slot_locks);
   assert.deepEqual(saved.cleanup.rune_pages,[2,4]);assert.deepEqual(saved.cleanup.gem_pages,[3]);
   assert.deepEqual(saved.synthesis.runes.excluded_keys,['RareRune_A','UncommonRune_B']);
-  assert.equal(ui.normalizeSynthesis({gems:{max_quality:7},runes:{max_quality:'invalid'}}).gems.max_quality,5);
+  assert.equal(ui.normalizeSynthesis({gems:{max_quality:8},runes:{max_quality:'invalid'}}).gems.max_quality,5);
   defaults.synthesis.runes.excluded_keys.push('RareRune_A');assert.deepEqual(ui.normalizeSettings().synthesis.runes.excluded_keys,[]);
 });
 
@@ -57,6 +57,7 @@ test('rune picker includes not-owned runes from every class with quality and ico
   const expected=Object.values(itemUi.collectibles).filter(row=>row.kind==='rune');
   const rows=ui.synthesisRunes(catalog);
   assert.equal(rows.length,expected.length);assert.ok(rows.length>150);
+  assert.ok(!rows.some(row=>row.key==='RuneChest'));
   assert.ok(rows.some(row=>row.key.startsWith('HunterSetRune')));
   for(const prefix of ['Sorcerer','Warrior','Monk'])assert.ok(rows.some(row=>row.key.startsWith(prefix+'SetRune')));
   assert.deepEqual(new Set(rows.map(row=>row.quality)),new Set(['uncommon','rare','grand','set']));
@@ -68,9 +69,9 @@ test('rune picker includes not-owned runes from every class with quality and ico
 });
 
 test('every supported cap retains its exact boundary including the lowest no-recipe cap',()=>{
-  for(let max_quality=1;max_quality<=6;max_quality++)assert.equal(ui.normalizeSynthesis({gems:{enabled:true,max_quality}}).gems.max_quality,max_quality);
+  for(let max_quality=1;max_quality<=7;max_quality++)assert.equal(ui.normalizeSynthesis({gems:{enabled:true,max_quality}}).gems.max_quality,max_quality);
   for(const max_quality of ['uncommon','rare','grand','set'])assert.equal(ui.normalizeSynthesis({runes:{enabled:true,max_quality}}).runes.max_quality,max_quality);
-  assert.deepEqual(ui.gemQualities,['粗糙','碎裂','粗砺','抛光','无瑕','璀璨']);
+  assert.deepEqual(ui.gemQualities,['粗糙','碎裂','粗砺','抛光','无瑕','璀璨','完美之星']);
 });
 
 test('filtered rune choices preserve hidden exclusions and unlisted saved choices remain removable',()=>{

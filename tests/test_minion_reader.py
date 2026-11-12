@@ -11,11 +11,11 @@ class MinionReaderTests(unittest.TestCase):
         self.reader, self.copy = Mock(), Mock()
         self.copy.verify.side_effect = lambda obj, name: obj
         self.copy.singleton.side_effect = lambda rva, name: {'SlaveManager':1000, 'GameManager':2000}[name]
-        pointers = {2032:3000, 3088:4000, 1080:5000, 1088:6000, 1096:7000,
-                    1128:8000, 1136:7000, 9032:10000, 9040:11000}
+        pointers = {2032:3000, 3088:4000, 1088:5000, 1096:6000, 1104:7000,
+                    1160:8000, 1168:7000, 9032:10000, 9040:11000}
         self.copy.ptr.side_effect = pointers.__getitem__
         self.copy.integer.side_effect = {4024:11, 4096:4, 4100:7, 9016:3,
-            7024:1, 7028:3, 7124:2, 7128:2, 1144:1, 1148:0}.__getitem__
+            7024:1, 7028:3, 7124:2, 7128:2, 1176:1, 1180:0}.__getitem__
         self.copy.dictionary.return_value = {7000:9000}
         self.copy.list.return_value = [struct.pack('<Q', n) for n in (7000,7100)]
         arrays = {8000:[b'\1', b'\0'], 10000:[struct.pack('<i',2)], 11000:[struct.pack('<i',1)]}

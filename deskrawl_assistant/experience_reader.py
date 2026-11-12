@@ -137,7 +137,7 @@ def _snapshot(reader):
         return verify(pointer(static), name)
 
     manager = singleton(native_rva(reader,'game_manager_rva',GAME_MANAGER_RVA), 'GameManager')
-    if struct.unpack('<i', read(manager + 176, 4))[0] != 1:
+    if struct.unpack('<i', read(manager + 184, 4))[0] != 1:
         raise MemoryReadError('游戏尚未进入角色，暂停读取经验。')
     player = singleton(native_rva(reader,'player_data_rva',PLAYER_DATA_RVA), 'PlayerData')
     config_obj = verify(pointer(manager + 32), 'GameConfig')
@@ -163,8 +163,8 @@ def _snapshot(reader):
         raise MemoryReadError('升级经验配置无效。')
     total = cumulative_xp(level, current_xp, config)
     stage, difficulty, run_id = '', '', ''
-    active_map = pointer(manager + 112)
-    plan = pointer(manager + 120)
+    active_map = pointer(manager + 120)
+    plan = pointer(manager + 128)
     if active_map and plan:
         verify(active_map, 'MapData')
         verify(plan, 'RunPlan')

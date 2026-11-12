@@ -33,6 +33,8 @@ def sale_feedback(auth, phase, message):
     """
     if phase != 'login_required':
         return phase, message
+    if auth.get('renewing') is True:
+        return phase, '本机 Steam 社区凭证正在自动续期，期间暂停市场出售。'
     if auth.get('expired') is True:
         return phase, 'Steam 登录已过期，请重新登录。'
     if auth.get('verified') is True:
@@ -284,7 +286,7 @@ class SteamTradingService(ManualSteamSaleMixin, SaleTrackingMixin, PendingTrades
         if refresh:
             refresh()
         state = self.session.state()
-        if (not state.get('bound') or state.get('expired') or state.get('login_open')
+        if (not state.get('bound') or state.get('expired') or state.get('renewing') or state.get('login_open')
                 or self._closed or self.clock() < max(self._auth_retry_after, self._retry_after)):
             return
         self._auth_retry_after = self.clock() + 30

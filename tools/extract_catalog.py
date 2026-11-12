@@ -9,11 +9,14 @@ import importlib.metadata
 import io
 import json
 import re
+import struct
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
 import UnityPy
+from UnityPy.classes import PPtr
+from item_asset_layout import ancient_of_offset
 
 
 EXPECTED_UNITYPY = "1.25.2"
@@ -134,6 +137,41 @@ def main() -> None:
         raise ValueError(f"Missing required TextAssets: {set(TABLE_NAMES) - set(tables)}")
     tables = {name: tables[name] for name in TABLE_NAMES}
     indexes = indexes_for(tables)
+    # These assets intentionally have no separate localization key. Preserve
+    # their exact native identity and inherit only the name through AncientOf.
+    # Do not infer identity from an "Ancient" prefix or duplicate display name.
+    equipment_aliases = {}
+    for obj in environment.objects:
+        if obj.type.name != 'MonoBehaviour':
+            continue
+        raw = obj.get_raw_data()
+        if len(raw) < 32:
+            continue
+        script_file, script_id = struct.unpack_from('<iq', raw, 16)
+        if not script_id:
+            continue
+        script = PPtr(m_FileID=script_file, m_PathID=script_id, assetsfile=obj.assets_file).deref()
+        if not script or script.read().m_ClassName != 'ItemData':
+            continue
+        size = struct.unpack_from('<i', raw, 28)[0]
+        key = raw[32:32+size].decode('utf-8')
+        start = (32+size+3)&~3
+        data = raw[start:]
+        if struct.unpack_from('<i', data, 12)[0] != 3:
+            continue
+        file_id, path_id = struct.unpack_from('<iq', data, ancient_of_offset(data))
+        if not path_id:
+            continue
+        base = PPtr(m_FileID=file_id, m_PathID=path_id, assetsfile=obj.assets_file).deref()
+        if not base:
+            raise ValueError('Missing AncientOf equipment: ' + key)
+        base_raw = base.get_raw_data()
+        base_size = struct.unpack_from('<i', base_raw, 28)[0]
+        base_key = base_raw[32:32+base_size].decode('utf-8')
+        if (key in equipment_aliases or key in indexes['equipment_root_key_groups']['equipment_names']
+                or base_key not in indexes['equipment_root_key_groups']['equipment_names']):
+            raise ValueError('Ambiguous AncientOf equipment: ' + key)
+        equipment_aliases[key] = base_key
     catalog = {
         "schema_version": 1,
         "scope": "Static shipped localization only. No character, save, account or UI TextAsset data.",
@@ -156,6 +194,7 @@ def main() -> None:
         },
         "tables": tables,
         "indexes": indexes,
+        "equipment_asset_aliases": dict(sorted(equipment_aliases.items())),
     }
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

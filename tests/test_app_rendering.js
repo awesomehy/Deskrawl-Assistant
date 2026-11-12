@@ -163,6 +163,19 @@ test('logs use one request in flight and periodic refreshes do not invalidate it
   assert.equal(p.run('logInFlight'),null);
 });
 
+test('identical polls retain connection and history nodes while real status/history changes render immediately',()=>{
+  const p=page();p.setState(packet({history:[{time:'12:00',text:'正在整理'}]}));p.run('renderState();');
+  const history=p.ids.get('history-list'),connection=p.ids.get('connection-state');
+  const historyWrites=history.writes,connectionWrites=connection.writes;
+  for(let n=0;n<100;n++){p.setState(packet({history:[{time:'12:00',text:'正在整理'}]}));p.run('renderState();');}
+  assert.equal(history.writes,historyWrites);assert.equal(connection.writes,connectionWrites);
+  p.setState(packet({busy:true,history:[{time:'12:01',text:'完成 <保护>'}]}));p.run('renderState();');
+  assert.equal(history.writes,historyWrites+1);assert.match(history.innerHTML,/完成 &lt;保护&gt;/);
+  assert.equal(connection.writes,connectionWrites+1);assert.match(connection.innerHTML,/处理中/);
+  p.setState(packet({connected:false}));p.run('renderState();');
+  assert.match(connection.innerHTML,/未连接游戏/);assert.match(history.innerHTML,/尚无操作记录/);
+});
+
 test('logs coalesce user filters/pages to the latest snapshot while ignoring obsolete results',async()=>{
   const p=page();const first=p.run('loadLogs()');
   p.ids.get('log-search').value='旧查询';p.run('loadLogs()');

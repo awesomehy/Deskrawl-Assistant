@@ -216,7 +216,7 @@ class PreviewReadTests(unittest.TestCase):
             ['PlayerData','PlayerTalentBook','PlayerLifeSkillBook','PlayerAbilityBook','Inventory','SaveSystem','MerchantUI'])}
         manager,hero,combat,player,soul=100,200,300,400,600
         items={'SoulShard':soul,**{row['id']:1000+index*1000 for index,row in enumerate(data['shop'])}}
-        pointers={manager+56:hero,manager+64:combat,combat+32:player,combat+112:ability,
+        pointers={manager+56:hero,manager+72:combat,combat+32:player,combat+112:ability,
                   singletons['SaveSystem']+112:90000,singletons['Inventory']+64:90001}
         copy.ptr.side_effect=lambda address:pointers.get(address,0)
         def verify(obj,name):
@@ -225,8 +225,8 @@ class PreviewReadTests(unittest.TestCase):
         copy.verify.side_effect=verify
         copy.dictionary.side_effect=lambda obj,*args:({index:obj for index,obj in enumerate(items.values())} if obj==90000 else {soul:100} if obj==90001 else {})
         copy.list.return_value=[];copy.array.return_value=[];copy.boolean.return_value=False
-        integers={hero+48:4,soul+156:2000,singletons['SaveSystem']+32:1,
-                  **{items[row['id']]+232:row['slot'] for row in data['shop']}}
+        integers={hero+48:4,soul+164:2000,singletons['SaveSystem']+32:1,
+                  **{items[row['id']]+248:row['slot'] for row in data['shop']}}
         copy.integer.side_effect=lambda address:integers.get(address,0)
         reader.string.side_effect=lambda key:list(items)[key]
         names={hero:data['heroes']['4']['id'],**{obj:key for key,obj in items.items()}}
@@ -325,8 +325,8 @@ class RuntimeBoundaryTests(unittest.TestCase):
             'deskrawl_assistant.progression_runtime.panel_active_self', return_value=False))
         copy.copied_only.side_effect = nullcontext
         copy.verify.side_effect = lambda obj, name: obj
-        copy.ptr.side_effect = lambda address: {1056:2000,1064:3000,3032:4000,3112:5000,2080:6000}.get(address, 7000)
-        copy.integer.side_effect = lambda address: before['merchant']['stock'][0]['slot'] if address==1231 else before['class_mask']
+        copy.ptr.side_effect = lambda address: {1056:2000,1072:3000,3032:4000,3112:5000,2080:6000}.get(address, 7000)
+        copy.integer.side_effect = lambda address: before['merchant']['stock'][0]['slot'] if address==1247 else before['class_mask']
         skills = catalog()['heroes'][str(before['class_mask'])]['abilities']
         names = {101 + n:s['id'] for n,s in enumerate(skills)}
         copy.list.return_value = [struct.pack('<Q', ptr) for ptr in names]

@@ -75,9 +75,9 @@ class PreviewDetailsTests(unittest.TestCase):
     def test_complete_shipped_catalogue_has_local_icons_and_effects_or_explicit_note(self):
         assets=json.loads((RESOURCE_ROOT/'data/loot-item-ui.json').read_text(encoding='utf-8'))
         items=assets['items']
-        self.assertEqual(len(items),602)
-        self.assertEqual(sum(r['kind']=='gem' for r in items.values()),36)
-        self.assertEqual(sum(r['kind']=='rune' for r in items.values()),199)
+        self.assertEqual(len(items),674)
+        self.assertEqual(sum(r['kind']=='gem' for r in items.values()),42)
+        self.assertEqual(sum(r['kind']=='rune' for r in items.values()),241)
         for key,row in items.items():
             with self.subTest(key=key):
                 self.assertTrue(row['name'])

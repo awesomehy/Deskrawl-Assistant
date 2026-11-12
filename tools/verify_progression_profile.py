@@ -22,7 +22,11 @@ def verify(game):
     image = next(row for row in metadata.images() if row['name']=='Assembly-CSharp.dll')
     classes = {metadata.defs[index]['name']:index for index in range(image['start'],image['start']+image['count'])}
     for name, expected in profile['types'].items():
-        index = classes[expected.get('name', name)]
+        matches = [index for index, definition in enumerate(metadata.defs)
+                   if (definition['name'], definition['namespace']) ==
+                   (expected.get('name', name), expected.get('namespace', ''))]
+        assert len(matches) == 1, name
+        index = matches[0]
         assert expected['typeDefinitionIndex'] == index, name
         actual = metadata.fields(index)
         field_signature = lambda rows:[(f['name'],f['rawRegistrationOffset'],f['token']) for f in rows]
@@ -37,7 +41,7 @@ def verify(game):
         raw = metadata.pe.raw(pointer); prefix = bytes.fromhex(expected['prefix'])
         assert metadata.pe.data[raw:raw+len(prefix)] == prefix, key
     assert catalog['soul_maximum'] == 2000
-    assert catalog['soul_maximum']+sum(n['soul_capacity_per_rank']*n['max_points'] for n in catalog['life_skills']) == 3000
+    assert catalog['soul_maximum']+sum(n['soul_capacity_per_rank']*n['max_points'] for n in catalog['life_skills']) == 4000
     print(json.dumps({'build':profile['build'],'types':len(profile['types']),'methods':len(profile['methods']),
                       'file_only':True,'game_process_opened':False},ensure_ascii=False))
 

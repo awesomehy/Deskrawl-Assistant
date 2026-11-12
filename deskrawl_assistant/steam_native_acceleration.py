@@ -24,7 +24,7 @@ import time
 
 from .steam_acceleration import STEAM_HOST
 from .steam_login_transport import CommunityLoginTransport, MAX_LOGIN_BODY
-from .steam_native_hosts import WindowsHostsLease
+from .steam_native_hosts import WindowsHostsLease, NativeAccelerationError
 from .steam_native_proxy import WindowsProxyBypassLease, ProxyConfigurationError
 from .steam_native_certificate import PersistentCertificateStore, PREFIX as PERSISTENT_PREFIX, validate_leaf
 
@@ -304,10 +304,13 @@ class NativeCommunityBridge:
                     try: self.send_error(502, 'Steam Community connection unavailable')
                     except OSError: pass
             do_GET = do_HEAD = do_POST = do_OPTIONS = _relay
+        stage = 'listener'
         try:
             self.server = Server(('127.0.0.1', self.port), Handler)
+            stage = 'upstream'
             self.transport.prepare()
             if cancelled.is_set(): raise OSError('本机 Steam 加速已取消。')
+            stage = 'certificate'
             self._prepare_certificate(initial=True)
             if cancelled.is_set(): raise OSError('本机 Steam 加速已取消。')
             der = self.der
@@ -317,12 +320,24 @@ class NativeCommunityBridge:
             self.thread = threading.Thread(target=self.server.serve_forever,
                 kwargs={'poll_interval': .1}, name='Steam-native-community-bridge', daemon=True)
             self.thread.start()
+            stage = 'hosts'
             self.lease.start(cancelled)
+            stage = 'proxy'
             self.proxy_lease.start(cancelled, nonce=self.lease.nonce)
             if cancelled.is_set(): raise OSError('本机 Steam 加速已取消。')
             return self
-        except Exception:
-            self.close(); raise
+        except Exception as exc:
+            self.close()
+            if isinstance(exc, (NativeAccelerationError, ProxyConfigurationError)):
+                raise
+            messages = {
+                'listener': '本机 Steam 加速监听端口 443 无法启用，可能被其他程序占用或系统禁止。',
+                'upstream': '本机 Steam 加速无法连接 Steam 上游线路，请稍后重试。',
+                'certificate': '本机 Steam 专用证书无法准备或获得系统信任；助手内部加速仍可使用。',
+                'hosts': '本机 Steam 域名配置未启用，请检查 Windows 授权及已有社区映射。',
+                'proxy': '本机 Steam 代理绕行配置未启用；助手内部加速仍可使用。',
+            }
+            raise NativeAccelerationError(stage + '_unavailable', messages[stage]) from None
 
     def _prepare_certificate(self, *, initial=False):
         if self.certificate_store is not None:
@@ -457,8 +472,9 @@ class NativeSteamAcceleration:
                         self.state = {'status': 'error', 'message': '本机 Steam 加速清理尚未完成，请检查 Windows 授权或已有社区映射。'}
                     elif not cancel.is_set():
                         self.state = {'status': 'error', 'message':
-                            (str(exc) if isinstance(exc, ProxyConfigurationError) else
-                             '本机 Steam 加速未启用。请检查系统授权、443 端口及已有社区 hosts 映射；助手内部加速仍可使用。')}
+                            (str(exc) if isinstance(exc, (ProxyConfigurationError, NativeAccelerationError)) else
+                             '本机 Steam 加速未启用。请检查系统授权、443 端口及已有社区 hosts 映射；助手内部加速仍可使用。'),
+                            'error_code': exc.code if isinstance(exc, NativeAccelerationError) else 'setup_failed'}
 
     def close(self):
         with self.guard:

@@ -20,10 +20,10 @@ class CampaignCopy(_Copy):
             string=lambda address: self.strings[address], asset_name=lambda obj: self.map_name)
         self.strings = {0x9000:'round-one', 0x9100:'MapA', 0x9200:'Normal'}
         self.map_name = 'MapA'
-        for address, pointer in ((self.manager+120,self.plan), (self.manager+112,self.active_map),
-                (self.manager+104,self.wave), (self.wave+88,self.plan),
+        for address, pointer in ((self.manager+128,self.plan), (self.manager+120,self.active_map),
+                (self.manager+112,self.wave), (self.wave+88,self.plan),
                 (self.plan+16,0x9000), (self.plan+32,0x9100), (self.plan+56,0x9200),
-                (self.plan+104,0x6000), (self.manager+200,0)):
+                (self.plan+104,0x6000), (self.manager+208,0)):
             self.values[address] = struct.pack('<Q',pointer)
         for address, value in ((self.active_map+32,0), (self.plan+72,1),
                 (self.wave+304,1), (self.wave+48,1), (self.wave+152,4)):
@@ -94,7 +94,7 @@ class CampaignRepeatCounterTests(unittest.TestCase):
                     old=getattr(copy,changed);new=old+0x10000
                     for address,value in list(copy.values.items()):
                         if old <= address < old+512:copy.values[new+(address-old)]=value
-                    offset=112 if changed=='active_map' else 104
+                    offset=120 if changed=='active_map' else 112
                     copy.values[copy.manager+offset]=struct.pack('<Q',new)
                     setattr(copy,changed,new)
                 self.assertNotEqual(copy.run(difficulty)['completion_counter']['id'],original)
@@ -135,7 +135,7 @@ class SettledWorldBossPlanTests(unittest.TestCase):
         copy = CampaignCopy()
         copy.map_name = copy.strings[0x9100] = PUMPKIN
         copy.integer_value(copy.active_map+32, 4)
-        copy.values[copy.manager+120] = struct.pack('<Q', 0)
+        copy.values[copy.manager+128] = struct.pack('<Q', 0)
         copy.values[copy.wave+40] = struct.pack('<Q', copy.active_map)
         copy.values[copy.wave+248] = b'\1'
         copy.integer_value(copy.wave+48, 2)
@@ -150,7 +150,7 @@ class SettledWorldBossPlanTests(unittest.TestCase):
         recovered = self.read(copy)
         self.assertEqual(recovered['map_id'], PUMPKIN)
         self.assertTrue(recovered['finished'])
-        copy.values[copy.manager+120] = struct.pack('<Q', copy.plan)
+        copy.values[copy.manager+128] = struct.pack('<Q', copy.plan)
         self.assertEqual(recovered, copy.run())
 
     def test_missing_or_nonterminal_or_other_map_plan_is_not_recovered(self):
@@ -178,7 +178,7 @@ class SettledWorldBossPlanTests(unittest.TestCase):
                 with self.assertRaises(SnapshotChangedError): self.read(copy)
 
     def test_plan_and_terminal_state_changes_invalidate_the_guarded_read(self):
-        for address, raw in ((CampaignCopy.manager+120, struct.pack('<Q', CampaignCopy.plan)),
+        for address, raw in ((CampaignCopy.manager+128, struct.pack('<Q', CampaignCopy.plan)),
                              (CampaignCopy.wave+88, struct.pack('<Q', 0)),
                              (CampaignCopy.wave+40, struct.pack('<Q', 0)),
                              (CampaignCopy.wave+248, b'\0'), (CampaignCopy.wave+64, b'\1')):

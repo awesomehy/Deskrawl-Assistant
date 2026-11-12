@@ -149,7 +149,7 @@ class SynthesisRuntime:
             asset = copy.verify(item_map.get(recipe['output_key']), 'GemData')
             if self.reader.asset_name(asset) != recipe['output_key']:
                 raise MemoryReadError('宝石产物资源身份未确认。')
-            maximum = copy.integer(asset + 152)
+            maximum = copy.integer(asset + 160)
             if type(maximum) is not int or not 1 <= maximum <= 2**31-1:
                 raise MemoryReadError('宝石产物堆叠上限读取无效。')
             recipe['output_max_stack'] = maximum
@@ -172,7 +172,7 @@ class SynthesisRuntime:
                 target_name = self.reader.string(copy.ptr(obj + 24))
                 # 1.1.0 adds equipment recipes to this same array. They are
                 # deliberately outside automatic rune synthesis.
-                if source_name in ('BlackMist', 'Divine') and target_name in ('BlackMist', 'Divine'):
+                if source_name in ('BlackMist', 'Divine', 'AncientDivine', 'AncientLegendary') and target_name in ('BlackMist', 'Divine', 'AncientDivine', 'AncientLegendary'):
                     continue
                 source, target = _quality(source_name), _quality(target_name)
                 chance = copy.number(obj + 32)
@@ -181,7 +181,7 @@ class SynthesisRuntime:
             for raw in copy.array(copy.ptr(config + 40), 8, 'CubeRecipeConfig', limit=32):
                 obj = copy.verify(struct.unpack('<Q', raw)[0], 'CubeRecipeConfig')
                 source_kind, target_kind = copy.integer(obj + 16), copy.integer(obj + 24)
-                if source_kind in (4, 5) and target_kind in (4, 5):
+                if source_kind in (4, 5, 6, 7) and target_kind in (4, 5, 6, 7):
                     continue
                 qualities = {0: 'uncommon', 1: 'rare', 2: 'grand', 3: 'set'}
                 entries.append((qualities.get(source_kind), qualities.get(target_kind),
@@ -437,7 +437,7 @@ class SynthesisRuntime:
         if group == 'gems':
             recipe = next((r for r in gem_recipes() if r['recipe_id'] == payload.get('recipe_id')), None)
             maximum, count = payload.get('max_quality'), payload.get('count')
-            if recipe is None or type(maximum) is not int or not 1 <= recipe['output_quality'] <= maximum <= 6:
+            if recipe is None or type(maximum) is not int or not 1 <= recipe['output_quality'] <= maximum <= 7:
                 raise NativeActionError('宝石配方或最高合成品质已经变化。')
             selected = gem_inputs(rows, recipe, count)
             gold = self._gold(copy)
@@ -445,7 +445,7 @@ class SynthesisRuntime:
                 raise NativeActionError('宝石合成金币或产物空格不足，重新规划。')
             pointer = self._find_recipe(read, manager, recipe, cancel_event, validate)
             output_asset = read.ptr(pointer + 32)
-            maximum_stack = read.integer(output_asset + 152)
+            maximum_stack = read.integer(output_asset + 160)
             room = ((capacity - len(rows)) * maximum_stack
                     + sum(maximum_stack - r['count'] for r in rows if item_key(r) == recipe['output_key']))
             if maximum_stack < 1 or count > room:
@@ -466,7 +466,7 @@ class SynthesisRuntime:
             selected = rune_inputs(rows, payload.get('input_uids'), recipe, payload.get('max_quality'),
                                    set(payload.get('excluded_keys', [])), state['equipped_uids'])
             self._guard_inputs(read, selected, registry, array)
-            if read.ptr(manager + 120) or read.boolean(manager + 276):
+            if read.ptr(manager + 128) or read.boolean(manager + 284):
                 raise GameBusyError('等待上一局奖励同步完成后合成符文。')
             if state['online']:
                 cloud = self._singleton(copy, 'CloudClient')
@@ -474,7 +474,7 @@ class SynthesisRuntime:
                     raise GameBusyError('等待在线角色请求结束后合成符文。')
             ui = read.singleton('CubePanelUI')
             opened = not read.boolean(ui + 40)
-            if read.boolean(ui + 252):
+            if read.boolean(ui + 292):
                 raise GameBusyError('符文魔盒正在处理上一轮操作。')
             slots, selections = self._cube_selections(read, ui)
             if selections:
@@ -501,7 +501,11 @@ class SynthesisRuntime:
             calls.extend(Invocation('CubePanelUI.gbh', instance=ui, arguments=(Argument.reference(slot),
                          Argument.integer(row['slot_index']), Argument.boolean(False)))
                          for slot, row in zip(slots, selected))
-            calls.append(Invocation('CubePanelUI.gbp', instance=ui))
+            # 1.1.11 adds a confirmation flag to the native submit handler.
+            # Use the same false value as the game's own Transmute button;
+            # equipment conversion recipes remain excluded above.
+            calls.append(Invocation('CubePanelUI.gbp', instance=ui,
+                                    arguments=(Argument.boolean(False),)))
             before_state = state
         # The caller's original plan cannot silently select a different set.
         identities = lambda entries: [(r.get('slot_index'), r.get('item_uid'), item_key(r), r.get('quantity')) for r in entries]
@@ -608,9 +612,9 @@ class SynthesisRuntime:
         ui = read.singleton('CubePanelUI')
         _, selections = self._cube_selections(read, ui)
         idle = (not any(read.boolean(save + offset) for offset in (193, 194))
-                and not read.ptr(manager + 120) and not read.boolean(manager + 276)
+                and not read.ptr(manager + 128) and not read.boolean(manager + 284)
                 and not copy.boolean(cloud + 289) and not copy.boolean(cloud + 290)
-                and not read.boolean(ui + 40) and not read.boolean(ui + 252) and not selections)
+                and not read.boolean(ui + 40) and not read.boolean(ui + 292) and not selections)
         self.actions._require_travel_ready(read)
         rows, _, _, _ = self._bag(read, include_storage=True)
         selected = pending['selected']
@@ -656,7 +660,7 @@ class SynthesisRuntime:
                 if read.singleton('CubePanelUI') != ui:
                     read.finish()
                     return True
-                animating = read.boolean(ui + 252)
+                animating = read.boolean(ui + 292)
                 _, selections = self._cube_selections(read, ui)
                 if any(uid and uid not in input_uids for _, uid in selections):
                     read.finish()

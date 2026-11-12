@@ -34,7 +34,7 @@ def _receipt_cursor(previous, source, counts, size, version):
 
 def read_loot_ledger(reader, action_read, manager):
     copy = _Copy(reader)
-    wave = copy.verify(copy.ptr(manager + 104), 'WaveManager')
+    wave = copy.verify(copy.ptr(manager + 112), 'WaveManager')
     plan = copy.ptr(wave + 88)
     if not plan:
         return {'available': True, 'complete': True, 'id': None, 'counts': {}, 'receipts': [], 'policy': {}}

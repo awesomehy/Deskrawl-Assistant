@@ -15,8 +15,8 @@ import struct
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-METADATA_HASH = 'a011ecdbd6f41d3e34c47aa85acc05868268710779c6a008bf8a841ef0d57942'
-ASSEMBLY_HASH = '14a46e0a1bccd03fa1091f72d26f739f8502780689df79ed9ec2e9112180ca5c'
+METADATA_HASH = '8e636924c88a9c9274c02df2f1b164303ff5064626e5d5f8169cb0a6fbcc75c8'
+ASSEMBLY_HASH = '5fedeb65c3ef1f607fa1441013068942c52d509d5658e62ecbacdf6b3d7f756c'
 CONFIG = {'XpPerBaseHealth': 1.0, 'XpPerLevelScale': 0.10000000149011612,
           'XpZeroUnderLevel': 6, 'MaxPlayerLevel': 70,
           'health_growth': [0.11999999731779099, 0.07999999821186066, 0.05999999865889549],
@@ -134,6 +134,9 @@ def extract(game, unitypy_path=None):
         pool = [encounter() for _ in range(npool)]
         mini = take('<i')
         boss = encounter()
+        first_boss_wave = take('<i')
+        second_boss = encounter()
+        heroic_health = take('<f')
         if mini not in (0, 1):
             raise ValueError('Invalid mini-boss flag')
         supported = typ == 0 and waves > 0 and bool(pool)
@@ -146,6 +149,8 @@ def extract(game, unitypy_path=None):
                      'locked_in_demo': bool(locked), 'unavailable': bool(unavailable),
                      'elite_chance': elite, 'normal_pool': pool, 'boss_encounter': boss,
                      'boss': bool(boss['enemies']), 'mini_boss': bool(mini),
+                     'heroic_first_boss_wave': first_boss_wave, 'heroic_second_boss': second_boss,
+                     'heroic_health_multiplier': heroic_health,
                      'boss_replaces_last_wave': True, 'supported': supported,
                      'unsupported_reason': '' if supported else '特殊/神话关卡生成路径尚未验证',
                      'source_path_id': o.path_id})

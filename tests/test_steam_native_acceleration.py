@@ -18,7 +18,9 @@ from deskrawl_assistant.steam_native_acceleration import (
     NativeSteamAcceleration, NativeCommunityBridge, CommunityRelayTransport, temporary_certificate,
     WindowsLeafTrust, cleanup_owned_leaf,
 )
-from deskrawl_assistant.steam_native_hosts import hosts_edit, hosts_worker, BEGIN, END
+from deskrawl_assistant.steam_native_hosts import (
+    hosts_edit, hosts_worker, recover_orphaned_hosts, NativeAccelerationError, BEGIN, END,
+)
 from deskrawl_assistant.steam_login_transport import CommunityLoginTransport
 
 NONCE = 'a' * 32
@@ -50,10 +52,40 @@ class HostsTests(unittest.TestCase):
         for nonce in ('', 'a' * 31, '\r\n127.0.0.1 example.com', '../../hosts'):
             with self.assertRaises(ValueError): hosts_edit(b'', nonce, True)
 
+    def test_orphan_recovery_preserves_unrelated_entries_and_clean_shutdown_baseline(self):
+        original = b'# custom\r\n192.0.2.2 other.example\r\n'
+        abandoned = hosts_edit(original, 'b' * 32, True) + b'# later edit\r\n'
+        probe = Mock(return_value=False)
+        clean = recover_orphaned_hosts(abandoned, NONCE, probe)
+        probe.assert_called_once_with('b' * 32)
+        self.assertEqual(clean, original + b'# later edit\r\n')
+        self.assertEqual(hosts_edit(hosts_edit(clean, NONCE, True), NONCE, False), clean)
+
+    def test_live_or_ambiguous_lease_cannot_be_taken_over(self):
+        raw = hosts_edit(b'# keep\n', 'b' * 32, True)
+        with self.assertRaises(NativeAccelerationError) as raised:
+            recover_orphaned_hosts(raw, NONCE, lambda _: True)
+        self.assertEqual(raised.exception.code, 'hosts_conflict')
+        for changed in (raw.replace(b'127.0.0.1', b'192.0.2.3'),
+                        raw + raw, raw.replace(b'b' * 32, b'invalid')):
+            probe = Mock(return_value=False)
+            try:
+                clean = recover_orphaned_hosts(changed, NONCE, probe)
+                with self.assertRaises(ValueError): hosts_edit(clean, NONCE, True)
+            except ValueError:
+                pass
+            probe.assert_not_called()
+
+    def test_foreign_mapping_survives_orphan_recovery_and_blocks_activation(self):
+        raw = hosts_edit(b'# keep\n', 'b' * 32, True) + b'192.0.2.3 steamcommunity.com\n'
+        clean = recover_orphaned_hosts(raw, NONCE, lambda _: False)
+        self.assertIn(b'192.0.2.3 steamcommunity.com', clean)
+        with self.assertRaises(ValueError): hosts_edit(clean, NONCE, True)
+
 
 @unittest.skipUnless(os.name == 'nt', 'Windows watcher orchestration with fake system APIs')
 class WatcherTests(unittest.TestCase):
-    def exercise(self, raw, *, changed=False, cancelled=False, wrong_owner=False, restore_busy=False):
+    def exercise(self, raw, *, changed=False, cancelled=False, wrong_owner=False, restore_busy=False, live_lease=False):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'fixture-hosts'
             path.write_bytes(raw)
@@ -77,6 +109,7 @@ class WatcherTests(unittest.TestCase):
             with patch('deskrawl_assistant.steam_native_hosts._kernel', return_value=kernel), \
                  patch('deskrawl_assistant.steam_native_hosts._created', return_value=43 if wrong_owner else 42), \
                  patch('deskrawl_assistant.steam_native_hosts._owner_sid', return_value='S-1-5-21-1234'), \
+                 patch('deskrawl_assistant.steam_native_hosts._lease_exists', return_value=live_lease), \
                  patch('deskrawl_assistant.steam_native_hosts._hosts_path', side_effect=hosts_path), \
                  patch('deskrawl_assistant.steam_native_hosts.time.sleep'), \
                  patch('deskrawl_assistant.steam_native_hosts._flush'), \
@@ -95,6 +128,19 @@ class WatcherTests(unittest.TestCase):
     def test_external_hosts_changes_survive_cleanup(self):
         result, restored, _, _, _ = self.exercise(b'# original\n', changed=True)
         self.assertEqual((result, restored), (0, b'# original\n# external change\n'))
+
+    def test_abandoned_mapping_is_replaced_but_not_restored_on_exit(self):
+        original = b'# original\n'
+        abandoned = hosts_edit(original, 'b' * 32, True)
+        result, restored, active, _, _ = self.exercise(abandoned)
+        self.assertEqual((result, restored), (0, original))
+        self.assertIn(BEGIN + NONCE.encode(), active[0])
+
+    def test_still_owned_old_mapping_is_preserved_without_writing(self):
+        raw = hosts_edit(b'# original\n', 'b' * 32, True)
+        result, restored, active, kernel, _ = self.exercise(raw, live_lease=True)
+        self.assertEqual((result, restored, active), (1, raw, []))
+        kernel.SetEvent.assert_any_call(3)
 
     def test_temporary_restore_lock_retries_before_removing_certificate(self):
         result, restored, _, kernel, cleanup = self.exercise(b'# original\n', restore_busy=True)
@@ -290,6 +336,18 @@ class ManagerTests(unittest.TestCase):
         self.addCleanup(manager.close)
         manager.configure(True)
         self.wait(lambda: manager.snapshot()['status'] == 'error')
+        self.assertEqual(factory.call_count, 1)
+
+    def test_fixed_diagnostic_identifies_failure_without_exposing_exception_details(self):
+        factory = Mock()
+        factory.return_value.start.side_effect = NativeAccelerationError(
+            'listener_unavailable', '本机 Steam 加速监听端口 443 无法启用。')
+        manager = NativeSteamAcceleration(bridge_factory=factory, supported=True)
+        self.addCleanup(manager.close)
+        manager.configure(True)
+        self.wait(lambda: manager.snapshot()['status'] == 'error')
+        self.assertEqual(manager.snapshot()['error_code'], 'listener_unavailable')
+        self.assertIn('443', manager.snapshot()['message'])
         self.assertEqual(factory.call_count, 1)
 
     def test_disabling_during_setup_cancels_and_cleans_before_disabled(self):

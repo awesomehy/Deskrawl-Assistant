@@ -13,7 +13,7 @@ import sys
 import UnityPy
 from UnityPy.classes import PPtr
 from extract_item_ui import Cursor, payload
-from item_asset_layout import item_layout
+from item_asset_layout import item_layout, ancient_of_offset
 from equipment_effect_text import render_equipment_effect
 
 BASE = Path(__file__).resolve().parents[1]
@@ -47,10 +47,12 @@ def main():
         cls = classes.get(script_id) if script_file == 1 else None
         if cls == 'GraphicsConfig':
             _, data = payload(obj)
-            # 1.1.0 adds MythicTimeLimitKillVFXPrefab before the colour fields.
-            c = Cursor(data, 10*12+16+3*12)
+            # 1.1.11 adds Heroic/WorldBoss map rings and an AncientDivine
+            # slot background. Serialized PPtrs are 12 bytes, unlike runtime
+            # pointers; consume the full reviewed prefix before the palette.
+            c = Cursor(data, 10*12+16+5*12)
             for _ in range(c.count()): c.take('iq')
-            for _ in range(8): c.take('iq')
+            for _ in range(9): c.take('iq')
             for label in ('common','uncommon','rare','legendary','divine','rune_set','black_mist'):
                 rgba = c.take('ffff')
                 if any(not 0<=v<=1 for v in rgba): raise ValueError('Invalid rarity colour')
@@ -65,6 +67,15 @@ def main():
         item_type, rarity = struct.unpack_from('<ii', data, 12)
         if item_type not in (1,2,3,5,6,7) or rarity not in range(6): raise ValueError('Unverified item enum: '+key)
         label_key = key
+        # Ancient divines inherit their display name from AncientOf. Their
+        # own effect assets/description remain distinct and must not be copied
+        # from the base divine.
+        ancient_file, ancient_path = struct.unpack_from('<iq', data, ancient_of_offset(data))
+        if ancient_path:
+            ancient_base = PPtr(m_FileID=ancient_file, m_PathID=ancient_path, assetsfile=obj.assets_file).deref()
+            if not ancient_base:
+                raise ValueError('Missing AncientOf item: ' + key)
+            label_key = payload(ancient_base)[0]
         # Resolve the serialized SlaveToUnlock reference rather than guessing
         # by prefix: legacy asset names can differ from the referenced servant.
         if not text(key) and item_type == 2:
@@ -78,9 +89,14 @@ def main():
         kind = ('equipment' if item_type == 3 else 'gem' if cls == 'GemData' else
                 'rune' if cls == 'RuneData' else 'chest' if item_effect == 2 else 'material')
         groups = list(other.get(key, {}).get('effect_groups', []))
-        description = text(label_key+'.Desc')
+        description = text(key+'.Desc') or text(label_key+'.Desc')
         effect_ids = []
         resolved_templates = {}
+        def effect_label(effect_id):
+            result = text(effect_id)
+            if not result and ancient_path and effect_id.startswith(key + '_'):
+                result = text(label_key + effect_id[len(key):])
+            return result
         if cls == 'ItemData':
             cursor = Cursor(data, item_layout(data)['effects'])
             for _ in range(cursor.count()):
@@ -89,7 +105,7 @@ def main():
                 if not effect: raise ValueError('Missing inherited effect: '+key)
                 effect_key, effect_data = payload(effect)
                 effect_ids.append(effect_key)
-                effect_text = text(effect_key+'.Desc') or text(effect_key.replace('_Effect','Effect')+'.Desc')
+                effect_text = effect_label(effect_key+'.Desc') or effect_label(effect_key.replace('_Effect','Effect')+'.Desc')
                 if not effect_text or re.search(r'\{[^{}]+\}', effect_text):
                     template = effect_text
                     script_file, script_id = struct.unpack_from('<iq', effect.get_raw_data(), 16)
@@ -101,7 +117,7 @@ def main():
                         linked_name, linked_data = payload(linked)
                         return classes.get(script_id) if script_file == 1 else None, linked_name, linked_data
                     try:
-                        effect_text = render_equipment_effect(effect_class, effect_data, text,
+                        effect_text = render_equipment_effect(effect_class, effect_data, effect_label,
                                                               effect_key=effect_key, resolve=resolve)
                         if template and not effect_text:
                             raise ValueError('Unsupported equipment description template')

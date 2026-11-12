@@ -240,7 +240,7 @@ def _plan_item(copy, obj):
 def _snapshot(reader, raw_sink=None):
     copy = _LootCopy(reader)
     manager = copy.singleton(0x3A17CD8, 'GameManager')
-    if copy.integer(manager + 176) != 1:
+    if copy.integer(manager + 184) != 1:
         copy.finish()
         return empty_preview(reason='进入角色后可显示本次在线关卡掉落计划。')
     area = copy.singleton(0x3A1BAA0, 'GameAreaManager')
@@ -254,8 +254,8 @@ def _snapshot(reader, raw_sink=None):
     if mode == 0:
         copy.finish()
         return empty_preview(reason='离线模式没有在线关卡掉落计划。')
-    wave_manager = copy.verify(copy.ptr(manager + 104), 'WaveManager')
-    active_map, plan = copy.ptr(manager + 112), copy.ptr(manager + 120)
+    wave_manager = copy.verify(copy.ptr(manager + 112), 'WaveManager')
+    active_map, plan = copy.ptr(manager + 120), copy.ptr(manager + 128)
     wave_map, wave_plan = copy.ptr(wave_manager + 40), copy.ptr(wave_manager + 88)
     enabled = copy.boolean(wave_manager + 96)
     if not plan or not wave_plan or not active_map or not wave_map or not enabled:

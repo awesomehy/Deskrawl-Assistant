@@ -29,7 +29,7 @@ def effects_supported(profile):
 def _active(condition, distance):
     # Same fixed scene as character_reader._conditional: full health, one boss,
     # in combat, and class-specific distance. No status stacks or temporary buffs.
-    if condition in (-1, 1, 3, 4): return True
+    if condition in (-1, 1, 3, 4, 6): return True
     if condition in (0, 5): return False
     if condition == 2: return distance > 6
     raise ValueError('装备属性特效条件尚未适配。')
@@ -42,7 +42,8 @@ def _effects(rows, catalog, distance):
         for effect in catalog['items'].get(key, ()):
             kind = effect['class']
             if kind == 'EquipmentEffect_StatModifier':
-                if effect['required_status'] or not _active(effect['condition'], distance): continue
+                if (effect['required_status'] or effect.get('channeling_ability')
+                        or not _active(effect['condition'], distance)): continue
             elif kind != 'EquipmentEffect_StatConversion':
                 raise ValueError('装备属性特效类型尚未适配。')
             # ItemData references shared effect assets. The same active effect

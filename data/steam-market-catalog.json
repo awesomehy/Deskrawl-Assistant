@@ -1,14 +1,146 @@
 {
   "schema_version": 1,
   "appid": 4623570,
-  "resources_sha256": "06e424d38d018a629559c04c78d8b396205b7ecc66926990481cbbe0ee89b0b5",
+  "resources_sha256": "3efaf658d393aeab532edb84d095e9575aba005041210c7c278c338b1e592084",
   "source": "Shipped ItemData SteamItemDefId/BlackMistSteamItemDefId and English localization; names remain candidates until exact Steam market description validation.",
   "items": {
+    "AncientDivineBow1": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5397,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1018,
+        "market_hash_name": "Violet Skybow"
+      }
+    },
+    "AncientDivineBow2": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5398,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1019,
+        "market_hash_name": "Grandmother's Bow"
+      }
+    },
+    "AncientDivineHelm1": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5281,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1011,
+        "market_hash_name": "Glorious Gladiator Helmet"
+      }
+    },
+    "AncientDivineHelm2": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5282,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1012,
+        "market_hash_name": "Visage of the Undying"
+      }
+    },
+    "AncientDivineHelm3": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5283,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1013,
+        "market_hash_name": "Iron Tyrant’s Helm"
+      }
+    },
+    "AncientDivineMace1": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5399,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1014,
+        "market_hash_name": "The Grandmother"
+      }
+    },
+    "AncientDivineMace2": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5400,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1020,
+        "market_hash_name": "Dreadwing"
+      }
+    },
+    "AncientDivineRing1": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5350,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1015,
+        "market_hash_name": "Remnant of the Elder Sage"
+      }
+    },
+    "AncientDivineRing2": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5351,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1016,
+        "market_hash_name": "Schrodinger's Ring"
+      }
+    },
+    "AncientDivineRing3": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5352,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1021,
+        "market_hash_name": "Ring of Momentum"
+      }
+    },
+    "AncientDivineSword1": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5401,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1017,
+        "market_hash_name": "Soulrender"
+      }
+    },
     "DivineBack1": {
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 4951,
+      "source_path_id": 5198,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -20,7 +152,7 @@
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 61715,
+      "source_path_id": 64288,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -32,7 +164,7 @@
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 5137,
+      "source_path_id": 5404,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -40,11 +172,23 @@
         "market_hash_name": "Violet Skybow"
       }
     },
+    "DivineBow2": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5405,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1010,
+        "market_hash_name": "Grandmother's Bow"
+      }
+    },
     "DivineHelm1": {
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 5034,
+      "source_path_id": 5288,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -56,7 +200,7 @@
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 5035,
+      "source_path_id": 5289,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -68,7 +212,7 @@
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 5036,
+      "source_path_id": 5290,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -80,7 +224,7 @@
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 5138,
+      "source_path_id": 5406,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -88,11 +232,23 @@
         "market_hash_name": "The Grandmother"
       }
     },
+    "DivineMace2": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5407,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1022,
+        "market_hash_name": "Dreadwing"
+      }
+    },
     "DivineRing1": {
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 5099,
+      "source_path_id": 5357,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -104,7 +260,7 @@
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 5100,
+      "source_path_id": 5358,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -112,11 +268,23 @@
         "market_hash_name": "Schrodinger's Ring"
       }
     },
+    "DivineRing3": {
+      "kind": "equipment",
+      "rarity": 4,
+      "source_class": "ItemData",
+      "source_path_id": 5359,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 1023,
+        "market_hash_name": "Ring of Momentum"
+      }
+    },
     "DivineSword1": {
       "kind": "equipment",
       "rarity": 4,
       "source_class": "ItemData",
-      "source_path_id": 5139,
+      "source_path_id": 5408,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -128,7 +296,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61692,
+      "source_path_id": 64263,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -140,7 +308,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5166,
+      "source_path_id": 5435,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -152,7 +320,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5167,
+      "source_path_id": 5436,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -164,7 +332,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5168,
+      "source_path_id": 5437,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -176,7 +344,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5169,
+      "source_path_id": 5438,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -188,7 +356,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5170,
+      "source_path_id": 5439,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -200,7 +368,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5171,
+      "source_path_id": 5440,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -212,7 +380,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5172,
+      "source_path_id": 5441,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -224,7 +392,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5173,
+      "source_path_id": 5442,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -236,7 +404,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5174,
+      "source_path_id": 5443,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -248,7 +416,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5175,
+      "source_path_id": 5444,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -260,7 +428,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5176,
+      "source_path_id": 5445,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -272,7 +440,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5177,
+      "source_path_id": 5446,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -284,7 +452,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5178,
+      "source_path_id": 5447,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -296,7 +464,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5179,
+      "source_path_id": 5448,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -308,7 +476,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5180,
+      "source_path_id": 5449,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -320,7 +488,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5181,
+      "source_path_id": 5450,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -332,7 +500,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5182,
+      "source_path_id": 5451,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -344,7 +512,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5183,
+      "source_path_id": 5452,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -352,11 +520,155 @@
         "market_hash_name": "Venomfang VI"
       }
     },
+    "HunterSetRune4_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5453,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4170,
+        "market_hash_name": "Bloodletter's Oath I"
+      }
+    },
+    "HunterSetRune4_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5454,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4171,
+        "market_hash_name": "Bloodletter's Oath II"
+      }
+    },
+    "HunterSetRune4_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5455,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4172,
+        "market_hash_name": "Bloodletter's Oath III"
+      }
+    },
+    "HunterSetRune4_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5456,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4173,
+        "market_hash_name": "Bloodletter's Oath IV"
+      }
+    },
+    "HunterSetRune4_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5457,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4174,
+        "market_hash_name": "Bloodletter's Oath V"
+      }
+    },
+    "HunterSetRune4_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5458,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4175,
+        "market_hash_name": "Bloodletter's Oath VI"
+      }
+    },
+    "HunterSetRune5_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5459,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4176,
+        "market_hash_name": "Astral Quiver I"
+      }
+    },
+    "HunterSetRune5_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5460,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4177,
+        "market_hash_name": "Astral Quiver II"
+      }
+    },
+    "HunterSetRune5_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5461,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4178,
+        "market_hash_name": "Astral Quiver III"
+      }
+    },
+    "HunterSetRune5_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5462,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4179,
+        "market_hash_name": "Astral Quiver IV"
+      }
+    },
+    "HunterSetRune5_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5463,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4180,
+        "market_hash_name": "Astral Quiver V"
+      }
+    },
+    "HunterSetRune5_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5464,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4181,
+        "market_hash_name": "Astral Quiver VI"
+      }
+    },
     "LegendaryAxe1": {
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5140,
+      "source_path_id": 5409,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -368,7 +680,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61717,
+      "source_path_id": 64290,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -380,7 +692,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61718,
+      "source_path_id": 64291,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -392,7 +704,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4964,
+      "source_path_id": 5211,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -404,7 +716,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4965,
+      "source_path_id": 5212,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -412,11 +724,23 @@
         "market_hash_name": "Ironthorn Warbelt (Black Mist)"
       }
     },
+    "LegendaryBelt5": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5213,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3063,
+        "market_hash_name": "Cinderheart Girdle (Black Mist)"
+      }
+    },
     "LegendaryBoots1": {
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4978,
+      "source_path_id": 5226,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -428,7 +752,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4979,
+      "source_path_id": 5227,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -440,7 +764,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61719,
+      "source_path_id": 64292,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -452,7 +776,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4980,
+      "source_path_id": 5228,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -464,7 +788,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4981,
+      "source_path_id": 5229,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -476,7 +800,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5141,
+      "source_path_id": 5410,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -488,7 +812,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5142,
+      "source_path_id": 5411,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -500,7 +824,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5143,
+      "source_path_id": 5412,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -512,7 +836,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4994,
+      "source_path_id": 5242,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -524,7 +848,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4995,
+      "source_path_id": 5243,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -536,7 +860,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4996,
+      "source_path_id": 5244,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -548,7 +872,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4997,
+      "source_path_id": 5245,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -560,7 +884,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61720,
+      "source_path_id": 64293,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -572,7 +896,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 4998,
+      "source_path_id": 5246,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -584,7 +908,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5015,
+      "source_path_id": 5263,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -592,11 +916,35 @@
         "market_hash_name": "Ragefire Gauntlets (Black Mist)"
       }
     },
+    "LegendaryGloves10": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5264,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3064,
+        "market_hash_name": "Windseeker Grips (Black Mist)"
+      }
+    },
+    "LegendaryGloves11": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5265,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3065,
+        "market_hash_name": "Gauntlets of Heaven's Verdict (Black Mist)"
+      }
+    },
     "LegendaryGloves2": {
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61721,
+      "source_path_id": 64294,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -608,7 +956,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5016,
+      "source_path_id": 5266,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -620,7 +968,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5017,
+      "source_path_id": 5267,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -632,7 +980,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5018,
+      "source_path_id": 5268,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -644,7 +992,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5019,
+      "source_path_id": 5269,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -656,7 +1004,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5020,
+      "source_path_id": 5270,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -668,7 +1016,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5021,
+      "source_path_id": 5271,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -676,11 +1024,23 @@
         "market_hash_name": "Wayfarer's Grips (Black Mist)"
       }
     },
+    "LegendaryGloves9": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5272,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3066,
+        "market_hash_name": "Rimebound Grasp (Black Mist)"
+      }
+    },
     "LegendaryHelm1": {
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5037,
+      "source_path_id": 5291,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -692,7 +1052,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5038,
+      "source_path_id": 5292,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -704,7 +1064,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5039,
+      "source_path_id": 5293,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -716,7 +1076,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5040,
+      "source_path_id": 5294,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -728,7 +1088,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5041,
+      "source_path_id": 5295,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -740,7 +1100,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5144,
+      "source_path_id": 5413,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -752,7 +1112,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5054,
+      "source_path_id": 5308,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -764,7 +1124,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61722,
+      "source_path_id": 64295,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -776,7 +1136,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5062,
+      "source_path_id": 5316,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -788,7 +1148,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5063,
+      "source_path_id": 5317,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -800,7 +1160,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5064,
+      "source_path_id": 5318,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -812,7 +1172,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5065,
+      "source_path_id": 5319,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -824,7 +1184,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5066,
+      "source_path_id": 5320,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -836,7 +1196,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5067,
+      "source_path_id": 5321,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -848,7 +1208,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61723,
+      "source_path_id": 64296,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -856,11 +1216,23 @@
         "market_hash_name": "Prismatic Heart (Black Mist)"
       }
     },
+    "LegendaryNeck9": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5322,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3067,
+        "market_hash_name": "Glacial Aegis (Black Mist)"
+      }
+    },
     "LegendaryPants1": {
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5080,
+      "source_path_id": 5335,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -872,7 +1244,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61724,
+      "source_path_id": 64297,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -884,7 +1256,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5081,
+      "source_path_id": 5336,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -896,7 +1268,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5082,
+      "source_path_id": 5337,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -908,7 +1280,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5101,
+      "source_path_id": 5360,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -916,11 +1288,23 @@
         "market_hash_name": "Bloodfang Signet of the Wyrm (Black Mist)"
       }
     },
+    "LegendaryRing10": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5361,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3068,
+        "market_hash_name": "Ring of the Third Verdict (Black Mist)"
+      }
+    },
     "LegendaryRing2": {
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5102,
+      "source_path_id": 5362,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -932,7 +1316,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5103,
+      "source_path_id": 5363,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -944,7 +1328,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5104,
+      "source_path_id": 5364,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -956,7 +1340,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61737,
+      "source_path_id": 64310,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -968,7 +1352,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5105,
+      "source_path_id": 5365,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -980,7 +1364,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61738,
+      "source_path_id": 64311,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -992,7 +1376,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5106,
+      "source_path_id": 5366,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -1000,11 +1384,23 @@
         "market_hash_name": "Cryofracture Ring (Black Mist)"
       }
     },
+    "LegendaryRing9": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5367,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3069,
+        "market_hash_name": "Signet of the Last Cut (Black Mist)"
+      }
+    },
     "LegendaryRune_HunterBasicAttack1": {
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5184,
+      "source_path_id": 5465,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1016,7 +1412,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5185,
+      "source_path_id": 5466,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1028,7 +1424,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5186,
+      "source_path_id": 5467,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1040,7 +1436,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5187,
+      "source_path_id": 5468,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1052,7 +1448,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5188,
+      "source_path_id": 5469,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1064,7 +1460,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5189,
+      "source_path_id": 5470,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1076,7 +1472,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5190,
+      "source_path_id": 5471,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1088,7 +1484,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5191,
+      "source_path_id": 5472,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1100,7 +1496,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5192,
+      "source_path_id": 5473,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1112,7 +1508,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5193,
+      "source_path_id": 5474,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1124,7 +1520,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5194,
+      "source_path_id": 5475,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1136,7 +1532,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5195,
+      "source_path_id": 5476,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1148,7 +1544,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5196,
+      "source_path_id": 5477,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1160,7 +1556,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5197,
+      "source_path_id": 5478,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1172,7 +1568,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5198,
+      "source_path_id": 5479,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1184,7 +1580,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5199,
+      "source_path_id": 5480,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1196,7 +1592,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5200,
+      "source_path_id": 5481,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1208,7 +1604,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5201,
+      "source_path_id": 5482,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1220,7 +1616,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5202,
+      "source_path_id": 5483,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1232,7 +1628,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5203,
+      "source_path_id": 5484,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1244,7 +1640,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5204,
+      "source_path_id": 5485,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1256,7 +1652,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5205,
+      "source_path_id": 5486,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1268,7 +1664,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5206,
+      "source_path_id": 5487,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1280,7 +1676,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5207,
+      "source_path_id": 5488,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1292,7 +1688,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5208,
+      "source_path_id": 5489,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1304,7 +1700,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5209,
+      "source_path_id": 5490,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1316,7 +1712,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5210,
+      "source_path_id": 5491,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1328,7 +1724,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5211,
+      "source_path_id": 5492,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1340,7 +1736,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5212,
+      "source_path_id": 5493,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1352,7 +1748,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5213,
+      "source_path_id": 5494,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1364,7 +1760,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5214,
+      "source_path_id": 5495,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1376,7 +1772,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5215,
+      "source_path_id": 5496,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1388,7 +1784,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5216,
+      "source_path_id": 5497,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1400,7 +1796,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5217,
+      "source_path_id": 5498,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1412,7 +1808,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5218,
+      "source_path_id": 5499,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1424,7 +1820,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5219,
+      "source_path_id": 5500,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1436,7 +1832,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5220,
+      "source_path_id": 5501,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1448,7 +1844,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5221,
+      "source_path_id": 5502,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1460,7 +1856,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5222,
+      "source_path_id": 5503,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1472,7 +1868,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5223,
+      "source_path_id": 5504,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1484,7 +1880,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5224,
+      "source_path_id": 5505,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1496,7 +1892,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5225,
+      "source_path_id": 5506,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1508,7 +1904,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5226,
+      "source_path_id": 5507,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1520,7 +1916,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5227,
+      "source_path_id": 5508,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1532,7 +1928,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5228,
+      "source_path_id": 5509,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1544,7 +1940,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5229,
+      "source_path_id": 5510,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1556,7 +1952,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5230,
+      "source_path_id": 5511,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1568,7 +1964,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5231,
+      "source_path_id": 5512,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1580,7 +1976,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5232,
+      "source_path_id": 5513,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1592,7 +1988,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5233,
+      "source_path_id": 5514,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1604,7 +2000,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5234,
+      "source_path_id": 5515,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1616,7 +2012,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5235,
+      "source_path_id": 5516,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1628,7 +2024,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5236,
+      "source_path_id": 5517,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1640,7 +2036,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5237,
+      "source_path_id": 5518,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1652,7 +2048,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5238,
+      "source_path_id": 5519,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1664,7 +2060,7 @@
       "kind": "rune",
       "rarity": 3,
       "source_class": "RuneData",
-      "source_path_id": 5239,
+      "source_path_id": 5520,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1676,7 +2072,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5119,
+      "source_path_id": 5380,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -1688,7 +2084,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5120,
+      "source_path_id": 5381,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -1700,7 +2096,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61739,
+      "source_path_id": 64312,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -1712,7 +2108,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5121,
+      "source_path_id": 5382,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -1724,7 +2120,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5122,
+      "source_path_id": 5383,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -1736,7 +2132,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61740,
+      "source_path_id": 64313,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "black_mist": {
@@ -1744,11 +2140,23 @@
         "market_hash_name": "Soulfeast Pauldron (Black Mist)"
       }
     },
+    "LegendaryShoulder7": {
+      "kind": "equipment",
+      "rarity": 3,
+      "source_class": "ItemData",
+      "source_path_id": 5384,
+      "source_file": "resources.assets",
+      "retired": false,
+      "black_mist": {
+        "definition_id": 3070,
+        "market_hash_name": "Tripwire Pauldron (Black Mist)"
+      }
+    },
     "LegendaryStaff1": {
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5145,
+      "source_path_id": 5414,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -1760,7 +2168,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5146,
+      "source_path_id": 5415,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -1772,7 +2180,7 @@
       "kind": "equipment",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5147,
+      "source_path_id": 5416,
       "source_file": "resources.assets",
       "retired": false,
       "black_mist": {
@@ -1784,7 +2192,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5240,
+      "source_path_id": 5521,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1796,7 +2204,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5241,
+      "source_path_id": 5522,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1808,7 +2216,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5242,
+      "source_path_id": 5523,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1820,7 +2228,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5243,
+      "source_path_id": 5524,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1832,7 +2240,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5244,
+      "source_path_id": 5525,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1844,7 +2252,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5245,
+      "source_path_id": 5526,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1856,7 +2264,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5246,
+      "source_path_id": 5527,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1868,7 +2276,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5247,
+      "source_path_id": 5528,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1880,7 +2288,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5248,
+      "source_path_id": 5529,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1892,7 +2300,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5249,
+      "source_path_id": 5530,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1904,7 +2312,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5250,
+      "source_path_id": 5531,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1916,7 +2324,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5251,
+      "source_path_id": 5532,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1928,7 +2336,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5252,
+      "source_path_id": 5533,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1940,7 +2348,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5253,
+      "source_path_id": 5534,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1952,7 +2360,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5254,
+      "source_path_id": 5535,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1964,7 +2372,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5255,
+      "source_path_id": 5536,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1976,7 +2384,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5256,
+      "source_path_id": 5537,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1988,7 +2396,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5257,
+      "source_path_id": 5538,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -1996,11 +2404,155 @@
         "market_hash_name": "Serpent's Tongue Rune (VI)"
       }
     },
+    "MonkSetRune4_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5539,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4150,
+        "market_hash_name": "Heavenly Convergence Rune (I)"
+      }
+    },
+    "MonkSetRune4_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5540,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4151,
+        "market_hash_name": "Heavenly Convergence Rune (II)"
+      }
+    },
+    "MonkSetRune4_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5541,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4152,
+        "market_hash_name": "Heavenly Convergence Rune (III)"
+      }
+    },
+    "MonkSetRune4_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5542,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4153,
+        "market_hash_name": "Heavenly Convergence Rune (IV)"
+      }
+    },
+    "MonkSetRune4_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5543,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4154,
+        "market_hash_name": "Heavenly Convergence Rune (V)"
+      }
+    },
+    "MonkSetRune4_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5544,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4155,
+        "market_hash_name": "Heavenly Convergence Rune (VI)"
+      }
+    },
+    "MonkSetRune5_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5545,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4160,
+        "market_hash_name": "Jade Meridian Rune (I)"
+      }
+    },
+    "MonkSetRune5_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5546,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4161,
+        "market_hash_name": "Jade Meridian Rune (II)"
+      }
+    },
+    "MonkSetRune5_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5547,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4162,
+        "market_hash_name": "Jade Meridian Rune (III)"
+      }
+    },
+    "MonkSetRune5_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5548,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4163,
+        "market_hash_name": "Jade Meridian Rune (IV)"
+      }
+    },
+    "MonkSetRune5_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5549,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4164,
+        "market_hash_name": "Jade Meridian Rune (V)"
+      }
+    },
+    "MonkSetRune5_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5550,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4165,
+        "market_hash_name": "Jade Meridian Rune (VI)"
+      }
+    },
     "Rein_BeachCrabBoss": {
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61836,
+      "source_path_id": 64415,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2012,7 +2564,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61841,
+      "source_path_id": 64420,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2024,7 +2576,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61842,
+      "source_path_id": 64421,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2036,7 +2588,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61844,
+      "source_path_id": 64423,
       "source_file": "sharedassets0.assets",
       "retired": true,
       "normal": {
@@ -2048,7 +2600,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61847,
+      "source_path_id": 64426,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2060,7 +2612,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61849,
+      "source_path_id": 64428,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2072,7 +2624,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61851,
+      "source_path_id": 64430,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2084,7 +2636,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61855,
+      "source_path_id": 64434,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2096,7 +2648,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61858,
+      "source_path_id": 64437,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2108,7 +2660,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 5165,
+      "source_path_id": 5434,
       "source_file": "resources.assets",
       "retired": true,
       "normal": {
@@ -2120,7 +2672,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61860,
+      "source_path_id": 64439,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2132,7 +2684,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61861,
+      "source_path_id": 64440,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2144,7 +2696,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61863,
+      "source_path_id": 64442,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2156,7 +2708,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61866,
+      "source_path_id": 64445,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2168,7 +2720,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61867,
+      "source_path_id": 64446,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2180,7 +2732,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61872,
+      "source_path_id": 64451,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2192,7 +2744,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61874,
+      "source_path_id": 64453,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2204,7 +2756,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61877,
+      "source_path_id": 64456,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2216,7 +2768,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61881,
+      "source_path_id": 64460,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2228,7 +2780,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61882,
+      "source_path_id": 64461,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2240,7 +2792,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61891,
+      "source_path_id": 64470,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2252,7 +2804,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61892,
+      "source_path_id": 64471,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2264,7 +2816,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61896,
+      "source_path_id": 64475,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2276,7 +2828,7 @@
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61898,
+      "source_path_id": 64477,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2288,7 +2840,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5362,
+      "source_path_id": 5678,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2300,7 +2852,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5363,
+      "source_path_id": 5679,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2312,7 +2864,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5364,
+      "source_path_id": 5680,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2324,7 +2876,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5365,
+      "source_path_id": 5681,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2336,7 +2888,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5366,
+      "source_path_id": 5682,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2348,7 +2900,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5367,
+      "source_path_id": 5683,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2360,7 +2912,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5368,
+      "source_path_id": 5684,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2372,7 +2924,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5369,
+      "source_path_id": 5685,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2384,7 +2936,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5370,
+      "source_path_id": 5686,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2396,7 +2948,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5371,
+      "source_path_id": 5687,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2408,7 +2960,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5372,
+      "source_path_id": 5688,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2420,7 +2972,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5373,
+      "source_path_id": 5689,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2432,7 +2984,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5374,
+      "source_path_id": 5690,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2444,7 +2996,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5375,
+      "source_path_id": 5691,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2456,7 +3008,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5376,
+      "source_path_id": 5692,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2468,7 +3020,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5377,
+      "source_path_id": 5693,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2480,7 +3032,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5378,
+      "source_path_id": 5694,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2492,7 +3044,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5379,
+      "source_path_id": 5695,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2500,11 +3052,155 @@
         "market_hash_name": "Stormcaller Rune (VI)"
       }
     },
+    "SorcererSetRune4_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5696,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4134,
+        "market_hash_name": "Glacial Cataclysm Rune (I)"
+      }
+    },
+    "SorcererSetRune4_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5697,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4135,
+        "market_hash_name": "Glacial Cataclysm Rune (II)"
+      }
+    },
+    "SorcererSetRune4_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5698,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4136,
+        "market_hash_name": "Glacial Cataclysm Rune (III)"
+      }
+    },
+    "SorcererSetRune4_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5699,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4137,
+        "market_hash_name": "Glacial Cataclysm Rune (IV)"
+      }
+    },
+    "SorcererSetRune4_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5700,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4138,
+        "market_hash_name": "Glacial Cataclysm Rune (V)"
+      }
+    },
+    "SorcererSetRune4_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5701,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4139,
+        "market_hash_name": "Glacial Cataclysm Rune (VI)"
+      }
+    },
+    "SorcererSetRune5_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5702,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4140,
+        "market_hash_name": "Absolute Zero Rune (I)"
+      }
+    },
+    "SorcererSetRune5_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5703,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4141,
+        "market_hash_name": "Absolute Zero Rune (II)"
+      }
+    },
+    "SorcererSetRune5_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5704,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4142,
+        "market_hash_name": "Absolute Zero Rune (III)"
+      }
+    },
+    "SorcererSetRune5_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5705,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4143,
+        "market_hash_name": "Absolute Zero Rune (IV)"
+      }
+    },
+    "SorcererSetRune5_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5706,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4144,
+        "market_hash_name": "Absolute Zero Rune (V)"
+      }
+    },
+    "SorcererSetRune5_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5707,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4145,
+        "market_hash_name": "Absolute Zero Rune (VI)"
+      }
+    },
     "UpgradeCommodity1": {
       "kind": "material",
       "rarity": 3,
       "source_class": "ItemData",
-      "source_path_id": 61693,
+      "source_path_id": 64264,
       "source_file": "sharedassets0.assets",
       "retired": false,
       "normal": {
@@ -2516,7 +3212,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5389,
+      "source_path_id": 5717,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2528,7 +3224,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5390,
+      "source_path_id": 5718,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2540,7 +3236,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5391,
+      "source_path_id": 5719,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2552,7 +3248,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5392,
+      "source_path_id": 5720,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2564,7 +3260,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5393,
+      "source_path_id": 5721,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2576,7 +3272,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5394,
+      "source_path_id": 5722,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2588,7 +3284,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5395,
+      "source_path_id": 5723,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2600,7 +3296,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5396,
+      "source_path_id": 5724,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2612,7 +3308,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5397,
+      "source_path_id": 5725,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2624,7 +3320,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5398,
+      "source_path_id": 5726,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2636,7 +3332,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5399,
+      "source_path_id": 5727,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2648,7 +3344,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5400,
+      "source_path_id": 5728,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2660,7 +3356,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5401,
+      "source_path_id": 5729,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2672,7 +3368,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5402,
+      "source_path_id": 5730,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2684,7 +3380,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5403,
+      "source_path_id": 5731,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2696,7 +3392,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5404,
+      "source_path_id": 5732,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2708,7 +3404,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5405,
+      "source_path_id": 5733,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2720,7 +3416,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5406,
+      "source_path_id": 5734,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2732,7 +3428,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5407,
+      "source_path_id": 5735,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2744,7 +3440,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5408,
+      "source_path_id": 5736,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2756,7 +3452,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5409,
+      "source_path_id": 5737,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2768,7 +3464,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5410,
+      "source_path_id": 5738,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2780,7 +3476,7 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5411,
+      "source_path_id": 5739,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
@@ -2792,12 +3488,84 @@
       "kind": "rune",
       "rarity": 5,
       "source_class": "RuneData",
-      "source_path_id": 5412,
+      "source_path_id": 5740,
       "source_file": "resources.assets",
       "retired": false,
       "normal": {
         "definition_id": 4077,
         "market_hash_name": "Harvest Moon Rune (VI)"
+      }
+    },
+    "WarriorSetRune5_1": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5741,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4182,
+        "market_hash_name": "Wrath of the Volcano Rune (I)"
+      }
+    },
+    "WarriorSetRune5_2": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5742,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4183,
+        "market_hash_name": "Wrath of the Volcano Rune (II)"
+      }
+    },
+    "WarriorSetRune5_3": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5743,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4184,
+        "market_hash_name": "Wrath of the Volcano Rune (III)"
+      }
+    },
+    "WarriorSetRune5_4": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5744,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4185,
+        "market_hash_name": "Wrath of the Volcano Rune (IV)"
+      }
+    },
+    "WarriorSetRune5_5": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5745,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4186,
+        "market_hash_name": "Wrath of the Volcano Rune (V)"
+      }
+    },
+    "WarriorSetRune5_6": {
+      "kind": "rune",
+      "rarity": 5,
+      "source_class": "RuneData",
+      "source_path_id": 5746,
+      "source_file": "resources.assets",
+      "retired": false,
+      "normal": {
+        "definition_id": 4187,
+        "market_hash_name": "Wrath of the Volcano Rune (VI)"
       }
     }
   }

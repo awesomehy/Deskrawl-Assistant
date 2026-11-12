@@ -14,7 +14,7 @@ class GameLootLedgerTests(unittest.TestCase):
             ({'Item1':16,'Item2':24,'Item3':28,'Item4':29} if obj==6100 else
              {'hashCode':16,'next':20,'key':24,'value':28}).items()]
         self.copy=Mock();self.copy.verify.side_effect=lambda obj,name:obj
-        pointers={1104:2000,2088:3000,3016:9000,2160:4000,2176:5000,5016:6000,
+        pointers={1112:2000,2088:3000,3016:9000,2160:4000,2176:5000,5016:6000,
                   6000:6001,6065:6100,8032:8000,7000:7001,7065:7100}
         self.copy.ptr.side_effect=lambda address:pointers[address]
         self.copy.read.side_effect=lambda address,size:struct.pack('<Qiiii',7000,2,0,0,1) if address==8024 else b'\0'*size

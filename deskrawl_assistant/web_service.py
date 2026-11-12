@@ -989,8 +989,8 @@ class AssistantService(TrayStatusMixin, AuctionTrackingMixin, ManualAuctionServi
                 selection = payload.get('items')
                 if target not in ('inventory','storage'):
                     raise ValidationError('物品移动方向无效。')
-                if not isinstance(selection,list) or not 1<=len(selection)<=250 or any(not isinstance(k,str) or not k for k in selection) or len(set(selection))!=len(selection):
-                    raise ValidationError('请勾选要移动的物品；每次最多 250 组。')
+                if not isinstance(selection,list) or not 1<=len(selection)<=460 or any(not isinstance(k,str) or not k for k in selection) or len(set(selection))!=len(selection):
+                    raise ValidationError('请勾选要移动的物品；每次最多 460 组。')
                 if not self.snapshot or not self.snapshot.get('complete') or not self.snapshot.get('transfer',{}).get('available'):
                     raise ValidationError('移动条件尚未核验，请刷新物品清单。')
                 source = 'storage' if target=='inventory' else 'inventory'

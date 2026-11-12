@@ -25,10 +25,10 @@ from .paths import RESOURCE_ROOT
 from .action_log import record
 
 IDLE, QUEUED, RUNNING, DONE, CANCELLED, GUARD_FAILED, EXCEPTION, REJECTED, INVALID = range(9)
-# A full 40-slot bag plus scene, reward and difficulty checks can exceed 256
-# eight-byte guard records. Reserve 384 records in the existing 16 KiB mailbox;
+# A 60-slot bag plus merchant, scene and reward checks can exceed 384
+# eight-byte guard records. Reserve 512 records in the existing 16 KiB mailbox;
 # keep every predicate, the call/argument limits and the final allocation bound.
-HEADER_SIZE, CALL_SIZE, MAX_CALLS, MAX_GUARDS, MAX_ARGS = 192, 64, 16, 384, 8
+HEADER_SIZE, CALL_SIZE, MAX_CALLS, MAX_GUARDS, MAX_ARGS = 192, 64, 16, 512, 8
 # Unity 6 GC handles are pointer-sized, not the uint32 used by older IL2CPP.
 # The call table's final QWORD is the GC handle; +40 remains reserved and +44
 # holds flags. Keeping a handle at +40 would overlap those flags on x64.

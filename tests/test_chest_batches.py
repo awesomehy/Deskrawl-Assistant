@@ -14,8 +14,9 @@ def chest(uid, slot=0, count=1, container='inventory', **extra):
 
 
 class ChestBatchTests(unittest.TestCase):
-    def test_twenty_counts_stack_quantities_only_in_inventory_and_forces_return(self):
-        for count, expected in ((19, None), (20, 'return_town'), (35, 'return_town')):
+    def test_thirty_counts_stack_quantities_only_in_inventory_and_forces_return(self):
+        self.assertEqual(CHEST_BATCH_LIMIT, 30)
+        for count, expected in ((19, None), (20, None), (29, None), (30, 'return_town'), (35, 'return_town')):
             with self.subTest(count=count):
                 world = observation([chest('a', count=count),
                     chest('warehouse', container='storage', count=99)])
@@ -24,20 +25,20 @@ class ChestBatchTests(unittest.TestCase):
                 action = engine.next_action(world)
                 self.assertEqual(action and action['kind'], expected)
                 if action:
-                    self.assertIn('20', action['reason'])
-        world = observation([chest('a', count=12), chest('b', 1, count=8)])
+                    self.assertIn('30', action['reason'])
+        world = observation([chest('a', count=18), chest('b', 1, count=12)])
         engine = ManagedMode(settings())
         engine.start(world)
         self.assertEqual(engine.next_action(world)['kind'], 'return_town')
 
     def test_threshold_also_returns_when_only_auto_equip_is_enabled(self):
-        world = observation([chest('batch', count=20)])
+        world = observation([chest('batch', count=30)])
         engine = ManagedMode(settings(equip=True, farm=False))
         engine.start(world)
         self.assertEqual(engine.next_action(world)['kind'], 'return_town')
 
-    def test_town_twenty_chests_open_before_any_external_pickup(self):
-        world = observation([chest('batch', count=20)], town=True)
+    def test_town_thirty_chests_open_before_any_external_pickup(self):
+        world = observation([chest('batch', count=30)], town=True)
         world['ground']['items'] = [equipment('outside', container='ground')]
         world['carriage']['items'] = [chest('carriage', container='carriage')]
         engine = ManagedMode(settings())
@@ -47,7 +48,7 @@ class ChestBatchTests(unittest.TestCase):
         self.assertEqual(action['item']['selection_id'], 'batch')
 
     def test_opening_receipt_must_be_visible_before_another_chest(self):
-        world = observation([chest('batch', count=20)], town=True)
+        world = observation([chest('batch', count=30)], town=True)
         engine = ManagedMode(settings())
         engine.start(world)
         action = engine.next_action(world)
@@ -56,7 +57,7 @@ class ChestBatchTests(unittest.TestCase):
         self.assertTrue(engine.running)
 
     def test_new_equipment_processed_before_next_chest_or_pickup(self):
-        box = chest('batch', count=20)
+        box = chest('batch', count=30)
         world = observation([box], town=True)
         engine = ManagedMode(settings(equipment_action='sell'))
         engine.start(world)
@@ -77,8 +78,8 @@ class ChestBatchTests(unittest.TestCase):
             elif kind == 'sell':
                 bag.remove(junk)
 
-    def test_twentieth_collected_chest_starts_batch_before_twenty_first(self):
-        box = chest('bag', count=19)
+    def test_thirtieth_collected_chest_starts_batch_before_thirty_first(self):
+        box = chest('bag', count=29)
         outside = chest('drop', container='ground')
         world = observation([box], town=True)
         world['ground']['items'] = [outside]
@@ -92,7 +93,7 @@ class ChestBatchTests(unittest.TestCase):
         world['ground']['items'] = [chest('next-drop', container='ground')]
         self.assertEqual(engine.next_action(world)['kind'], 'open_chest')
 
-    def test_full_bag_with_chests_can_start_opening_even_below_twenty(self):
+    def test_full_bag_with_chests_can_start_opening_even_below_thirty(self):
         world = observation([chest('only')], town=True, capacity=1)
         world['ground']['items'] = [equipment('outside', container='ground')]
         engine = ManagedMode(settings(equipment_action='sell'))
@@ -102,7 +103,7 @@ class ChestBatchTests(unittest.TestCase):
     def test_locked_or_unverified_chests_are_never_opened(self):
         for extra in ({'locked':True}, {'issues':['identity unconfirmed']}):
             with self.subTest(extra=extra):
-                world = observation([chest('batch', count=20, **extra)], town=True)
+                world = observation([chest('batch', count=30, **extra)], town=True)
                 engine = ManagedMode(settings())
                 engine.start(world)
                 self.assertIsNone(engine.next_action(world))
@@ -110,7 +111,7 @@ class ChestBatchTests(unittest.TestCase):
                 self.assertIn('宝箱', engine.status)
 
     def test_locked_chests_below_threshold_remain_after_drain(self):
-        locked, active = chest('locked', count=19, locked=True), chest('open', 1)
+        locked, active = chest('locked', count=29, locked=True), chest('open', 1)
         world = observation([locked, active], town=True)
         engine = ManagedMode(settings())
         engine.start(world)
@@ -124,7 +125,7 @@ class ChestBatchTests(unittest.TestCase):
     def test_incomplete_outside_read_waits_without_opening_or_pausing(self):
         for source in ('carriage', 'ground'):
             with self.subTest(source=source):
-                world = observation([chest('batch', count=20)], town=True)
+                world = observation([chest('batch', count=30)], town=True)
                 world[source]['complete'] = False
                 engine = ManagedMode(settings())
                 engine.start(world)
@@ -134,7 +135,7 @@ class ChestBatchTests(unittest.TestCase):
                 self.assertEqual(engine.next_action(world)['kind'], 'open_chest')
 
     def test_threshold_preserves_boss_ground_reward_collection_before_travel(self):
-        world = observation([chest('batch', count=20)])
+        world = observation([chest('batch', count=30)])
         world['scene']['run']['status'] = 'success'
         world['ground']['items'] = [equipment('boss', container='ground')]
         engine = ManagedMode(settings())
@@ -144,19 +145,19 @@ class ChestBatchTests(unittest.TestCase):
         self.assertEqual(action['item']['item_uid'], 'boss')
 
     def test_full_bag_and_large_outside_chest_batches_finish_without_loss(self):
-        bag = [chest(f'bag-{n}', n) for n in range(35)]
-        potions = [loot(f'potion-{n}', 'material', 'MovementPotion1', n + 35, count=14)
+        bag = [chest(f'bag-{n}', n) for n in range(55)]
+        potions = [loot(f'potion-{n}', 'material', 'MovementPotion1', n + 55, count=14)
                    for n in range(5)]
         bag.extend(deepcopy(potions))
         ground = [chest(f'ground-{n}', container='ground') for n in range(35)]
         carriage = [chest(f'carriage-{n}', container='carriage') for n in range(30)]
         ground.append(equipment('outside-gear', container='ground'))
         engine = ManagedMode(settings(equipment_action='sell'))
-        engine.start(observation(bag, town=True))
+        engine.start(observation(bag, town=True, capacity=60))
         opened = sold = 0
         phases = []
         for _ in range(600):
-            world = observation(bag, town=True)
+            world = observation(bag, town=True, capacity=60)
             world['ground']['items'] = deepcopy(ground)
             world['carriage']['items'] = deepcopy(carriage)
             action = engine.next_action(world)
@@ -179,7 +180,7 @@ class ChestBatchTests(unittest.TestCase):
                 source = ground if kind == 'collect_ground' else carriage
                 row = next(r for r in source if r['selection_id'] == selected)
                 source.remove(row)
-                row.update(container='inventory', slot_index=next(n for n in range(40)
+                row.update(container='inventory', slot_index=next(n for n in range(60)
                     if n not in {r['slot_index'] for r in bag}))
                 bag.append(row)
             elif kind == 'sell':
@@ -192,8 +193,8 @@ class ChestBatchTests(unittest.TestCase):
             verified(engine, action)
         else:
             self.fail('Cleanup did not finish within the bounded simulation')
-        self.assertEqual(phases[:35], ['open_chest'] * 35)
-        self.assertEqual((opened, sold), (100, 101))
+        self.assertEqual(phases[:55], ['open_chest'] * 55)
+        self.assertEqual((opened, sold), (120, 121))
         self.assertEqual(bag, potions)
         self.assertEqual((ground, carriage), ([], []))
 

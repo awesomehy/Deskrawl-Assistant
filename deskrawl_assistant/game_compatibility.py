@@ -96,7 +96,11 @@ def enum_contract(inspector,names):
     defaults={field:(typ,index) for field,typ,index in struct.iter_unpack('<iHi',inspector.meta[off:off+count*10])}
     result={}
     for n,d in enumerate(inspector.defs):
-        if d['namespace'] or d['name'] not in names:continue
+        # Nested framework enums can have an empty namespace too (for example
+        # System.Xml.XmlWellFormedWriter.ItemType). Only the game's top-level
+        # enum is part of this contract; never let a namesake overwrite it.
+        if d['namespace'] or d.get('declaringTypeIndex', 65535) != 65535 or d['name'] not in names:continue
+        if d['name'] in result:raise CompatibilityError('词条或物品枚举存在歧义',d['name'])
         values=[]
         for f in inspector.fields(n):
             if not f['isLiteral']:continue

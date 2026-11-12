@@ -28,9 +28,9 @@ class TownCampaignCopy:
         self.reader = SimpleNamespace(session_id='campaign-test',module={'base':0},singleton=lambda name:{'SaveSystem':0x3000,'Inventory':0x5000}[name],
             string=lambda address:{0x8000:'Offline',0xD000:'run-1',0xD100:'Forest2',0xD200:'Normal'}[address],
             asset_name=lambda obj:{0xB000:'Forest2',0xE000:'Ticket'}[obj])
-        self.pointers = {0x1000+32:0x4000,0x1000+120:0,0x1000+112:0,0x2000+40:0x8000,
+        self.pointers = {0x1000+32:0x4000,0x1000+128:0,0x1000+120:0,0x2000+40:0x8000,
             DIFFICULTY_RVA:0x6000,0x6000+184:0x7000,0x5000+64:0x9000}
-        self.integers = {0x1000+176:1,0x7000:0,0x7004:1,0x4000+208:2,0xB000+32:0}
+        self.integers = {0x1000+184:1,0x7000:0,0x7004:1,0x4000+208:2,0xB000+32:0}
         self.flags = {0x4000+48:False}
         self.finished = False
     def singleton(self, rva, name): return {'GameManager':0x1000,'PlayerData':0x2000}[name]
@@ -75,9 +75,9 @@ class CampaignReadTests(unittest.TestCase):
 
     def test_combat_completion_keeps_verified_wave_evidence_without_dps(self):
         copy=TownCampaignCopy()
-        copy.pointers.update({0x1000+120:0xA000,0x1000+112:0xB000,0x1000+104:0xC000,
+        copy.pointers.update({0x1000+128:0xA000,0x1000+120:0xB000,0x1000+112:0xC000,
             0xC000+88:0xA000,0xA000+16:0xD000,0xA000+32:0xD100,0xA000+56:0xD200,
-            0xA000+104:0xF000,0x1000+200:0xF300})
+            0xA000+104:0xF000,0x1000+208:0xF300})
         copy.integers.update({0xC000+48:2,0xC000+152:1})
         copy.flags.update({0xC000+64:False,0xC000+248:True,0xC000+249:False,0xF200+296:True})
         result=self.read_fixture(copy)
@@ -92,6 +92,26 @@ class CampaignReadTests(unittest.TestCase):
         self.assertFalse(result['available'])
         self.assertIsNone(result['profile'])
         self.assertIn('难度',result['reason'])
+
+    def test_heroic_map_is_never_unlocked_below_inferno(self):
+        from deskrawl_assistant.recommendation_reader import _campaign_progress
+        copy=TownCampaignCopy()
+        copy.integers[0x7004]=2
+        catalog={'maps':[{'map_id':'ForestHeroic','map_type':5}],
+                 'difficulties':{key:{'value':n} for n,key in enumerate(('Normal','Nightmare','Inferno'))}}
+        with patch('deskrawl_assistant.recommendation_reader.native_rva',side_effect=lambda reader,key,value:value):
+            progress=_campaign_progress(copy,0x3000,0x4000,catalog)
+        self.assertEqual(progress['unlocked_maps'],{'Normal':[],'Nightmare':[],'Inferno':['ForestHeroic']})
+
+    def test_heroic_first_boss_cannot_count_as_success(self):
+        run={'id':'heroic-run','map_id':'ForestHeroic','difficulty':'Inferno','wave_count':2,
+             'wave_index':1,'wave_active':False,'enemy_count':0,'final_kill_settled':True}
+        result=normalise_run(run,{'ForestHeroic'})
+        self.assertFalse(result['completion_confirmed'])
+        self.assertEqual(result['status'],'settling')
+        result=normalise_run({**run,'wave_index':2,'finished':True}, {'ForestHeroic'})
+        self.assertTrue(result['completion_confirmed'])
+        self.assertEqual(result['status'],'success')
 
 
 if __name__=='__main__': unittest.main()

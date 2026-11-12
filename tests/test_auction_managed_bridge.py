@@ -556,6 +556,55 @@ class AuctionManagedBridgeTests(unittest.TestCase):
         self.service._auction_policy()
         self.client.steam_identity_snapshot.assert_not_called()
 
+    def gold_bar(self, *, container='inventory', count=2):
+        self.enable()
+        self.service.managed.settings['auction']['categories'] = ['gold_bar']
+        self.client.items = [fixtures.equipment(container=container, key='GoldBar', count=count,
+            item_uid=None, instance_id=None, item_type=7, base_rarity=3,
+            is_equipment=False, identity_verified=False, bound=None, socket_count=None,
+            read_evidence={'snapshot_consistent': True})]
+
+    def test_uidless_warehouse_gold_withdraws_then_uploads_one_and_recovers_late_receipt(self):
+        self.gold_bar(container='storage')
+        action, world = self.plan()
+        self.assertEqual(action['kind'], 'transfer')
+        result = self.service._managed_execute(action, world)
+        self.assertTrue(result['verified'])
+        action, world = self.plan()
+        self.assertEqual(action['kind'], 'auction_upload')
+        self.assertEqual(action['quantity'], 1)
+        self.client.native_handler = Mock(side_effect=AuctionUploadPending())
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=100):
+            self.service._managed_once()
+        wait = self.service.managed_auction_wait
+        self.assertIsNotNone(wait)
+        self.assertTrue(self.service.managed.running)
+        op = wait['uploads'][0]['auction_operation_id']
+        self.assertTrue(op.startswith('commodity:'))
+        payload = self.client.actions[-1][1]
+        self.assertIsNone(payload['item']['item_uid'])
+        self.assertIsNone(payload['item']['instance_id'])
+        self.assertEqual(payload['item']['count'], 2)
+        self.assertEqual(payload['item']['auction_operation_id'], op)
+        self.client.items[0]['count'] = 1
+        self.native.update(pending=False, needs_refresh=False, confirmed_uploads=[{
+            'steamid': STEAMID, 'uploaded_uid': None, 'uploaded_operation_id': op,
+            'uploaded_instance_id': 'server-gold-id', 'uploaded_internal_name': 'GoldBar'}])
+        world = self.service._managed_observation()
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=103):
+            self.service._managed_wait_auction(world)
+        self.assertIsNone(self.service.managed_auction_wait)
+        self.assertEqual(next(iter(self.coordinator.intents.values()))['phase'], 'resolved')
+
+    def test_uidless_commodity_preflight_does_not_confuse_two_empty_uids(self):
+        self.gold_bar()
+        action, world = self.plan()
+        action['item']['selection_id'] = 'stale-other-stack'
+        action['item']['transfer_key'] = 'stale-other-stack'
+        result = self.service._managed_execute(action, world)
+        self.assertTrue(result['retryable'])
+        self.assertEqual(self.client.actions, [])
+
 
 if __name__ == '__main__':
     unittest.main()

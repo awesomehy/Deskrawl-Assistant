@@ -20,7 +20,7 @@ def _conditional(copy, player, manager, status_obj, hp, maximum, warnings, fixed
         # Native big uses List.Find: keep the first matching status instance.
         stacks.setdefault(key, count)
     active = set(stacks)
-    battle = True if fixed_distance is not None else copy.boolean(copy.verify(copy.ptr(manager + 64), 'PlayerCombatController') + 80)
+    battle = True if fixed_distance is not None else copy.boolean(copy.verify(copy.ptr(manager + 72), 'PlayerCombatController') + 80)
     area = None
     layers = ({}, {})
     conversions = []
@@ -31,7 +31,7 @@ def _conditional(copy, player, manager, status_obj, hp, maximum, warnings, fixed
         nonlocal alive_enemies
         if alive_enemies is None:
             alive_enemies = []
-            for raw in copy.list(copy.ptr(manager + 200), element='Enemy', limit=2048):
+            for raw in copy.list(copy.ptr(manager + 208), element='Enemy', limit=2048):
                 obj = struct.unpack('<Q', raw)[0]
                 if obj:
                     copy.verify(obj, 'Enemy')
@@ -41,7 +41,7 @@ def _conditional(copy, player, manager, status_obj, hp, maximum, warnings, fixed
 
     def condition(kind, radius):
         if fixed_distance is not None:
-            if kind in (-1, 1, 3, 4):
+            if kind in (-1, 1, 3, 4, 6):
                 return True
             if kind in (0, 5):
                 return False
@@ -57,14 +57,14 @@ def _conditional(copy, player, manager, status_obj, hp, maximum, warnings, fixed
             return battle and not special_area()
         if kind == 4:
             return not copy.boolean(player + 296) and battle and not special_area() and len(enemies()) == 1
-        if kind in (2, 5):
+        if kind in (2, 5, 6):
             nonlocal positions
             if not enemies():
-                return kind == 2
+                return kind in (2, 6)
             if positions is None:
                 positions = Positions(copy)
-            count = positions.nearby_count(player, enemies(), radius, 1 if kind == 2 else 3)
-            return count == 0 if kind == 2 else count >= 3
+            count = positions.nearby_count(player, enemies(), radius, {2: 1, 5: 3, 6: 2}[kind])
+            return count == 0 if kind == 2 else count <= 1 if kind == 6 else count >= 3
         raise MemoryReadError('角色条件类型尚未适配。')
 
     def special_area():
@@ -79,28 +79,30 @@ def _conditional(copy, player, manager, status_obj, hp, maximum, warnings, fixed
             raise MemoryReadError('条件属性参数无效。')
         layers[kind][stat] = layers[kind].get(stat, 0) + value
 
-    for off in (792, 864):
+    for off in (808, 880):
         for raw in copy.list(copy.ptr(player + off), 24, 'ValueTuple`4'):
             source, target, coef, status = struct.unpack('<iidQ', raw)
             if source not in range(67) or target not in range(67) or not math.isfinite(coef):
                 raise MemoryReadError('角色转换参数无效。')
             if not status or status in active:
                 conversions.append((source, target, coef))
-    for raw in copy.list(copy.ptr(player + 872), 24, 'ValueTuple`3'):
+    for raw in copy.list(copy.ptr(player + 888), 24, 'ValueTuple`3'):
         status, stat, coef = struct.unpack('<Qi4xd', raw)
         add(stat, 0, coef * stacks.get(status, 0))
-    for raw in copy.list(copy.ptr(player + 944), 24, 'ValueTuple`4'):
+    for raw in copy.list(copy.ptr(player + 960), 24, 'ValueTuple`4'):
         status, stat, kind, coef = struct.unpack('<Qiid', raw)
         add(stat, kind, coef * stacks.get(status, 0))
-    for raw in copy.list(copy.ptr(player + 920), 32, 'ValueTuple`6'):
+    for raw in copy.list(copy.ptr(player + 936), 32, 'ValueTuple`6'):
         cond, radius, stat, kind, value, ability = struct.unpack('<ifiidQ', raw)
         if ability and fixed_distance is None:
             warnings.append('施放指定技能时的条件属性未计入，相关属性为参考值。')
         elif not ability and condition(cond, radius):
             add(stat, kind, value)
-    for raw in copy.list(copy.ptr(player + 928), 32, 'ValueTuple`5'):
-        cond, status, stat, kind, value = struct.unpack('<i4xQiid', raw)
-        if (not status or status in active) and condition(cond, 6):
+    for raw in copy.list(copy.ptr(player + 944), 40, 'ValueTuple`6'):
+        cond, status, stat, kind, value, ability = struct.unpack('<i4xQiidQ', raw)
+        if ability:
+            warnings.append('施放指定技能时的条件属性未计入，相关属性为参考值。')
+        elif (not status or status in active) and condition(cond, 6):
             add(stat, kind, value)
     return layers, conversions
 
@@ -109,10 +111,10 @@ def _snapshot(reader):
     reader.check_game_files()
     copy = _Copy(reader)
     manager = copy.singleton(0x3A17CD8, 'GameManager')
-    if copy.integer(manager + 176) != 1:
+    if copy.integer(manager + 184) != 1:
         raise MemoryReadError('进入角色后可读取当前属性与装备。')
     data = copy.singleton(0x3A1BA98, 'PlayerData')
-    combat = copy.verify(copy.ptr(manager + 64), 'PlayerCombatController')
+    combat = copy.verify(copy.ptr(manager + 72), 'PlayerCombatController')
     player = copy.verify(copy.ptr(combat + 32), 'Player')
     copy.klass(copy.ptr(copy.ptr(player) + 88), 'Character')
     hero = copy.verify(copy.ptr(manager + 56), 'HeroData')
@@ -137,10 +139,11 @@ def _snapshot(reader):
     base = {7: decode_obscured_long(copy.read(player + 48, 32)),
             3: decode_obscured_long(copy.read(player + 80, 32)),
             14: decode_obscured_long(copy.read(player + 216, 32)),
-            primary: decode_obscured_float(copy.read(player + 416, 20))}
-    for stat, offset in ((10, 112), (4, 132), (5, 152), (6, 172), (22, 192), (11, 436), (12, 456), (13, 476)):
+            primary: decode_obscured_float(copy.read(player + 400, 20))}
+    for stat, offset in ((10, 112), (4, 132), (5, 152), (6, 172), (22, 192), (11, 420), (12, 440), (13, 460)):
         base[stat] = decode_obscured_float(copy.read(player + offset, 20))
-    caches = {off: copy.dictionary(copy.ptr(player + off)) for off in (536, 544, 568, 576, 632, 640, 648)}
+    caches = {key: copy.dictionary(copy.ptr(player + offset)) for key, offset in
+              ((536, 520), (544, 528), (568, 552), (576, 560), (632, 632), (640, 640), (648, 648))}
     status_obj = copy.verify(copy.ptr(player + 304), 'StatusEffectController')
     status = tuple(copy.dictionary(copy.ptr(status_obj + off), 'double') for off in (64, 72, 80))
     warnings = []

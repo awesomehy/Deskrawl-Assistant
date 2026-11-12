@@ -21,15 +21,15 @@ from pathlib import Path
 import struct
 
 
-METADATA_HASH = "a011ecdbd6f41d3e34c47aa85acc05868268710779c6a008bf8a841ef0d57942"
-GAME_VERSION = "1.1.0a"
-STEAM_BUILD = 26337088
+METADATA_HASH = "8e636924c88a9c9274c02df2f1b164303ff5064626e5d5f8169cb0a6fbcc75c8"
+GAME_VERSION = "1.1.11"
+STEAM_BUILD = 26604532
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from deskrawl_assistant.il2cpp_metadata import PE, MetadataInspector
 
 SELECTED = {
-    "Inventory", "InventorySlot", "Storage", "GeneratedItemData", "ItemData", "gq",
+    "Inventory", "InventorySlot", "Storage", "GeneratedItemData", "ItemData", "gw",
     "StatModifier", "LeveledStatModifier", "SaveSystem", "SaveData", "SavedSlot",
     "SavedRegistryEntry", "SavedStatModifier", "SavedStash", "SaveContainer",
     "ObscuredFloat", "ObscuredInt", "ObscuredLong", "ObscuredString",
@@ -51,7 +51,7 @@ class Inspector(MetadataInspector):
             if hits:
                 references.append({"type": ".".join(x for x in (d["namespace"], d["name"]) if x), "fields": hits})
             if d["name"] in SELECTED or hits:
-                selected.append({"name": d["name"], "logicalName": "gj" if d["name"] == "gq" and not d['namespace'] else d['name'], "namespace": d["namespace"], "typeDefinitionIndex": index,
+                selected.append({"name": d["name"], "logicalName": "gj" if d["name"] == "gw" and not d['namespace'] else d['name'], "namespace": d["namespace"], "typeDefinitionIndex": index,
                                  "isValueType": d["isValueType"], "byvalTypeIndex": d["byvalTypeIndex"],
                                  "fields": fields, "methods": self.methods(index)})
         by_name = {row["name"]: row for row in selected}
@@ -78,8 +78,8 @@ class Inspector(MetadataInspector):
                 "storage": {"class": "Storage", "namespace": "",
                             "singletonStaticField": field_name("Storage", "Storage", static=True),
                             "slotsInstanceField": field_name("Storage", "InventorySlot[]"), "slotsType": "InventorySlot[]"},
-                "registry": {"class": "gq", "namespace": "", "dictionaryStaticField": field_name(
-                    "gq", "System.Collections.Generic.Dictionary`2<System.String, GeneratedItemData>", static=True),
+                "registry": {"class": "gw", "namespace": "", "dictionaryStaticField": field_name(
+                    "gw", "System.Collections.Generic.Dictionary`2<System.String, GeneratedItemData>", static=True),
                              "dictionaryType": "System.Collections.Generic.Dictionary`2<System.String, GeneratedItemData>",
                              "candidateKeySlotField": "ItemUid", "keyAssociationValidatedAtRuntime": False},
                 "modifiers": {"class": "GeneratedItemData", "field": "Modifiers", "type": "StatModifier[]",

@@ -59,14 +59,14 @@ class ReconnectRuntime:
             self.actions.dispatcher.verify()
         read = _Read(self.reader, self.profile)
         manager = read.singleton('GameManager')
-        game_state = read.integer(manager + 176)
+        game_state = read.integer(manager + 184)
         popup = read.singleton('PopupPanel')
         popup_visible = self._active(read, read.ptr(popup + 32))
         text = self._popup_text(read, read.ptr(popup + 40)) if popup_visible else ''
         # Only exact observed network notices with no delegate can be dismissed.
         # The retry notice cannot arm login; the owning flow must have observed
         # an actual disconnect first. Generic and destructive prompts stay manual.
-        notice = _notice_kind(text, bool(read.ptr(popup + 64) or read.ptr(popup + 72))) if popup_visible else None
+        notice = _notice_kind(text, bool(read.ptr(popup + 72) or read.ptr(popup + 80))) if popup_visible else None
         disconnected = notice == 'disconnect'
         state = {'in_game': game_state == 1, 'popup_visible': popup_visible,
                  'disconnected': disconnected, 'retryable_network_error': notice == 'server_unavailable',

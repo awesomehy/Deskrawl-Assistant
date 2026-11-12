@@ -8,9 +8,9 @@ import re
 import struct
 
 try:
-    from .equipment_description_assets import Reader, damage_tokens, status_tokens, linked_asset
+    from .equipment_description_assets import Reader, damage_tokens, status_tokens, linked_asset, managed_body
 except ImportError:  # Direct exporter invocation.
-    from equipment_description_assets import Reader, damage_tokens, status_tokens, linked_asset
+    from equipment_description_assets import Reader, damage_tokens, status_tokens, linked_asset, managed_body
 
 
 def _number(value, percent=False, places=1):
@@ -57,7 +57,10 @@ def render_equipment_effect(kind, data, text, *, effect_key='', resolve=None):
             raise ValueError('Invalid iron-thorn effect parameters')
         values = {'hits': str(hits), 'cooldown': _number(cooldown, places=2)}
     elif kind in ('EquipmentEffect_DamagePerStatusStack', 'EquipmentEffect_DamagePerActiveSummon'):
-        if len(data) != 16:
+        # 1.1.11 adds an AbilityTag to the status condition. The native
+        # description still formats DamagePerStack and the linked status;
+        # the tag is expressed in the localisation text, not a numeric token.
+        if len(data) != (20 if kind == 'EquipmentEffect_DamagePerStatusStack' else 16):
             raise ValueError('Unverified linked damage effect layout')
         damage, = struct.unpack_from('<f', data, 12)
         if damage < 0:
@@ -65,7 +68,8 @@ def render_equipment_effect(kind, data, text, *, effect_key='', resolve=None):
         values = {'damage': _number(damage, True)}
         if kind == 'EquipmentEffect_DamagePerStatusStack':
             _, status = linked_asset(data, 0, resolve, 'StatusEffectData')
-            values.update(status_tokens(status))
+            required = set(re.findall(r'\{([^{}]+)\}', text(key)))
+            values.update({k:v for k,v in status_tokens(status).items() if k in required})
         else:
             ability, _ = linked_asset(data, 0, resolve, 'AbilityData')
             values['ability'] = text(ability)
@@ -91,6 +95,37 @@ def render_equipment_effect(kind, data, text, *, effect_key='', resolve=None):
         _, status = linked_asset(data, 0, resolve, 'StatusEffectData')
         values = status_tokens(status, shield=True)
         values.pop('stacks')
+    elif kind == 'EquipmentEffect_AbilityStatusDamage':
+        if len(data) != 28:
+            raise ValueError('Unverified ability/status damage layout')
+        ability, _ = linked_asset(data, 0, resolve, 'AbilityData')
+        status, _ = linked_asset(data, 12, resolve, 'StatusEffectData')
+        damage, = struct.unpack_from('<f', data, 24)
+        values = {'ability': text(ability), 'status': text(status), 'damage': _number(damage, True)}
+        if damage < 0 or not values['ability'] or not values['status']:
+            raise ValueError('Invalid ability/status description')
+    elif kind == 'EquipmentEffect_ProjectileTriggerProjectile':
+        # The serialised projectile is inline; the native Desc reads only
+        # ProcChance, before that managed record.
+        if len(data) < 28:
+            raise ValueError('Missing projectile trigger parameters')
+        chance, = struct.unpack_from('<f', data, 12)
+        if not 0 <= chance <= 1:
+            raise ValueError('Invalid projectile trigger chance')
+        values = {'chance': _number(chance, True)}
+    elif kind == 'EquipmentEffect_StatusOnCriticalCast':
+        if len(data) != 12:
+            raise ValueError('Unverified critical-cast status layout')
+        _, status = linked_asset(data, 0, resolve, 'StatusEffectData')
+        values = status_tokens(status)
+        values['maxStacks'] = values.pop('stacks')
+        reader = managed_body(status, 'StatModifierBehavior')
+        if reader.take('iii') != (1, 20, 2):
+            raise ValueError('Unverified critical-cast damage modifier')
+        damage, growth = reader.leveled()
+        if damage < 0 or growth:
+            raise ValueError('Invalid critical-cast modifier')
+        values['damage'] = _number(damage, True)
     elif kind == 'EquipmentEffect_PotionDrops':
         chance, cooldown = struct.unpack('<ff', data)
         if not 0 <= chance <= 1 or cooldown < 0:
@@ -100,9 +135,9 @@ def render_equipment_effect(kind, data, text, *, effect_key='', resolve=None):
     elif kind == 'EquipmentEffect_AllStats':
         # Inherited StatModifier array, required status and condition precede
         # Bonus. This asset has no extra modifiers/status/condition.
-        if len(data) != 24 or data[:20] != bytes(16) + b'\xff' * 4:
+        if len(data) != 36 or data[:32] != bytes(16) + b'\xff' * 4 + bytes(12):
             raise ValueError('Unverified AllStats parent layout')
-        bonus = struct.unpack_from('<f', data, 20)[0]
+        bonus = struct.unpack_from('<f', data, 32)[0]
         key = 'EquipmentEffect.AllStats'
         values = {'0':_number(bonus * 100)}
     elif kind == 'EquipmentEffect_DivineHelmet3':

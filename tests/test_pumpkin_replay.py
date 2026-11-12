@@ -68,7 +68,7 @@ class PumpkinReplayTests(unittest.TestCase):
             with self.subTest(trigger=trigger):
                 engine, world = settled()
                 if trigger == 'quota': world['scene']['maps_by_difficulty'] = options(0)
-                elif trigger == 'chests': world['items'] = [loot('boxes', 'chest', 'TreasureChest3', count=20)]
+                elif trigger == 'chests': world['items'] = [loot('boxes', 'chest', 'TreasureChest3', count=30)]
                 elif trigger == 'slots': world['counts']['inventory']['occupied'] = 37
                 elif trigger == 'merchant':
                     engine.settings['merchant']['enabled'] = True
@@ -101,6 +101,86 @@ class PumpkinReplayTests(unittest.TestCase):
 class PumpkinReplayServiceTests(unittest.TestCase):
     setUp = service_fixture.ManagedServiceTests.setUp
 
+    def waiting_replay(self):
+        engine, world = settled()
+        world['scene'].update(in_dungeon=True, scene_changing=False, teleporting=False)
+        action = after_rewards(engine, world)
+        self.service.managed = engine
+        self.service.managed_retry = self.service.managed_scene_wait = None
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=100):
+            self.service._managed_defer(action, '等待南瓜王结算界面就绪后复刷。', 'game_busy')
+        return world, action
+
+    def test_new_completed_run_gets_its_own_preflight_wait_budget(self):
+        world, action = self.waiting_replay()
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=233):
+            self.service._managed_defer(dict(action, source_run_id='next-win'),
+                '等待南瓜王结算界面就绪后复刷。', 'game_busy')
+        self.assertTrue(self.service.managed.running)
+        self.assertEqual(self.service.managed_retry['attempts'], 1)
+        self.assertEqual(self.service.managed_retry['started'], 233)
+        self.assertEqual(self.client.actions, [])
+
+    def test_same_run_still_pauses_when_it_really_remains_blocked(self):
+        world, action = self.waiting_replay()
+        with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=221):
+            self.service._managed_defer(action, '等待南瓜王结算界面就绪后复刷。', 'game_busy')
+        self.assertEqual(self.service.managed.phase, 'paused')
+        self.assertTrue(self.service.managed_can_resume)
+        self.assertEqual(self.client.actions, [])
+
+    def test_native_repeat_clears_unsubmitted_replay_before_backoff_expires(self):
+        for status in ('running', 'success'):
+            with self.subTest(status=status):
+                world, action = self.waiting_replay()
+                world['scene']['run'].update(id='native-next', status=status)
+                world['scene']['completion_visible'] = {'CombatMapCompletionUI': status == 'success'}
+                with patch.object(self.service, '_managed_observation', return_value=world), \
+                        patch('deskrawl_assistant.managed_service.time.monotonic', return_value=101):
+                    self.service._managed_once()
+                self.assertIsNone(self.service.managed_retry)
+                self.assertTrue(self.service.managed.running)
+                self.assertEqual(self.client.actions, [])
+
+    def test_missing_or_unconfirmed_run_does_not_reset_wait(self):
+        for state in ('missing', 'unavailable', 'retained', 'changing'):
+            with self.subTest(state=state):
+                world, action = self.waiting_replay()
+                world['scene']['run'].update(id='unconfirmed-next', status='running')
+                if state == 'missing': world['scene']['run'] = None
+                elif state == 'unavailable': world['scene']['available'] = False
+                elif state == 'retained': world['scene']['run']['retained_terminal'] = True
+                else: world['scene']['scene_changing'] = True
+                retry = self.service.managed_retry
+                with patch.object(self.service, '_managed_observation', return_value=world), \
+                        patch('deskrawl_assistant.managed_service.time.monotonic', return_value=101):
+                    self.service._managed_once()
+                self.assertIs(self.service.managed_retry, retry)
+                self.assertEqual(self.client.actions, [])
+
+    def test_native_wins_between_popup_races_keep_running_and_count_once(self):
+        world, _ = self.waiting_replay()
+        with patch.object(self.service, '_managed_observation', return_value=world), \
+                patch.object(self.service, '_managed_execute',
+                             side_effect=GameBusyError('等待南瓜王结算界面就绪后复刷。')) as execute:
+            for number, start in ((2, 101), (3, 235)):
+                world['scene']['run'].update(id=f'native-run-{number}', status='running')
+                world['scene']['completion_visible'] = {'CombatMapCompletionUI': False}
+                with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=start):
+                    self.service._managed_once()
+                self.assertIsNone(self.service.managed_retry)
+                world['scene']['run']['status'] = 'success'
+                world['scene']['completion_visible'] = {'CombatMapCompletionUI': True}
+                for now in (start + 129, start + 131):
+                    with patch('deskrawl_assistant.managed_service.time.monotonic', return_value=now):
+                        self.service._managed_once()
+                self.assertTrue(self.service.managed.running)
+                self.assertEqual(self.service.managed_retry['attempts'], 1)
+                self.assertEqual(self.service.managed.pumpkin_completed, number)
+                self.assertEqual(self.service.managed.repeat_completed, 0)
+            self.assertEqual(execute.call_count, 2)
+        self.assertEqual(self.client.actions, [])
+
     def test_fresh_replay_rechecks_returns_late_drops_and_source_run(self):
         for change in ('none', 'quota', 'slots', 'chests', 'merchant', 'late_drop', 'source'):
             with self.subTest(change=change):
@@ -109,7 +189,7 @@ class PumpkinReplayServiceTests(unittest.TestCase):
                 self.service.managed = engine
                 if change == 'quota': world['scene']['maps_by_difficulty'] = options(0)
                 elif change == 'slots': world['counts']['inventory']['occupied'] = 40
-                elif change == 'chests': world['items'] = [loot('boxes', 'chest', 'TreasureChest3', count=20)]
+                elif change == 'chests': world['items'] = [loot('boxes', 'chest', 'TreasureChest3', count=30)]
                 elif change == 'merchant':
                     engine.settings['merchant']['enabled'] = True
                     world['progression'] = growth_state()

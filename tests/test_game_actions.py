@@ -76,7 +76,7 @@ class ActionBoundaryTests(unittest.TestCase):
                                                (1,False,2,False),(0,True,2,True)):
             with self.subTest(state=state,gathering=gathering,map_type=map_type):
                 reader=Mock()
-                memory={1064:struct.pack('<Q',2000),1112:struct.pack('<Q',3000),
+                memory={1072:struct.pack('<Q',2000),1120:struct.pack('<Q',3000),
                         2048:struct.pack('<i',state),2052:bytes([gathering]),3032:struct.pack('<i',map_type)}
                 reader.memory.read.side_effect=lambda address,size:memory[address]
                 read=_Read(reader,{})
@@ -93,10 +93,10 @@ class ActionBoundaryTests(unittest.TestCase):
         from deskrawl_assistant.native_memory import SnapshotChangedError
         reader,read,copy=Mock(),Mock(),Mock();read.guards=[]
         reader.string.return_value='original-run'
-        copy.ptr.side_effect=lambda address:{1104:2000,1120:3000,1112:4000,2088:3000,2040:4000,3016:5000}[address]
+        copy.ptr.side_effect=lambda address:{1112:2000,1128:3000,1120:4000,2088:3000,2040:4000,3016:5000}[address]
         copy.verify.side_effect=lambda obj,name:obj
         copy.boolean.side_effect=lambda address:address==2096
-        copy.guards=[(1120,b'original-plan-pointer')]
+        copy.guards=[(1128,b'original-plan-pointer')]
         game=GameActions(reader,dispatcher=Mock())
         with patch('deskrawl_assistant.recommendation_reader._Copy',return_value=copy):
             game._require_stargazing_run(read,1000,hashlib.sha256(b'original-run').hexdigest())
@@ -466,6 +466,19 @@ class ActionBoundaryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, '后台指令数据超出限制'):
             compile_mailbox(*params, [Invocation('hm.ecc', arguments=(Argument(raw=bytes(16384)),))], [])
 
+    def test_sixty_slot_merchant_batch_fits_with_all_512_guard_records(self):
+        calls = [Invocation('MerchantUI.gzr', 1,
+            (Argument.reference(2), Argument.integer(1))) for _ in range(10)]
+        # Include a long predicate block: the limit applies to expanded records,
+        # not merely the count of reads supplied by the Python preflight.
+        guards = [(0x500000, b'\x71' * (512 * 8))]
+        raw = compile_mailbox(0x100000, 0x180000000, load_profile(), 1, 2, 3, calls, guards)
+        self.assertLessEqual(len(raw), 16384)
+        self.assertEqual(struct.unpack_from('<II', raw, 52), (10, 512))
+        table = struct.unpack_from('<Q', raw, 152)[0] - 0x100000
+        self.assertEqual(struct.unpack_from('<QQQ', raw, table + 511 * 24),
+            (0x500000 + 511 * 8, 0x7171717171717171, 0xffffffffffffffff))
+
     def test_game_exit_after_submission_never_allows_retry(self):
         for unreadable in (False,True):
             with self.subTest(unreadable=unreadable):
@@ -610,16 +623,16 @@ class LocalMainThreadMailboxTests(unittest.TestCase):
         self.assertEqual(status,GUARD_FAILED)
         self.assertFalse(self.seen)
 
-    def test_full_bag_budget_checks_guards_beyond_record_256_before_any_call(self):
-        contents = bytes((n % 251 for n in range(300 * 8)))
+    def test_sixty_slot_bag_budget_checks_final_guard_before_any_call(self):
+        contents = bytes((n % 251 for n in range(MAX_GUARDS * 8)))
         guard = C.create_string_buffer(contents)
         address = C.addressof(guard)
-        guards = [(address + n * 8, contents[n * 8:(n + 1) * 8]) for n in range(300)]
+        guards = [(address + n * 8, contents[n * 8:(n + 1) * 8]) for n in range(MAX_GUARDS)]
         calls = [Invocation('hm.ecc', arguments=(Argument.integer(3),))]
         self.assertEqual(self.run_command(calls, guards), DONE)
         self.assertEqual(len(self.seen), 1)
         self.seen.clear()
-        guard[299 * 8] = bytes([contents[299 * 8] ^ 1])
+        guard[(MAX_GUARDS - 1) * 8] = bytes([contents[(MAX_GUARDS - 1) * 8] ^ 1])
         self.assertEqual(self.run_command(calls, guards), GUARD_FAILED)
         self.assertFalse(self.seen)
 

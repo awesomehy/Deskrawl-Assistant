@@ -100,7 +100,7 @@ class NativeSettlementTests(unittest.TestCase):
         self.stack.enter_context(patch('deskrawl_assistant.recommendation_reader.resolved_profile',
                                       return_value={'types': []}))
         active = self.fixture.object('MapData')
-        self.fixture.memory.pointer(self.fixture.objects['GameManager'] + 112, active)
+        self.fixture.memory.pointer(self.fixture.objects['GameManager'] + 120, active)
         self.fixture.reader.asset_name = Mock(return_value='map-a')
 
     def settlement(self, value=None):

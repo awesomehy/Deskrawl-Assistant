@@ -24,6 +24,9 @@ MAX_DATABASE = 16 * 1024 * 1024
 
 class LocalSessionUnavailable(RuntimeError):
     """A fixed diagnostic, never an underlying exception containing secrets."""
+    def __init__(self, message, *, retryable=True):
+        super().__init__(message)
+        self.retryable = retryable
 
 
 @dataclass(frozen=True)
@@ -261,12 +264,30 @@ class WindowsCommunityCache:
 
 
 class LocalSteamSessionProvider:
-    def __init__(self, backend=None, cache_factory=WindowsCommunityCache):
+    def __init__(self, backend=None, cache_factory=WindowsCommunityCache, *, renewer=None):
         self.backend = backend or WindowsSteamProfile()
         self.cache_factory = cache_factory
+        self.renewer = renewer
 
     def current_identity(self):
         return self.backend.identity()
+
+    def renew(self, identity):
+        from .steam_local_renewal import renew_native_web_session, NativeRenewalUnavailable
+        if identity.status != 'online' or self.current_identity() != identity:
+            raise LocalSessionUnavailable('本机 Steam 已退出或切换账号，未请求续期。')
+        try:
+            values = (self.renewer or renew_native_web_session)(identity)
+            values = _validated_values(values)
+        except NativeRenewalUnavailable as exc:
+            raise LocalSessionUnavailable(str(exc), retryable=exc.retryable) from None
+        except Exception:
+            raise LocalSessionUnavailable('本机 Steam 自动续期暂未完成，将稍后重试。') from None
+        from urllib.parse import unquote
+        if (self.current_identity() != identity or unquote(values['steamLoginSecure']).split('||', 1)[0]
+                != str(STEAM_ID_BASE + identity.account)):
+            raise LocalSessionUnavailable('本机 Steam 账号已变化，未采用续期凭证。')
+        return LocalSessionSnapshot(identity, values)
 
     def snapshot(self):
         try:

@@ -20,6 +20,32 @@ BEGIN = b'# Deskrawl Steam Community temporary acceleration '
 END = b'# End Deskrawl Steam Community temporary acceleration'
 
 
+class NativeAccelerationError(OSError):
+    """Allowlisted diagnostics; never expose system file or credential contents."""
+    def __init__(self, code, message):
+        super().__init__(message)
+        self.code = code
+
+
+def recover_orphaned_hosts(raw, nonce, lease_exists):
+    """Called only while the elevated watcher owns the global hosts mutex.
+
+    An exact old assistant block with no surviving lease events can be replaced.
+    Foreign mappings, altered blocks and live/starting leases remain untouched.
+    The returned baseline deliberately excludes the abandoned loopback mapping,
+    so shutdown cannot restore a route to a listener which no longer exists.
+    """
+    starts = re.findall(rb'^' + re.escape(BEGIN) + rb'([a-f0-9]{32})\r?$', raw, re.M)
+    if len(starts) != 1 or starts[0].decode() == nonce:
+        return raw
+    previous = starts[0].decode()
+    # Validate the entire owned block before considering recovery.
+    clean = hosts_edit(raw, previous, False)
+    if lease_exists(previous):
+        raise NativeAccelerationError('hosts_conflict', '另一份助手仍在使用本机 Steam 加速，未覆盖其配置。')
+    return clean
+
+
 def hosts_edit(raw, nonce, enabled):
     if not re.fullmatch('[a-f0-9]{32}', nonce): raise ValueError('Invalid lease')
     if b'\x00' in raw: raise ValueError('hosts 格式无法确认，未修改。')
@@ -73,6 +99,17 @@ def _event_name(nonce, suffix):
     return 'Local\\Deskrawl.SteamCommunity.' + nonce + '.' + suffix
 
 
+def _lease_exists(kernel, nonce):
+    for suffix in ('ready', 'stop', 'done'):
+        handle = kernel.OpenEventW(0x100000, False, _event_name(nonce, suffix))
+        if handle:
+            kernel.CloseHandle(handle)
+            return True
+        if ctypes.get_last_error() != 2:  # Access denied/unknown is not proof of absence.
+            return True
+    return False
+
+
 def _owner_sid(process):
     api = ctypes.WinDLL('advapi32', use_last_error=True)
     api.OpenProcessToken.argtypes = (w.HANDLE, w.DWORD, ctypes.POINTER(w.HANDLE))
@@ -114,6 +151,7 @@ def hosts_worker(pid, created, nonce, fingerprint):
     kernel = _kernel()
     handles, events, owner, mutex, acquired = [], {}, None, None, False
     original = applied = owner_sid = None
+    write_started = False
     try:
         for suffix in ('ready', 'stop', 'done'):
             events[suffix] = kernel.OpenEventW(0x100002, False, _event_name(nonce, suffix))
@@ -133,13 +171,15 @@ def hosts_worker(pid, created, nonce, fingerprint):
             return 1
         path = _hosts_path()
         if path.is_symlink() or path.stat().st_size > 1024 * 1024: return 1
-        original = path.read_bytes()
+        observed = path.read_bytes()
+        original = recover_orphaned_hosts(observed, nonce, lambda old: _lease_exists(kernel, old))
         applied = hosts_edit(original, nonce, True)
         # Preserve the existing file's ACL. Never replace the system file with
         # a user-writable temporary file or accept a caller-selected path.
         with path.open('r+b') as stream:
-            if stream.read() != original: return 1
+            if stream.read() != observed: return 1
             if kernel.WaitForSingleObject(events['stop'], 0) == 0: return 1
+            write_started = True
             stream.seek(0); stream.write(applied); stream.truncate(); stream.flush(); os.fsync(stream.fileno())
         _flush()
         kernel.SetEvent(events['ready'])
@@ -155,7 +195,7 @@ def hosts_worker(pid, created, nonce, fingerprint):
         # The certificate cleanup routine retains reusable DPAPI-backed leaves.
         for attempt in range(6):
             cleaned = True
-            if applied is not None and original is not None:
+            if write_started:
                 try:
                     path = _hosts_path()
                     with path.open('r+b') as stream:
@@ -200,14 +240,17 @@ class WindowsHostsLease:
         shell.ShellExecuteW.argtypes = (w.HWND, w.LPCWSTR, w.LPCWSTR, w.LPCWSTR, w.LPCWSTR, ctypes.c_int)
         shell.ShellExecuteW.restype = ctypes.c_ssize_t
         result = shell.ShellExecuteW(None, 'runas', sys.executable, subprocess.list2cmdline(args), None, 0)
-        if result <= 32: raise OSError('未获得本机 Steam 加速所需的系统授权；助手内部加速仍可使用。')
+        if result <= 32:
+            raise NativeAccelerationError('authorization_denied',
+                '未获得本机 Steam 加速所需的 Windows 授权；助手内部加速仍可使用。')
         self.launched = True
         deadline = time.monotonic() + 30
         while not cancelled.is_set() and time.monotonic() < deadline:
             if self.kernel.WaitForSingleObject(self.events['ready'], 100) == 0: return
             if self.kernel.WaitForSingleObject(self.events['done'], 0) == 0:
-                raise OSError('本机 Steam 域名配置未启用；可能存在其他加速器或 hosts 映射。')
-        raise OSError('本机 Steam 加速已取消或启用超时。')
+                raise NativeAccelerationError('hosts_unavailable',
+                    '本机 Steam 域名配置未启用；请检查已有加速器、hosts 映射或系统权限。')
+        raise NativeAccelerationError('authorization_timeout', '本机 Steam 加速授权已取消或启用超时。')
 
     def close(self):
         events = getattr(self, 'events', {})

@@ -55,8 +55,9 @@
   const helpers={normalize,activeHero,talentProgress,talentChange,talentAllowed,talentPointLimit,lifePath,lifeRemove,skillTargets,skillChoice,description,enabled};
   if(typeof module!=='undefined'&&module.exports)module.exports=helpers;if(!root.document)return;
   const $=id=>root.document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const setText=(id,value)=>{const node=$(id),text=String(value??'');if(node.textContent!==text)node.textContent=text;};
   let settings=null,data=null,state=null,disabled=false,onChange=null,selected=null,connected=false,tab='talents',specialSlot=2,search='',lifeZoom=.42,lifeCentered=false,drag=null;
-  let talentSignature='',skillSignature='',lifeSignature='',prioritySignature='',shopSignature='',tooltip=null;
+  let talentSignature='',skillSignature='',lifeSignature='',lifeSummaryMarkup='',prioritySignature='',shopSignature='',tooltip=null;
   let previousTalentClass=null,previousTalentPoints=0;
   const slots=['普通攻击','强力攻击','特殊技能 1','特殊技能 2'];
   const bindings=[['managed-merchant','merchant','enabled'],['managed-shard-trigger','merchant','trigger_percent'],['managed-shard-reserve','merchant','spend_to_percent'],['managed-talents','progression','talents_enabled'],['managed-skills','progression','skills_enabled'],['managed-life','life_skills','enabled'],['managed-life-gold','life_skills','gold_reserve']];
@@ -70,7 +71,8 @@
   function renderLife(){
     const nodes=data?.life_skills||[],list=settings.life_skills.priorities,path=new Set(lifePath(nodes,list)),ranks=state?.available?state.life_skills.ranks:{},byId=Object.fromEntries(nodes.map(n=>[n.id,n]));
     const learned=nodes.filter(n=>ranks[n.id]>=n.max_points).length,remaining=nodes.reduce((sum,n)=>sum+(ranks[n.id]>=n.max_points?0:n.gold_costs[0]||0),0);
-    $('growth-life-summary').innerHTML=`<h3>总览</h3><strong>最终 ${nodes.length} / ${nodes.length} 个节点</strong><p>优先路径 <b>${path.size}</b> 个节点</p><p>已学习 <b>${state?.available?learned:'—'}</b> / ${nodes.length}</p><p>待学金币 <b>${remaining.toLocaleString()}</b></p><p>当前金币 <b>${state?.available?state.gold.toLocaleString():'—'}</b></p><hr><p class="growth-green">优先路径为绿色连线</p><p class="growth-gold">金色编号为执行顺序</p><p>左键选优先节点，右键取消该节点及其后续优先路径。</p><p>拖动空白区域平移，使用 + / − 缩放。</p>`;
+    const summary=`<h3>总览</h3><strong>最终 ${nodes.length} / ${nodes.length} 个节点</strong><p>优先路径 <b>${path.size}</b> 个节点</p><p>已学习 <b>${state?.available?learned:'—'}</b> / ${nodes.length}</p><p>待学金币 <b>${remaining.toLocaleString()}</b></p><p>当前金币 <b>${state?.available?state.gold.toLocaleString():'—'}</b></p><hr><p class="growth-green">优先路径为绿色连线</p><p class="growth-gold">金色编号为执行顺序</p><p>左键选优先节点，右键取消该节点及其后续优先路径。</p><p>拖动空白区域平移，使用 + / − 缩放。</p>`;
+    if(summary!==lifeSummaryMarkup){lifeSummaryMarkup=summary;$('growth-life-summary').innerHTML=summary;}
     const psig=JSON.stringify([list,disabled]);if(psig!==prioritySignature){prioritySignature=psig;$('managed-life-priorities').innerHTML=list.map((key,index)=>{const n=byId[key];return `<li><img src="${esc(n?.icon)}" alt=""><span>${index+1}. ${esc(n?.name||key)}</span><small>${(n?.gold_costs[0]||0).toLocaleString()} 金币</small><button data-life-up="${esc(key)}" type="button" ${disabled||index===0?'disabled':''} aria-label="上移 ${esc(n?.name)} 的优先级">↑</button><button data-life-remove="${esc(key)}" type="button" ${disabled?'disabled':''} aria-label="移除 ${esc(n?.name)} 优先路径">×</button></li>`;}).join('')||'<li class="muted">尚未指定优先路径，将按前置关系和金币消耗逐步点满。</li>';}
     const sig=JSON.stringify([list,ranks,search,disabled,data?.build]);if(sig===lifeSignature)return;lifeSignature=sig;
     if(!nodes.length){$('managed-life-nodes').innerHTML='<p class="muted">等待载入生活技能资源。</p>';return;}
@@ -89,12 +91,13 @@
   function zoomLife(amount){const viewport=$('managed-life-nodes'),old=lifeZoom,x=(viewport.scrollLeft+viewport.clientWidth/2)/old,y=(viewport.scrollTop+viewport.clientHeight/2)/old;lifeZoom=Math.max(.3,Math.min(.9,Math.round((lifeZoom+amount)*100)/100));lifeSignature='';renderLife();viewport.scrollLeft=x*lifeZoom-viewport.clientWidth/2;viewport.scrollTop=y*lifeZoom-viewport.clientHeight/2;}
   function renderTalents(){
     if(!selected){
-      talentSignature='';previousTalentClass=null;previousTalentPoints=0;
-      $('managed-talent-total').textContent='尚未识别当前职业';$('growth-talent-feedback').textContent='';
-      $('managed-talent-tree').innerHTML=`<div class="growth-empty"><strong>${connected?'等待职业数据':'尚未连接游戏'}</strong><p>${waitingMessage()}</p></div>`;return;
+      previousTalentClass=null;previousTalentPoints=0;
+      setText('managed-talent-total','尚未识别当前职业');setText('growth-talent-feedback','');
+      const signature='waiting:'+connected;
+      if(talentSignature!==signature){talentSignature=signature;$('managed-talent-tree').innerHTML=`<div class="growth-empty"><strong>${connected?'等待职业数据':'尚未连接游戏'}</strong><p>${waitingMessage()}</p></div>`;}return;
     }
     const hero=data?.heroes?.[selected],nodes=(hero?.talents||[]).filter(n=>n.selectable!==false),targets=settings.progression.talent_targets[selected]||{},ranks=live()?state.talents.ranks:{};
-    $('managed-talent-total').textContent=`预设投入 ${total(targets)} / ${talentPointLimit} 点${live()?' · 当前已投入 '+total(ranks)+' · 可用 '+state.talents.unspent+' 点':''}`;
+    setText('managed-talent-total',`预设投入 ${total(targets)} / ${talentPointLimit} 点${live()?' · 当前已投入 '+total(ranks)+' · 可用 '+state.talents.unspent+' 点':''}`);
     const sig=JSON.stringify([selected,targets,ranks,disabled,data?.build]);if(sig===talentSignature)return;talentSignature=sig;if(!nodes.length){$('managed-talent-tree').innerHTML='<p class="muted">等待载入天赋资源。</p>';return;}
     const ys=[...new Set(nodes.map(n=>n.y))].sort((a,b)=>a-b),minX=Math.min(...nodes.map(n=>n.x)),maxX=Math.max(...nodes.map(n=>n.x)),x=n=>14+(n.x-minX)*78/Math.max(1,maxX-minX),y=n=>50+ys.indexOf(n.y)*96,byId=Object.fromEntries(nodes.map(n=>[n.id,n]));
     const points=total(targets),progress=talentProgress(nodes,points),sameClass=previousTalentClass===selected;
@@ -112,13 +115,14 @@
     tree.querySelectorAll('[data-talent-node]').forEach(button=>{const n=byId[button.dataset.talentNode];button.style.left=x(n)+'%';button.style.top=y(n)+'px';});
   }
   function renderSkills(){
-    if(!selected){skillSignature='';$('growth-skill-status').textContent='尚未识别当前职业';$('growth-skills-note').textContent='';
-      $('managed-skill-stages').innerHTML=`<div class="growth-empty"><strong>${connected?'等待职业数据':'尚未连接游戏'}</strong><p>${waitingMessage()}</p></div>`;return;
+    if(!selected){setText('growth-skill-status','尚未识别当前职业');setText('growth-skills-note','');
+      const signature='waiting:'+connected;
+      if(skillSignature!==signature){skillSignature=signature;$('managed-skill-stages').innerHTML=`<div class="growth-empty"><strong>${connected?'等待职业数据':'尚未连接游戏'}</strong><p>${waitingMessage()}</p></div>`;}return;
     }
     const hero=data?.heroes?.[selected],stages=settings.progression.skill_stages[selected]||[],targets=skillTargets(stages),abilities=hero?.abilities||[],currentReadable=skillsLive(),waitingForSkills=live()&&!currentReadable;
-    $('growth-skill-status').textContent=live()?`${hero.name} · 当前 ${state.level} 级${waitingForSkills?' · 技能状态待读取':''}`:'未连接时也可预设技能';
+    setText('growth-skill-status',live()?`${hero.name} · 当前 ${state.level} 级${waitingForSkills?' · 技能状态待读取':''}`:'未连接时也可预设技能');
     const planNote=stages.some(s=>s.level!==1)||stages.length>1?'原等级阶段仍按已保存设置执行。点选图标后，本职业改为一套预设，按各技能自身解锁等级切换。':'未预设的栏位保留当前技能。两个特殊技能分别配置，点击右侧栏位选择要替换的目标。';
-    $('growth-skills-note').textContent=(waitingForSkills?'当前技能待读取：'+(state.skills?.reason||'等待当前技能栏读取。')+' 可继续配置技能预设。':'')+planNote;
+    setText('growth-skills-note',(waitingForSkills?'当前技能待读取：'+(state.skills?.reason||'等待当前技能栏读取。')+' 可继续配置技能预设。':'')+planNote);
     const sig=JSON.stringify([selected,stages,live()?state.skills:null,live()?state.level:null,disabled,specialSlot,data?.build]);if(sig===skillSignature)return;skillSignature=sig;const byId=Object.fromEntries(abilities.map(a=>[a.id,a]));
     const icon=a=>{const target=targets.indexOf(a.id),current=currentReadable?state.skills.equipped.indexOf(a.id):-1,waiting=live()&&(state.level<a.level_requirement||(currentReadable&&!state.skills.available.includes(a.id)));return `<button type="button" data-skill-id="${esc(a.id)}" data-growth-tooltip="skill" class="growth-skill-icon ${target>=0?'selected':''} ${current>=0?'equipped':''} ${waiting?'locked-level':''}" ${disabled?'disabled':''} aria-pressed="${target>=0}" aria-label="${esc(a.name)}，${a.level_requirement} 级解锁${target>=0?'，已预设 '+slots[target]:''}"><img src="${esc(a.icon)}" alt="">${target>=2?`<b>${target-1}</b>`:''}<small>${a.level_requirement}级</small></button>`;};
     $('managed-skill-stages').innerHTML=`<div class="growth-skill-book"><h3>${esc(hero?.name||'')} · 法术</h3>${['普通攻击','强力攻击','特殊'].map((title,category)=>`<section><h4>${title}</h4><div class="growth-skill-grid">${abilities.filter(a=>category===0?a.slots.includes(0):category===1?a.slots.includes(1):a.slots.includes(2)).map(icon).join('')}</div></section>`).join('')}</div><aside class="growth-skill-loadout"><h3>目标技能</h3>${slots.map((label,index)=>{const target=byId[targets[index]],current=currentReadable?byId[state.skills.equipped[index]]:null,waiting=target&&live()&&(state.level<target.level_requirement||(currentReadable&&!state.skills.available.includes(target.id)));return `<button type="button" class="growth-skill-target ${index>=2&&specialSlot===index?'active':''}" ${index>=2?`data-special-slot="${index}"`:''} ${disabled||index<2?'disabled':''}><span>${label}</span><strong>${target?`<img src="${esc(target.icon)}" alt="">${esc(target.name)}`:'沿用当前技能'}</strong><small>${target?(waiting?`${target.level_requirement} 级解锁，等待解锁后切换`:`${target.level_requirement} 级解锁`):'不主动更改此栏位'+(waitingForSkills?'；当前技能待读取':'')}</small><em>当前：${esc(current?.name||(currentReadable?'未装备':'未读取'))}</em></button>`;}).join('')}<p><span class="growth-gold">金框</span> 预设技能 · <span class="growth-green">绿点</span> 当前技能</p></aside>`;
@@ -151,7 +155,7 @@
       input.disabled=disabled;
       if(root.document.activeElement!==input&&input.value!==String(settings.merchant.weights[slot]))input.value=settings.merchant.weights[slot];
     }
-    $('managed-shop-price-note').textContent=preview.some(row=>row.price_source==='level'||row.price_reference)?'按游戏的当前等级定价公式显示；在线购买前会刷新并核对服务器报价。':preview.length?'已读取游戏报价。':connected?'正在读取商人价格。':'连接后显示价格，购买计划可提前配置。';
+    setText('managed-shop-price-note',preview.some(row=>row.price_source==='level'||row.price_reference)?'按游戏的当前等级定价公式显示；在线购买前会刷新并核对服务器报价。':preview.length?'已读取游戏报价。':connected?'正在读取商人价格。':'连接后显示价格，购买计划可提前配置。');
   }
   function render(value,catalog,current,readonly,changed,isConnected=false){
     if(!$('managed-growth'))return;settings=normalize(value);data=catalog;disabled=readonly;onChange=changed;connected=isConnected;state=connected?current:null;
@@ -160,12 +164,12 @@
     for(const [id,key,field] of bindings){const input=$(id);if(input.type==='checkbox')input.checked=settings[key][field];else if(root.document.activeElement!==input)input.value=settings[key][field];input.disabled=disabled||(['managed-talents','managed-skills'].includes(id)&&!selected)||(id==='managed-merchant'&&!merchantUnlocked&&!input.checked);}
     const requirements=shop?.unlock_requirements||data?.shop_unlock;
     const conditions=requirements?[`${requirements.level} 级`,`${requirements.gold} 金币`,...requirements.materials.map(row=>`${row.count} ${row.name}`)].join('、'):'';
-    $('managed-merchant-unlock').textContent=merchantUnlocked?'神秘商人已解锁':!connected?'连接后确认商人解锁状态':shop?.unlock_known?'神秘商人未解锁'+(conditions?' · 游戏内解锁需要 '+conditions:''):'神秘商人解锁状态待读取';
+    setText('managed-merchant-unlock',merchantUnlocked?'神秘商人已解锁':!connected?'连接后确认商人解锁状态':shop?.unlock_known?'神秘商人未解锁'+(conditions?' · 游戏内解锁需要 '+conditions:''):'神秘商人解锁状态待读取');
     $('managed-merchant').title=merchantUnlocked?'已完成游戏内解锁，可启用自动购买':'未确认已解锁时不能开启；旧配置若已开启，可先关闭';
     $('managed-skills').title=live()&&!skillsLive()?'技能状态待读取，托管会在技能栏读取完成后切换：'+(state.skills?.reason||'等待当前技能栏读取。'):'按预设切换已解锁的技能';
-    $('managed-shard-state').textContent=state?.available?`灵魂碎片 ${state.soul_shards.current} / ${state.soul_shards.maximum} · 金币 ${state.gold.toLocaleString()}`:state?.reason||'连接后读取实际灵魂碎片上限和成长状态。';
+    setText('managed-shard-state',state?.available?`灵魂碎片 ${state.soul_shards.current} / ${state.soul_shards.maximum} · 金币 ${state.gold.toLocaleString()}`:state?.reason||'连接后读取实际灵魂碎片上限和成长状态。');
     renderShop();
-    $('managed-growth-class').textContent=selected?data.heroes[selected].name+' · 当前职业':'连接后识别职业';
+    setText('managed-growth-class',selected?data.heroes[selected].name+' · 当前职业':'连接后识别职业');
     $('managed-talent-clear').disabled=disabled||!selected;$('growth-life-clear').disabled=disabled;$('growth-skills-clear').disabled=disabled||!selected;renderLife();renderTalents();renderSkills();
   }
   function init(){

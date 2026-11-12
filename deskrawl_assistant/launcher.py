@@ -11,6 +11,10 @@ from .paths import runtime_dir
 
 
 def main(argv=None):
+    # Frozen native renewal helpers must enter multiprocessing before argparse,
+    # the desktop service or any UI is created.
+    import multiprocessing
+    multiprocessing.freeze_support()
     values = list(sys.argv[1:] if argv is None else argv)
     if values[:1] == ['--steam-community-hosts']:
         # The elevated process exposes only a fixed hosts lease, never the

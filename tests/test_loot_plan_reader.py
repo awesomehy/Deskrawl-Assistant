@@ -54,12 +54,12 @@ class Fixture:
         native = self.allocate(128)
         self.ptr(self.map + 16, native)
         self.memory.write_fixture(native + 56, b'RedForest2\0' + bytes(21))
-        self.integer(self.manager + 176, 1)
+        self.integer(self.manager + 184, 1)
         self.integer(self.area + 120, 0)
         self.integer(self.save + 32, 1)
-        self.ptr(self.manager + 104, self.wave_manager)
-        self.ptr(self.manager + 112, self.map)
-        self.ptr(self.manager + 120, self.plan)
+        self.ptr(self.manager + 112, self.wave_manager)
+        self.ptr(self.manager + 120, self.map)
+        self.ptr(self.manager + 128, self.plan)
         self.ptr(self.wave_manager + 40, self.map)
         self.ptr(self.wave_manager + 88, self.plan)
         self.integer(self.wave_manager + 48, 1)
@@ -196,7 +196,7 @@ class LootPlanReaderTests(unittest.TestCase):
         self.assertEqual(result['phase'], 'waiting')
         self.assertEqual(result['waves'], [])
         self.assertIsNone(result['run'])
-        self.assertNotIn((f.manager + 120, 8), f.memory.reads)
+        self.assertNotIn((f.manager + 128, 8), f.memory.reads)
 
     def test_zero_items_is_a_valid_plan_and_gold_not_inferred(self):
         f = Fixture()
@@ -214,7 +214,7 @@ class LootPlanReaderTests(unittest.TestCase):
             elif field == 'enabled':
                 f.boolean(f.wave_manager + 96, value)
             else:
-                f.ptr(f.manager + 120, value)
+                f.ptr(f.manager + 128, value)
             result = read_loot_plan(f.reader)
             self.assertFalse(result['available'])
             self.assertEqual(result['phase'], 'waiting')

@@ -26,11 +26,13 @@ def parse_effect(kind, name, data):
             modifiers.append({'stat':stat, 'type':modifier, 'value':value})
         required_status = cursor.take('iq')[1] != 0
         condition = cursor.take('i')
+        channeling_ability = cursor.take('iq')[1] != 0
         cursor.done()
         if condition not in range(-1, 6):
             raise ValueError('Unsupported equipment condition: ' + name)
         return {'id':name, 'class':kind, 'condition':condition,
-                'required_status':required_status, 'modifiers':modifiers}
+                'required_status':required_status, 'channeling_ability':channeling_ability,
+                'modifiers':modifiers}
     if kind == 'EquipmentEffect_StatConversion':
         source, target, fraction = cursor.take('iif')
         cursor.done()

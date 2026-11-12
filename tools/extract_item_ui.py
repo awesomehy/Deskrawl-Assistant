@@ -135,6 +135,7 @@ def main():
         c.pos=item_layout(data)['effects']
         inherited_effects=effects(c,obj)
         abilities=grants(c,obj)
+        c.take('iq')  # AncientOf, reviewed 1.1.11 ItemData
         fixed=[attribute(c) for _ in range(c.count())]
         c.take('iii')  # Steam definition, retired aligned bool, Black Mist definition
         effect_groups=[]

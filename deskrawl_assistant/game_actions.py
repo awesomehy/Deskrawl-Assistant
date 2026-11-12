@@ -247,7 +247,7 @@ class GameActions:
         self.reader.check_game_files()
         read = _Read(self.reader, self.profile)
         manager = read.singleton('GameManager')
-        if read.integer(manager+176) != 1:
+        if read.integer(manager+184) != 1:
             raise NativeActionError('请先进入角色，当前不能执行托管动作')
         area = read.singleton('GameAreaManager')
         scene = read.integer(area+120)
@@ -279,7 +279,7 @@ class GameActions:
         """Re-read the same Player/config fields as ddt before any game call."""
         from .recommendation_reader import _Copy, decode_obscured_int
         copy = _Copy(self.reader)
-        combat = copy.verify(copy.ptr(manager + 64), 'PlayerCombatController')
+        combat = copy.verify(copy.ptr(manager + 72), 'PlayerCombatController')
         player = copy.verify(copy.ptr(combat + 32), 'Player')
         copy.klass(copy.ptr(copy.ptr(player) + 88), 'Character')
         config = copy.verify(copy.ptr(manager + 32), 'GameConfig')
@@ -293,7 +293,7 @@ class GameActions:
                 {'equipped_slot': slot, 'internal_name': self.reader.asset_name(equipped[slot])}
                 for slot in (6, 7) if equipped.get(slot)]
         current = {**selected, 'base_rarity': copy.integer(item + 36),
-                   'equip_slot': copy.integer(item + 160)}
+                   'equip_slot': copy.integer(item + 168)}
         eligibility = equip_eligibility(current, character, target_slot=target_slot)
         copy.finish()
         read.guards.extend(copy.guards)
@@ -364,9 +364,9 @@ class GameActions:
 
     def _ground(self, read, manager, selection_id=None):
         rows = []
-        list_obj = read.ptr(manager+224)
+        list_obj = read.ptr(manager+232)
         world = read.list(list_obj, 'LootDrop', 8192, selected_only=selection_id is not None)
-        carriage = read.ptr(manager+88)
+        carriage = read.ptr(manager+96)
         carriage_items = set()
         if carriage:
             # Exact HorseCarriage layout is verified by the existing reader.
@@ -474,7 +474,7 @@ class GameActions:
     def _return_town_call(self, read, manager, portal):
         self._require_travel_ready(read)
         completion = self._completion_state(read)
-        combat = read.verify(read.ptr(manager+64), 'PlayerCombatController')
+        combat = read.verify(read.ptr(manager+72), 'PlayerCombatController')
         player = read.ptr(combat+32)
         if not player or self.reader.class_name(self.reader.memory.u64(player)) != 'Player':
             raise NativeActionError('当前角色实体未确认')
@@ -506,9 +506,9 @@ class GameActions:
         portal = read.singleton('TownPortalSystem')
         online = self._online_state(read)
         if (read.boolean(portal+76) or online['online_saving']
-                or online['online_pending_requests'] != 0 or read.boolean(manager+276)):
+                or online['online_pending_requests'] != 0 or read.boolean(manager+284)):
             return None
-        combat = read.verify(read.ptr(manager+64), 'PlayerCombatController')
+        combat = read.verify(read.ptr(manager+72), 'PlayerCombatController')
         player = read.verify(read.ptr(combat+32), 'Player')
         if read.boolean(player+296) or read.boolean(combat+80): return None
         town = read.verify(read.ptr(area+128), 'TownData')
@@ -530,7 +530,7 @@ class GameActions:
             entries = read.pointers(array, 'InventorySlot', limit=2048, contents=False)
             if not entries: return None
             containers.extend((obj, array, len(entries)))
-        carriage = read.ptr(manager+88)
+        carriage = read.ptr(manager+96)
         if carriage:
             value = self._carriage(read, in_town=True, offload_only=True)
             if value.get('complete') is not True or value.get('settling') is not False: return None
@@ -591,11 +591,11 @@ class GameActions:
         from .recommendation_reader import read_campaign
         read = _Read(self.reader, self.profile)
         manager = read.singleton('GameManager')
-        if read.integer(manager + 176) != 1:
+        if read.integer(manager + 184) != 1:
             raise NativeActionError('请先进入角色，再读取关卡。')
         save = read.singleton('SaveSystem')
         read.read(save + 32, 8)
-        combat = read.verify(read.ptr(manager + 64), 'PlayerCombatController')
+        combat = read.verify(read.ptr(manager + 72), 'PlayerCombatController')
         player = read.verify(read.ptr(combat + 32), 'Player')
         dead = read.boolean(player + 296)
         campaign = recommendation if recommendation is not None else read_campaign(self.reader)
@@ -631,7 +631,7 @@ class GameActions:
             online = self._online_state(read)
             portal = read.singleton('TownPortalSystem')
             teleporting, scene_changing = read.boolean(portal+76), read.boolean(area+176)
-            combat = read.verify(read.ptr(manager+64), 'PlayerCombatController')
+            combat = read.verify(read.ptr(manager+72), 'PlayerCombatController')
             player = read.ptr(combat+32)
             if not player or self.reader.class_name(self.reader.memory.u64(player)) != 'Player':
                 raise NativeActionError('当前角色实体未确认')
@@ -666,7 +666,7 @@ class GameActions:
                 tier_completed = set(progress['completed_maps'].get(key,[]))
                 maps = []
                 for row in catalog['maps']:
-                    if row.get('map_type') == 1: continue
+                    if row.get('map_type') == 1 or (row.get('map_type') == 5 and key != 'Inferno'): continue
                     requirements = [entry for entry in row.get('requirements', []) if entry['difficulty_mask'] & (1 << diff_value)]
                     enough = all(progress['entry_items'].get(entry['item_id'], 0) >= entry['count'] for entry in requirements)
                     maps.append({'map_id':row['map_id'], 'name':row['stage'], 'stage':row['stage'],'difficulty':key,
@@ -710,7 +710,7 @@ class GameActions:
                 system_log = {'available':False, 'complete':False, 'reason':str(exc)}
             from .statistics_reader import read_gold_ledger
             gold_ledger = read_gold_ledger(self.reader, progress['character_id'])
-            active = read.ptr(manager+112)
+            active = read.ptr(manager+120)
             map_id = self.reader.asset_name(active) if active else None
             scene_difficulty = difficulty
             if map_id == MYTHIC_MAP and scene == 0:
@@ -718,7 +718,7 @@ class GameActions:
                 # not the narrower native-action profile. Keep its guards until
                 # the whole control snapshot is checked, including floor changes.
                 copy = _Copy(self.reader)
-                wave = copy.verify(copy.ptr(manager+104),'WaveManager')
+                wave = copy.verify(copy.ptr(manager+112),'WaveManager')
                 map_id,scene_difficulty = floor_id(copy.integer(wave+304)),MYTHIC
                 read.guards.extend(copy.guards)
             campaign_run = recommendation.get('run')
@@ -853,10 +853,10 @@ class GameActions:
 
     def _combat_travel_state(self, read, manager):
         """Mirror the original portal gates; keep their reads in native guards."""
-        combat = read.verify(read.ptr(manager + 64), 'PlayerCombatController')
+        combat = read.verify(read.ptr(manager + 72), 'PlayerCombatController')
         state = read.integer(combat + 48)
         gathering = read.boolean(combat + 52)
-        active = read.ptr(manager + 112)
+        active = read.ptr(manager + 120)
         if active: read.verify(active, 'MapData')
         map_type = read.integer(active + 32) if active else None
         # TownPortalSystem.frm permits attacks only in CombatMapType 2.
@@ -872,9 +872,9 @@ class GameActions:
         # repeat occurring after the Python preflight must cancel the action.
         from .recommendation_reader import _Copy
         copy = _Copy(self.reader)
-        wave = copy.verify(copy.ptr(manager + 104), 'WaveManager')
-        plan = copy.verify(copy.ptr(manager + 120), 'RunPlan')
-        active = copy.ptr(manager + 112)
+        wave = copy.verify(copy.ptr(manager + 112), 'WaveManager')
+        plan = copy.verify(copy.ptr(manager + 128), 'RunPlan')
+        active = copy.ptr(manager + 120)
         if copy.ptr(wave + 88) != plan or copy.ptr(wave + 40) != active or not active:
             raise SnapshotChangedError('观星关卡计划正在切换。')
         if not copy.boolean(wave + 96) or copy.boolean(wave + 248) or copy.boolean(wave + 249):
@@ -896,7 +896,7 @@ class GameActions:
             raise SnapshotChangedError('南瓜王结算关卡已变化，重新读取后再复刷。')
         if not self._completion_state(read).get('CombatMapCompletionUI'):
             raise GameBusyError('等待南瓜王结算界面就绪后复刷。')
-        if read.boolean(manager + 240):
+        if read.boolean(manager + 248):
             raise GameBusyError('游戏正在重开关卡，等待完成。')
         from .recommendation_reader import _Copy, _campaign_run
         copy = _Copy(self.reader)
@@ -1104,7 +1104,7 @@ class GameActions:
                 if not boss['can_enter']: raise NativeActionError(boss['reason'])
             if floor:
                 if read.integer(obj+32)!=1: raise NativeActionError('神话裂隙地图类型未确认。')
-                if read.boolean(manager+276): raise GameBusyError('游戏正在提交关卡请求，等待完成。')
+                if read.boolean(manager+284): raise GameBusyError('游戏正在提交关卡请求，等待完成。')
                 # Match MythicPortalInteractable: native unlock + material gates,
                 # then the floor-aware GameManager entry. WaveManager consumes
                 # entry materials when accepting the run, never deduct twice here.

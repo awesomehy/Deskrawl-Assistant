@@ -42,9 +42,9 @@ class MythicProgressTests(unittest.TestCase):
         copy=campaign.TownCampaignCopy()
         copy.reader.asset_name=lambda obj:'MythicDungeon' if obj==0xB000 else 'Ticket'
         copy.reader.string=lambda addr:{0x8000:'Offline',0xD000:'run-1',0xD100:'MythicDungeon',0xD200:'Normal'}[addr]
-        copy.pointers.update({0x1000+120:0xA000,0x1000+112:0xB000,0x1000+104:0xC000,
+        copy.pointers.update({0x1000+128:0xA000,0x1000+120:0xB000,0x1000+112:0xC000,
             0xC000+88:0xA000,0xA000+16:0xD000,0xA000+32:0xD100,0xA000+56:0xD200,
-            0xA000+104:0xF000,0x1000+200:0xF300})
+            0xA000+104:0xF000,0x1000+208:0xF300})
         copy.integers.update({0xB000+32:1,0xA000+72:22,0xC000+304:22,0xC000+48:2,0xC000+152:1})
         copy.flags.update({0xC000+64:False,0xC000+248:True,0xC000+249:True,0xF200+296:True})
         fixture=campaign.CampaignReadTests();result=fixture.read_fixture(copy)
@@ -63,7 +63,7 @@ class MythicEntryTests(unittest.TestCase):
                 read,reader,dispatcher=Mock(),Mock(),Mock()
                 dispatcher.invoke.return_value={}
                 read.guards=[];read.singleton.return_value=3
-                read.boolean.side_effect=lambda addr:addr==277 and case=='busy'
+                read.boolean.side_effect=lambda addr:addr==285 and case=='busy'
                 read.integer.return_value=0 if case=='wrong_type' else 1
                 key=floor_id(22) if case!='invalid_floor' else 'MythicDungeon::mythic::101'
                 state={'available':True,'difficulty':'Inferno','maps':[],
@@ -135,8 +135,8 @@ class MythicControlReadTests(unittest.TestCase):
         wave = fixture.object('WaveManager',336)
         del fixture.profile['types']['WaveManager']
         active = fixture.object('MapData')
-        fixture.memory.pointer(manager+104,wave)
-        fixture.memory.pointer(manager+112,active)
+        fixture.memory.pointer(manager+112,wave)
+        fixture.memory.pointer(manager+120,active)
         fixture.memory.put(active+32,struct.pack('<i',1))
         fixture.memory.put(wave+304,struct.pack('<i',9))
         fixture.reader.asset_name = lambda obj:'MythicDungeon' if obj==active else ''

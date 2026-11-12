@@ -26,11 +26,11 @@ import UnityPy
 from extract_catalog import sha256_file
 
 
-METADATA_HASH = "a011ecdbd6f41d3e34c47aa85acc05868268710779c6a008bf8a841ef0d57942"
-CONFIG_PATH_ID = 61691
-SCRIPT_PATH_ID = 376
+METADATA_HASH = "8e636924c88a9c9274c02df2f1b164303ff5064626e5d5f8169cb0a6fbcc75c8"
+CONFIG_PATH_ID = 64262
+SCRIPT_PATH_ID = 377
 CONFIG_BYTES = 1300
-ENUM_DEFAULT_TYPE_INDEX = 24214
+ENUM_DEFAULT_TYPE_INDEX = 24303
 
 
 def compressed_integer(data: bytes, offset: int) -> tuple[int, bytes]:

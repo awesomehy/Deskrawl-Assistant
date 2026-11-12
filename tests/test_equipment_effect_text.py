@@ -77,13 +77,13 @@ class EquipmentEffectTextTests(unittest.TestCase):
             calls.append((file_id, path_id))
             return 'StatusEffectData', 'LegendaryGloves8', raw
         value = render_equipment_effect('EquipmentEffect_DamagePerStatusStack',
-            struct.pack('<iqf', 0, 5433, .08), self.text,
+            struct.pack('<iqfi', 0, 5433, .08, 0), self.text,
             effect_key='LegendaryGloves8_Damage', resolve=resolve)
         self.assertEqual(value, '施放冲锋时获得一层增益，持续5s。每层使造成的伤害额外提高8%，最多20层。')
         self.assertEqual(calls, [(0, 5433)])
         with self.assertRaisesRegex(ValueError, 'linked asset'):
             render_equipment_effect('EquipmentEffect_DamagePerStatusStack',
-                struct.pack('<iqf', 0, 5433, .08), self.text, effect_key='LegendaryGloves8_Damage')
+                struct.pack('<iqfi', 0, 5433, .08, 0), self.text, effect_key='LegendaryGloves8_Damage')
 
     def test_damage_managed_records_require_unique_header_and_verified_values(self):
         header = serialized('DamageEffect') + serialized('') + serialized('Assembly-CSharp')

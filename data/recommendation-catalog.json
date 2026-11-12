@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "metadata_sha256": "a011ecdbd6f41d3e34c47aa85acc05868268710779c6a008bf8a841ef0d57942",
-  "game_assembly_sha256": "14a46e0a1bccd03fa1091f72d26f739f8502780689df79ed9ec2e9112180ca5c",
+  "metadata_sha256": "8e636924c88a9c9274c02df2f1b164303ff5064626e5d5f8169cb0a6fbcc75c8",
+  "game_assembly_sha256": "5fedeb65c3ef1f607fa1441013068942c52d509d5658e62ecbacdf6b3d7f756c",
   "source": "Verified shipped MapData and Enemy assets; integrity-checked Obscured values. No player/save data.",
   "asset_sha256": {
-    "resources.assets": "06e424d38d018a629559c04c78d8b396205b7ecc66926990481cbbe0ee89b0b5",
-    "sharedassets0.assets": "5e90a12c85dbbdcd4f5c00f1079d361d249f93ccb8efbe3f813cff62500f51f6",
-    "globalgamemanagers.assets": "d2a07cea7ef49e8cb2c2c8e33f37d58b454d847e7bc7483de1717b5962bde51f"
+    "resources.assets": "3efaf658d393aeab532edb84d095e9575aba005041210c7c278c338b1e592084",
+    "sharedassets0.assets": "560cef8b8516922f7b722dc2f590d4943188af377118bd70aa055a1c12404f27",
+    "globalgamemanagers.assets": "fbaef1c37bb36104836dedd0ff6d592fbeb9693ad6306855c6e826979b93174e"
   },
   "config": {
     "XpPerBaseHealth": 1.0,
@@ -102,10 +102,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62026
+      "source_path_id": 64609
     },
     {
       "map_id": "Beach2",
@@ -163,10 +169,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62027
+      "source_path_id": 64610
     },
     {
       "map_id": "Beach3",
@@ -224,10 +236,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62028
+      "source_path_id": 64611
     },
     {
       "map_id": "Beach4",
@@ -281,10 +299,16 @@
       },
       "boss": true,
       "mini_boss": true,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62029
+      "source_path_id": 64612
     },
     {
       "map_id": "Beach5",
@@ -327,10 +351,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62030
+      "source_path_id": 64613
     },
     {
       "map_id": "Beach6",
@@ -383,10 +413,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62031
+      "source_path_id": 64614
     },
     {
       "map_id": "Beach7",
@@ -471,10 +507,16 @@
       },
       "boss": true,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62032
+      "source_path_id": 64615
     },
     {
       "map_id": "CorruptForest1",
@@ -517,10 +559,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62033
+      "source_path_id": 64616
     },
     {
       "map_id": "CorruptForest2",
@@ -578,10 +626,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62034
+      "source_path_id": 64617
     },
     {
       "map_id": "CorruptForest3",
@@ -639,10 +693,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62035
+      "source_path_id": 64618
     },
     {
       "map_id": "CorruptForest4",
@@ -721,10 +781,16 @@
       },
       "boss": true,
       "mini_boss": true,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62036
+      "source_path_id": 64619
     },
     {
       "map_id": "CorruptForest5",
@@ -787,10 +853,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62037
+      "source_path_id": 64620
     },
     {
       "map_id": "CorruptForest6",
@@ -853,10 +925,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62038
+      "source_path_id": 64621
     },
     {
       "map_id": "CorruptForest7",
@@ -946,10 +1024,16 @@
       },
       "boss": true,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62039
+      "source_path_id": 64622
     },
     {
       "map_id": "DefiledKeep1",
@@ -997,10 +1081,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62040
+      "source_path_id": 64623
     },
     {
       "map_id": "DefiledKeep2",
@@ -1048,10 +1138,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62041
+      "source_path_id": 64624
     },
     {
       "map_id": "DefiledKeep3",
@@ -1109,10 +1205,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62042
+      "source_path_id": 64625
     },
     {
       "map_id": "DefiledKeep4",
@@ -1181,10 +1283,16 @@
       },
       "boss": true,
       "mini_boss": true,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62043
+      "source_path_id": 64626
     },
     {
       "map_id": "DefiledKeep5",
@@ -1237,10 +1345,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62044
+      "source_path_id": 64627
     },
     {
       "map_id": "DefiledKeep6",
@@ -1293,10 +1407,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62045
+      "source_path_id": 64628
     },
     {
       "map_id": "DefiledKeep7",
@@ -1366,10 +1486,16 @@
       },
       "boss": true,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62046
+      "source_path_id": 64629
     },
     {
       "map_id": "Desert1",
@@ -1412,10 +1538,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62047
+      "source_path_id": 64630
     },
     {
       "map_id": "Desert2",
@@ -1473,10 +1605,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62048
+      "source_path_id": 64631
     },
     {
       "map_id": "Desert3",
@@ -1534,10 +1672,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62049
+      "source_path_id": 64632
     },
     {
       "map_id": "Desert4",
@@ -1601,10 +1745,16 @@
       },
       "boss": true,
       "mini_boss": true,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62050
+      "source_path_id": 64633
     },
     {
       "map_id": "Desert5",
@@ -1662,10 +1812,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62051
+      "source_path_id": 64634
     },
     {
       "map_id": "Desert6",
@@ -1728,10 +1884,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62052
+      "source_path_id": 64635
     },
     {
       "map_id": "Desert7",
@@ -1821,10 +1983,16 @@
       },
       "boss": true,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62053
+      "source_path_id": 64636
     },
     {
       "map_id": "Dungeon1",
@@ -1882,10 +2050,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62055
+      "source_path_id": 64638
     },
     {
       "map_id": "Dungeon2",
@@ -1953,10 +2127,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62056
+      "source_path_id": 64639
     },
     {
       "map_id": "Dungeon3",
@@ -2024,10 +2204,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62057
+      "source_path_id": 64640
     },
     {
       "map_id": "Dungeon4",
@@ -2106,10 +2292,16 @@
       },
       "boss": true,
       "mini_boss": true,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62058
+      "source_path_id": 64641
     },
     {
       "map_id": "DungeonL1",
@@ -2167,10 +2359,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62059
+      "source_path_id": 64642
     },
     {
       "map_id": "DungeonL2",
@@ -2228,10 +2426,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62060
+      "source_path_id": 64643
     },
     {
       "map_id": "DungeonL3",
@@ -2316,10 +2520,16 @@
       },
       "boss": true,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62061
+      "source_path_id": 64644
     },
     {
       "map_id": "Forest1",
@@ -2362,10 +2572,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62065
+      "source_path_id": 64648
     },
     {
       "map_id": "Forest2",
@@ -2408,10 +2624,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62066
+      "source_path_id": 64649
     },
     {
       "map_id": "Forest3",
@@ -2464,10 +2686,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62067
+      "source_path_id": 64650
     },
     {
       "map_id": "Forest4",
@@ -2516,10 +2744,16 @@
       },
       "boss": true,
       "mini_boss": true,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62068
+      "source_path_id": 64651
     },
     {
       "map_id": "Forest5",
@@ -2572,10 +2806,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62069
+      "source_path_id": 64652
     },
     {
       "map_id": "Forest6",
@@ -2618,10 +2858,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62070
+      "source_path_id": 64653
     },
     {
       "map_id": "Forest7",
@@ -2691,10 +2937,85 @@
       },
       "boss": true,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62071
+      "source_path_id": 64654
+    },
+    {
+      "map_id": "ForestHeroic",
+      "stage": "国王森林 (英雄)",
+      "family": "ForestHeroic",
+      "map_type": 5,
+      "min_level": 70,
+      "max_level": 70,
+      "waves": 22,
+      "prerequisite": "Forest7",
+      "requirements": [],
+      "locked_in_demo": false,
+      "unavailable": false,
+      "elite_chance": 0.20000000298023224,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Boar",
+              "count": 4,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "Wolf",
+              "count": 6,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "RaptorH",
+            "count": 1,
+            "row": 0
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "heroic_first_boss_wave": 11,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "Wolf",
+            "count": 3,
+            "row": 0
+          },
+          {
+            "enemy_id": "WerewolfH",
+            "count": 1,
+            "row": 1
+          }
+        ]
+      },
+      "heroic_health_multiplier": 3.0,
+      "boss_replaces_last_wave": true,
+      "supported": false,
+      "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
+      "source_path_id": 64655
     },
     {
       "map_id": "LockedMap",
@@ -2747,10 +3068,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 5415
+      "source_path_id": 5749
     },
     {
       "map_id": "MythicDungeon",
@@ -2810,10 +3137,16 @@
       },
       "boss": true,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": false,
       "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
-      "source_path_id": 62073
+      "source_path_id": 64657
     },
     {
       "map_id": "RedDesert1",
@@ -2856,10 +3189,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62074
+      "source_path_id": 64658
     },
     {
       "map_id": "RedDesert2",
@@ -2917,10 +3256,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62075
+      "source_path_id": 64659
     },
     {
       "map_id": "RedDesert3",
@@ -2983,10 +3328,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62076
+      "source_path_id": 64660
     },
     {
       "map_id": "RedDesert4",
@@ -3055,10 +3406,16 @@
       },
       "boss": true,
       "mini_boss": true,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62077
+      "source_path_id": 64661
     },
     {
       "map_id": "RedDesert5",
@@ -3116,10 +3473,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62078
+      "source_path_id": 64662
     },
     {
       "map_id": "RedDesert6",
@@ -3187,10 +3550,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62079
+      "source_path_id": 64663
     },
     {
       "map_id": "RedDesert7",
@@ -3290,10 +3659,16 @@
       },
       "boss": true,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62080
+      "source_path_id": 64664
     },
     {
       "map_id": "RedForest1",
@@ -3336,10 +3711,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62081
+      "source_path_id": 64665
     },
     {
       "map_id": "RedForest2",
@@ -3382,10 +3763,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62082
+      "source_path_id": 64666
     },
     {
       "map_id": "RedForest3",
@@ -3438,10 +3825,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62083
+      "source_path_id": 64667
     },
     {
       "map_id": "RedForest4",
@@ -3505,10 +3898,16 @@
       },
       "boss": true,
       "mini_boss": true,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62084
+      "source_path_id": 64668
     },
     {
       "map_id": "RedForest5",
@@ -3571,10 +3970,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62085
+      "source_path_id": 64669
     },
     {
       "map_id": "RedForest6",
@@ -3632,10 +4037,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62086
+      "source_path_id": 64670
     },
     {
       "map_id": "RedForest7",
@@ -3705,10 +4116,16 @@
       },
       "boss": true,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62087
+      "source_path_id": 64671
     },
     {
       "map_id": "SnowHill1",
@@ -3751,10 +4168,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62088
+      "source_path_id": 64672
     },
     {
       "map_id": "SnowHill2",
@@ -3797,10 +4220,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62089
+      "source_path_id": 64673
     },
     {
       "map_id": "SnowHill3",
@@ -3853,10 +4282,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62090
+      "source_path_id": 64674
     },
     {
       "map_id": "SnowHill4",
@@ -3925,10 +4360,16 @@
       },
       "boss": true,
       "mini_boss": true,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62091
+      "source_path_id": 64675
     },
     {
       "map_id": "SnowHill5",
@@ -3986,10 +4427,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62092
+      "source_path_id": 64676
     },
     {
       "map_id": "SnowHill6",
@@ -4047,10 +4494,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62093
+      "source_path_id": 64677
     },
     {
       "map_id": "SnowHill7",
@@ -4125,10 +4578,16 @@
       },
       "boss": true,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62094
+      "source_path_id": 64678
     },
     {
       "map_id": "TrainingGrounds",
@@ -4156,10 +4615,16 @@
       },
       "boss": true,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": false,
       "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
-      "source_path_id": 62096
+      "source_path_id": 64680
     },
     {
       "map_id": "TreasureBarrens",
@@ -4259,10 +4724,16 @@
       },
       "boss": true,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": false,
       "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
-      "source_path_id": 62097
+      "source_path_id": 64681
     },
     {
       "map_id": "TreasureForest",
@@ -4362,10 +4833,16 @@
       },
       "boss": true,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": false,
       "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
-      "source_path_id": 62098
+      "source_path_id": 64682
     },
     {
       "map_id": "TreasureKeep",
@@ -4465,10 +4942,115 @@
       },
       "boss": true,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": false,
       "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
-      "source_path_id": 62099
+      "source_path_id": 64683
+    },
+    {
+      "map_id": "TreasureVolcano",
+      "stage": "梦幻之冠",
+      "family": "TreasureVolcano",
+      "map_type": 3,
+      "min_level": 70,
+      "max_level": 70,
+      "waves": 5,
+      "prerequisite": "Volcano7",
+      "requirements": [
+        {
+          "item_id": "TreasureMapKey",
+          "count": 2,
+          "difficulty_mask": -7
+        },
+        {
+          "item_id": "TreasureMapKeyNightmare",
+          "count": 2,
+          "difficulty_mask": -6
+        },
+        {
+          "item_id": "TreasureMapKeyInferno",
+          "count": 2,
+          "difficulty_mask": -4
+        }
+      ],
+      "locked_in_demo": true,
+      "unavailable": false,
+      "elite_chance": 0.0,
+      "normal_pool": [
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "TreasureVolcanoShellback",
+              "count": 5,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "TreasureVolcanoShellback",
+              "count": 6,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "TreasureVolcanoShellback",
+              "count": 7,
+              "row": 0
+            }
+          ]
+        },
+        {
+          "weight": 1.0,
+          "enemies": [
+            {
+              "enemy_id": "TreasureVolcanoShellback",
+              "count": 8,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "boss_encounter": {
+        "weight": 1.0,
+        "enemies": [
+          {
+            "enemy_id": "TreasureVolcanoShellbackBoss",
+            "count": 1,
+            "row": 1
+          },
+          {
+            "enemy_id": "TreasureVolcanoShellback",
+            "count": 8,
+            "row": 0
+          }
+        ]
+      },
+      "boss": true,
+      "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
+      "boss_replaces_last_wave": true,
+      "supported": false,
+      "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
+      "source_path_id": 64684
     },
     {
       "map_id": "Volcano1",
@@ -4511,10 +5093,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62100
+      "source_path_id": 64685
     },
     {
       "map_id": "Volcano2",
@@ -4557,10 +5145,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62101
+      "source_path_id": 64686
     },
     {
       "map_id": "Volcano3",
@@ -4613,10 +5207,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62102
+      "source_path_id": 64687
     },
     {
       "map_id": "Volcano4",
@@ -4690,10 +5290,16 @@
       },
       "boss": true,
       "mini_boss": true,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62103
+      "source_path_id": 64688
     },
     {
       "map_id": "Volcano5",
@@ -4741,10 +5347,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62104
+      "source_path_id": 64689
     },
     {
       "map_id": "Volcano6",
@@ -4797,10 +5409,16 @@
       },
       "boss": false,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62105
+      "source_path_id": 64690
     },
     {
       "map_id": "Volcano7",
@@ -4880,10 +5498,16 @@
       },
       "boss": true,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": true,
       "unsupported_reason": "",
-      "source_path_id": 62106
+      "source_path_id": 64691
     },
     {
       "map_id": "WorldBossPumpkin",
@@ -4947,10 +5571,16 @@
       },
       "boss": true,
       "mini_boss": false,
+      "heroic_first_boss_wave": 3,
+      "heroic_second_boss": {
+        "weight": 1.0,
+        "enemies": []
+      },
+      "heroic_health_multiplier": 1.0,
       "boss_replaces_last_wave": true,
       "supported": false,
       "unsupported_reason": "特殊/神话关卡生成路径尚未验证",
-      "source_path_id": 62107
+      "source_path_id": 64692
     }
   ],
   "enemies": {
@@ -4965,7 +5595,7 @@
       "attack_speed": 1.5,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 62745
+      "source_path_id": 65337
     },
     "DefiledKeepScarab": {
       "enemy_id": "DefiledKeepScarab",
@@ -4978,7 +5608,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 62820
+      "source_path_id": 65413
     },
     "DefiledKeepDragon": {
       "enemy_id": "DefiledKeepDragon",
@@ -4991,7 +5621,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 6500,
       "high_difficulty_damage": 38,
-      "source_path_id": 62802
+      "source_path_id": 65395
     },
     "DefiledKeepOoze": {
       "enemy_id": "DefiledKeepOoze",
@@ -5004,7 +5634,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 62763
+      "source_path_id": 65356
     },
     "DefiledKeepReaper": {
       "enemy_id": "DefiledKeepReaper",
@@ -5017,7 +5647,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 7500,
       "high_difficulty_damage": 38,
-      "source_path_id": 62774
+      "source_path_id": 65367
     },
     "DefiledKeepAxemaster": {
       "enemy_id": "DefiledKeepAxemaster",
@@ -5030,7 +5660,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 62747
+      "source_path_id": 65339
     },
     "VolcanoCinderlash": {
       "enemy_id": "VolcanoCinderlash",
@@ -5043,7 +5673,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 64235
+      "source_path_id": 66887
     },
     "VolcanoEmberBat": {
       "enemy_id": "VolcanoEmberBat",
@@ -5056,7 +5686,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 64182
+      "source_path_id": 66834
     },
     "VolcanoMagmaGolem": {
       "enemy_id": "VolcanoMagmaGolem",
@@ -5069,7 +5699,7 @@
       "attack_speed": 0.6000000238418579,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 62808
+      "source_path_id": 65401
     },
     "VolcanoDemonLord": {
       "enemy_id": "VolcanoDemonLord",
@@ -5082,7 +5712,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 11000,
       "high_difficulty_damage": 38,
-      "source_path_id": 63830
+      "source_path_id": 66467
     },
     "VolcanoDragon": {
       "enemy_id": "VolcanoDragon",
@@ -5095,7 +5725,7 @@
       "attack_speed": 0.6000000238418579,
       "high_difficulty_health": 7000,
       "high_difficulty_damage": 34,
-      "source_path_id": 63262
+      "source_path_id": 65875
     },
     "OrcWarrior": {
       "enemy_id": "OrcWarrior",
@@ -5108,7 +5738,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63367
+      "source_path_id": 65986
     },
     "TreasureForestDragon": {
       "enemy_id": "TreasureForestDragon",
@@ -5121,7 +5751,7 @@
       "attack_speed": 1.5,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63369
+      "source_path_id": 65988
     },
     "SnowHillFrostDragon": {
       "enemy_id": "SnowHillFrostDragon",
@@ -5134,7 +5764,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 6000,
       "high_difficulty_damage": 30,
-      "source_path_id": 63370
+      "source_path_id": 65989
     },
     "Wolf": {
       "enemy_id": "Wolf",
@@ -5147,7 +5777,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63371
+      "source_path_id": 65990
     },
     "Dragon": {
       "enemy_id": "Dragon",
@@ -5160,7 +5790,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63372
+      "source_path_id": 65991
     },
     "RedDesertImp": {
       "enemy_id": "RedDesertImp",
@@ -5173,7 +5803,7 @@
       "attack_speed": 0.6499999761581421,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63373
+      "source_path_id": 65992
     },
     "TreasureBarrensDragonBoss": {
       "enemy_id": "TreasureBarrensDragonBoss",
@@ -5186,7 +5816,33 @@
       "attack_speed": 1.5,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63374
+      "source_path_id": 65993
+    },
+    "TreasureVolcanoShellbackBoss": {
+      "enemy_id": "TreasureVolcanoShellbackBoss",
+      "base_level": 1,
+      "base_health": 300,
+      "base_damage": 1,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.5,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 65994
+    },
+    "TreasureVolcanoShellback": {
+      "enemy_id": "TreasureVolcanoShellback",
+      "base_level": 1,
+      "base_health": 30,
+      "base_damage": 1,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.10000000149011612,
+      "crit_multiplier": 1.5,
+      "attack_speed": 1.5,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 65995
     },
     "BeachCrabBoss": {
       "enemy_id": "BeachCrabBoss",
@@ -5199,7 +5855,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63375
+      "source_path_id": 65996
     },
     "DesertEagle": {
       "enemy_id": "DesertEagle",
@@ -5212,7 +5868,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63376
+      "source_path_id": 65997
     },
     "BeachSerpent": {
       "enemy_id": "BeachSerpent",
@@ -5225,7 +5881,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63377
+      "source_path_id": 65998
     },
     "RedForestHobgoblin": {
       "enemy_id": "RedForestHobgoblin",
@@ -5238,7 +5894,7 @@
       "attack_speed": 1.0,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63378
+      "source_path_id": 65999
     },
     "SnowHillZombieWarrior": {
       "enemy_id": "SnowHillZombieWarrior",
@@ -5251,7 +5907,7 @@
       "attack_speed": 0.6000000238418579,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63379
+      "source_path_id": 66000
     },
     "Boar": {
       "enemy_id": "Boar",
@@ -5264,7 +5920,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63380
+      "source_path_id": 66001
     },
     "TreasureKeepDragonBoss": {
       "enemy_id": "TreasureKeepDragonBoss",
@@ -5277,7 +5933,7 @@
       "attack_speed": 1.5,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63381
+      "source_path_id": 66002
     },
     "SnowHillRockElemental": {
       "enemy_id": "SnowHillRockElemental",
@@ -5290,7 +5946,7 @@
       "attack_speed": 0.6000000238418579,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63382
+      "source_path_id": 66003
     },
     "SkeletonArcher": {
       "enemy_id": "SkeletonArcher",
@@ -5303,7 +5959,20 @@
       "attack_speed": 0.8299999833106995,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63383
+      "source_path_id": 66004
+    },
+    "WerewolfH": {
+      "enemy_id": "WerewolfH",
+      "base_level": 1,
+      "base_health": 50000,
+      "base_damage": 60,
+      "move_speed": 2.5,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 2.0,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 66005
     },
     "RedDesertRockGolem": {
       "enemy_id": "RedDesertRockGolem",
@@ -5316,7 +5985,7 @@
       "attack_speed": 1.0,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63384
+      "source_path_id": 66006
     },
     "BeachHermitCrab_BossMinion": {
       "enemy_id": "BeachHermitCrab_BossMinion",
@@ -5329,7 +5998,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63385
+      "source_path_id": 66007
     },
     "DesertHarpy": {
       "enemy_id": "DesertHarpy",
@@ -5342,7 +6011,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63386
+      "source_path_id": 66008
     },
     "RedForestGiant": {
       "enemy_id": "RedForestGiant",
@@ -5355,7 +6024,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63387
+      "source_path_id": 66009
     },
     "Ogre": {
       "enemy_id": "Ogre",
@@ -5368,7 +6037,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63388
+      "source_path_id": 66010
     },
     "Stumplin": {
       "enemy_id": "Stumplin",
@@ -5381,7 +6050,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63389
+      "source_path_id": 66011
     },
     "ZombieWolf": {
       "enemy_id": "ZombieWolf",
@@ -5394,7 +6063,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63390
+      "source_path_id": 66012
     },
     "RedDesertSatyr": {
       "enemy_id": "RedDesertSatyr",
@@ -5407,7 +6076,7 @@
       "attack_speed": 1.5,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63391
+      "source_path_id": 66013
     },
     "DarkElfMage": {
       "enemy_id": "DarkElfMage",
@@ -5420,7 +6089,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 4000,
       "high_difficulty_damage": 26,
-      "source_path_id": 63392
+      "source_path_id": 66014
     },
     "DesertWasp": {
       "enemy_id": "DesertWasp",
@@ -5433,7 +6102,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63393
+      "source_path_id": 66015
     },
     "ForestSpiderKing": {
       "enemy_id": "ForestSpiderKing",
@@ -5446,7 +6115,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63394
+      "source_path_id": 66016
     },
     "BeachHermitCrab": {
       "enemy_id": "BeachHermitCrab",
@@ -5459,7 +6128,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63395
+      "source_path_id": 66017
     },
     "SnowHillWhelp": {
       "enemy_id": "SnowHillWhelp",
@@ -5472,7 +6141,7 @@
       "attack_speed": 1.0,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63396
+      "source_path_id": 66018
     },
     "RedForestTiger": {
       "enemy_id": "RedForestTiger",
@@ -5485,7 +6154,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63397
+      "source_path_id": 66019
     },
     "RedForestBear": {
       "enemy_id": "RedForestBear",
@@ -5498,7 +6167,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63398
+      "source_path_id": 66020
     },
     "SkeletonWarrior": {
       "enemy_id": "SkeletonWarrior",
@@ -5511,7 +6180,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63399
+      "source_path_id": 66021
     },
     "BeachTurtleBoss": {
       "enemy_id": "BeachTurtleBoss",
@@ -5524,7 +6193,7 @@
       "attack_speed": 0.4000000059604645,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63400
+      "source_path_id": 66022
     },
     "Raptor": {
       "enemy_id": "Raptor",
@@ -5537,7 +6206,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 4000,
       "high_difficulty_damage": 24,
-      "source_path_id": 63401
+      "source_path_id": 66023
     },
     "RedDesertAirWarlord": {
       "enemy_id": "RedDesertAirWarlord",
@@ -5550,7 +6219,7 @@
       "attack_speed": 1.0,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63402
+      "source_path_id": 66024
     },
     "RedForestDragon": {
       "enemy_id": "RedForestDragon",
@@ -5563,7 +6232,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63403
+      "source_path_id": 66025
     },
     "Spider": {
       "enemy_id": "Spider",
@@ -5576,7 +6245,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63404
+      "source_path_id": 66026
     },
     "DesertManticoraBoss": {
       "enemy_id": "DesertManticoraBoss",
@@ -5589,7 +6258,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63405
+      "source_path_id": 66027
     },
     "BeachNaga": {
       "enemy_id": "BeachNaga",
@@ -5602,7 +6271,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63406
+      "source_path_id": 66028
     },
     "TreasureForestDragonBoss": {
       "enemy_id": "TreasureForestDragonBoss",
@@ -5615,7 +6284,7 @@
       "attack_speed": 1.5,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63407
+      "source_path_id": 66029
     },
     "BeachSquid": {
       "enemy_id": "BeachSquid",
@@ -5628,7 +6297,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63408
+      "source_path_id": 66030
     },
     "WorldBossPumpkin": {
       "enemy_id": "WorldBossPumpkin",
@@ -5641,7 +6310,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63409
+      "source_path_id": 66031
     },
     "GoblinWarrior": {
       "enemy_id": "GoblinWarrior",
@@ -5654,7 +6323,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63411
+      "source_path_id": 66033
     },
     "BigTreant": {
       "enemy_id": "BigTreant",
@@ -5667,7 +6336,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63412
+      "source_path_id": 66034
     },
     "Werewolf": {
       "enemy_id": "Werewolf",
@@ -5680,7 +6349,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 4400,
       "high_difficulty_damage": 28,
-      "source_path_id": 63413
+      "source_path_id": 66035
     },
     "DesertKoboldWarrior": {
       "enemy_id": "DesertKoboldWarrior",
@@ -5693,7 +6362,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63414
+      "source_path_id": 66036
     },
     "PoisonSpider": {
       "enemy_id": "PoisonSpider",
@@ -5706,7 +6375,7 @@
       "attack_speed": 0.6700000166893005,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63415
+      "source_path_id": 66037
     },
     "TreasureForestDragon2": {
       "enemy_id": "TreasureForestDragon2",
@@ -5719,7 +6388,7 @@
       "attack_speed": 1.5,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63416
+      "source_path_id": 66038
     },
     "RedDesertCrocodile": {
       "enemy_id": "RedDesertCrocodile",
@@ -5732,7 +6401,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63417
+      "source_path_id": 66039
     },
     "SnowHillIceHound": {
       "enemy_id": "SnowHillIceHound",
@@ -5745,7 +6414,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63418
+      "source_path_id": 66040
     },
     "RedForestFaeDragon": {
       "enemy_id": "RedForestFaeDragon",
@@ -5758,7 +6427,20 @@
       "attack_speed": 1.0,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63419
+      "source_path_id": 66041
+    },
+    "RaptorH": {
+      "enemy_id": "RaptorH",
+      "base_level": 1,
+      "base_health": 40000,
+      "base_damage": 55,
+      "move_speed": 1.600000023841858,
+      "crit_chance": 0.15000000596046448,
+      "crit_multiplier": 2.0,
+      "attack_speed": 0.6700000166893005,
+      "high_difficulty_health": 0,
+      "high_difficulty_damage": 0,
+      "source_path_id": 66042
     },
     "SnowHillSlime": {
       "enemy_id": "SnowHillSlime",
@@ -5771,7 +6453,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63420
+      "source_path_id": 66043
     },
     "DesertKoboldThief": {
       "enemy_id": "DesertKoboldThief",
@@ -5784,7 +6466,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63421
+      "source_path_id": 66044
     },
     "RedDesertSerparmat": {
       "enemy_id": "RedDesertSerparmat",
@@ -5797,7 +6479,7 @@
       "attack_speed": 1.25,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63422
+      "source_path_id": 66045
     },
     "VolcanoHellguard": {
       "enemy_id": "VolcanoHellguard",
@@ -5810,7 +6492,7 @@
       "attack_speed": 0.75,
       "high_difficulty_health": 0,
       "high_difficulty_damage": 0,
-      "source_path_id": 63642
+      "source_path_id": 66272
     }
   },
   "evidence": {

@@ -181,7 +181,7 @@ class GrowthPolicyTests(unittest.TestCase):
     def test_catalog_has_four_complete_distinct_pages_and_all_icons(self):
         data=catalog();self.assertEqual(set(data['heroes']),{'1','2','4','8'})
         self.assertEqual(sum(len(h['talents']) for h in data['heroes'].values()),169)
-        self.assertEqual(len(data['life_skills']),87)
+        self.assertEqual(len(data['life_skills']),89)
         rows = data['life_skills']+[r for h in data['heroes'].values() for group in ('talents','abilities') for r in h[group]]
         for row in rows:
             icon=Path(__file__).resolve().parents[1]/'deskrawl_assistant/web'/row['icon'].lstrip('/')
@@ -212,7 +212,7 @@ class GrowthPolicyTests(unittest.TestCase):
             if not action:break
             current['life_skills']['ranks'][action['node_id']]=action['expected_rank']+1
             current['gold']-=action['gold_cost']
-        self.assertEqual(len(current['life_skills']['ranks']),87)
+        self.assertEqual(len(current['life_skills']['ranks']),89)
 
     def test_busy_game_never_allocates_or_submits_another_purchase(self):
         cfg=settings();cfg['life_skills']['enabled']=True;cfg['merchant']['enabled']=True

@@ -17,6 +17,7 @@ from .native_dispatcher import Argument, Invocation, NativeActionError, REJECTED
 from .native_memory import MemoryReadError, SnapshotChangedError, GameBusyError
 from .paths import runtime_dir
 from .progression_runtime import _GrowthCopy
+from .auction_commodities import CommodityAuctionMixin, commodity_candidate, commodity_receipt, is_commodity
 
 
 KINDS = ('auction_open', 'auction_upload')
@@ -39,17 +40,19 @@ def auction_candidate_fields(row, catalog):
     verified = (row.get('identity_verified') is True
         or row.get('identity_verified') is not False and evidence.get('snapshot_consistent') is True
         and bool(row.get('item_uid')) and bool(row.get('instance_id')))
+    commodity = commodity_candidate(row)
     return {'auction_identity_verified': bool(verified),
+            'auction_commodity_candidate': bool(commodity),
             'auction_candidate': bool(catalog and catalog.resolve(row)[0]
-                and auction_eligibility({**row, 'auction_identity_verified': bool(verified)},
-                                        preliminary=True)['eligible'])}
+                and (commodity or auction_eligibility({**row, 'auction_identity_verified': bool(verified)},
+                                        preliminary=True)['eligible']))}
 
 
 def auction_eligibility(row, *, equipped_uids=(), preliminary=False):
     """Conservative copy of ItemData.cge; native cge is checked again in-job.
 
-    Missing fields fail closed. Valid server identities are currently required
-    even for commodities; the legacy UID-less Steam exchange path is excluded.
+    Missing fields fail closed. Generated items require their server identity;
+    UID-less commodities use the separate guarded native-stack path.
     """
     def rejected(code, reason):
         return {'eligible': False, 'reason_code': code, 'reason': reason}
@@ -83,7 +86,7 @@ def auction_eligibility(row, *, equipped_uids=(), preliminary=False):
     return {'eligible': True, 'reason_code': '', 'reason': ''}
 
 
-class AuctionRuntime:
+class AuctionRuntime(CommodityAuctionMixin):
     def __init__(self, actions, *, journal_path=None):
         self.actions, self.reader = actions, actions.reader
         self.journal_path = Path(journal_path) if journal_path is not None else runtime_dir() / 'auction-pending.json'
@@ -124,6 +127,10 @@ class AuctionRuntime:
                        'retained': self._retained}, stream, ensure_ascii=False)
             stream.flush(); os.fsync(stream.fileno())
         os.replace(temporary, self.journal_path)
+
+    def _pending_rows(self):
+        return [{**deepcopy(row), 'instance_id': None if row.get('auction_operation_id') else identity}
+                for identity, row in self._pending.items()]
 
     def _copy(self):
         copy = _GrowthCopy(self.reader)
@@ -215,8 +222,7 @@ class AuctionRuntime:
                 'needs_refresh': loading or listings is None,
                 'selected_uid': selected, 'selection_occupied': bool(selected_item or selected),
                 'pending': bool(self._pending) or bool(self._journal_error),
-                'pending_uploads': [{**deepcopy(row), 'instance_id': instance}
-                                    for instance, row in self._pending.items()],
+                'pending_uploads': self._pending_rows(),
                 'pending_reason': self._journal_error or next((row.get('last_status')
                     for row in self._pending.values() if row.get('last_status')), ''),
                 'blocked_uids': [p.get('item_uid') for p in self._pending.values() if p.get('item_uid')],
@@ -225,7 +231,7 @@ class AuctionRuntime:
                 'reason': self._journal_error or ('服务器拍卖行暂不可用。' if enabled is False else status if not known else ''),
                 'native_status': status,
                 'native_verified': all(kind in self.actions.profile.get('verified_kinds', []) for kind in KINDS),
-                'identityless_materials_supported': False,
+                'identityless_materials_supported': True,
                 '_ui': ui, '_slot': slot, '_refresh_key': key, '_list_versions': versions,
                 '_response_ready': response_ready}
 
@@ -255,8 +261,7 @@ class AuctionRuntime:
                 # the first receipt across that GET, but never across an upload
                 # action, account change or an unrelated native refresh.
                 self._negative_checks.clear()
-            state['pending_uploads'] = [{**deepcopy(row), 'instance_id': instance}
-                                       for instance, row in self._pending.items()]
+            state['pending_uploads'] = self._pending_rows()
             state['retained_uploads'] = deepcopy(list(self._retained.values()))
             state['blocked_uids'] += [p.get('item_uid') for p in self._retained.values()
                 if p.get('steamid') == state.get('steamid') and p['retry_after'] > time.time()]
@@ -270,8 +275,7 @@ class AuctionRuntime:
                     'listing_count': None, 'capacity': CAPACITY, 'listing_limit': CAPACITY,
                     'busy': False, 'needs_refresh': True, 'reason': str(exc),
                     'pending': bool(self._pending) or bool(self._journal_error),
-                    'pending_uploads': [{**deepcopy(row), 'instance_id': instance}
-                                        for instance, row in self._pending.items()],
+                    'pending_uploads': self._pending_rows(),
                     'pending_reason': self._journal_error or next((row.get('last_status')
                         for row in self._pending.values() if row.get('last_status')), ''),
                     'blocked_uids': [p.get('item_uid') for p in self._pending.values() if p.get('item_uid')],
@@ -444,7 +448,7 @@ class AuctionRuntime:
         # cge reads immutable ItemData and mutable GeneratedItemData fields.
         read.read(generated, 128)
         row['identity_verified'] = True  # fresh slot + registry + generated read above
-        row.update(effect=read.integer(item + 56), steam_retired=read.boolean(item + 220))
+        row.update(effect=read.integer(item + 56), steam_retired=read.boolean(item + 236))
         copy = self._copy()
         equipment = copy.singleton(self.actions.profile['singletons']['EquipmentManager'], 'EquipmentManager')
         rune = copy.singleton(self.actions.profile['singletons']['RuneManager'], 'RuneManager')
@@ -482,6 +486,8 @@ class AuctionRuntime:
         quantity = payload.get('quantity', 1)
         if type(quantity) is not int or quantity != 1:
             raise NativeActionError('原生上传当前仅支持明确的单件数量，堆叠数量语义尚未实机核验。')
+        if is_commodity(requested):
+            return self._execute_commodity(dict(payload, item=requested), cancel_event=cancel_event, validate=validate)
         if not requested.get('item_uid') or not requested.get('instance_id'):
             raise NativeActionError('该物品缺少原生 UID 或服务器实例编号；不会为上传伪造身份。')
         expected_steamid = payload.get('expected_steamid')
@@ -592,6 +598,15 @@ class AuctionRuntime:
         for instance, row in list(self._pending.items()):
             if not row.get('steamid') or row['steamid'] != state.get('steamid'):
                 self._negative_checks.pop(instance, None)
+                continue
+            if row.get('auction_operation_id'):
+                receipt = commodity_receipt(row, state, snapshot)
+                if receipt:
+                    self._confirmed[instance] = receipt
+                    del self._pending[instance]
+                    changed = True
+                # A queued UID-less save cannot be released using the
+                # generated-item retained-identity proof.
                 continue
             receipt = self._receipt({**row, 'instance_id': instance}, state, snapshot)
             if receipt:

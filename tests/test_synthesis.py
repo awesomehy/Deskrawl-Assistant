@@ -58,7 +58,7 @@ class PolicyTests(unittest.TestCase):
         self.assertFalse(any(v['enabled'] for v in DEFAULT_SYNTHESIS.values()))
         legacy = settings(); legacy.pop('synthesis')
         self.assertEqual(validate_settings(legacy)['synthesis'], DEFAULT_SYNTHESIS)
-        for group, key, value in [('gems','max_quality',7),('gems','max_quality',True),
+        for group, key, value in [('gems','max_quality',8),('gems','max_quality',True),
                                  ('runes','max_quality','normal'),('runes','excluded_keys',['a','a'])]:
             bad = deepcopy(DEFAULT_SYNTHESIS); bad[group][key] = value
             with self.subTest(value=value), self.assertRaises(ValidationError):validate_synthesis(bad)
@@ -71,6 +71,19 @@ class PolicyTests(unittest.TestCase):
         self.assertEqual((action['recipe_id'],action['count']),('1',2))
         self.assertEqual(sum(r['quantity'] for r in action['inputs']),20)
         self.assertEqual(next_action(cfg,world([gem(100,grade=5)])),None)
+
+    def test_perfect_star_is_output_only_and_old_quality_caps_stay_unchanged(self):
+        from deskrawl_assistant.synthesis_runtime import gem_recipes
+        cfg=config();cfg['synthesis']['gems']['max_quality']=7
+        state=world([gem(20,grade=6),gem(50,slot=1,grade=7)])
+        state['synthesis']['gems']['recipes']=[dict(recipe, output_max_stack=999) for recipe in gem_recipes()]
+        state['synthesis']['gems']['gold']=1000000
+        action=next_action(cfg,state)
+        self.assertEqual((action['recipe_id'],action['count']),('GemUpgradeRuby7',1))
+        self.assertEqual({row['internal_name'] for row in action['inputs']},{'GemRuby6'})
+        cfg['synthesis']['gems']['max_quality']=6
+        self.assertIsNone(next_action(cfg,state))
+        self.assertEqual(validate_synthesis(DEFAULT_SYNTHESIS)['gems']['max_quality'],5)
 
     def test_insufficient_gold_or_unavailable_group_does_not_block_other_group(self):
         state = world([gem(100)]+[rune(n+1) for n in range(9)])

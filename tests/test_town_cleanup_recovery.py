@@ -64,9 +64,9 @@ class NativeCleanupBoundaryTests(unittest.TestCase):
         reader.classes = {'Inventory':9000, 'Storage':8000}
         reader.session_id = 'session'
         reader.class_name.return_value = 'GameObject'
-        pointers = {1064:4000,4032:5000,2128:6000,2040:7000,7000:17000,
+        pointers = {1072:4000,4032:5000,2128:6000,2040:7000,7000:17000,
                     9184:10000,10000:12000,12000:9000,12056:14000,
-                    8184:11000,11000:13000,13000:8000,13048:15000,1088:18000}
+                    8184:11000,11000:13000,13000:8000,13048:15000,1096:18000}
         flags = {2176:True}
         read.ptr.side_effect = lambda a: pointers.get(a,0)
         read.boolean.side_effect = lambda a: flags.get(a,False)
@@ -80,7 +80,7 @@ class NativeCleanupBoundaryTests(unittest.TestCase):
         carriage = {'complete':True,'settling':False}
         game._carriage = Mock(return_value=carriage)
         self.assertIsNotNone(game._town_cleanup_signature(read,1000,2000,1))
-        for flag in (3076,1276,5296,4080):
+        for flag in (3076,1284,5296,4080):
             flags[flag] = True
             self.assertIsNone(game._town_cleanup_signature(read,1000,2000,1))
             flags[flag] = False

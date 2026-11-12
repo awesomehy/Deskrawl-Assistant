@@ -64,4 +64,13 @@ def load_catalog(path: str | Path) -> Catalog:
                 raise ValidationError(f"词典缺少有效名称：{key}") from exc
         return result
 
-    return Catalog(entries(equipment_keys, equipment_rows), entries(stat_keys, stat_rows))
+    equipment = entries(equipment_keys, equipment_rows)
+    aliases = data.get('equipment_asset_aliases', {})
+    if not isinstance(aliases, dict):
+        raise ValidationError('装备资源名称映射结构不受支持')
+    for key, base in aliases.items():
+        if not isinstance(key, str) or not key or key in equipment or not isinstance(base, str) or base not in equipment_keys:
+            raise ValidationError('装备资源名称映射缺少唯一的基础装备')
+        source = equipment[base]
+        equipment[key] = CatalogEntry(key, source.en, source.zh)
+    return Catalog(equipment, entries(stat_keys, stat_rows))

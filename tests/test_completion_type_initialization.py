@@ -16,10 +16,10 @@ from deskrawl_assistant.native_reader import NativeReader
 
 BASE = 0x180000000
 TOKENS = {
-    # Deskrawl 1.1.0a / Steam 26337088: copied from each TypeInfo slot in
+    # Deskrawl 1.1.11 / Steam 26604532: copied from each TypeInfo slot in
     # GameAssembly before IL2CPP resolves the encoded type reference.
-    'CombatMapCompletionUI': 0x200096D3,
-    'MythicCompletionUI': 0x2000CB97,
+    'CombatMapCompletionUI': 0x20009765,
+    'MythicCompletionUI': 0x2000CC4F,
 }
 VISIBILITY_OFFSETS = {'CombatMapCompletionUI': 0, 'MythicCompletionUI': 8}
 
@@ -150,9 +150,9 @@ class CompletionFixture:
         portal = self.singleton('TownPortalSystem')
         combat = self.object('PlayerCombatController')
         player = self.object('Player')
-        self.memory.put(manager + 176, struct.pack('<i', 1))
+        self.memory.put(manager + 184, struct.pack('<i', 1))
         self.memory.put(area + 120, struct.pack('<i', 0))
-        self.memory.pointer(manager + 64, combat)
+        self.memory.pointer(manager + 72, combat)
         self.memory.pointer(combat + 32, player)
         self.memory.put(player + 296, bytes((dead,)))
         if dead: self.singleton('DeathUI')
@@ -163,13 +163,13 @@ class CompletionTypeInitializationTests(unittest.TestCase):
     def test_release_profile_records_the_two_verified_exact_tokens(self):
         self.assertEqual({key:load_profile()['uninitialized_type_tokens'][key] for key in TOKENS}, TOKENS)
 
-    def test_exact_cold_tokens_are_bound_to_the_revalidated_1_1_0a_build(self):
+    def test_exact_cold_tokens_are_bound_to_the_revalidated_1_1_11_build(self):
         profile = load_profile()
-        self.assertEqual(profile['build'], 'Deskrawl 1.1.0a / Steam 26337088')
+        self.assertEqual(profile['build'], 'Deskrawl 1.1.11 / Steam 26604532')
         self.assertEqual(profile['sha256']['GameAssembly.dll'],
-                         '14a46e0a1bccd03fa1091f72d26f739f8502780689df79ed9ec2e9112180ca5c')
+                         '5fedeb65c3ef1f607fa1441013068942c52d509d5658e62ecbacdf6b3d7f756c')
         self.assertEqual({name:profile['statics'][name] for name in TOKENS},
-                         {'CombatMapCompletionUI': 61637424, 'MythicCompletionUI': 61637392})
+                         {'CombatMapCompletionUI': 62045800, 'MythicCompletionUI': 62045784})
 
     def test_both_cold_tokens_are_absent_without_being_dereferenced(self):
         fixture = CompletionFixture()

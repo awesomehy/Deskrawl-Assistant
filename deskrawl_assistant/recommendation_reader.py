@@ -338,10 +338,10 @@ def _effects(copy, obj, level, stats, depth=0, seen=None):
                        damage=max(0, int(pre_type * (1 + stats[type_stat] + stats[65]))))
         elif name == 'SpawnProjectileEffect':
             row.update(projectiles=max(1, copy.integer(effect + 92)), pierce=copy.boolean(effect + 69),
-                       max_pierce=copy.integer(effect + 72), splash_radius=copy.number(effect + 152),
-                       rehit_interval=copy.number(effect + 144))
-            row['on_hit'] = _effects(copy, copy.ptr(effect + 160), level, stats, depth + 1, nested_seen)
-            row['on_expire'] = _effects(copy, copy.ptr(effect + 168), level, stats, depth + 1, nested_seen)
+                       max_pierce=copy.integer(effect + 72), splash_radius=copy.number(effect + 164),
+                       rehit_interval=copy.number(effect + 156))
+            row['on_hit'] = _effects(copy, copy.ptr(effect + 168), level, stats, depth + 1, nested_seen)
+            row['on_expire'] = _effects(copy, copy.ptr(effect + 176), level, stats, depth + 1, nested_seen)
         elif name == 'EveryNthCastEffect':
             row.update(interval=max(1, copy.integer(effect + 48)), replaces=copy.boolean(effect + 64))
             row['triggered'] = _effects(copy, copy.ptr(effect + 56), level, stats, depth + 1, nested_seen)
@@ -357,10 +357,10 @@ def _effects(copy, obj, level, stats, depth=0, seen=None):
 def _skills(copy, controller, player, stats, warnings):
     book = copy.singleton(BOOK_RVA, 'PlayerAbilityBook')
     levels = copy.dictionary(copy.ptr(book + 40), 'int', 'object')
-    bonuses = copy.dictionary(copy.ptr(player + 1296), 'int', 'object')
-    global_levels = copy.integer(player + 1304)
-    cooldown_tags = copy.dictionary(copy.ptr(player + 968), 'float')
-    cooldown_abilities = copy.dictionary(copy.ptr(player + 1112), 'float', 'object')
+    bonuses = copy.dictionary(copy.ptr(player + 1328), 'int', 'object')
+    global_levels = copy.integer(player + 1336)
+    cooldown_tags = copy.dictionary(copy.ptr(player + 984), 'float')
+    cooldown_abilities = copy.dictionary(copy.ptr(player + 1144), 'float', 'object')
     global_cooldown = max(0, copy.number(controller + 64))
     frequency = max(0.001, (stats[21] if stats[21] > 0 else 1.0) * (1 + max(0, stats[6])))
     slots = []
@@ -394,8 +394,8 @@ def _skills(copy, controller, player, stats, warnings):
 def _run(copy, manager, wave, catalog, difficulty, *, player_level, xp_gain_multiplier):
     from .recommendation import difficulty_id, enemy_health, enemy_xp
     config = catalog['config']
-    plan = copy.ptr(manager + 120)
-    active_map = copy.ptr(manager + 112)
+    plan = copy.ptr(manager + 128)
+    active_map = copy.ptr(manager + 120)
     if not plan or not active_map:
         return None
     copy.verify(active_map, 'MapData')
@@ -457,7 +457,7 @@ def _run(copy, manager, wave, catalog, difficulty, *, player_level, xp_gain_mult
             boss_health += subtotal
         else:
             normal_health += subtotal
-    enemies = copy.list(copy.ptr(manager + 200), element='Enemy', limit=4096)
+    enemies = copy.list(copy.ptr(manager + 208), element='Enemy', limit=4096)
     alive = 0
     for raw in enemies:
         enemy = struct.unpack('<Q', raw)[0]
@@ -500,7 +500,7 @@ def _loadout_identity(copy):
                           'uid': copy.reader.string(uid) or ''})
     talent_book = copy.singleton(0x3A1BA80, 'PlayerTalentBook')
     talents = []
-    for talent, points in copy.dictionary(copy.ptr(talent_book + 40), 'int', 'object').items():
+    for talent, points in talent_ranks(copy, talent_book).items():
         if points:
             copy.verify(talent, 'TalentData')
             talents.append({'asset_id': copy.reader.asset_name(talent), 'points': points})
@@ -529,7 +529,7 @@ def _campaign_progress(copy, save, config_obj, catalog):
     for item,amount in copy.dictionary(copy.ptr(inventory+64),'int','object').items():
         if amount>0: entry_items[reader.asset_name(item)] = amount
     unlocked_maps = {tier:[m['map_id'] for m in catalog['maps']
-        if m.get('map_type') != 1 and not m.get('unavailable') and not (is_demo and m.get('locked_in_demo'))
+        if m.get('map_type') != 1 and (m.get('map_type') != 5 or tier == 'Inferno') and not m.get('unavailable') and not (is_demo and m.get('locked_in_demo'))
         and catalog['difficulties'][tier]['value']<=max_difficulty
         and (not m.get('prerequisite') or m['prerequisite'] in completed_maps[tier])]
         for tier in completed_maps}
@@ -543,7 +543,7 @@ def _campaign_progress(copy, save, config_obj, catalog):
 
 def _campaign_run(copy, manager, difficulty, *, allow_settled_world_boss=False):
     """Only the identity and completion evidence needed by the serial planner."""
-    plan,active_map = copy.ptr(manager+120),copy.ptr(manager+112)
+    plan,active_map = copy.ptr(manager+128),copy.ptr(manager+120)
     if not active_map: return None
     settlement_plan = False
     if not plan:
@@ -556,14 +556,14 @@ def _campaign_run(copy, manager, difficulty, *, allow_settled_world_boss=False):
         copy.verify(active_map, 'MapData')
         if (copy.integer(active_map+32) != MAP_TYPE
                 or not is_world_boss(copy.reader.asset_name(active_map))): return None
-        wave = copy.verify(copy.ptr(manager+104), 'WaveManager')
+        wave = copy.verify(copy.ptr(manager+112), 'WaveManager')
         if (copy.ptr(wave+40) != active_map or not copy.boolean(wave+248)
                 or copy.boolean(wave+64)): return None
         plan = copy.ptr(wave+88)
         if not plan: return None
         settlement_plan = True
     copy.verify(plan,'RunPlan'); copy.verify(active_map,'MapData')
-    wave = copy.verify(copy.ptr(manager+104),'WaveManager')
+    wave = copy.verify(copy.ptr(manager+112),'WaveManager')
     if copy.ptr(wave+88)!=plan: raise SnapshotChangedError('当前关卡计划正在切换。')
     from .recommendation import difficulty_id
     raw_id = copy.reader.string(copy.ptr(plan+16)) or ''
@@ -579,7 +579,7 @@ def _campaign_run(copy, manager, difficulty, *, allow_settled_world_boss=False):
         map_id, difficulty = floor_id(floor), MYTHIC
     waves = copy.array(copy.ptr(plan+104),8,'RunWave',limit=512)
     alive = 0
-    for raw in copy.list(copy.ptr(manager+200),element='Enemy',limit=4096):
+    for raw in copy.list(copy.ptr(manager+208),element='Enemy',limit=4096):
         enemy = struct.unpack('<Q',raw)[0]
         if enemy and not copy.boolean(copy.verify(enemy,'Enemy')+296): alive += 1
     wave_index = copy.integer(wave+48)
@@ -602,7 +602,7 @@ def _campaign_run(copy, manager, difficulty, *, allow_settled_world_boss=False):
 def _campaign_snapshot(reader):
     copy = _Copy(reader)
     manager = copy.singleton(MANAGER_RVA,'GameManager')
-    if copy.integer(manager+176)!=1: raise MemoryReadError('请先进入角色，再读取关卡。')
+    if copy.integer(manager+184)!=1: raise MemoryReadError('请先进入角色，再读取关卡。')
     data = copy.singleton(DATA_RVA,'PlayerData')
     save = copy.verify(reader.singleton('SaveSystem'),'SaveSystem')
     mode,slot = struct.unpack('<ii',copy.read(save+32,8))
@@ -631,14 +631,14 @@ def read_campaign(reader):
 def _snapshot(reader):
     copy = _Copy(reader)
     manager = copy.singleton(MANAGER_RVA, 'GameManager')
-    if copy.integer(manager + 176) != 1:
+    if copy.integer(manager + 184) != 1:
         raise MemoryReadError('请先进入角色，再读取当前角色推荐。')
     data = copy.singleton(DATA_RVA, 'PlayerData')
-    combat = copy.verify(copy.ptr(manager + 64), 'PlayerCombatController')
+    combat = copy.verify(copy.ptr(manager + 72), 'PlayerCombatController')
     player = copy.verify(copy.ptr(combat + 32), 'Player')
     copy.klass(copy.ptr(copy.ptr(player) + 88), 'Character')
     controller = copy.verify(copy.ptr(combat + 112), 'PlayerAbilityController')
-    wave = copy.verify(copy.ptr(manager + 104), 'WaveManager')
+    wave = copy.verify(copy.ptr(manager + 112), 'WaveManager')
     config_obj = copy.verify(copy.ptr(manager + 32), 'GameConfig')
     hero = copy.verify(copy.ptr(manager + 56), 'HeroData')
     save = copy.verify(reader.singleton('SaveSystem'), 'SaveSystem')
@@ -655,14 +655,15 @@ def _snapshot(reader):
         raise MemoryReadError('角色主属性类型无效。')
     base = {7: decode_obscured_long(copy.read(player + 48, 32)),
             3: decode_obscured_long(copy.read(player + 80, 32)),
-            primary: decode_obscured_float(copy.read(player + 416, 20))}
-    for stat, offset in ((10, 112), (4, 132), (5, 152), (6, 172), (22, 192), (11, 436), (12, 456), (13, 476)):
+            primary: decode_obscured_float(copy.read(player + 400, 20))}
+    for stat, offset in ((10, 112), (4, 132), (5, 152), (6, 172), (22, 192), (11, 420), (12, 440), (13, 460)):
         base[stat] = decode_obscured_float(copy.read(player + offset, 20))
-    caches = {off: copy.dictionary(copy.ptr(player + off)) for off in (536, 544, 568, 576, 632, 640, 648)}
+    caches = {key: copy.dictionary(copy.ptr(player + offset)) for key, offset in
+              ((536, 520), (544, 528), (568, 552), (576, 560), (632, 632), (640, 640), (648, 648))}
     status_obj = copy.verify(copy.ptr(player + 304), 'StatusEffectController')
     status = tuple(copy.dictionary(copy.ptr(status_obj + off), 'double') for off in (64, 72, 80))
     warnings, conversions = [], []
-    for off in (792, 864):
+    for off in (808, 880):
         for raw in copy.list(copy.ptr(player + off), 24, 'ValueTuple`4'):
             source, target, coefficient, condition = struct.unpack('<iidQ', raw)
             if source not in range(67) or target not in range(67) or not math.isfinite(coefficient):
@@ -671,7 +672,7 @@ def _snapshot(reader):
                 conversions.append((source, target, coefficient))
             else:
                 warnings.append('带状态条件的属性转换未计入参考属性。')
-    conditional = any(copy.integer(copy.ptr(player + off) + 24) > 0 for off in (872, 920, 944))
+    conditional = any(copy.integer(copy.ptr(player + off) + 24) > 0 for off in (888, 936, 960))
     if conditional:
         warnings.append('当前配装含额外条件属性，参考属性尚未计入该条件部分。')
     conditional = conditional or any('属性转换' in message for message in warnings)
@@ -736,3 +737,13 @@ def read_recommendation(reader):
     except (MemoryReadError, OSError, ValueError, UnicodeError, KeyError, struct.error) as exc:
         return {'available': False, 'profile': None, 'run': None, 'warnings': [], 'reason': str(exc),
                 'source': 'verified_game_memory'}
+
+
+def talent_ranks(copy, book):
+    """Read only the active native loadout, guarded against switching mid-read."""
+    index = copy.integer(book + 48)
+    rows = copy.array(copy.ptr(book + 40), 8, 'Dictionary`2', limit=3)
+    if len(rows) != 3 or not 0 <= index < len(rows):
+        raise MemoryReadError('当前战斗天赋方案尚未确认。')
+    pointer = struct.unpack('<Q', rows[index])[0]
+    return copy.dictionary(pointer, 'int', 'object')

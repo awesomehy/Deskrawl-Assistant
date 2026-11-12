@@ -108,7 +108,7 @@ def read_carriage(reader):
         return obj
     klass=ptr(reader.module['base']+native_rva(reader,'game_manager_rva',GAME_MANAGER_RVA))
     manager=verify(ptr(ptr(klass+184)),'GameManager')
-    carriage=verify(ptr(manager+88),'HorseCarriage')
+    carriage=verify(ptr(manager+96),'HorseCarriage')
     context_guards=list(guards)
     def objects(root,element):
         if not root or reader.class_name(p.u64(root))!='List`1': raise MemoryReadError('马车列表类型未确认')
@@ -120,7 +120,7 @@ def read_carriage(reader):
         if count: guards.append((array+32,block[:count*8]))
         return [struct.unpack('<Q',v)[0] for v in records[:count]]
     drops=objects(ptr(carriage+152),'LootDrop')
-    world=objects(ptr(manager+224),'LootDrop')
+    world=objects(ptr(manager+232),'LootDrop')
     rows=[]
     for index,address in enumerate(drops):
         if not address: continue

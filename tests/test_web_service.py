@@ -140,7 +140,7 @@ class WebServiceTests(unittest.TestCase):
     def test_catalog_has_all_64_legendary_icons_and_real_class_masks(self):
         catalog=self.service.catalog_payload()
         legendaries=[i for i in catalog['equipment'] if i['legendary']]
-        self.assertEqual(len(legendaries),67)
+        self.assertEqual(len(legendaries),75)
         for i in legendaries:
             self.assertTrue((BASE/'deskrawl_assistant/web'/i['icon'].lstrip('/')).is_file())
         values={c['key']:c['value'] for c in catalog['classes']}

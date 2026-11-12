@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "appid": 4623570,
-  "resources_sha256": "3efaf658d393aeab532edb84d095e9575aba005041210c7c278c338b1e592084",
+  "resources_sha256": "5f0565bfdc94074daf47d6a817246e25f1a33233a7d309949b180cb644481524",
   "source": "Shipped ItemData SteamItemDefId/BlackMistSteamItemDefId and English localization; names remain candidates until exact Steam market description validation.",
   "items": {
     "AncientDivineBow1": {

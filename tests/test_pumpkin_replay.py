@@ -209,12 +209,15 @@ class PumpkinReplayServiceTests(unittest.TestCase):
 
 class PumpkinReplayNativeTests(unittest.TestCase):
     def test_live_dialog_lookup_rejects_stale_ambiguous_and_changing_instances(self):
-        for case in ('single', 'multicast', 'old_map', 'ambiguous', 'missing', 'layout', 'changed'):
+        for case in ('single', 'multicast', 'old_map', 'ambiguous', 'missing', 'layout', 'changed', 'event_changed'):
             with self.subTest(case=case):
                 reader = Mock(); reader.module = {'base': 0}
                 game = GameActions(reader, dispatcher=Mock())
                 root = game.profile['statics']['completion_events']
-                pointers = {root:1000, 1184:2000, 2424:3000, 3000:4000, 4088:5000,
+                # 424 is now an unrelated Action; the current GameArea event
+                # lives at 448 and must be used even when the old slot is live.
+                pointers = {root:1000, 1184:2000, 2424:3500, 3500:4500,
+                            2448:3000, 3000:4000, 4088:5000,
                             5088:6000, 3120:7000 if case in ('multicast','ambiguous') else 0,
                             3032:8000 if case != 'missing' else 0, 8000:9000,
                             8208:99 if case == 'old_map' else 100, 8224:0,
@@ -223,21 +226,43 @@ class PumpkinReplayNativeTests(unittest.TestCase):
                 memory[8200] = b'\1'
                 reader.memory.read.side_effect = lambda a,n: memory[a]
                 reader.class_name.side_effect = {4000:'Action`2', 5000:'MulticastDelegate',
-                    6000:'Delegate', 9000:'CombatMapCompletionUI'}.__getitem__
+                    6000:'Delegate', 9000:'CombatMapCompletionUI', 4500:'Action'}.__getitem__
                 reader.fields.side_effect = lambda k: [{'name':'delegates','offset':119 if case == 'layout' else 120}] if k == 5000 else [{'name':'m_target','offset':32}]
                 read = _Read(reader, game.profile)
                 read.klass = Mock(side_effect=lambda address,name: address)
                 read.verify = Mock(side_effect=lambda address,name: address)
                 read.pointers = Mock(return_value=[3000,3100] if case == 'ambiguous' else [3000])
-                if case in ('single', 'multicast', 'changed'):
+                if case in ('single', 'multicast', 'changed', 'event_changed'):
                     self.assertEqual(game._pumpkin_replay_ui(read, 100), 8000)
                     read.finish()
-                    if case == 'changed':
-                        memory[8224] = struct.pack('<Q', 77)
+                    if case in ('changed', 'event_changed'):
+                        memory[8224 if case == 'changed' else 2448] = struct.pack('<Q', 77)
                         with self.assertRaises(SnapshotChangedError): read.finish()
                 else:
                     with self.assertRaises((GameBusyError, MemoryReadError, SnapshotChangedError)):
                         game._pumpkin_replay_ui(read, 100)
+                self.assertNotIn(unittest.mock.call(2424, 8), reader.memory.read.call_args_list)
+                game.dispatcher.invoke.assert_not_called()
+
+    def test_dialog_lookup_requires_one_static_game_area_event_in_verified_profile(self):
+        for case in ('missing', 'ambiguous', 'instance', 'type', 'negative', 'unaligned', 'boolean'):
+            with self.subTest(case=case):
+                reader = Mock(); reader.module = {'base': 0}
+                game = GameActions(reader, dispatcher=Mock())
+                fields = game.profile['types']['completion_events']['fields']
+                event = next(field for field in fields
+                             if field.get('resolvedType') == 'System.Action`2<GameArea, System.Boolean>')
+                if case == 'missing': fields.remove(event)
+                elif case == 'ambiguous': fields.append(dict(event))
+                elif case == 'instance': event['isStatic'] = False
+                elif case == 'type': event['resolvedType'] = 'System.Action'
+                else: event['rawRegistrationOffset'] = {'negative': -8, 'unaligned': 449, 'boolean': True}[case]
+                read = Mock()
+                read.ptr.side_effect = [1000, 2000]
+                read.klass.return_value = 1000
+                with self.assertRaisesRegex(MemoryReadError, '关卡事件未唯一确认'):
+                    game._pumpkin_replay_ui(read, 100)
+                self.assertEqual(read.ptr.call_count, 2)
                 game.dispatcher.invoke.assert_not_called()
 
     def test_replay_uses_original_replay_and_native_material_gates(self):

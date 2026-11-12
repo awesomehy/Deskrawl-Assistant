@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "metadata_sha256": "8e636924c88a9c9274c02df2f1b164303ff5064626e5d5f8169cb0a6fbcc75c8",
-  "game_assembly_sha256": "5fedeb65c3ef1f607fa1441013068942c52d509d5658e62ecbacdf6b3d7f756c",
+  "metadata_sha256": "6637c2fcf57dc7d8b8d98ebb733b2b7f5054e355772fd82f1060c68e16f4ae45",
+  "game_assembly_sha256": "de0896d9f6a20ed7b4137198fef86ba6a029ce001e01617c9aae78c1682d4113",
   "source": "Verified shipped MapData and Enemy assets; integrity-checked Obscured values. No player/save data.",
   "asset_sha256": {
-    "resources.assets": "3efaf658d393aeab532edb84d095e9575aba005041210c7c278c338b1e592084",
-    "sharedassets0.assets": "560cef8b8516922f7b722dc2f590d4943188af377118bd70aa055a1c12404f27",
+    "resources.assets": "5f0565bfdc94074daf47d6a817246e25f1a33233a7d309949b180cb644481524",
+    "sharedassets0.assets": "035eaaadd68752f81c2baed41befe4d7126cce6bacd721067bfe5b5e117c0a25",
     "globalgamemanagers.assets": "fbaef1c37bb36104836dedd0ff6d592fbeb9693ad6306855c6e826979b93174e"
   },
   "config": {

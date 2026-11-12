@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scope": "Static shipped affix pool configuration only; eligible pool membership is not player affix provenance.",
-  "metadataSha256": "8e636924c88a9c9274c02df2f1b164303ff5064626e5d5f8169cb0a6fbcc75c8",
+  "metadataSha256": "6637c2fcf57dc7d8b8d98ebb733b2b7f5054e355772fd82f1060c68e16f4ae45",
   "unitypyVersion": "1.25.2",
   "source": {
     "path": "G:\\SteamLibrary\\steamapps\\common\\Deskrawl\\Deskrawl_Data\\sharedassets0.assets",
-    "sha256": "560cef8b8516922f7b722dc2f590d4943188af377118bd70aa055a1c12404f27",
+    "sha256": "035eaaadd68752f81c2baed41befe4d7126cce6bacd721067bfe5b5e117c0a25",
     "configPathId": 64262,
     "configByteLength": 1300,
     "configObjectSha256": "1532b06f25eacc74a2e7770e62bbfd5d5349c98c200a896f2668c587efc28230",

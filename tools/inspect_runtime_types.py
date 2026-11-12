@@ -21,9 +21,9 @@ from pathlib import Path
 import struct
 
 
-METADATA_HASH = "8e636924c88a9c9274c02df2f1b164303ff5064626e5d5f8169cb0a6fbcc75c8"
-GAME_VERSION = "1.1.11"
-STEAM_BUILD = 26604532
+METADATA_HASH = "6637c2fcf57dc7d8b8d98ebb733b2b7f5054e355772fd82f1060c68e16f4ae45"
+GAME_VERSION = "1.1.11a"
+STEAM_BUILD = 26606215
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from deskrawl_assistant.il2cpp_metadata import PE, MetadataInspector

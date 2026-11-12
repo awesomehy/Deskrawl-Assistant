@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "source": "Shipped ItemData assets; class bitmask and slot constants decoded from verified metadata.",
-  "metadata_sha256": "8e636924c88a9c9274c02df2f1b164303ff5064626e5d5f8169cb0a6fbcc75c8",
-  "resources_sha256": "3efaf658d393aeab532edb84d095e9575aba005041210c7c278c338b1e592084",
-  "sharedassets_sha256": "560cef8b8516922f7b722dc2f590d4943188af377118bd70aa055a1c12404f27",
+  "metadata_sha256": "6637c2fcf57dc7d8b8d98ebb733b2b7f5054e355772fd82f1060c68e16f4ae45",
+  "resources_sha256": "5f0565bfdc94074daf47d6a817246e25f1a33233a7d309949b180cb644481524",
+  "sharedassets_sha256": "035eaaadd68752f81c2baed41befe4d7126cce6bacd721067bfe5b5e117c0a25",
   "enums": {
     "HeroClass": {
       "None": 0,

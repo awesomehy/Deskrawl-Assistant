@@ -16,7 +16,7 @@ from deskrawl_assistant.native_reader import NativeReader
 
 BASE = 0x180000000
 TOKENS = {
-    # Deskrawl 1.1.11 / Steam 26604532: copied from each TypeInfo slot in
+    # Deskrawl 1.1.11a / Steam 26606215: copied from each TypeInfo slot in
     # GameAssembly before IL2CPP resolves the encoded type reference.
     'CombatMapCompletionUI': 0x20009765,
     'MythicCompletionUI': 0x2000CC4F,
@@ -163,11 +163,11 @@ class CompletionTypeInitializationTests(unittest.TestCase):
     def test_release_profile_records_the_two_verified_exact_tokens(self):
         self.assertEqual({key:load_profile()['uninitialized_type_tokens'][key] for key in TOKENS}, TOKENS)
 
-    def test_exact_cold_tokens_are_bound_to_the_revalidated_1_1_11_build(self):
+    def test_exact_cold_tokens_are_bound_to_the_revalidated_1_1_11a_build(self):
         profile = load_profile()
-        self.assertEqual(profile['build'], 'Deskrawl 1.1.11 / Steam 26604532')
+        self.assertEqual(profile['build'], 'Deskrawl 1.1.11a / Steam 26606215')
         self.assertEqual(profile['sha256']['GameAssembly.dll'],
-                         '5fedeb65c3ef1f607fa1441013068942c52d509d5658e62ecbacdf6b3d7f756c')
+                         'de0896d9f6a20ed7b4137198fef86ba6a029ce001e01617c9aae78c1682d4113')
         self.assertEqual({name:profile['statics'][name] for name in TOKENS},
                          {'CombatMapCompletionUI': 62045800, 'MythicCompletionUI': 62045784})
 

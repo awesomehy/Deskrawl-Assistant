@@ -3,13 +3,13 @@
   "scope": "Static shipped localization only. No character, save, account or UI TextAsset data.",
   "source": {
     "path": "G:\\SteamLibrary\\steamapps\\common\\Deskrawl\\Deskrawl_Data\\resources.assets",
-    "size_bytes": 16651688,
-    "sha256": "3efaf658d393aeab532edb84d095e9575aba005041210c7c278c338b1e592084",
+    "size_bytes": 16652760,
+    "sha256": "5f0565bfdc94074daf47d6a817246e25f1a33233a7d309949b180cb644481524",
     "unity_version": "6000.3.6f1",
     "game_version": null,
     "game_version_note": "Not inferred from localization or Unity version; verify separately in the running client."
   },
-  "extracted_at_utc": "2026-11-12T02:19:11.188248+00:00",
+  "extracted_at_utc": "2026-11-12T15:12:07.058764+00:00",
   "extractor": {
     "name": "extract_catalog.py",
     "unitypy_version": "1.25.2"
@@ -17,7 +17,7 @@
   "summary": {
     "table_row_counts": {
       "Stats": 136,
-      "Equipments": 716,
+      "Equipments": 717,
       "Items": 188,
       "Abilities": 321,
       "Talents": 358,
@@ -25,7 +25,7 @@
       "Lifeskills": 82,
       "World": 46
     },
-    "total_localization_rows": 2093,
+    "total_localization_rows": 2094,
     "stat_label_count": 69,
     "stat_description_count": 66,
     "equipment_root_group_counts": {
@@ -40,7 +40,7 @@
   },
   "tables": {
     "Stats": {
-      "source_path_id": 770,
+      "source_path_id": 769,
       "columns": [
         "Key",
         "English",
@@ -2238,7 +2238,7 @@
       }
     },
     "Equipments": {
-      "source_path_id": 775,
+      "source_path_id": 774,
       "columns": [
         "Key",
         "English",
@@ -2255,7 +2255,7 @@
         "Thai",
         "Turkish"
       ],
-      "row_count": 716,
+      "row_count": 717,
       "entries": {
         "DivineRing3": {
           "Key": "DivineRing3",
@@ -10529,6 +10529,22 @@
           "Thai": "ธนูของคุณย่า",
           "Turkish": "Büyükannenin Yayı"
         },
+        "DivineBow2.Desc": {
+          "Key": "DivineBow2.Desc",
+          "English": "+5% Critical Hit Chance and +120% Critical Hit Damage.",
+          "Chinese (Simplified)": "暴击几率+5%，暴击伤害+120%。",
+          "Chinese (Traditional)": "暴擊機率+5%，暴擊傷害+120%。",
+          "Russian": "+5% к шансу крит. удара и +120% к урону крит. удара.",
+          "Spanish": "+5% de probabilidad de golpe crítico y +120% de daño crítico.",
+          "French": "+5% de chances de coup critique et +120% de dégâts critiques.",
+          "German": "+5% kritische Trefferchance und +120% kritischer Trefferschaden.",
+          "Portuguese (Brazil)": "+5% de chance de acerto crítico e +120% de dano crítico.",
+          "Polish": "+5% szansy na trafienie krytyczne i +120% obrażeń krytycznych.",
+          "Korean": "치명타 확률 +5%, 치명타 피해 +120%.",
+          "Japanese": "クリティカル率+5%、クリティカルダメージ+120%。",
+          "Thai": "โอกาสคริติคอล +5% และความเสียหายคริติคอล +120%",
+          "Turkish": "+%5 Kritik Vuruş Şansı ve +%120 Kritik Vuruş Hasarı."
+        },
         "DivineBow2.Story": {
           "Key": "DivineBow2.Story",
           "English": "She never let a wolf reach the doorstep.",
@@ -13716,7 +13732,7 @@
       }
     },
     "Items": {
-      "source_path_id": 774,
+      "source_path_id": 773,
       "columns": [
         "Key",
         "English",
@@ -21904,7 +21920,7 @@
       }
     },
     "Talents": {
-      "source_path_id": 773,
+      "source_path_id": 772,
       "columns": [
         "Key",
         "English",
@@ -32946,7 +32962,7 @@
       }
     },
     "World": {
-      "source_path_id": 776,
+      "source_path_id": 775,
       "columns": [
         "Key",
         "English",
@@ -34419,7 +34435,7 @@
     },
     "equipment_suffix_counts": {
       "root_key": 547,
-      "Desc": 146,
+      "Desc": 147,
       "Story": 17,
       "AbilityLevel": 1,
       "AllAbilityLevels": 1,

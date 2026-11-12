@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "source": "Read-only online RunPlan loot, Deskrawl 1.1.11 / build 26604532; exact disk build and complete live FieldInfo verification required. No game method invocation or write.",
-  "metadataSha256": "8e636924c88a9c9274c02df2f1b164303ff5064626e5d5f8169cb0a6fbcc75c8",
-  "gameAssemblySha256": "5fedeb65c3ef1f607fa1441013068942c52d509d5658e62ecbacdf6b3d7f756c",
+  "source": "Read-only online RunPlan loot, Deskrawl 1.1.11a / build 26606215; exact disk build and complete live FieldInfo verification required. No game method invocation or write.",
+  "metadataSha256": "6637c2fcf57dc7d8b8d98ebb733b2b7f5054e355772fd82f1060c68e16f4ae45",
+  "gameAssemblySha256": "de0896d9f6a20ed7b4137198fef86ba6a029ce001e01617c9aae78c1682d4113",
   "enums": {
     "GameArea": {
       "Combat": 0,
@@ -9395,6 +9395,6 @@
     "sharedassets0.assets": "6484c1535e6d64b60bdc162204a43cdb2bbd9e2b3561612b7c7e06bd6086c9aa",
     "globalgamemanagers.assets": "e0dbf8deb7a296c139d5cba8213a6308ec6c650b60f73bd318302844a2c604e7"
   },
-  "gameVersion": "1.1.11",
-  "steamBuildId": "26604532"
+  "gameVersion": "1.1.11a",
+  "steamBuildId": "26606215"
 }

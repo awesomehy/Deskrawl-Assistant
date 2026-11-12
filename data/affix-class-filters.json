@@ -2,12 +2,12 @@
   "schema_version": 1,
   "scope": "Legendary random primary affixes by generation HeroClass. Secondary affixes are not class filtered; divine fixed stats are excluded.",
   "source": {
-    "game_version": "1.1.11",
-    "gameAssemblySha256": "5fedeb65c3ef1f607fa1441013068942c52d509d5658e62ecbacdf6b3d7f756c",
-    "metadataSha256": "8e636924c88a9c9274c02df2f1b164303ff5064626e5d5f8169cb0a6fbcc75c8",
-    "assetsSha256": "560cef8b8516922f7b722dc2f590d4943188af377118bd70aa055a1c12404f27",
-    "primary_filter": "gu.dxs @ RVA 0x81c310 -> gu.dxt @ RVA 0x81c3d0",
-    "secondary_sampling": "gu.dxf @ RVA 0x81a700 (secondary array sampling; no class filter)"
+    "game_version": "1.1.11a",
+    "gameAssemblySha256": "de0896d9f6a20ed7b4137198fef86ba6a029ce001e01617c9aae78c1682d4113",
+    "metadataSha256": "6637c2fcf57dc7d8b8d98ebb733b2b7f5054e355772fd82f1060c68e16f4ae45",
+    "assetsSha256": "035eaaadd68752f81c2baed41befe4d7126cce6bacd721067bfe5b5e117c0a25",
+    "primary_filter": "gu.dxs @ RVA 0x81c410 -> gu.dxt @ RVA 0x81c4d0",
+    "secondary_sampling": "gu.dxf @ RVA 0x81a800 (secondary array sampling; no class filter)"
   },
   "classes": {
     "Barbarian": 1,

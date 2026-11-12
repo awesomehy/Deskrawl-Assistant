@@ -19,6 +19,15 @@ from deskrawl_assistant.recommendation_reader import talent_ranks
 
 
 class NewItemTests(unittest.TestCase):
+    def test_grandmothers_bow_has_the_hotfix_effect_description(self):
+        ui=json.loads((RESOURCE_ROOT/'data/loot-item-ui.json').read_text(encoding='utf-8'))['items']
+        bow=ui['DivineBow2']
+        self.assertEqual(bow['name'],'祖母的弓')
+        self.assertIn('5%',bow['description'])
+        self.assertIn('120%',bow['description'])
+        self.assertTrue(bow['effect_groups'])
+        self.assertFalse(bow['effect_note'])
+
     def test_ancient_divines_keep_exact_identity_and_own_effects(self):
         data=json.loads((RESOURCE_ROOT/'data/game-catalog.json').read_text(encoding='utf-8'))
         ui=json.loads((RESOURCE_ROOT/'data/loot-item-ui.json').read_text(encoding='utf-8'))['items']

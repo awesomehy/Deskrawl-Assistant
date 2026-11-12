@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "metadataSha256": "8e636924c88a9c9274c02df2f1b164303ff5064626e5d5f8169cb0a6fbcc75c8",
-  "gameAssemblySha256": "5fedeb65c3ef1f607fa1441013068942c52d509d5658e62ecbacdf6b3d7f756c",
+  "metadataSha256": "6637c2fcf57dc7d8b8d98ebb733b2b7f5054e355772fd82f1060c68e16f4ae45",
+  "gameAssemblySha256": "de0896d9f6a20ed7b4137198fef86ba6a029ce001e01617c9aae78c1682d4113",
   "types": [
     {
       "name": "RunPlan",
@@ -7869,6 +7869,6 @@
     }
   ],
   "source": "Deskrawl 1.1.0 / build 26310087; metadata layouts verified; ordinary changes use connection-resolved profiles.",
-  "gameVersion": "1.1.11",
-  "steamBuildId": "26604532"
+  "gameVersion": "1.1.11a",
+  "steamBuildId": "26606215"
 }

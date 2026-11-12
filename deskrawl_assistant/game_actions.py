@@ -922,7 +922,17 @@ class GameActions:
         if not klass or klass == self.profile['uninitialized_type_tokens']['completion_events']:
             raise GameBusyError('等待南瓜王结算窗口完成初始化。')
         static = read.ptr(read.klass(klass, 'completion_events') + 184)
-        root = read.ptr(static + 424) if static else 0
+        # New native events can shift this static slot. Resolve the unique
+        # GameArea-change event from the profile whose full runtime layout was
+        # checked above, rather than reading an unrelated event at an old offset.
+        events = [field for field in self.profile['types']['completion_events']['fields']
+                  if field.get('isStatic') is True
+                  and field.get('resolvedType') == 'System.Action`2<GameArea, System.Boolean>']
+        if (len(events) != 1 or type(events[0].get('rawRegistrationOffset')) is not int
+                or events[0]['rawRegistrationOffset'] < 0
+                or events[0]['rawRegistrationOffset'] % 8):
+            raise MemoryReadError('结算窗口关卡事件未唯一确认，未提交复刷。')
+        root = read.ptr(static + events[0]['rawRegistrationOffset']) if static else 0
         if not root:
             raise GameBusyError('等待南瓜王结算窗口注册完成。')
         delegate_class = read.ptr(root)

@@ -1,6 +1,6 @@
 {
-  "game_version": "1.1.11",
-  "build": 26604532,
+  "game_version": "1.1.11a",
+  "build": 26606215,
   "source": "Reviewed sharedassets0.assets RecipeData; runtime fields must agree before execution",
   "gems": [
     {

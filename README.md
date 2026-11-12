@@ -1,10 +1,10 @@
 # Deskrawl 装备助手
 
-为 Deskrawl 提供装备筛选、物品整理与自动刷图的 Windows x64 工具，无需安装 Python。当前版本：**v1.6.2**。
+为 Deskrawl 提供装备筛选、物品整理与自动刷图的 Windows x64 工具，无需安装 Python。当前版本：**v1.6.3**。
 
-**[下载 Windows 版](https://github.com/awesomehy/Deskrawl-Assistant/releases/download/v1.6.2/Deskrawl-Assistant-v1.6.2.exe)** · [大陆下载](https://hhyan.me:25667/s/a1247f09c37c4b4bb7) · [官网](https://deskrawl.hhyan.me/) · [全部版本与更新说明](https://github.com/awesomehy/Deskrawl-Assistant/releases)
+**[下载 Windows 版](https://github.com/awesomehy/Deskrawl-Assistant/releases/download/v1.6.3/Deskrawl-Assistant-v1.6.3.exe)** · [大陆下载](https://hhyan.me:25667/s/a1247f09c37c4b4bb7) · [官网](https://deskrawl.hhyan.me/) · [全部版本与更新说明](https://github.com/awesomehy/Deskrawl-Assistant/releases)
 
-v1.6.2：适配游戏 1.1.11，优化 Steam 会话续期与界面性能，修复扩容背包下的商人购买校验。
+v1.6.3：适配游戏版本1.1.11a。
 
 ## 快速开始
 
@@ -46,7 +46,7 @@ v1.6.2：适配游戏 1.1.11，优化 Steam 会话续期与界面性能，修复
 
 ## 兼容性与数据
 
-- 已验证 **Deskrawl 1.1.11 / Steam build 26604532**；游戏更新后可能需要适配。
+- 已验证 **Deskrawl 1.1.11a / Steam build 26606215**；游戏更新后可能需要适配。
 - 配置与日志保存在 `%LOCALAPPDATA%\Deskrawl装备助手\`，升级保留；Steam 登录成功后自动关闭窗口，凭证使用当前 Windows 用户的 DPAPI 在本机加密保存，重开助手后自动核验。
 - 自动合成、交易所上传与 Steam 出售默认关闭，启用前请确认配置；战力和市场报价仅供参考，掉落以游戏实际结算为准。
 - 优先使用本机 Steam 登录态并尝试自动续期，无法恢复且确认过期时提示重新登录并取消自动出售，游戏交易所上传继续；待手机确认数量只显示近期核验成功的数据。

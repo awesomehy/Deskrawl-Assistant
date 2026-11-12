@@ -4,7 +4,7 @@
     "learn_life_skill",
     "set_skill"
   ],
-  "build": "Deskrawl 1.1.11 / Steam 26604532",
+  "build": "Deskrawl 1.1.11a / Steam 26606215",
   "verified_kinds": [
     "return_town",
     "enter_map",
@@ -25,9 +25,9 @@
     "auction_upload"
   ],
   "sha256": {
-    "GameAssembly.dll": "5fedeb65c3ef1f607fa1441013068942c52d509d5658e62ecbacdf6b3d7f756c",
+    "GameAssembly.dll": "de0896d9f6a20ed7b4137198fef86ba6a029ce001e01617c9aae78c1682d4113",
     "UnityPlayer.dll": "9feedb4527a30fae4762bff45d204f8e85b90851b2c8ae8d24f436f7d474667b",
-    "Deskrawl_Data/il2cpp_data/Metadata/global-metadata.dat": "8e636924c88a9c9274c02df2f1b164303ff5064626e5d5f8169cb0a6fbcc75c8"
+    "Deskrawl_Data/il2cpp_data/Metadata/global-metadata.dat": "6637c2fcf57dc7d8b8d98ebb733b2b7f5054e355772fd82f1060c68e16f4ae45"
   },
   "exports": {
     "il2cpp_runtime_invoke": {
@@ -44,7 +44,7 @@
     },
     "il2cpp_thread_current": {
       "rva": 4030992,
-      "prefix": "40534883ec20488b0d833b8f038b09ff159bb2b402488bd8"
+      "prefix": "40534883ec20488b0dc33b8f038b09ff159bb2b402488bd8"
     },
     "il2cpp_gchandle_new": {
       "rva": 4028432,
@@ -21589,7 +21589,7 @@
         }
       ],
       "rva": 5762720,
-      "prefix": "48895c2418554883ec30803d3bee740300488bda488be975",
+      "prefix": "48895c2418554883ec30803d8bee740300488bda488be975",
       "declaring_type": "TownPortalSystem"
     },
     "TownPortalSystem.frj": {
@@ -21599,7 +21599,7 @@
       "returnType": "System.Void",
       "parameters": [],
       "rva": 5763936,
-      "prefix": "40564883ec20803d1eea740300488bf17518488d0defca5a",
+      "prefix": "40564883ec20803d6eea740300488bf17518488d0defca5a",
       "declaring_type": "TownPortalSystem"
     },
     "MerchantUI.gzy": {
@@ -21619,8 +21619,8 @@
           "resolvedType": "UnityEngine.Vector2"
         }
       ],
-      "rva": 6605984,
-      "prefix": "405741544883ec58803d84146803004c8be10f2974244066",
+      "rva": 6606240,
+      "prefix": "405741544883ec58803dd4136803004c8be10f2974244066",
       "declaring_type": "MerchantUI"
     },
     "hm.ecc": {
@@ -21636,7 +21636,7 @@
         }
       ],
       "rva": 5204320,
-      "prefix": "48895c2418564883ec30803dbe6f7d03004863f1753a488d",
+      "prefix": "48895c2418564883ec30803d12707d03004863f1753a488d",
       "declaring_type": "io"
     },
     "ConsumableItemSystem.eyu": {
@@ -21657,7 +21657,7 @@
         }
       ],
       "rva": 5497776,
-      "prefix": "48895c2418555741574881ec80000000803d84f778030041",
+      "prefix": "48895c2418555741574881ec80000000803dd4f778030041",
       "declaring_type": "ConsumableItemSystem"
     },
     "EquipmentManager.ddw": {
@@ -21682,8 +21682,8 @@
           "resolvedType": "EquipSlotId"
         }
       ],
-      "rva": 8380032,
-      "prefix": "48895c240848896c24104889742418574883ec20803d8c0b",
+      "rva": 8380288,
+      "prefix": "48895c240848896c24104889742418574883ec20803ddc0a",
       "declaring_type": "EquipmentManager"
     },
     "EquipmentManager.ded": {
@@ -21708,8 +21708,8 @@
           "resolvedType": "System.String"
         }
       ],
-      "rva": 8382688,
-      "prefix": "48895c2410488974241848897c242041564883ec30803d32",
+      "rva": 8382944,
+      "prefix": "48895c2410488974241848897c242041564883ec30803d82",
       "declaring_type": "EquipmentManager"
     },
     "EquipmentManager.deh": {
@@ -21724,8 +21724,8 @@
           "resolvedType": "EquipSlotId"
         }
       ],
-      "rva": 8384720,
-      "prefix": "48895c2408574883ec20803d51f94c03008bda488bf97518",
+      "rva": 8384976,
+      "prefix": "48895c2408574883ec20803da1f84c03008bda488bf97518",
       "declaring_type": "EquipmentManager"
     },
     "Inventory.fcc": {
@@ -21751,7 +21751,7 @@
         }
       ],
       "rva": 5540416,
-      "prefix": "40534154415541564883ec28803d3d517803004d8be1418b",
+      "prefix": "40534154415541564883ec28803d8d517803004d8be1418b",
       "declaring_type": "Inventory"
     },
     "Inventory.fcj": {
@@ -21776,8 +21776,8 @@
       "isStatic": false,
       "returnType": "System.Void",
       "parameters": [],
-      "rva": 8293392,
-      "prefix": "405557488d6c24b14881ecc8000000803d545d4e0300488b",
+      "rva": 8293648,
+      "prefix": "405557488d6c24b14881ecc8000000803da45c4e0300488b",
       "declaring_type": "LootDrop"
     },
     "EquipmentManager.ddq": {
@@ -21797,8 +21797,8 @@
           "resolvedType": "EquipSlotId"
         }
       ],
-      "rva": 8378528,
-      "prefix": "48895c2410564883ec20803d6f114d03008bf2488bd97529",
+      "rva": 8378784,
+      "prefix": "48895c2410564883ec20803dbf104d03008bf2488bd97529",
       "declaring_type": "EquipmentManager"
     },
     "EquipmentManager.ddt": {
@@ -21818,8 +21818,8 @@
           "resolvedType": "System.String"
         }
       ],
-      "rva": 8379552,
-      "prefix": "48895c2410574883ec30803d740d4d0300488bda488bf975",
+      "rva": 8379808,
+      "prefix": "48895c2410574883ec30803dc40c4d0300488bda488bf975",
       "declaring_type": "EquipmentManager"
     },
     "EquipmentManager.ddu": {
@@ -21834,8 +21834,8 @@
           "resolvedType": "ItemData"
         }
       ],
-      "rva": 8379776,
-      "prefix": "40534883ec20803d68da4c0300488bd97518488d0dff6b32",
+      "rva": 8380032,
+      "prefix": "40534883ec20803da8d94c0300488bd97518488d0d0f6b32",
       "declaring_type": "EquipmentManager"
     },
     "EquipmentManager.ddv": {
@@ -21850,8 +21850,8 @@
           "resolvedType": "System.String"
         }
       ],
-      "rva": 8379904,
-      "prefix": "40534883ec20803d190c4d0300488bd97518488d0dbf9e32",
+      "rva": 8380160,
+      "prefix": "40534883ec20803d690b4d0300488bd97518488d0dc79d32",
       "declaring_type": "EquipmentManager"
     },
     "ey.dcq": {
@@ -21866,8 +21866,8 @@
           "resolvedType": "WorldDifficulty"
         }
       ],
-      "rva": 8362672,
-      "prefix": "40534883ec20803d444f4d03008bd97518488d0d48bc3203",
+      "rva": 8362928,
+      "prefix": "40534883ec20803d944e4d03008bd97518488d0d50bb3203",
       "declaring_type": "fj"
     },
     "TownPortalSystem.frk": {
@@ -21877,7 +21877,7 @@
       "returnType": "System.Boolean",
       "parameters": [],
       "rva": 5764528,
-      "prefix": "48895c2410564883ec20803d2ce7740300488bf17518488d",
+      "prefix": "48895c2410564883ec20803d7ce7740300488bf17518488d",
       "declaring_type": "TownPortalSystem"
     },
     "TownPortalSystem.frl": {
@@ -21887,7 +21887,7 @@
       "returnType": "System.Boolean",
       "parameters": [],
       "rva": 5764992,
-      "prefix": "40564883ec20803d61e5740300488bf17518488d0d57f159",
+      "prefix": "40564883ec20803db1e5740300488bf17518488d0d5ff159",
       "declaring_type": "TownPortalSystem"
     },
     "PlayerAbilityBook.bbv": {
@@ -21903,7 +21903,7 @@
         }
       ],
       "rva": 5061584,
-      "prefix": "48895c2408574883ec20803d6e9c7f0300488bfa488bd975",
+      "prefix": "48895c2408574883ec20803dc29c7f0300488bfa488bd975",
       "declaring_type": "PlayerAbilityBook"
     },
     "PlayerAbilityController.bdg": {
@@ -21945,7 +21945,7 @@
         }
       ],
       "rva": 5072576,
-      "prefix": "48895c2408574883ec20803d91717f03008bda488bf97529",
+      "prefix": "48895c2408574883ec20803de5717f03008bda488bf97529",
       "declaring_type": "PlayerAbilityController"
     },
     "DialogueInteractable.clw": {
@@ -21954,8 +21954,8 @@
       "isStatic": false,
       "returnType": "System.Void",
       "parameters": [],
-      "rva": 8166800,
-      "prefix": "40534883ec30803d581a500300488bd97518488d0defab35",
+      "rva": 8167056,
+      "prefix": "40534883ec30803d9819500300488bd97518488d0dffaa35",
       "declaring_type": "DialogueInteractable"
     },
     "PlayerLifeSkillBook.fmu": {
@@ -21971,7 +21971,7 @@
         }
       ],
       "rva": 5709472,
-      "prefix": "48895c24084889742410574883ec30803ddabd750300488b",
+      "prefix": "48895c24084889742410574883ec30803d2abe750300488b",
       "declaring_type": "PlayerLifeSkillBook"
     },
     "PlayerLifeSkillBook.fmv": {
@@ -21987,7 +21987,7 @@
         }
       ],
       "rva": 5709872,
-      "prefix": "48896c2418574883ec40803d50bc750300488bfa488be975",
+      "prefix": "48896c2418574883ec40803da0bc750300488bfa488be975",
       "declaring_type": "PlayerLifeSkillBook"
     },
     "PlayerTalentBook.fod": {
@@ -22003,7 +22003,7 @@
         }
       ],
       "rva": 5723936,
-      "prefix": "48895c2410574883ec20803d7a85750300488bda488bf975",
+      "prefix": "48895c2410574883ec20803dca85750300488bda488bf975",
       "declaring_type": "PlayerTalentBook"
     },
     "PlayerTalentBook.fom": {
@@ -22019,7 +22019,7 @@
         }
       ],
       "rva": 5727536,
-      "prefix": "48895c2410574883ec30803d7177750300488bfa488bd975",
+      "prefix": "48895c2410574883ec30803dc177750300488bfa488bd975",
       "declaring_type": "PlayerTalentBook"
     },
     "MerchantUI.gzr": {
@@ -22039,8 +22039,8 @@
           "resolvedType": "System.Int32"
         }
       ],
-      "rva": 6596272,
-      "prefix": "4055565741554156488d6c24c94881ecd0000000803d603a",
+      "rva": 6596528,
+      "prefix": "4055565741554156488d6c24c94881ecd0000000803db039",
       "declaring_type": "MerchantUI"
     },
     "PanelBase.Close": {
@@ -22049,8 +22049,8 @@
       "isStatic": false,
       "returnType": "System.Void",
       "parameters": [],
-      "rva": 6688256,
-      "prefix": "48895c2408574883ec20803d95d3660300488bd97529488d",
+      "rva": 6688512,
+      "prefix": "48895c2408574883ec20803de5d2660300488bd97529488d",
       "declaring_type": "PanelBase"
     },
     "SaveSystem.egx": {
@@ -22065,7 +22065,7 @@
           "resolvedType": "System.Boolean"
         }
       ],
-      "rva": 8704768,
+      "rva": 8705024,
       "prefix": "48895c2408574883ec4080b9c200000000488bd90fb6fa0f",
       "declaring_type": "SaveSystem"
     },
@@ -22075,8 +22075,8 @@
       "isStatic": true,
       "returnType": "System.Boolean",
       "parameters": [],
-      "rva": 8420656,
-      "prefix": "40534883ec20803d446d4c03007529488d0daa6b3103e805",
+      "rva": 8420912,
+      "prefix": "40534883ec20803d946c4c03007529488d0db26a3103e805",
       "declaring_type": "GameManager"
     },
     "DeathUI.return_to_town": {
@@ -22085,8 +22085,8 @@
       "isStatic": false,
       "returnType": "System.Void",
       "parameters": [],
-      "rva": 6002736,
-      "prefix": "40534883ec20803df745710300488bd97518488d0da75056",
+      "rva": 6002992,
+      "prefix": "40534883ec20803d4745710300488bd97518488d0daf4f56",
       "declaring_type": "DeathUI"
     },
     "SaveSystem.mythic_unlocked": {
@@ -22106,8 +22106,8 @@
           "resolvedType": "System.Int32"
         }
       ],
-      "rva": 8673104,
-      "prefix": "48895c2408574883ec20803db1944803008bda488bf97518",
+      "rva": 8673360,
+      "prefix": "48895c2408574883ec20803d01944803008bda488bf97518",
       "declaring_type": "SaveSystem"
     },
     "TownPortalSystem.entry_materials": {
@@ -22123,7 +22123,7 @@
         }
       ],
       "rva": 5772432,
-      "prefix": "48895c24104889742418574883ec40488bd9803d4ac87403",
+      "prefix": "48895c24104889742418574883ec40488bd9803d9ac87403",
       "declaring_type": "TownPortalSystem"
     },
     "GameManager.enter_mythic": {
@@ -22143,8 +22143,8 @@
           "resolvedType": "System.Int32"
         }
       ],
-      "rva": 8424688,
-      "prefix": "48895c24084889742410574883ec20803d815d4c0300418b",
+      "rva": 8424944,
+      "prefix": "48895c24084889742410574883ec20803dd15c4c0300418b",
       "declaring_type": "GameManager"
     },
     "GameManager.travel_busy": {
@@ -22153,8 +22153,8 @@
       "isStatic": true,
       "returnType": "System.Boolean",
       "parameters": [],
-      "rva": 8421280,
-      "prefix": "40534883ec20803dd56a4c03007518488d0d3a693103e895",
+      "rva": 8421536,
+      "prefix": "40534883ec20803d256a4c03007518488d0d42683103e895",
       "declaring_type": "GameManager"
     },
     "CubePanelUI.gba": {
@@ -22164,7 +22164,7 @@
       "returnType": "System.Boolean",
       "parameters": [],
       "rva": 5936624,
-      "prefix": "40534883ec20803de847720300488bd97518488d0d0fea57",
+      "prefix": "40534883ec20803d3848720300488bd97518488d0d17ea57",
       "declaring_type": "CubePanelUI"
     },
     "CubePanelUI.Open": {
@@ -22174,7 +22174,7 @@
       "returnType": "System.Void",
       "parameters": [],
       "rva": 5941264,
-      "prefix": "40534883ec20803dcc35720300488bd9753a488d0dafb757",
+      "prefix": "40534883ec20803d1c36720300488bd9753a488d0db7b757",
       "declaring_type": "CubePanelUI"
     },
     "CubePanelUI.gbh": {
@@ -22200,7 +22200,7 @@
         }
       ],
       "rva": 5944432,
-      "prefix": "44884c242048894c2408555741564883ec60803d67297203",
+      "prefix": "44884c242048894c2408555741564883ec60803db7297203",
       "declaring_type": "CubePanelUI"
     },
     "CubePanelUI.gbp": {
@@ -22215,8 +22215,8 @@
           "resolvedType": "System.Boolean"
         }
       ],
-      "rva": 5965728,
-      "prefix": "4055415441574883ec50803d55d6710300440fb6e24c8bf9",
+      "rva": 5965984,
+      "prefix": "4055415441574883ec50803da5d5710300440fb6e24c8bf9",
       "declaring_type": "CubePanelUI"
     },
     "CubePanelUI.gbu": {
@@ -22225,7 +22225,7 @@
       "isStatic": false,
       "returnType": "System.Void",
       "parameters": [],
-      "rva": 5976544,
+      "rva": 5976800,
       "prefix": "48895c2418574883ec30ff8128010000488bf9488b890001",
       "declaring_type": "CubePanelUI"
     },
@@ -22236,7 +22236,7 @@
       "returnType": "System.Void",
       "parameters": [],
       "rva": 5942864,
-      "prefix": "48895c241048896c2418574883ec20803d872f720300488b",
+      "prefix": "48895c241048896c2418574883ec20803dd72f720300488b",
       "declaring_type": "CubePanelUI"
     },
     "et.dbi": {
@@ -22251,8 +22251,8 @@
           "resolvedType": "RecipeData"
         }
       ],
-      "rva": 8342112,
-      "prefix": "40534883ec30803d719f4d0300488bd97518488d0d779e32",
+      "rva": 8342368,
+      "prefix": "40534883ec30803dc19e4d0300488bd97518488d0d7f9d32",
       "declaring_type": "fb"
     },
     "et.dbn": {
@@ -22272,8 +22272,8 @@
           "resolvedType": "System.Int32"
         }
       ],
-      "rva": 8344544,
-      "prefix": "8954241055564155488d6c24b94881eca0000000803de795",
+      "rva": 8344800,
+      "prefix": "8954241055564155488d6c24b94881eca0000000803d3795",
       "declaring_type": "fb"
     },
     "SaveSystem.eke": {
@@ -22288,8 +22288,8 @@
           "resolvedType": "CubeRecipe"
         }
       ],
-      "rva": 8794000,
-      "prefix": "4889742410574883ec20803dd6bc460300488bf97518488d",
+      "rva": 8794256,
+      "prefix": "4889742410574883ec20803d26bc460300488bf97518488d",
       "declaring_type": "SaveSystem"
     },
     "SaveSystem.ekf": {
@@ -22298,8 +22298,8 @@
       "isStatic": false,
       "returnType": "System.Boolean",
       "parameters": [],
-      "rva": 8794240,
-      "prefix": "48895c2410574883ec20803d6487460300488bd97518488d",
+      "rva": 8794496,
+      "prefix": "48895c2410574883ec20803da486460300488bd97518488d",
       "declaring_type": "SaveSystem"
     },
     "PopupPanel.confirm_disconnect": {
@@ -22308,8 +22308,8 @@
       "isStatic": false,
       "returnType": "System.Void",
       "parameters": [],
-      "rva": 6710480,
-      "prefix": "40574883ec20803dec7c660300488bf97518488d0d2f1b4c",
+      "rva": 6710736,
+      "prefix": "40574883ec20803d3c7c660300488bf97518488d0d371a4c",
       "declaring_type": "PopupPanel"
     },
     "MainMenuUI.online_tab": {
@@ -22318,7 +22318,7 @@
       "isStatic": false,
       "returnType": "System.Void",
       "parameters": [],
-      "rva": 6482512,
+      "rva": 6482768,
       "prefix": "33d2c781bc00000001000000c781c0000000ffffffffe925",
       "declaring_type": "MainMenuUI"
     },
@@ -22334,7 +22334,7 @@
           "resolvedType": "SaveSlotEntryUI"
         }
       ],
-      "rva": 6473936,
+      "rva": 6474192,
       "prefix": "48895c240848896c24104889742418574883ec20488be948",
       "declaring_type": "MainMenuUI"
     },
@@ -22344,8 +22344,8 @@
       "isStatic": false,
       "returnType": "System.Void",
       "parameters": [],
-      "rva": 6478112,
-      "prefix": "48895c2408574883ec30803d5a076a0300488bd9754b488d",
+      "rva": 6478368,
+      "prefix": "48895c2408574883ec30803daa066a0300488bd9754b488d",
       "declaring_type": "MainMenuUI"
     },
     "AuctionUI.Show": {
@@ -22386,7 +22386,7 @@
       "returnType": "System.Void",
       "parameters": [],
       "rva": 5820240,
-      "prefix": "48895c2418574883ec30803ddd0d740300488bd9753a488d",
+      "prefix": "48895c2418574883ec30803d2d0e740300488bd9753a488d",
       "declaring_type": "AuctionUI"
     },
     "AuctionUploadSlotUI.clear": {
@@ -22396,7 +22396,7 @@
       "returnType": "System.Void",
       "parameters": [],
       "rva": 5834912,
-      "prefix": "40534883ec208b05a4cb73034c8d15edfe74034533c9488b",
+      "prefix": "40534883ec208b05f4cb73034c8d152dff74034533c9488b",
       "declaring_type": "AuctionUploadSlotUI"
     },
     "ItemData.auction_tradable": {
@@ -22411,7 +22411,7 @@
           "resolvedType": "GeneratedItemData"
         }
       ],
-      "rva": 7963008,
+      "rva": 7963264,
       "prefix": "4885d20f8490000000488b42504885c00f84830000008378",
       "declaring_type": "ItemData"
     },
@@ -22421,8 +22421,8 @@
       "isStatic": false,
       "returnType": "System.Boolean",
       "parameters": [],
-      "rva": 6686016,
-      "prefix": "48895c2408574883ec20803d51dc660300488bd97518488d",
+      "rva": 6686272,
+      "prefix": "48895c2408574883ec20803da1db660300488bd97518488d",
       "declaring_type": "PanelBase"
     },
     "AuctionUI.refresh_list": {
@@ -22432,7 +22432,7 @@
       "returnType": "System.Void",
       "parameters": [],
       "rva": 5819696,
-      "prefix": "40534883ec20803d0010740300488bd9755c488d0d17fb59",
+      "prefix": "40534883ec20803d5010740300488bd9755c488d0d17fb59",
       "declaring_type": "AuctionUI"
     },
     "CombatMapCompletionUI.replay": {
@@ -22442,44 +22442,44 @@
       "returnType": "System.Void",
       "parameters": [],
       "rva": 5899712,
-      "prefix": "40534883ec20488bd933c9e86077260084c0740c33c94883",
+      "prefix": "40534883ec20488bd933c9e86078260084c0740c33c94883",
       "declaring_type": "CombatMapCompletionUI"
     }
   },
   "singletons": {
-    "TownPortalSystem": 62032248,
-    "MerchantUI": 62061816,
-    "ConsumableItemSystem": 62043368,
-    "EquipmentManager": 62021592,
-    "Inventory": 62025464,
-    "GameManager": 62015896,
-    "GameAreaManager": 62025512,
-    "PlayerData": 62025496,
-    "SaveSystem": 62029848,
-    "CarriageAutomation": 62030128,
-    "PlayerLifeSkillBook": 62030144,
-    "PlayerTalentBook": 62042184,
-    "PlayerAbilityBook": 62015936,
-    "CloudClient": 62025480,
-    "DeathUI": 62050088,
-    "HealthPotionSystem": 62043288,
-    "CubePanelUI": 62051400,
-    "RuneManager": 62029040,
-    "CraftingPanelUI": 62051664,
-    "MainMenuUI": 62057184,
-    "PopupPanel": 62025488,
-    "AuctionUI": 62048656
+    "TownPortalSystem": 62032256,
+    "MerchantUI": 62061832,
+    "ConsumableItemSystem": 62043376,
+    "EquipmentManager": 62021600,
+    "Inventory": 62025472,
+    "GameManager": 62015912,
+    "GameAreaManager": 62025520,
+    "PlayerData": 62025504,
+    "SaveSystem": 62029856,
+    "CarriageAutomation": 62030136,
+    "PlayerLifeSkillBook": 62030152,
+    "PlayerTalentBook": 62042192,
+    "PlayerAbilityBook": 62015944,
+    "CloudClient": 62025488,
+    "DeathUI": 62050096,
+    "HealthPotionSystem": 62043296,
+    "CubePanelUI": 62051416,
+    "RuneManager": 62029048,
+    "CraftingPanelUI": 62051680,
+    "MainMenuUI": 62057200,
+    "PopupPanel": 62025496,
+    "AuctionUI": 62048664
   },
   "iat": {
     "peek_message_w_rva": 28941400
   },
   "statics": {
-    "merchant_unlocks_type": 62032768,
-    "ey": 62025504,
+    "merchant_unlocks_type": 62032776,
+    "ey": 62025512,
     "CombatMapCompletionUI": 62045800,
     "MythicCompletionUI": 62045784,
     "merchant_stock_type": 62079032,
-    "completion_events": 62019344
+    "completion_events": 62019352
   },
   "uninitialized_type_tokens": {
     "CombatMapCompletionUI": 536909669,
@@ -22489,7 +22489,7 @@
     "completion_events": 536938545
   },
   "panel_log": {
-    "class_rva": 62032208,
+    "class_rva": 62032216,
     "capacity": 1000,
     "templates": {
       "sell": {

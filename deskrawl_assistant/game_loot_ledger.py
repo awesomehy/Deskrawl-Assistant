@@ -63,10 +63,17 @@ def read_loot_ledger(reader, action_read, manager):
         if action not in (0, 1, 2) or ancient not in (0, 1) or mist not in (0, 1):
             raise MemoryReadError('马车处置记录格式未确认。')
         # base_item verifies the ItemData hierarchy against the shipped layout.
-        row = reader.base_item(item)
+        row = dict(reader.base_item(item))
         copy.read(item + 32, 8)
         if not row.get('is_equipment'): continue
-        row.update(kind='equipment', count=1, is_ancient=bool(ancient), is_black_mist=bool(mist))
+        # This queue retains ItemData, not GeneratedItemData. Its quality is
+        # base_rarity plus the two recorded flags; normalise the receipt just
+        # like inventory rows before the statistics consumer sees it.
+        rarity = row.get('base_rarity')
+        if type(rarity) is not int or rarity not in range(5):
+            raise MemoryReadError('马车处置记录装备品质未确认。')
+        row.update(kind='equipment', count=1, rarity=rarity,
+                   is_ancient=bool(ancient), is_black_mist=bool(mist))
         receipts.append({'index': index, 'action': {0:'pickup', 1:'sell', 2:'salvage'}[action], 'item': row})
     automation = action_read.singleton('CarriageAutomation')
     policy_obj = copy.ptr(automation + 32)

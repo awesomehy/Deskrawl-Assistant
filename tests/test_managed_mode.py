@@ -849,6 +849,17 @@ class CleanupTests(unittest.TestCase):
 
 
 class MetricsTests(unittest.TestCase):
+    def test_equipment_with_unread_quality_waits_without_becoming_other_or_losing_pickup(self):
+        metric=ManagedMetrics();metric.observe(observation())
+        row=equipment('late-quality',rarity=None)
+        for _ in range(3):metric.observe(observation([row]))
+        self.assertEqual(metric.state()['others'],[])
+        self.assertTrue(all(r['count']==0 for r in metric.state()['equipment'].values()))
+        row['rarity']=3
+        for _ in range(3):metric.observe(observation([row]))
+        self.assertEqual(metric.state()['others'],[])
+        self.assertEqual(metric.state()['equipment']['legendary']['count'],1)
+
     def test_other_drops_exclude_potions_and_coins_without_changing_known_categories(self):
         metric = ManagedMetrics(); metric.observe(observation())
         others = [loot('chest', 'chest', 'TreasureChest2', count=2),

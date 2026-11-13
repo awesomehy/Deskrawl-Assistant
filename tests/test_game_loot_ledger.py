@@ -9,7 +9,7 @@ from deskrawl_assistant.native_memory import MemoryReadError, SnapshotChangedErr
 class GameLootLedgerTests(unittest.TestCase):
     def setUp(self):
         self.reader=Mock();self.reader.string.return_value='offline-run-guid'
-        self.reader.base_item.return_value={'is_equipment':True,'rarity':3,'internal_name':'LegendaryNeck1'}
+        self.reader.base_item.return_value={'is_equipment':True,'base_rarity':3,'internal_name':'LegendaryNeck1'}
         self.reader.fields.side_effect=lambda obj:[{'name':k,'offset':v} for k,v in
             ({'Item1':16,'Item2':24,'Item3':28,'Item4':29} if obj==6100 else
              {'hashCode':16,'next':20,'key':24,'value':28}).items()]
@@ -33,8 +33,62 @@ class GameLootLedgerTests(unittest.TestCase):
         self.assertEqual(result['policy'],{'0':1,'2':2})
         self.assertEqual(result['receipts'][0]['action'],'salvage')
         self.assertTrue(result['receipts'][0]['item']['is_ancient'])
+        self.assertEqual(result['receipts'][0]['item']['rarity'],3)
         self.reader.memory.write.assert_not_called();self.action_read.singleton.assert_called_once_with('CarriageAutomation')
         self.copy.finish.assert_called_once()
+
+    def test_native_base_item_receipts_join_equipment_statistics_not_other_items(self):
+        from deskrawl_assistant.managed_mode import ManagedMetrics
+        from test_managed_mode import observation
+
+        for name, rarity, ancient, mist, bucket in (
+                ('LegendaryNeck1',3,0,0,'legendary'),
+                ('LegendaryNeck1',3,1,0,'ancient'),
+                ('LegendaryNeck1',3,0,1,'black_mist'),
+                ('DivineNeck1',4,0,0,'divine'),
+                ('LegendaryMinionGear1',3,0,0,'legendary'),
+                ('LegendaryMinionGear1',3,0,1,'black_mist')):
+            with self.subTest(name=name,bucket=bucket):
+                self.reader.base_item.return_value={'is_equipment':True,
+                    'base_rarity':rarity,'internal_name':name,'name_key':name}
+                self.copy.queue.return_value=[struct.pack('<QiBB2x',10000,2,ancient,mist)]
+                ledger=self.read()
+                ledger['counts']={str(n):int(n==rarity) for n in range(6)}
+                metric=ManagedMetrics()
+                metric.observe(observation(loot_ledger={**ledger,
+                    'counts':{str(n):0 for n in range(6)},'receipts':[]}))
+                for _ in range(3):metric.observe(observation(loot_ledger=ledger))
+                stats=metric.state()
+                self.assertEqual(stats['others'],[])
+                if 'Minion' in name:
+                    self.assertEqual(len(stats['minion_equipment']),1)
+                    totals=stats['minion_equipment'][0]
+                    self.assertEqual(totals['bucket'],bucket)
+                    self.assertEqual(sum(r['count'] for r in stats['equipment'].values()),0)
+                else:
+                    totals=stats['equipment'][bucket]
+                    self.assertEqual(stats['minion_equipment'],[])
+                self.assertEqual((totals['count'],totals['salvaged']),(1,1))
+
+    def test_unknown_equipment_rarity_does_not_commit_a_receipt_cursor(self):
+        for rarity in (None,-1,5,True,'3'):
+            with self.subTest(rarity=rarity):
+                self.reader.base_item.return_value={'is_equipment':True,
+                    'base_rarity':rarity,'internal_name':'LegendaryNeck1'}
+                with self.assertRaisesRegex(MemoryReadError,'装备品质未确认'):
+                    self.read()
+                self.assertNotIn('_loot_receipt_cursor',self.reader.__dict__)
+
+    def test_same_equipment_base_keeps_each_receipts_quality_flags_independent(self):
+        base=dict(self.reader.base_item.return_value)
+        self.copy.queue.return_value=[struct.pack('<QiBB2x',10000,action,ancient,mist)
+            for action,ancient,mist in ((1,0,0),(2,1,0),(2,0,1))]
+        rows=[r['item'] for r in self.read()['receipts']]
+        self.assertEqual([(r['rarity'],r['is_ancient'],r['is_black_mist']) for r in rows],
+                         [(3,False,False),(3,True,False),(3,False,True)])
+        self.assertEqual(self.reader.base_item.return_value,base)
+        rows[0]['rarity']=4
+        self.assertEqual(rows[1]['rarity'],3)
 
     def test_invalid_receipt_and_duplicate_policy_fail_closed(self):
         self.copy.queue.return_value=[struct.pack('<QiBB2x',10000,9,0,0)]

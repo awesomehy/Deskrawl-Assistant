@@ -395,12 +395,17 @@ def _metric_key(row):
     kind = item_kind(row)
     if name in ('GoldDrop', 'HealthPotionDrop') or kind not in ('equipment', 'rune', 'gem') and 'Potion' in name:
         return None
-    if kind == 'equipment' and equipment_bucket(row) in EQUIPMENT_BUCKETS:
+    if kind == 'equipment':
+        bucket = equipment_bucket(row)
+        # An incomplete equipment read must wait for its quality, rather than
+        # becoming a material drop and consuming the UID's first observation.
+        if bucket not in EQUIPMENT_BUCKETS:
+            return None
         if is_minion_equipment(row):
             # Native disposal receipts have no instance level. Group by item
             # and quality so those receipts join the observed pickup row.
-            return 'minion_equipment', name, equipment_bucket(row), None
-        return kind, equipment_bucket(row)
+            return 'minion_equipment', name, bucket, None
+        return kind, bucket
     # Native fungible stacks expose base_rarity; the managed view decorates
     # the same value as rarity. Receipts and observations must share one key.
     rarity = row.get('rarity')

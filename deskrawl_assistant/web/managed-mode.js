@@ -14,13 +14,17 @@
   const capabilityNames={transfer:'物品转移',lock:'装备保护',equip:'后台换装',travel:'回城 / 进入关卡',difficulty:'主城切换难度',sell:'出售',salvage:'分解',chests:'开启宝箱',ground_pickup:'地面拾取',merchant:'神秘商人消费',talents:'职业天赋加点',life_skills:'生活技能学习',skills:'技能切换',gem_synthesis:'宝石合成',rune_synthesis:'符文合成',auction_upload:'游戏拍卖行上传'};
   const gemQualities=['粗糙','碎裂','粗砺','抛光','无瑕','璀璨','完美之星'];
   const runeQualities={uncommon:'优秀',rare:'稀有',grand:'宏伟',set:'符文套装'};
+  const equipmentRecipes={ancient_to_black_mist:'远古传说 → 黑雾传说',black_mist_to_divine:'黑雾传说 → 神圣',divine_to_ancient:'神圣 → 远古神圣'};
+  capabilityNames.equipment_synthesis='装备合成';
   function normalizeSynthesis(value={}){
-    const gems=value?.gems||{},runes=value?.runes||{};
+    const gems=value?.gems||{},runes=value?.runes||{},equipment=value?.equipment||{};
     return {gems:{enabled:gems.enabled===true,max_quality:Number.isInteger(gems.max_quality)&&gems.max_quality>=1&&gems.max_quality<=7?gems.max_quality:5},
       runes:{enabled:runes.enabled===true,max_quality:Object.hasOwn(runeQualities,runes.max_quality)?runes.max_quality:'rare',
-        excluded_keys:[...new Set((Array.isArray(runes.excluded_keys)?runes.excluded_keys:[]).filter(key=>typeof key==='string'&&key.trim()).map(key=>key.trim()))].sort()}};
+        excluded_keys:[...new Set((Array.isArray(runes.excluded_keys)?runes.excluded_keys:[]).filter(key=>typeof key==='string'&&key.trim()).map(key=>key.trim()))].sort()},
+      equipment:{enabled:equipment.enabled===true,include_matched:equipment.include_matched!==false,
+        ...Object.fromEntries(Object.keys(equipmentRecipes).map(key=>[key,equipment[key]===true]))}};
   }
-  const synthesisEnabled=value=>{const s=normalizeSynthesis(value?.synthesis);return s.gems.enabled||s.runes.enabled;};
+  const synthesisEnabled=value=>{const s=normalizeSynthesis(value?.synthesis);return s.gems.enabled||s.runes.enabled||s.equipment.enabled;};
   function runeQuality(row){
     const key=String(row.key??row.internal_name??'');
     if(Object.hasOwn(runeQualities,row.quality))return row.quality;
@@ -117,7 +121,7 @@
   function capabilityAvailable(value){return value===true||!!(value&&typeof value==='object'&&(value.native_verified!==false||value.test_enabled===true||value.release_enabled===true)&&(value.available===true||(value.available===undefined&&value.supported===true)));}
   function requiredCapabilities(settings){
     const c=settings.cleanup,keys=[],synthesis=normalizeSynthesis(settings.synthesis);
-    const cleanupEnabled=farmingEnabled(settings)||growthTools.normalize(settings).merchant.enabled||synthesis.gems.enabled||synthesis.runes.enabled||settings.auction?.upload_enabled===true;
+    const cleanupEnabled=farmingEnabled(settings)||growthTools.normalize(settings).merchant.enabled||synthesisEnabled(settings)||settings.auction?.upload_enabled===true;
     if(cleanupEnabled)keys.push('transfer','lock','chests','ground_pickup');
     else if(settings.auto_equip.enabled)keys.push('transfer');
     if(settings.auto_equip.enabled)keys.push('equip');
@@ -128,6 +132,7 @@
     if(growth.progression.talents_enabled)keys.push('talents');if(growth.progression.skills_enabled)keys.push('skills');if(growth.life_skills.enabled)keys.push('life_skills');
     if(synthesis.gems.enabled)keys.push('gem_synthesis','transfer');
     if(synthesis.runes.enabled)keys.push('rune_synthesis','transfer');
+    if(synthesis.equipment.enabled)keys.push('equipment_synthesis','transfer');
     if(settings.auction?.upload_enabled===true)keys.push('auction_upload','transfer');
     if(growth.merchant.enabled)keys.push('merchant','travel','transfer','lock','chests','ground_pickup');
     const policies=normalizeSettings(settings).cleanup;
@@ -215,7 +220,7 @@
       farming:state(farmingEnabled(s),(s.pumpkin.enabled?'优先南瓜王 · '+(difficultyNames[s.pumpkin.difficulty]||'启动时难度')+'；次数用尽后 → ':'')+(s.farming.enabled?progress+(s.farming.mode==='push'?'自动推图 · 最高已解锁关卡':maps.length?maps.join(' → '):'重复刷图 · 未选择关卡')+(s.farming.mode==='repeat'&&s.farming.stargazing.enabled?' · 观星开启':''):'原副本刷图未开启')+` · 空格 < ${s.farming.free_threshold} 回城`),
       merchant:state(s.merchant.enabled,`${s.merchant.trigger_percent}% 回城 · 保留 ${s.merchant.spend_to_percent}% · ${buying.length} 部位 / 每轮 ${buying.reduce((a,b)=>a+b,0)} 件`),
       growth:state(growing.length>0,growing.length?growing.join(' / ')+'自动养成':'战斗天赋 / 生活技能 / 技能预设'),
-      synthesis:state(synthesisEnabled(s),`宝石${s.synthesis.gems.enabled?' → '+gemQualities[s.synthesis.gems.max_quality-1]:'关闭'} · 符文${s.synthesis.runes.enabled?' → '+runeQualities[s.synthesis.runes.max_quality]:'关闭'} · 跳过 ${s.synthesis.runes.excluded_keys.length} 种符文`),
+      synthesis:state(synthesisEnabled(s),`宝石${s.synthesis.gems.enabled?' → '+gemQualities[s.synthesis.gems.max_quality-1]:'关闭'} · 符文${s.synthesis.runes.enabled?' → '+runeQualities[s.synthesis.runes.max_quality]:'关闭'} · 装备${s.synthesis.equipment.enabled?' '+Object.keys(equipmentRecipes).filter(k=>s.synthesis.equipment[k]).length+' 条配方':'关闭'} · 跳过 ${s.synthesis.runes.excluded_keys.length} 种符文`),
       auction:state(auctionTools.enabled(s.auction),`上传${s.auction.upload_enabled?'开':'关'} · 出售${s.auction.sell_enabled?'开':'关'} · 允许 ${s.auction.categories.length} 类 · 保留白名单 ${s.auction.excluded_keys.length} 种优先`),
       cleanup:{enabled:true,status:'固定保护',summary:`角色装备 ${folders('equipment')} 页 · 仆从装备 命中规则锁定入库 / ${minionRarities.map(([key,name])=>`${name}${dispositionNames[s.cleanup.minion_equipment_policies[key]]}`).join(' / ')} / ${folders('minion_equipment')} 页 · 符文 ${folders('rune')} 页 · 宝石 ${folders('gem')} 页 · `+storageMaterials.map(([key,label])=>`${label} ${folders(key)} 页`).join(' · ')},
       talents:state(s.progression.talents_enabled,currentClass?`当前职业目标 ${points} / ${growthTools.talentPointLimit} 点`:'按职业保存 · 连接后显示当前预设'),
@@ -262,6 +267,7 @@
   const farmFields=['managed-farm-mode','managed-difficulty','managed-map','managed-repeat-two','managed-repeat-count','managed-difficulty-two','managed-map-two','managed-repeat-count-two','managed-free-threshold','managed-stargazing'];
   const fieldIds=['managed-reconnect','managed-reconnect-index','managed-rule-monitoring','managed-inventory-automation','managed-auto-equip','managed-farming','managed-pumpkin','managed-pumpkin-difficulty',...farmFields,'managed-synthesis-gems','managed-synthesis-gems-max','managed-synthesis-runes','managed-synthesis-runes-max'];
   const catalog=()=>context?.catalog||{};
+  fieldIds.push(...['enabled','include_matched',...Object.keys(equipmentRecipes)].map(key=>'managed-synthesis-equipment-'+key));
   const maps=()=>availableMaps(packet,draft||normalizeSettings());
   const mapId=row=>row.id??row.dungeon_id;
   const phaseLabel=()=>packet?.phase_label||phaseNames[packet?.phase]||packet?.phase||'尚未启动';
@@ -296,6 +302,7 @@
     for(const [key] of minionRarities)c.minion_equipment_policies[key]=$(`managed-minion-equipment-${key}-action`).value;
     next.synthesis.gems={enabled:$('managed-synthesis-gems').checked,max_quality:Number($('managed-synthesis-gems-max').value)};
     next.synthesis.runes.enabled=$('managed-synthesis-runes').checked;next.synthesis.runes.max_quality=$('managed-synthesis-runes-max').value;
+    for(const key of ['enabled','include_matched',...Object.keys(equipmentRecipes)])next.synthesis.equipment[key]=$('managed-synthesis-equipment-'+key).checked;
     next.synthesis.runes.excluded_keys=updateRuneExclusions(next.synthesis.runes.excluded_keys,[...root.document.querySelectorAll('[data-synthesis-rune-key]')].map(input=>({key:input.dataset.synthesisRuneKey,excluded:input.checked})));
     for(const kind of storageKinds)c[kind+'_pages']=pageIds([...root.document.querySelectorAll(`[data-managed-pages="${kind}"]:checked`)].map(input=>input.value));
     next.auction=root.AuctionUI?.read(next.auction)||next.auction;
@@ -381,6 +388,7 @@
     const s=draft.synthesis,disabled=!!packet?.running||busy,query=$('managed-synthesis-rune-search').value;
     $('managed-synthesis-gems-max').disabled=disabled||!s.gems.enabled;
     $('managed-synthesis-runes-max').disabled=disabled||!s.runes.enabled;
+    for(const key of ['include_matched',...Object.keys(equipmentRecipes)])$('managed-synthesis-equipment-'+key).disabled=disabled||!s.equipment.enabled;
     $('managed-synthesis-rune-search').disabled=disabled;
     setText('managed-synthesis-gems-note',s.gems.max_quality===1?'粗糙是最低品质，没有可执行的合成配方。':`最多消耗${gemQualities[s.gems.max_quality-2]}合成至${gemQualities[s.gems.max_quality-1]}，不消耗${gemQualities[s.gems.max_quality-1]}。`);
     const runeKeys=Object.keys(runeQualities),index=runeKeys.indexOf(s.runes.max_quality);
@@ -434,6 +442,7 @@
     for(const key of stargazingRewards)$('managed-stargazing-'+key).checked=draft.farming.stargazing.rewards[key];
     $('managed-synthesis-gems').checked=draft.synthesis.gems.enabled;$('managed-synthesis-gems-max').value=draft.synthesis.gems.max_quality;
     $('managed-synthesis-runes').checked=draft.synthesis.runes.enabled;$('managed-synthesis-runes-max').value=draft.synthesis.runes.max_quality;
+    for(const key of ['enabled','include_matched',...Object.keys(equipmentRecipes)])$('managed-synthesis-equipment-'+key).checked=draft.synthesis.equipment[key];
     for(const [key] of disposalRarities)for(const field of ['action','fallback'])$(`managed-equipment-${key}-${field}`).value=draft.cleanup.equipment_policies[key][field];
     for(const [key] of minionRarities)$(`managed-minion-equipment-${key}-action`).value=draft.cleanup.minion_equipment_policies[key];
     if(renderNow){renderSlots();renderMaps();renderPages();renderDependencies();}
@@ -544,10 +553,11 @@
         if(ticket!==actionVersion)return;
         const c=draft.cleanup;
         const growthNotice=[draft.progression.talents_enabled?'按当前职业的目标逐点学习天赋，不重置已有天赋。':'',draft.progression.skills_enabled?'到达设定等级并解锁后切换目标技能组合。':'',draft.life_skills.enabled?`按优先顺序学习生活技能，随后补满；至少保留 ${draft.life_skills.gold_reserve} 金币。`:'',draft.merchant.enabled?'灵魂碎片达到实际容量的回城比例后，整理奖励并按部位比例消费；新购买的装备重新筛选整理。':''].filter(Boolean).join('\n');
-        const synthesisNotice=synthesisEnabled(draft)?'仅在主城整理时按最高产出品质，从低到高合成背包与已解锁仓库材料。'+(draft.synthesis.gems.enabled?`\n宝石合成至${gemQualities[draft.synthesis.gems.max_quality-1]}，会消耗金币。`:'')+(draft.synthesis.runes.enabled?`\n符文合成至${runeQualities[draft.synthesis.runes.max_quality]}，每次消耗 9 枚；概率合成失败也消耗，已有等级和经验不保留。已锁定、已装备及跳过名单中的 ${draft.synthesis.runes.excluded_keys.length} 种符文不参与。`:''):'';
+        const synthesisNotice=synthesisEnabled(draft)?'仅在主城整理时合成背包与已解锁仓库材料；宝石、符文按最高产出品质从低到高处理。'+(draft.synthesis.gems.enabled?`\n宝石合成至${gemQualities[draft.synthesis.gems.max_quality-1]}，会消耗金币。`:'')+(draft.synthesis.runes.enabled?`\n符文合成至${runeQualities[draft.synthesis.runes.max_quality]}，每次消耗 9 枚；概率合成失败也消耗，已有等级和经验不保留。已锁定、已装备及跳过名单中的 ${draft.synthesis.runes.excluded_keys.length} 种符文不参与。`:''):'';
         const auctionNotice=auctionTools.enabled(draft.auction)?`仅处理勾选的 ${draft.auction.categories.length} 类商品。保留白名单的 ${draft.auction.excluded_keys.length} 种物品始终优先，不自动上传或出售。`+(draft.auction.upload_enabled?'\n允许将符合原生交易条件的允许列表物品移出游戏，上传至 Steam 库存；包含本来需要保护入库的高价值物品。':'')+(draft.auction.upload_enabled?'\n锁定状态不影响上传；不会自动解锁，已绑定、强化、有孔或已穿戴物品仍不参与。':'')+(draft.auction.sell_enabled?`\n允许在 Steam 市场按${auctionTools.priceRules[draft.auction.price_rule]}自动出售本工具精确匹配的允许列表上传资产。报价为买方支付总价，币种以 Steam 钱包为准。手机确认中的出售不重复提交。`:''):'';
         const cleanupNotice=(farmingEnabled(draft)||draft.merchant.enabled||synthesisEnabled(draft))?`不符合规则的装备按品质处理：\n${equipmentSummary(c)}。\n仆从装备：黑雾传说和命中规则的装备固定锁定入库；${minionRarities.map(([key,name])=>name+dispositionNames[c.minion_equipment_policies[key]]).join("、")}。\n仓库满时清理所选页的未锁定垃圾：\n${equipmentSummary(c,true)}。\n所有符文、宝石、金条、传说缰绳必须入库，指定页满时留在背包并暂停，腾出容量后继续。出售和分解无法撤回，强化和宝石不自动返还。神圣、黑雾装备必须收纳；已锁定、待核验及命中筛选规则的角色和仆从装备固定保留。神圣装备禁止自动穿戴，主城奖励未收完不得入图。`:draft.auto_equip.enabled?'按固定单体 Boss 战力更换更高战力的装备。神圣装备禁止自动穿戴。未指定暗金时允许其他品质；指定但尚未穿上时允许普通、优秀、稀有装备过渡，穿上后只比较同名装备。不自动转移宝石。':'';
-        const confirmed=await context.confirmAction?.('启动托管？',[growthNotice,synthesisNotice,auctionNotice,cleanupNotice].filter(Boolean).join('\n\n'),'启动托管',false);
+        const equipmentNotice=draft.synthesis.equipment.enabled?'装备合成：'+Object.entries(equipmentRecipes).filter(([key])=>draft.synthesis.equipment[key]).map(([,name])=>name).join('、')+'。允许解锁并消耗选定材料；概率失败也消耗。'+(draft.synthesis.equipment.include_matched?'命中筛选规则的装备也参与。':'命中筛选规则的装备不参与。')+'已穿戴、强制保留和指定保留部位的装备不参与；合成授权优先于默认收纳保护。':'';
+        const confirmed=await context.confirmAction?.('启动托管？',[growthNotice,synthesisNotice,auctionNotice,cleanupNotice,equipmentNotice].filter(Boolean).join('\n\n'),'启动托管',false);
         if(confirmed===false||ticket!==actionVersion)return;
         const result=await context.api('managed/run',{enabled:true});if(ticket===actionVersion)applyPacket(result);
       }

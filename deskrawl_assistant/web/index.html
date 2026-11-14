@@ -278,7 +278,7 @@
           <details class="panel managed-card managed-fold" data-managed-fold="synthesis">
             <summary class="managed-fold-heading"><div class="managed-fold-title"><span class="eyebrow">05 · 回城整理时执行</span><h2>自动合成</h2><p data-managed-fold-summary="synthesis"></p></div><span class="managed-fold-status" data-managed-fold-status="synthesis">未启用</span><span class="managed-fold-caret" aria-hidden="true">⌄</span><span class="managed-fold-hint" aria-hidden="true"></span></summary>
             <div class="managed-fold-content">
-              <p class="managed-card-note">扫描背包与已解锁仓库，从低品质向高品质合成；达到上限的产物不再作为材料。仅在主城整理时执行，不会为合成中断刷图回城。</p>
+              <p class="managed-card-note">扫描背包与已解锁仓库。宝石、符文按最高产出品质合成，装备按勾选配方处理；仅在主城整理时执行，不会为合成中断刷图回城。</p>
               <div class="synthesis-settings">
                 <section class="synthesis-kind"><div class="synthesis-kind-heading"><h3>宝石</h3><label class="managed-toggle"><input id="managed-synthesis-gems" type="checkbox">启用宝石合成</label></div>
                   <label class="synthesis-quality-field" for="managed-synthesis-gems-max">最高产出品质<select id="managed-synthesis-gems-max"><option value="1">粗糙</option><option value="2">碎裂</option><option value="3">粗砺</option><option value="4">抛光</option><option value="5">无瑕</option><option value="6">璀璨</option></select></label>
@@ -287,6 +287,16 @@
                 <section class="synthesis-kind"><div class="synthesis-kind-heading"><h3>符文</h3><label class="managed-toggle"><input id="managed-synthesis-runes" type="checkbox">启用符文合成</label></div>
                   <label class="synthesis-quality-field" for="managed-synthesis-runes-max">最高产出品质<select id="managed-synthesis-runes-max"><option value="uncommon">优秀</option><option value="rare">稀有</option><option value="grand">宏伟</option><option value="set">符文套装</option></select></label>
                   <p>每次消耗 9 枚同品质符文，产出 1 枚随机符文。稀有 → 宏伟、宏伟 → 套装为概率合成，失败也会消耗材料。已有等级、经验的符文可被消耗，合成产物重新从 1 级开始。</p><p id="managed-synthesis-runes-note" class="synthesis-limit-note"></p>
+                </section>
+                <section class="synthesis-kind synthesis-equipment"><div class="synthesis-kind-heading"><h3>装备合成</h3><label class="managed-toggle"><input id="managed-synthesis-equipment-enabled" type="checkbox">启用装备合成</label></div>
+                  <div class="synthesis-equipment-recipes">
+                    <label><input id="managed-synthesis-equipment-ancient_to_black_mist" type="checkbox">9 件远古传说 → 黑雾传说<small>材料物品等级至少 800；基础成功率 50%</small></label>
+                    <label><input id="managed-synthesis-equipment-black_mist_to_divine" type="checkbox">9 件黑雾传说 → 神圣<small>基础成功率 40%</small></label>
+                    <label><input id="managed-synthesis-equipment-divine_to_ancient" type="checkbox">3 件同名神圣 → 远古神圣<small>基础成功率 50%；必须存在对应远古版本</small></label>
+                  </div>
+                  <label class="managed-toggle"><input id="managed-synthesis-equipment-include_matched" type="checkbox" checked>命中筛选规则的装备参与合成</label>
+                  <p class="synthesis-limit-note">允许解锁并消耗对应配方的锁定装备，包含黑雾、神圣。命中规则默认参与，可取消；已穿戴、强制保留商品及指定部位的保留装备始终跳过。</p>
+                  <p>概率合成失败同样消耗全部材料，返回 1 件原品质新装备；材料的词条、强化与镶嵌不保留。实际金币、概率与解锁条件以游戏实时配方为准。自动换装及上架优先于合成。</p>
                 </section>
               </div>
               <div class="synthesis-exclusions"><div class="synthesis-exclusions-heading"><h3>跳过合成的符文</h3><small id="managed-synthesis-rune-count">已跳过 0 种</small></div><p>勾选后，该种符文在背包与仓库中的所有等级、数量都不参与合成。已锁定和已装备的符文也不会消耗；剩余符文统一入库。</p>

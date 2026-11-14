@@ -18,6 +18,7 @@ from .native_dispatcher import Argument, Invocation, NativeActionError
 from .progression_runtime import _GrowthCopy
 from .recommendation_reader import decode_obscured_int
 from .synthesis import RUNE_QUALITIES, item_key, rune_quality
+from .equipment_synthesis import RECIPES as EQUIPMENT_RECIPES, quality as equipment_quality, ancient_aliases
 from .action_log import record
 
 
@@ -86,6 +87,35 @@ def rune_inputs(rows, uids, recipe, maximum, excluded, equipped=()):
             raise NativeActionError('符文锁定、穿戴、跳过名单或品质已变化，已取消合成。')
         result.append(dict(deepcopy(row), quantity=1))
     return result
+
+
+def equipment_inputs(rows, uids, recipe):
+    expected = EQUIPMENT_RECIPES.get(recipe.get('option'))
+    if (expected is None or (recipe.get('input_quality'), recipe.get('output_quality'),
+                            recipe.get('input_count')) != expected):
+        raise NativeActionError('装备合成配方已移除或不支持，未消耗材料。')
+    amount = recipe['input_count']
+    if (not isinstance(uids, list) or len(uids) != amount or len(set(uids)) != amount
+            or any(not isinstance(uid, str) or not uid for uid in uids)):
+        raise NativeActionError('装备合成材料 UID 数量或唯一性无效。')
+    selected = []
+    for uid in uids:
+        found = [r for r in rows if r.get('item_uid') == uid]
+        if len(found) != 1:
+            raise SnapshotChangedError('装备材料已移动或身份不唯一。')
+        row = found[0]
+        if (row.get('container') != 'inventory' or row.get('count') != 1
+                or row.get('locked') is not False or row.get('slot_locked') is not False
+                or row.get('identity_verified') is not True or row.get('issues')
+                or row.get('is_equipped') is True or equipment_quality(row) != recipe['input_quality']
+                or type(row.get('item_level')) is not int or row['item_level'] < recipe['min_item_level']):
+            raise NativeActionError('装备合成材料品质、锁定或身份已变化，未消耗。')
+        selected.append(dict(deepcopy(row), quantity=1))
+    if recipe['input_quality'] == 'Divine':
+        keys = {item_key(r) for r in selected}
+        if len(keys) != 1 or not keys <= set(ancient_aliases().values()):
+            raise NativeActionError('远古神圣合成必须使用同名且存在远古版本的神圣装备。')
+    return selected
 
 
 class SynthesisReceiptPending(NativeActionError):
@@ -228,10 +258,72 @@ class SynthesisRuntime:
             result['_recipe_objects'] = objects
         return result
 
-    def snapshot(self, *, gems=True, runes=True):
+    def _equipment(self, copy, manager, save, *, include_objects=False):
+        config = copy.verify(copy.ptr(manager + 32), 'GameConfig')
+        mode = copy.integer(save + 32)
+        kinds = {4: 'BlackMist', 5: 'Divine', 6: 'AncientDivine', 7: 'AncientLegendary'}
+        entries, objects, sequence, version = [], {}, 0, 'local'
+        if mode == 1:
+            cloud = self._singleton(copy, 'CloudClient')
+            state = copy.verify(copy.ptr(cloud + 448), 'CubeState')
+            version, sequence = self.reader.string(copy.ptr(state + 16)), copy.integer(state + 24)
+            if not version or sequence < 0:
+                raise MemoryReadError('在线装备魔盒配方尚未同步。')
+            raw_entries = copy.array(copy.ptr(state + 32), 8, 'CubeRecipe', limit=32)
+        elif mode == 0:
+            raw_entries = copy.array(copy.ptr(config + 40), 8, 'CubeRecipeConfig', limit=32)
+        else:
+            raise MemoryReadError('当前角色模式不支持装备合成。')
+        difficulty = copy.klass(copy.ptr(self.reader.module['base'] + self.actions.profile['statics']['ey']), 'ey')
+        highest = copy.integer(copy.ptr(difficulty + 184) + 4)
+        loot = copy.verify(copy.ptr(config + 80), 'LootConfig')
+        thresholds = {'BlackMist': copy.integer(loot + 152), 'Divine': copy.integer(loot + 156),
+                      'AncientDivine': copy.integer(loot + 156), 'AncientLegendary': 0}
+        if highest not in (0, 1, 2) or any(v not in (0, 1, 2) for v in thresholds.values()):
+            raise MemoryReadError('装备合成解锁难度未确认。')
+        for raw in raw_entries:
+            obj = copy.verify(struct.unpack('<Q', raw)[0], 'CubeRecipe' if mode == 1 else 'CubeRecipeConfig')
+            if mode == 1:
+                source, target = (self.reader.string(copy.ptr(obj + offset)) for offset in (16, 24))
+            else:
+                source, target = (kinds.get(copy.integer(obj + offset)) for offset in (16, 24))
+            option = next((k for k, (a, b, _) in EQUIPMENT_RECIPES.items() if (source, target) == (a, b)), None)
+            if option is None: continue
+            amount = copy.integer(obj + (36 if mode == 1 else 20))
+            chance, cost = copy.number(obj + (32 if mode == 1 else 28)), copy.integer(obj + (40 if mode == 1 else 32))
+            minimum = copy.integer(obj + (64 if mode == 1 else 52))
+            ancient_level = copy.integer(obj + (68 if mode == 1 else 56))
+            refund = copy.ptr(obj + (48 if mode == 1 else 40))
+            refund_key = (self.reader.string(refund) if mode == 1 else self.reader.asset_name(refund)) if refund else ''
+            refund_level = copy.integer(obj + (56 if mode == 1 else 48))
+            if (amount != EQUIPMENT_RECIPES[option][2] or not 0 <= chance <= 1
+                    or not 0 <= cost <= 2**31-1 or not 0 <= minimum <= 100000
+                    or not 0 <= ancient_level <= 100000 or not 0 <= refund_level <= 100000
+                    or refund_key not in ('', 'UpgradeCommodity1')):
+                raise MemoryReadError('装备实时配方出现未适配的材料、费用或返还规则。')
+            if source != target and chance == 0:
+                raise MemoryReadError('装备升级配方概率无效。')
+            recipe_id = 'cube:' + source + ':' + target
+            entries.append({'recipe_id': recipe_id, 'option': option, 'input_quality': source,
+                'output_quality': target, 'input_count': amount, 'output_count': 1,
+                'chance': chance, 'gold_cost': cost, 'min_item_level': minimum,
+                'output_ancient_item_level': ancient_level, 'refund_key': refund_key,
+                'refund_from_level': refund_level,
+                'available': highest >= max(thresholds[source], thresholds[target])})
+            objects[recipe_id] = obj if mode == 1 else None
+        if not entries or len(objects) != len(entries):
+            raise MemoryReadError('装备配方未加载或存在重复配方。')
+        # Keep recipe order stable; never let server array order change priority.
+        entries.sort(key=lambda r: list(EQUIPMENT_RECIPES).index(r['option']))
+        result = {'available': True, 'recipes': entries, 'gold': self._gold(copy),
+                  'online': mode == 1, 'rules_version': version, 'sequence': sequence}
+        if include_objects: result['_recipe_objects'] = objects
+        return result
+
+    def snapshot(self, *, gems=True, runes=True, equipment=False):
         result = {}
         # Each group is isolated: an unavailable CubeState cannot hide gems.
-        for group, requested in (('gems', gems), ('runes', runes)):
+        for group, requested in (('gems', gems), ('runes', runes), ('equipment', equipment)):
             if not requested:
                 continue
             if self._uncertain or self._pending or self._cleanup_pending:
@@ -242,8 +334,8 @@ class SynthesisRuntime:
                 read, manager, _, _ = self.actions._context(allow_busy=True)
                 copy = self._copy()
                 save = self._singleton(copy, 'SaveSystem')
-                state = (self._gems(copy, save)
-                         if group == 'gems' else self._runes(copy, manager, save))
+                state = (self._gems(copy, save) if group == 'gems' else
+                         self._equipment(copy, manager, save) if group == 'equipment' else self._runes(copy, manager, save))
                 read.finish(); copy.finish()
                 state['native_verified'] = ('synthesize_' + group) in self.actions.verified_kinds
                 result[group] = state
@@ -251,12 +343,13 @@ class SynthesisRuntime:
                 result[group] = {'available': False, 'recipes': [], 'reason': str(exc)}
         return result
 
-    def _bag(self, read, *, include_storage=False):
+    def _bag(self, read, *, include_storage=False, snapshot_copy=None):
         reader = self.reader
         previous, reader.snapshot_stamps = reader.snapshot_stamps, []
         try:
             reader.item_cache = {}
             registry, stamp = reader.registry()
+            registry_stamps = list(reader.snapshot_stamps)
             bag = reader.container('Inventory', registry, 2048)
             if bag.get('complete') is not True:
                 raise MemoryReadError('背包材料尚未完整读取，暂不合成。')
@@ -275,12 +368,19 @@ class SynthesisRuntime:
             if any(reader.memory.read(a, len(raw)) != raw for a, raw in stamps):
                 raise SnapshotChangedError('背包材料读取期间发生变化。')
             if include_storage:
-                # Read-only reconciliation also rechecks both containers at
-                # the end of the entire gold/sequence/identity observation.
-                read.guards.extend(stamps)
+                # Keep the full before/after economic observation consistent.
+                # Execution rechecks these large snapshots in copy.finish(),
+                # without encoding the entire warehouse/registry in a mailbox.
+                # Receipt-only reads keep their original end-of-read checks.
+                target = snapshot_copy.guards if snapshot_copy is not None else read.guards
+                target.extend(stamps)
             # Registry header/version guards protect generated UID identity;
             # its potentially huge entry block is only copied/checked above.
-            read.guards.append((stamp['object'] + 24, stamp['header']))
+            if snapshot_copy is None:
+                read.guards.append((stamp['object'] + 24, stamp['header']))
+            else:
+                read.guards.extend((address, raw) for address, raw in registry_stamps
+                                   if address != stamp['entries'] + 32)
             inventory = read.singleton('Inventory')
             array = read.ptr(inventory + 56)
             read.read(array + 24, 8)
@@ -302,6 +402,13 @@ class SynthesisRuntime:
                 generated = read.verify(registry.get(uid), 'GeneratedItemData')
                 if read.integer(generated + 20) != row.get('rarity') or read.boolean(generated + 73):
                     raise SnapshotChangedError('合成材料品质或锁定已变化。')
+                if row.get('is_equipment'):
+                    read.read(generated + 16, 94)
+                    if (read.integer(generated + 16) != row.get('item_level')
+                            or read.integer(generated + 32) != row.get('upgrade_level')
+                            or read.boolean(generated + 72) != row.get('is_ancient')
+                            or read.boolean(generated + 105) != row.get('is_black_mist')):
+                        raise SnapshotChangedError('装备材料强化、品质或等级已变化。')
 
     def _guard_bag_identities(self, read, array, capacity):
         # An initially empty slot could acquire a locked matching gem between
@@ -426,13 +533,20 @@ class SynthesisRuntime:
             raise NativeActionError('上一轮合成结果仍未确认，禁止重复消耗材料；请先人工核验。', uncertain=True)
         if self._pending or self._cleanup_pending:
             raise GameBusyError('上一轮合成仍在核验或清理，仅允许继续核验原操作。')
-        if kind not in ('synthesize_gems', 'synthesize_runes'):
+        if kind not in ('synthesize_gems', 'synthesize_runes', 'synthesize_equipment'):
             raise NativeActionError('未知合成动作。')
         read, manager, save = self._context()
         copy = self._copy()
-        rows, registry, array, capacity = self._bag(read)
-        self._guard_bag_identities(read, array, capacity)
-        group = 'gems' if kind == 'synthesize_gems' else 'runes'
+        rows, registry, array, capacity = (self._bag(read, include_storage=True, snapshot_copy=copy)
+                                          if kind == 'synthesize_equipment' else self._bag(read))
+        # Equipment cube slots consume the nine explicitly verified UIDs, not
+        # arbitrary matching stacks. _guard_inputs retains every selected slot,
+        # generated identity and lock guard. Whole-container snapshots still
+        # pass copy.finish(); unrelated/empty slots need not fill the mailbox.
+        # Gems retain all-slot guards because native removal ignores locks.
+        if kind != 'synthesize_equipment':
+            self._guard_bag_identities(read, array, capacity)
+        group = kind.removeprefix('synthesize_')
         ui, opened = None, False
         if group == 'gems':
             recipe = next((r for r in gem_recipes() if r['recipe_id'] == payload.get('recipe_id')), None)
@@ -456,18 +570,19 @@ class SynthesisRuntime:
                      Invocation('et.dbn', arguments=(Argument.reference(pointer), Argument.integer(count)), require_true=True)]
             before_state = {'gold': gold}
         else:
-            state = dict(self._runes(copy, manager, save, include_objects=True))
+            state = dict((self._equipment if group == 'equipment' else self._runes)(copy, manager, save, include_objects=True))
             recipe_objects = state.pop('_recipe_objects')
             recipe = next((r for r in state['recipes'] if r['recipe_id'] == payload.get('recipe_id')), None)
             if recipe is None or recipe.get('available') is not True or payload.get('count') != 1:
-                raise NativeActionError('符文配方尚未解锁或已变化。')
+                raise NativeActionError('魔盒配方尚未解锁或已变化。')
             if state['gold'] < recipe['gold_cost']:
-                raise NativeActionError('符文合成金币不足，结束本轮符文合成。')
-            selected = rune_inputs(rows, payload.get('input_uids'), recipe, payload.get('max_quality'),
-                                   set(payload.get('excluded_keys', [])), state['equipped_uids'])
+                raise NativeActionError('魔盒合成金币不足，结束对应合成。')
+            selected = (equipment_inputs(rows, payload.get('input_uids'), recipe) if group == 'equipment' else
+                        rune_inputs(rows, payload.get('input_uids'), recipe, payload.get('max_quality'),
+                                    set(payload.get('excluded_keys', [])), state['equipped_uids']))
             self._guard_inputs(read, selected, registry, array)
             if read.ptr(manager + 128) or read.boolean(manager + 284):
-                raise GameBusyError('等待上一局奖励同步完成后合成符文。')
+                raise GameBusyError('等待上一局奖励同步完成后使用魔盒。')
             if state['online']:
                 cloud = self._singleton(copy, 'CloudClient')
                 if copy.boolean(cloud + 289) or copy.boolean(cloud + 290):
@@ -488,7 +603,9 @@ class SynthesisRuntime:
                                      for obj, uid in selections):
                     raise GameBusyError('魔盒中已有玩家选择的材料，请先完成或清空该操作。')
                 for obj, _ in selections:
-                    read.verify(obj, 'RuneData')
+                    if group == 'runes': read.verify(obj, 'RuneData')
+                    elif not self.reader.item(obj).get('is_equipment'):
+                        raise GameBusyError('魔盒中残留的材料类型未确认。')
             calls = [Invocation('SaveSystem.ekf', instance=save, require_true=True)]
             if state['online']:
                 # The new preflight is static and accepts the live CubeRecipe,
@@ -501,11 +618,11 @@ class SynthesisRuntime:
             calls.extend(Invocation('CubePanelUI.gbh', instance=ui, arguments=(Argument.reference(slot),
                          Argument.integer(row['slot_index']), Argument.boolean(False)))
                          for slot, row in zip(slots, selected))
-            # 1.1.11 adds a confirmation flag to the native submit handler.
-            # Use the same false value as the game's own Transmute button;
-            # equipment conversion recipes remain excluded above.
+            # The native handler's true flag accepts the investments warning.
+            # Only explicitly enabled equipment recipes accept that warning;
+            # rune behaviour remains the original Transmute button's false.
             calls.append(Invocation('CubePanelUI.gbp', instance=ui,
-                                    arguments=(Argument.boolean(False),)))
+                                    arguments=(Argument.boolean(group == 'equipment'),)))
             before_state = state
         # The caller's original plan cannot silently select a different set.
         identities = lambda entries: [(r.get('slot_index'), r.get('item_uid'), item_key(r), r.get('quantity')) for r in entries]
@@ -685,7 +802,7 @@ class SynthesisRuntime:
             return False
 
     def _confirm(self, kind, before, selected, recipe, count, state, invocation):
-        deadline = time.monotonic() + (20 if kind == 'synthesize_runes' else 8)
+        deadline = time.monotonic() + (8 if kind == 'synthesize_gems' else 20)
         last_error = ''
         while time.monotonic() < deadline:
             try:
@@ -705,8 +822,9 @@ class SynthesisRuntime:
     def _receipt(self, kind, before, selected, recipe, count, state, invocation):
         read, manager, save = self._context(after=True)
         copy = self._copy()
-        reloaded = kind == 'synthesize_runes' and bool(self._pending and self._pending.get('reconnected'))
-        rows, _, _, _ = self._bag(read, include_storage=True) if reloaded else self._bag(read)
+        reloaded = kind != 'synthesize_gems' and bool(self._pending and self._pending.get('reconnected'))
+        rows, _, _, _ = (self._bag(read, include_storage=True)
+                         if reloaded or kind == 'synthesize_equipment' else self._bag(read))
         if kind == 'synthesize_gems':
             gold = self._gold(copy)
             confirmed = (_total(before, recipe['input_key']) - _total(rows, recipe['input_key']) == count * 10
@@ -723,19 +841,45 @@ class SynthesisRuntime:
             confirmed = confirmed and remaining == 0
             sequence = invocation.get('sequence')
         else:
-            after = self._runes(copy, manager, save)
+            after = (self._equipment if kind == 'synthesize_equipment' else self._runes)(copy, manager, save)
             old_uids = {r.get('item_uid') for r in before if r.get('item_uid')}
             if reloaded:
                 # Pre-existing warehouse items are not synthesis outputs.
                 old_uids |= self._pending['registry_uids']
             new_rows = [r for r in rows if r.get('item_uid') and r['item_uid'] not in old_uids]
             consumed = {r['item_uid'] for r in selected}
+            output_valid = (len(new_rows) == 1 and
+                (equipment_quality(new_rows[0]) in (recipe['input_quality'], recipe['output_quality'])
+                 if kind == 'synthesize_equipment' else new_rows[0].get('item_class') == 'RuneData'
+                 and rune_quality(new_rows[0]) in (recipe['input_quality'], recipe['output_quality'])))
+            if output_valid and kind == 'synthesize_equipment':
+                product = new_rows[0]
+                output_valid = (product.get('count') == 1 and product.get('identity_verified') is True
+                                and not product.get('issues'))
+                if equipment_quality(product) == 'AncientDivine':
+                    output_valid = output_valid and ancient_aliases().get(item_key(product)) == item_key(selected[0])
+                elif recipe['input_quality'] == 'Divine':
+                    output_valid = output_valid and item_key(product) == item_key(selected[0])
+                if equipment_quality(product) == 'AncientLegendary' and recipe.get('output_ancient_item_level'):
+                    output_valid = output_valid and product.get('item_level') == recipe['output_ancient_item_level']
             confirmed = (not any(r.get('item_uid') in consumed for r in rows)
-                         and len(new_rows) == 1 and new_rows[0].get('item_class') == 'RuneData'
-                         and rune_quality(new_rows[0]) in (recipe['input_quality'], recipe['output_quality'])
+                         and output_valid
                          and state['gold'] - after['gold'] == recipe['gold_cost']
                          and (not state['online'] or after['sequence'] == state['sequence'] + 1))
             outputs = [dict(deepcopy(r), quantity=1) for r in new_rows]
+            if kind == 'synthesize_equipment' and recipe.get('refund_key'):
+                key, level = recipe['refund_key'], recipe['refund_from_level']
+                expected = sum(max(0, r.get('upgrade_level', 0) - level + 1) for r in selected)
+                confirmed = confirmed and _total(rows, key) - _total(before, key) == expected
+                old = {(r['container'], r['slot_index']): r for r in before}
+                refunded = 0
+                for row in rows:
+                    previous = old.get((row['container'], row['slot_index']), {})
+                    delta = row['count'] - (previous.get('count', 0) if item_key(previous) == key else 0)
+                    if item_key(row) == key and delta > 0:
+                        outputs.append(dict(deepcopy(row), quantity=delta))
+                        refunded += delta
+                confirmed = confirmed and refunded == expected
             sequence = after['sequence'] if state['online'] else invocation.get('sequence')
         read.finish(); copy.finish()
         if confirmed:

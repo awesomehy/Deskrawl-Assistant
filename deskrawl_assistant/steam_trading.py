@@ -174,7 +174,7 @@ class SteamTradingService(ManualSteamSaleMixin, SaleTrackingMixin, PendingTrades
         self._journal = []
         self._receipt_rows = ()
         self._tickets = {}
-        self._message = 'Steam 市场出售为开发验证功能，尚未进行实机出售验证。'
+        self._message = '等待 Steam 市场出售任务。'
         self._status = 'idle'
         self._retry_after = 0
         self._auth_retry_after = 0
@@ -257,6 +257,11 @@ class SteamTradingService(ManualSteamSaleMixin, SaleTrackingMixin, PendingTrades
         with self.guard:
             counts = {key: sum(row.get('status') == key for row in self._journal)
                       for key in ('captured', 'intent', 'uncertain', 'pending', 'listed')}
+            # Old cancelled orders remain durable write fences after their
+            # display retires. They are not outstanding items for the UI count.
+            uncertain_count = sum(row.get('status') == 'uncertain' and not (
+                (row.get('reprice') or {}).get('phase') == 'cancel_submitted'
+                and row['reprice'].get('display_retired_at')) for row in self._journal)
             confirmation = self._confirmation or {}
             fresh = (state.get('verified') is True and not state.get('expired')
                      and confirmation.get('steamid') == state.get('steamid')
@@ -271,9 +276,9 @@ class SteamTradingService(ManualSteamSaleMixin, SaleTrackingMixin, PendingTrades
                     'pending_count': len(confirmation['assets']) if fresh else 0,
                     'confirmation_known': fresh,
                     'confirmation_expires_at': confirmation.get('expires_at') if fresh else None,
-                    'uncertain_count': counts['uncertain'],
+                    'uncertain_count': uncertain_count,
                     'queued_count': counts['captured'], 'retry_after': self._retry_after,
-                    'counts': counts, 'development': True}
+                    'counts': counts, 'development': False}
 
     def login_window(self):
         return self.session.login_window()

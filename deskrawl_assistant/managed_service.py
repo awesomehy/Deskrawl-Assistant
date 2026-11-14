@@ -26,7 +26,7 @@ from .auction_commodities import upload_receipt_matches
 from .carriage_transfer import CarriageUnavailable
 from .town_cleanup_recovery import cleanup_ready, cleanup_action_allowed
 
-SYNTHESIS_ACTIONS = ('synthesize_gems', 'synthesize_runes')
+from .synthesis import KINDS as SYNTHESIS_ACTIONS
 
 
 def _synthesis_action_key(action):
@@ -36,7 +36,7 @@ def _synthesis_action_key(action):
         return (identity(row), row.get('container'), row.get('slot_index'),
                 row.get('internal_name') or row.get('name_key'), row.get('count'), row.get('quantity'))
     return {**{key: deepcopy(action.get(key)) for key in ('kind', 'recipe_id', 'recipe', 'input_keys',
-             'input_uids', 'count', 'max_quality', 'excluded_keys', 'target', 'target_indices', 'reason_code', 'synthesis_group')},
+             'input_uids', 'count', 'max_quality', 'include_matched', 'excluded_keys', 'target', 'target_indices', 'reason_code', 'synthesis_group')},
             'inputs': [material(row) for row in inputs],
             'item': material(action['item']) if action.get('item') else None}
 
@@ -51,7 +51,7 @@ def required_capabilities(settings):
     if settings.get('progression', {}).get('talents_enabled'): required.add('talents')
     if settings.get('progression', {}).get('skills_enabled'): required.add('skills')
     if settings.get('life_skills', {}).get('enabled'): required.add('life_skills')
-    for group, capability in (('gems', 'gem_synthesis'), ('runes', 'rune_synthesis')):
+    for group, capability in (('gems', 'gem_synthesis'), ('runes', 'rune_synthesis'), ('equipment', 'equipment_synthesis')):
         if settings.get('synthesis', {}).get(group, {}).get('enabled'):
             required.add(capability)
             synthesis_enabled = True
@@ -264,6 +264,8 @@ class ManagedServiceMixin:
         if scene.get('in_dungeon') is True and scene.get('available') is True:
             self.managed_synthesis_deferred.clear()
         enabled = {group: config.get(group, {}).get('enabled') is True for group in ('gems', 'runes')}
+        if config.get('equipment', {}).get('enabled') is True:
+            enabled['equipment'] = True
         if scene.get('in_town') is not True or not any(enabled.values()): return {}
         reader = getattr(self.client, 'synthesis_snapshot', None)
         try:
@@ -309,10 +311,16 @@ class ManagedServiceMixin:
             item['transfer_key'] = source.get('transfer_key')
             item['item_class'] = source.get('item_class')
             item['slot_locked'] = source.get('slot_locked')
-            item['identity_verified'] = source.get('identity_verified')
+            # Native equipment snapshots keep identity proof in read_evidence.
+            # Preserve an explicit top-level rejection/unknown from other readers.
+            evidence = source.get('read_evidence')
+            item['identity_verified'] = source.get('identity_verified',
+                evidence.get('identity_verified') if isinstance(evidence, dict) else None)
             item['base_rarity'] = source.get('base_rarity')
             item['bound'] = source.get('bound')
             item['is_equipped'] = source.get('is_equipped')
+            for key in ('item_level', 'upgrade_level', 'socket_count', 'is_ancient', 'is_black_mist'):
+                item[key] = source.get(key)
             item.update(auction_candidate_fields(source, market_catalog))
             item['equip_slot'] = source.get('equip_slot')
             if not item['is_equipment']:
@@ -672,6 +680,9 @@ class ManagedServiceMixin:
                     and not (self.managed.finishing and (kind in ('auction_open', 'auction_upload')
                         or action.get('reason_code') == 'auction_prepare')))
         if not self.managed.running or self.cancelled.is_set(): raise ValidationError('托管已取消。')
+        if kind == 'unlock' and (action.get('synthesis_group') != 'equipment'
+                or action.get('reason_code') != 'synthesis_prepare'):
+            raise ValidationError('托管仅允许按当前装备合成规划解锁选定材料。')
         if self.managed.finishing and (kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh','allocate_talent','learn_life_skill','set_skill','auction_upload','auction_open',*SYNTHESIS_ACTIONS)
                 or action.get('reason_code') in ('synthesis_prepare', 'auction_prepare')):
             return {'verified':False,'retryable':True,'reason':'已请求停止，改为回城整理。'}
@@ -769,9 +780,9 @@ class ManagedServiceMixin:
         capability = {'enter_dungeon':'travel','return_town':'travel','open_chest':'chests',
                       'switch_difficulty':'difficulty', 'allocate_talent':'talents', 'learn_life_skill':'life_skills',
                       'set_skill':'skills', 'merchant_buy':'merchant', 'merchant_open':'merchant', 'merchant_close':'merchant', 'merchant_refresh':'merchant',
-                      'synthesize_gems':'gem_synthesis', 'synthesize_runes':'rune_synthesis',
+                      'synthesize_gems':'gem_synthesis', 'synthesize_runes':'rune_synthesis', 'synthesize_equipment':'equipment_synthesis',
                       'auction_open':'auction_upload',
-                      'collect_ground':'ground_pickup','collect_carriage':'transfer'}.get(kind,kind)
+                      'collect_ground':'ground_pickup','collect_carriage':'transfer', 'unlock':'lock'}.get(kind,kind)
         if not available_capability(self.managed_page()['capabilities'].get(capability)):
             raise ValidationError('当前托管动作能力尚未核验：'+capability)
         if kind in NEW_ACTIONS:
@@ -797,7 +808,7 @@ class ManagedServiceMixin:
                 missing=sorted(selected-{r['slot'] for r in state.get('merchant',{}).get('stock',[])})
                 if not self.managed.merchant_pending or not missing or action.get('shop_slots')!=missing:
                     return {'verified':False,'retryable':True,'reason':'商人库存已变化，重新读取报价。'}
-        if item and kind in ('transfer','lock','equip','sell','salvage','open_chest','auction_upload'):
+        if item and kind in ('transfer','lock','unlock','equip','sell','salvage','open_chest','auction_upload'):
             current = next((r for r in observation['items'] if identity(r)==identity(item)
                             and r.get('container')==item.get('container')),None)
             if not current: raise SnapshotChangedError('物品已移动或变化。')
@@ -853,7 +864,7 @@ class ManagedServiceMixin:
                     or item.get('kind') not in ('rune','gem')
                     or self.managed.settings['cleanup'][item['kind']+'_action'] != 'sell'):
                 raise ValidationError('当前物品不能按此策略处置。')
-        if kind in ('transfer','lock','equip','sell','salvage','open_chest','auction_upload'):
+        if kind in ('transfer','lock','unlock','equip','sell','salvage','open_chest','auction_upload'):
             if not source: raise SnapshotChangedError('物品已移动或变化，请重新扫描。')
             if source.get('slot_index')!=item.get('slot_index') or source.get('count')!=item.get('count'):
                 raise SnapshotChangedError('物品格位或数量已变化。')
@@ -889,6 +900,9 @@ class ManagedServiceMixin:
         elif kind=='lock':
             result = self.client.lock_equipment(source,lambda row:active(), **recovery_options)
             result = {**result,'verified':result.get('status') in ('locked','already_locked')}
+        elif kind=='unlock' and action.get('synthesis_group') == 'equipment':
+            result = self.client.unlock_equipment(source, lambda row: active())
+            result = {**result, 'verified': result.get('status') in ('unlocked', 'already_unlocked')}
         elif kind=='collect_carriage':
             try:
                 result = self.client.collect_carriage(item['selection_id'],active, **recovery_options)
@@ -1667,7 +1681,7 @@ class ManagedServiceMixin:
                                          'level':'info' if result.get('verified') else 'error'})
             self.managed_history = self.managed_history[-100:]
             self.journal.append('system','managed_action',message,context={'action':action,'result':result})
-        inventory_action = action['kind'] in ('collect_ground','collect_carriage','lock','transfer','sell','salvage',*SYNTHESIS_ACTIONS)
+        inventory_action = action['kind'] in ('collect_ground','collect_carriage','lock','unlock','transfer','sell','salvage',*SYNTHESIS_ACTIONS)
         use_receipt = (isinstance(receipt,dict) and receipt.get('complete') is True
                        and receipt.get('bridge_session') == observation.get('session'))
         self._publish(receipt if use_receipt else self._managed_snapshot(), refresh_character=not inventory_action)

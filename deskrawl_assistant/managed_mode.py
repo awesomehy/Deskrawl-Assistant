@@ -107,6 +107,7 @@ def validate_settings(raw, *, equipment_keys=None, available_pages=None, allow_e
     # Migrate retired development fields before the generic shape check;
     # otherwise an older auction section rejects every unrelated preset too.
     raw['auction'] = validate_auction(raw['auction'])
+    raw['synthesis'] = validate_synthesis(raw['synthesis'])
     if isinstance(raw.get('farming'),dict):
         raw['farming'].setdefault('difficulty','current')
         raw['farming'].setdefault('repeat_maps',[])
@@ -1241,6 +1242,8 @@ class ManagedMode:
                        and identity(r) == identity(old)]
             if kind == 'lock':
                 visible = bool(matches and matches[0].get('locked') is True)
+            elif kind == 'unlock':
+                visible = bool(matches and matches[0].get('locked') is False)
             elif kind == 'equip':
                 visible = any(identity(r) == identity(old) and r.get('equipped_slot') == action['target_slot']
                               for r in observation.get('character', {}).get('equipment', []))
@@ -1574,13 +1577,17 @@ class ManagedMode:
         protected = [r for r in bag if item_kind(r) == 'equipment' and self._safe(r)
                      and (mandatory_storage(r) or r.get('matches') is True
                           or r.get('locked') is True)]
+        from .equipment_synthesis import plan as equipment_synthesis_action
+        equipment_plan = (equipment_synthesis_action(self.settings, observation)
+                          if not self.finishing and not recovery_only else None)
+        synthesis_uids = set(equipment_plan.get('input_uids', [])) if equipment_plan else set()
         # Phase 1: finish and observe EVERY required lock before any disposal,
         # including warehouse-capacity fallback disposal. Each verified lock is
         # followed by the state fence before this loop can move to the next item.
         for row in protected:
-            if row.get('locked') is False:
+            if row.get('locked') is False and row.get('item_uid') not in synthesis_uids:
                 return self._action('lock', row, reason='锁定黑雾、神圣或命中筛选规则的装备。')
-        action = self._background_lock(all_items)
+        action = self._background_lock([r for r in all_items if r.get('item_uid') not in synthesis_uids])
         if action: return action
         self.reward_barrier = False; self.barrier_reads = 0
         # Phase 2: only fully screened/locked rewards may now be rearranged.
@@ -1600,7 +1607,7 @@ class ManagedMode:
         deferred_ids = {identity(row) for row in deferred}
         for row in bag:
             if identity(row) in self.force_dispose:
-                if identity(row) in deferred_ids: continue
+                if identity(row) in deferred_ids or row.get('item_uid') in synthesis_uids: continue
                 if not self._disposable(row): return self._pause('待清理仓库装备状态发生变化，已停止以保留装备。')
                 return self._action(equipment_policy(settings,row,fallback=True), row,
                     reason_code='equipment_fallback', reason='按品质处理从装备专用页取出的未命中装备。')
@@ -1613,6 +1620,14 @@ class ManagedMode:
                 self.phase = 'auction'
                 return self._action(action['kind'], action.get('item'),
                     **{k: v for k, v in action.items() if k not in ('kind', 'item')})
+        if equipment_plan:
+            if not self.check_identity(observation, require_character=True): return None
+            if state.get('merchant', {}).get('open'):
+                return self._action('merchant_close', class_mask=state['class_mask'],
+                                    reason='关闭商人后再合成装备。')
+            self.phase = 'synthesizing'
+            return self._action(equipment_plan['kind'], equipment_plan.get('item'),
+                **{k: v for k, v in equipment_plan.items() if k not in ('kind', 'item')})
         for row in protected:
             return self._storage_transfer(observation, row,
                 settings['minion_equipment_pages' if is_minion_equipment(row) else 'equipment_pages'], all_items, mandatory=True)
@@ -2154,6 +2169,11 @@ class ManagedMode:
                 if any(value is True for value in (scene.get('completion_visible') or {}).values()):
                     self.status = '检测到结算界面，正在核验本局结果；尚未计数或切图。'
                     return None
+                # Native repeat can start before an unsubmitted return clears
+                # the reward barrier. All return conditions are rechecked above;
+                # do not retain its phase (and recovery timer) during live play.
+                # Submitted returns remain fenced by self.pending/the service.
+                self.phase = 'farming'
                 action = self._stargazing(observation)
                 if action: return action
             if self._town(observation) and any(r.get('container')=='inventory'

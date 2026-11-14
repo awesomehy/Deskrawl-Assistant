@@ -395,6 +395,38 @@ class LifecycleTests(unittest.TestCase):
         engine.start(world)
         return engine, world
 
+    def test_native_repeat_clears_return_phase_after_unsubmitted_return_is_obsolete(self):
+        engine, world = self._native_repeat()
+        world['scene']['run'].update(status='success', completion_confirmed=True)
+        with patch('deskrawl_assistant.combat_rewards.time.monotonic', return_value=100):
+            self.assertIsNone(engine.next_action(world))
+        self.assertEqual(engine.phase, 'returning')
+        self.assertIsNone(engine.pending)
+        # Native repeat starts before the reward barrier permits a return.
+        world['scene']['run'].update(id='run2', status='running', completion_confirmed=False)
+        self.assertIsNone(engine.next_action(world))
+        self.assertEqual(engine.phase, 'farming')
+        self.assertEqual(engine.status, '正在刷图，等待奖励或更好的装备。')
+        self.assertEqual(engine.repeat_completed, 1)
+
+    def test_pending_return_keeps_phase_even_if_native_repeat_starts(self):
+        engine, world = self._native_repeat()
+        world['scene']['run'].update(status='success', completion_confirmed=True)
+        action = after_rewards(engine, world)
+        self.assertEqual(action['kind'], 'return_town')
+        world['scene']['run'].update(id='run2', status='running', completion_confirmed=False)
+        self.assertIsNone(engine.next_action(world))
+        self.assertEqual(engine.phase, 'returning')
+        self.assertEqual(engine.pending, action)
+
+    def test_active_return_condition_keeps_phase_after_native_repeat(self):
+        engine, world = self._native_repeat()
+        engine.phase = 'returning'
+        world['counts']['inventory']['occupied'] = 40
+        action = engine.next_action(world)
+        self.assertEqual(action['kind'], 'return_town')
+        self.assertEqual(engine.phase, 'returning')
+
     def test_native_repeat_counts_confirmed_win_without_returning_every_run(self):
         engine, world = self._native_repeat()
         world['scene']['run'].update(status='settling', completion_confirmed=True)

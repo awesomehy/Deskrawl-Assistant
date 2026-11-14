@@ -1460,6 +1460,20 @@ class ManagedServiceTests(unittest.TestCase):
         self.service._managed_once()
         self.assertEqual([a[0] for a in self.client.actions],['return_town','enter_map'])
 
+    def test_obsolete_return_phase_cannot_pause_a_healthy_farming_run(self):
+        self.client.items=[];self.client.in_town=False;self.client.current_map='offline-map'
+        self.ready(farming=True,auto_equip=False)
+        self.service.managed.phase='returning'
+        self.service.managed_return_recovery={'started':100,'interruptions':0}
+        with patch('deskrawl_assistant.managed_service.time.monotonic',return_value=221):
+            self.service._managed_once()
+        self.assertTrue(self.service.managed.running)
+        self.assertEqual(self.service.managed.phase,'farming')
+        self.assertIsNone(self.service.managed_return_recovery)
+        self.assertIsNone(self.service.managed_transition)
+        self.assertIsNone(self.service.managed.pending)
+        self.assertEqual(self.client.actions,[])
+
     def test_cancelled_return_replans_native_repeat_without_cleanup_or_false_arrival(self):
         self.client.items=[];self.client.in_town=False;self.client.current_map='offline-map'
         self.client.run_status='success'

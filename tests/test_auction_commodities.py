@@ -205,11 +205,96 @@ class CommodityCoordinatorTests(unittest.TestCase):
             lambda: (True, self.config, STEAMID), start_worker=False)
         self.addCleanup(self.coordinator.close)
 
+    def test_empty_native_identifiers_are_canonical_in_journal_without_changing_native_payload(self):
+        for name in ('GoldBar', 'UpgradeCommodity1'):
+            for uid, instance in (('', ''), ('', None), (None, '')):
+                with self.subTest(name=name, uid=uid, instance=instance):
+                    original = gold(internal_name=name, item_uid=uid, instance_id=instance)
+                    row = self.coordinator.materialize_upload(original, STEAMID)
+                    # Native slot comparison still receives the exact snapshot
+                    # representation; only the durable intent is canonicalized.
+                    self.assertEqual(row['item_uid'], uid)
+                    self.assertEqual(row['instance_id'], instance)
+                    self.assertEqual(original['item_uid'], uid)
+                    self.assertEqual(original['instance_id'], instance)
+                    # Direct callers must also persist the canonical form.
+                    identity = self.coordinator.submitted(
+                        {**original, 'auction_operation_id': row['auction_operation_id']}, STEAMID)
+                    persisted = json.loads(self.coordinator.path.read_text(encoding='utf-8'))['intents'][identity]
+                    self.assertIsNone(persisted['uid'])
+                    self.assertIsNone(persisted['instance_id'])
+                    reopened = AuctionCoordinator(Path(self.directory.name), self.trading,
+                        lambda: (True, self.config, STEAMID), start_worker=False)
+                    self.addCleanup(reopened.close)
+                    self.assertFalse(reopened.journal_error)
+                    self.assertIn(name, reopened.observe(ready(steamid=STEAMID))['blocked_keys'])
+                    with self.assertRaises(ValidationError):
+                        reopened.submitted(row, STEAMID)
+
+    def test_legacy_empty_commodity_ids_preserve_all_transactions_and_original_file(self):
+        intents = {}
+        expected = {}
+        for name in ('GoldBar', 'UpgradeCommodity1'):
+            for phase in ('submitted', 'uncertain', 'confirmed', 'resolved'):
+                op = 'commodity:' + format(len(intents), '032x')
+                identity = self.coordinator.identity(STEAMID, op)
+                instance = 'real-server-instance-' + name if phase in ('confirmed', 'resolved') else ''
+                row = dict(uid='', item_key=name, instance_id=instance, auction_operation_id=op,
+                    phase=phase, steamid=STEAMID, ticket='b' * 32, variant='normal',
+                    created_at=100, managed_run='preserved-run')
+                intents[identity] = row
+                expected[identity] = {**row, 'uid': None, 'instance_id': instance or None}
+        regular_id = self.coordinator.identity(STEAMID, 'equipment-uid')
+        intents[regular_id] = dict(uid='equipment-uid', item_key='DivineBow1',
+            instance_id='equipment-server-instance', phase='submitted', steamid=STEAMID,
+            ticket=None, variant='normal', created_at=100)
+        expected[regular_id] = deepcopy(intents[regular_id])
+        original = json.dumps(dict(schema_version=1, intents=intents)).encode('utf-8')
+        self.coordinator.path.write_bytes(original)
+        reopened = AuctionCoordinator(Path(self.directory.name), self.trading,
+            lambda: (True, self.config, STEAMID), start_worker=False)
+        self.addCleanup(reopened.close)
+        self.assertFalse(reopened.journal_error)
+        self.assertEqual(reopened.intents, expected)
+        self.assertEqual(reopened.path.read_bytes(), original)
+        self.assertEqual(set(reopened.jobs), {i for i, r in expected.items() if r['phase'] == 'confirmed'})
+        observed = reopened.observe(ready(steamid=STEAMID))
+        self.assertTrue(observed['available'])
+        self.assertEqual(observed['blocked_keys'], ['GoldBar', 'UpgradeCommodity1'])
+        self.assertEqual(observed['blocked_uids'], ['equipment-uid'])
+        for row in intents.values():
+            if row['phase'] != 'resolved' and row['item_key'] == 'GoldBar':
+                with self.assertRaises(ValidationError):
+                    reopened.submitted(gold(auction_operation_id=row['auction_operation_id']), STEAMID)
+        self.assertEqual(reopened.path.read_bytes(), original)
+        self.assertEqual(self.trading.calls, [])
+
+    def test_legacy_compatibility_still_rejects_invalid_identity_or_metadata(self):
+        valid = dict(uid='', item_key='GoldBar', instance_id='', auction_operation_id=OP,
+            phase='submitted', steamid=STEAMID, ticket='b' * 32, variant='normal', created_at=100)
+        for change in ({'item_key': 'DivineBow1'}, {'item_key': 'UnknownCommodity'},
+                       {'auction_operation_id': None}, {'auction_operation_id': 'commodity:invalid'},
+                       {'uid': False}, {'uid': 0}, {'instance_id': False}, {'instance_id': 0},
+                       {'phase': 'confirmed'}, {'phase': 'resolved'},
+                       {'steamid': 'wrong-account'}, {'ticket': 'invalid'}, {'variant': 'unknown'}):
+            with self.subTest(change=change):
+                original = json.dumps(dict(schema_version=1,
+                    intents={'legacy-valid': valid, 'invalid': {**valid, **change}})).encode('utf-8')
+                self.coordinator.path.write_bytes(original)
+                reopened = AuctionCoordinator(Path(self.directory.name), self.trading,
+                    lambda: (True, self.config, STEAMID), start_worker=False)
+                self.addCleanup(reopened.close)
+                self.assertTrue(reopened.journal_error)
+                self.assertEqual(reopened.path.read_bytes(), original)
+                with self.assertRaises(ValidationError):
+                    reopened.submitted(gold(auction_operation_id='commodity:' + 'c' * 32), STEAMID)
+                self.assertEqual(reopened.path.read_bytes(), original)
+
     def test_prepare_reference_stable_receipt_maps_real_instance_and_journal_restarts(self):
         c = self.coordinator
-        row = c.materialize_upload(gold(), STEAMID)
+        row = c.materialize_upload(gold(item_uid='', instance_id=''), STEAMID)
         self.assertIsNone(c.prepare(row, STEAMID, self.config))
-        again = c.materialize_upload(gold(), STEAMID)
+        again = c.materialize_upload(gold(item_uid='', instance_id=''), STEAMID)
         self.assertEqual(row['auction_operation_id'], again['auction_operation_id'])
         c.process_once()
         ticket = c.prepare(again, STEAMID, self.config)

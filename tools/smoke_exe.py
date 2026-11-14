@@ -23,7 +23,7 @@ import uuid
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = 'Deskrawl装备助手-v1.6.4'
+NAME = 'Deskrawl装备助手-v1.6.5'
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -85,7 +85,7 @@ def main():
     assert 'deskrawl_assistant.statistics_reader' in bundled_modules.toc
     for module in ('combat_rewards', 'game_lifecycle', 'mythic', 'minion_reader', 'world_boss', 'chests'):
         assert 'deskrawl_assistant.' + module in bundled_modules.toc
-    for module in ('synthesis', 'synthesis_runtime', 'steam_market', 'market_currency'):
+    for module in ('synthesis', 'synthesis_runtime', 'equipment_synthesis', 'steam_market', 'market_currency'):
         assert 'deskrawl_assistant.' + module in bundled_modules.toc
     for module in ('auction', 'auction_runtime', 'auction_service', 'manual_auction',
                    'steam_session', 'steam_trading', 'steam_listing_receipts'):
@@ -116,7 +116,7 @@ def main():
         'allocate_talent','merchant_open','merchant_buy','merchant_close','merchant_refresh',
         'synthesize_gems','synthesize_runes','auction_open','auction_upload'}
     growth = json.loads(archive.extract(normalized['data/progression-catalog.json']))
-    assert set(actions_profile['enabled_kinds']) == {'learn_life_skill', 'set_skill'}
+    assert set(actions_profile['enabled_kinds']) == {'learn_life_skill', 'set_skill', 'synthesize_equipment'}
     assert set(growth['heroes']) == {'1','2','4','8'}
     growth_icons = {n for n in normalized if n.startswith('deskrawl_assistant/web/progression-icons/')}
     assert len(growth_icons) == 338
@@ -154,7 +154,7 @@ def main():
                 result = {'schema': 1, 'client_id': payload['client_id'], 'token': 'a' * 64}
             elif self.path == '/v1/report':
                 assert self.headers.get('Authorization') == 'Bearer ' + 'a' * 64
-                assert payload['version'] == '1.6.4'
+                assert payload['version'] == '1.6.5'
                 result = {'accepted': True, 'report_id': payload['report_id'],
                           'sequence': payload['sequence'], 'accepted_at': datetime.now(timezone.utc).isoformat()}
             else:
@@ -222,7 +222,7 @@ def main():
             try:
                 assert request('/api/ping')['app'] == 'deskrawl-local-assistant'
                 assert request('/api/ping')['desktop'] is args.desktop
-                assert request('/api/state')['app_version'] == '1.6.4'
+                assert request('/api/state')['app_version'] == '1.6.5'
                 token = request('/api/session')['token']
                 if args.desktop:
                     while time.monotonic()<deadline:
@@ -240,7 +240,13 @@ def main():
         if process is None:
             return
         request('/api/shutdown', {})
-        assert process.wait(15) == 0
+        # A read-only Steam verification may still be in flight. The window
+        # closes immediately, while AuctionCoordinator.close() gives its
+        # worker up to 20 seconds to finish; allow the frozen host to clean up
+        # afterwards instead of killing it before that existing deadline.
+        started = time.monotonic()
+        assert process.wait(35) == 0
+        report.setdefault('shutdown_seconds', []).append(round(time.monotonic()-started, 2))
         process = None
 
     def check_reporting_disabled():
@@ -291,6 +297,9 @@ def main():
         assert not request('/api/state')['automation']['running']
         managed = request('/api/managed')
         assert not managed['running'] and managed['phase'] == 'idle'
+        assert managed['settings']['synthesis']['equipment'] == {
+            'enabled': False, 'include_matched': True, 'ancient_to_black_mist': False,
+            'black_mist_to_divine': False, 'divine_to_ancient': False}
         assert managed['settings']['auction'] == {
             'upload_enabled': False, 'sell_enabled': False, 'price_rule': 'lowest_sell',
             'categories': [], 'item_keys': [], 'excluded_keys': []}

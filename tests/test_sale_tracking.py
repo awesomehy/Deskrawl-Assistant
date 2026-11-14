@@ -1006,14 +1006,20 @@ class ManagedTrackingTests(unittest.TestCase):
                 self.assertFalse(old['display_retired'])
                 self.trading._observed_listings = saved
         self.trading._retire_cancelled_reprice_displays(STEAMID)
+        self.assertEqual(self.trading.state()['uncertain_count'], 0)
         restored = SteamTradingService(Path(self.tmp.name), catalog(), session=self.trading.session)
         old = next(r for r in restored.pending_trade_receipts(STEAMID) if r['id'] == row['id'])
         self.assertTrue(old['display_retired'])  # Survives restart and expired views.
         self.assertEqual(restored._journal[0]['status'], 'uncertain')
+        self.assertEqual(restored.state()['uncertain_count'], 0)
+        self.assertEqual(restored.state()['counts']['uncertain'], 1)  # Durable fence retained.
+        restored.sale_once({'sell_enabled': True, 'categories': ['gold_bar']}, STEAMID)
+        self.assertFalse(self.trading.session.sales)
         self.trading._observed_listings['items'] = [{'assetid': '1'}]
         self.trading._retire_cancelled_reprice_displays(STEAMID)
         old = next(r for r in self.trading.pending_trade_receipts(STEAMID) if r['id'] == row['id'])
         self.assertFalse(old['display_retired'])  # Fresh positive evidence restores verification.
+        self.assertEqual(self.trading.state()['uncertain_count'], 1)
 
     def test_successful_reprice_new_asset_is_one_row_with_its_market_stage(self):
         self.trading.register_uploaded('1', 'GoldBar', expected_steamid=STEAMID)

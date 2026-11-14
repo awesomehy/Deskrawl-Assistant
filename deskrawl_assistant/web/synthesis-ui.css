@@ -1,4 +1,9 @@
 .synthesis-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:0 20px 15px}
+.synthesis-equipment{grid-column:1/-1}
+.synthesis-equipment-recipes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:16px 0;font-size:11px;line-height:1.7}
+.synthesis-equipment-recipes label{display:block;min-width:0}
+.synthesis-equipment-recipes small{display:block;padding-left:21px;color:var(--muted);font-size:10px}
+@media(max-width:600px){.synthesis-equipment-recipes{grid-template-columns:1fr}}
 .synthesis-kind{min-width:0;border:1px solid var(--line);border-radius:8px;padding:14px;background:#141a21}
 .synthesis-kind-heading,.synthesis-exclusions-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .synthesis-kind h3,.synthesis-exclusions h3{font-size:12px;font-weight:500;color:var(--text)}

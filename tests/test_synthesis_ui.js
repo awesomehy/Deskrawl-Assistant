@@ -5,7 +5,7 @@ const ui=require('../deskrawl_assistant/web/managed-mode.js');
 
 test('synthesis is opt-in and quality caps and exclusions survive configuration saving',()=>{
   const defaults=ui.normalizeSettings();
-  assert.deepEqual(defaults.synthesis,{gems:{enabled:false,max_quality:5},runes:{enabled:false,max_quality:'rare',excluded_keys:[]}});
+  assert.deepEqual(defaults.synthesis,{gems:{enabled:false,max_quality:5},runes:{enabled:false,max_quality:'rare',excluded_keys:[]},equipment:{enabled:false,include_matched:true,ancient_to_black_mist:false,black_mist_to_divine:false,divine_to_ancient:false}});
   const old={auto_equip:{enabled:true,slot_locks:{6:'LegendaryRing1'}},cleanup:{rune_pages:[2,4],gem_pages:[3]},
     synthesis:{gems:{enabled:true,max_quality:5},runes:{enabled:true,max_quality:'set',excluded_keys:['RareRune_A','UncommonRune_B','RareRune_A']}}};
   const settings=ui.normalizeSettings(old),saved=ui.normalizeSettings(JSON.parse(JSON.stringify(settings)));
@@ -14,6 +14,29 @@ test('synthesis is opt-in and quality caps and exclusions survive configuration 
   assert.deepEqual(saved.synthesis.runes.excluded_keys,['RareRune_A','UncommonRune_B']);
   assert.equal(ui.normalizeSynthesis({gems:{max_quality:8},runes:{max_quality:'invalid'}}).gems.max_quality,5);
   defaults.synthesis.runes.excluded_keys.push('RareRune_A');assert.deepEqual(ui.normalizeSettings().synthesis.runes.excluded_keys,[]);
+});
+
+test('equipment matched-material preference defaults on and explicit off persists',()=>{
+  assert.equal(ui.normalizeSettings().synthesis.equipment.include_matched,true);
+  for(const include_matched of [false,true]){
+    const settings=ui.normalizeSettings({synthesis:{equipment:{enabled:true,black_mist_to_divine:true,include_matched}}});
+    const restored=ui.normalizeSettings(JSON.parse(JSON.stringify(settings)));
+    assert.equal(restored.synthesis.equipment.include_matched,include_matched);
+    assert.equal(restored.synthesis.equipment.black_mist_to_divine,true);
+    assert.ok(ui.requiredCapabilities(restored).includes('equipment_synthesis'));
+  }
+});
+
+test('retired black mist reforge is removed from controls and saved configuration',()=>{
+  const old={synthesis:{equipment:{enabled:true,include_matched:false,black_mist_reforge:true,black_mist_to_divine:true}}};
+  const saved=ui.normalizeSettings(old);
+  assert.equal(Object.hasOwn(saved.synthesis.equipment,'black_mist_reforge'),false);
+  assert.equal(saved.synthesis.equipment.black_mist_to_divine,true);
+  assert.equal(saved.synthesis.equipment.include_matched,false);
+  assert.equal(ui.foldSummaries(saved,null).synthesis.summary.includes('装备 1 条配方'),true);
+  const html=fs.readFileSync('deskrawl_assistant/web/index.html','utf8');
+  assert.equal(html.includes('managed-synthesis-equipment-black_mist_reforge'),false);
+  assert.equal(html.includes('3 件黑雾传说 → 重铸'),false);
 });
 
 test('all rune and valuable material disposal policies migrate to storage without replacing pages',()=>{

@@ -37,6 +37,17 @@ class AuctionCoordinator:
                 if raw.get('schema_version') != 1 or not isinstance(raw.get('intents'), dict):
                     raise ValueError('invalid journal')
                 self.intents = raw['intents']
+                # Native commodities have no generated UID. Older writers saved
+                # an absent identifier as either "" or null. Normalize only known
+                # commodity operations; retain phases, receipts and real server
+                # identities, and do not rewrite the journal merely by loading it.
+                for row in self.intents.values():
+                    if (isinstance(row, dict) and row.get('item_key') in COMMODITIES
+                            and operation_id(row.get('auction_operation_id'))
+                            and row.get('uid') in (None, '')):
+                        row['uid'] = None
+                        if row.get('instance_id') == '' and row.get('phase') in ('submitted', 'uncertain'):
+                            row['instance_id'] = None
                 if any(not isinstance(v, dict) or v.get('phase') not in ('submitted', 'confirmed', 'resolved', 'uncertain')
                        or not (isinstance(v.get('uid'), str) and 0 < len(v['uid']) <= 256
                                or v.get('uid') is None and v.get('item_key') in COMMODITIES
@@ -250,15 +261,17 @@ class AuctionCoordinator:
 
     def submitted(self, row, steamid, ticket=None, *, managed_run=None):
         reference = upload_reference(row)
-        if not reference or not row.get('item_uid') and not is_commodity(row):
+        commodity = is_commodity(row)
+        if not reference or not row.get('item_uid') and not commodity:
             raise ValidationError('上传物品身份或商品操作记录无效，未提交。')
         identity = self.identity(steamid, reference)
         with self.guard:
             if identity in self.intents:
                 raise ValidationError('该物品已有上传请求记录，禁止重复上传。')
-            self.intents[identity] = {'uid': row.get('item_uid'), 'steamid': steamid, 'phase': 'submitted',
+            self.intents[identity] = {'uid': None if commodity else row.get('item_uid'),
+                'steamid': steamid, 'phase': 'submitted',
                 'auction_operation_id': row.get('auction_operation_id'),
-                'instance_id': row.get('instance_id'),
+                'instance_id': None if commodity else row.get('instance_id'),
                 'item_key': key(row), 'variant': 'black_mist' if row.get('is_black_mist') is True else 'normal',
                 'created_at': time.time(), 'ticket': ticket}
             if managed_run is not None:

@@ -32,7 +32,8 @@ KINDS = ('return_town', 'enter_map', 'switch_difficulty', 'equip', 'sell', 'salv
 CAPABILITIES = {'travel': ('return_town', 'enter_map'), 'equip': ('equip',), 'sell': ('sell',),
     'difficulty': ('switch_difficulty',), 'salvage': ('salvage',), 'chests': ('open_chest',), 'ground_pickup': ('collect_ground',), 'talents': ('allocate_talent',),
     'life_skills': ('learn_life_skill',), 'skills': ('set_skill',), 'merchant': ('merchant_open', 'merchant_buy', 'merchant_close', 'merchant_refresh'),
-    'gem_synthesis': ('synthesize_gems',), 'rune_synthesis': ('synthesize_runes',), 'auction_upload': AUCTION_ACTIONS}
+    'gem_synthesis': ('synthesize_gems',), 'rune_synthesis': ('synthesize_runes',),
+    'equipment_synthesis': ('synthesize_equipment',), 'auction_upload': AUCTION_ACTIONS}
 
 
 def normalise_run(run, completed, dead=False, completion_visible=None):
@@ -215,8 +216,8 @@ class GameActions:
             self._synthesis = SynthesisRuntime(self)
         return self._synthesis
 
-    def synthesis_snapshot(self, *, gems=True, runes=True):
-        return self.synthesis_runtime().snapshot(gems=gems, runes=runes)
+    def synthesis_snapshot(self, *, gems=True, runes=True, equipment=False):
+        return self.synthesis_runtime().snapshot(gems=gems, runes=runes, **({'equipment': True} if equipment else {}))
 
     def auction_runtime(self):
         if self._auction is None:

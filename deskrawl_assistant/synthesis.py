@@ -4,21 +4,28 @@ from __future__ import annotations
 from copy import deepcopy
 from .models import ValidationError
 from .item_protection import is_rune
+from .equipment_synthesis import DEFAULT_EQUIPMENT, plan as equipment_action
 
 
 DEFAULT_SYNTHESIS = {
     'gems': {'enabled': False, 'max_quality': 5},
     'runes': {'enabled': False, 'max_quality': 'rare', 'excluded_keys': []},
+    'equipment': deepcopy(DEFAULT_EQUIPMENT),
 }
 RUNE_QUALITIES = ('uncommon', 'rare', 'grand', 'set')
 RUNE_RARITIES = {1: 'uncommon', 2: 'rare', 3: 'grand', 4: 'grand', 5: 'set'}
-KINDS = ('synthesize_gems', 'synthesize_runes')
+KINDS = ('synthesize_gems', 'synthesize_runes', 'synthesize_equipment')
 
 
 def validate_settings(value):
-    if not isinstance(value, dict) or set(value) != {'gems', 'runes'}:
+    if not isinstance(value, dict) or set(value) not in ({'gems', 'runes'}, set(DEFAULT_SYNTHESIS)):
         raise ValidationError('自动合成配置格式无效。')
     result = deepcopy(value)
+    result.setdefault('equipment', deepcopy(DEFAULT_EQUIPMENT))
+    if isinstance(result['equipment'], dict):
+        # Retired development option: discard it without enabling an upgrade.
+        result['equipment'].pop('black_mist_reforge', None)
+        result['equipment'].setdefault('include_matched', True)
     for name, defaults in DEFAULT_SYNTHESIS.items():
         group = result[name]
         if not isinstance(group, dict) or set(group) != set(defaults) or type(group['enabled']) is not bool:
@@ -34,12 +41,14 @@ def validate_settings(value):
             or len(set(keys)) != len(keys)):
         raise ValidationError('跳过合成的符文列表无效。')
     runes['excluded_keys'] = sorted(keys)
+    if any(type(v) is not bool for v in result['equipment'].values()):
+        raise ValidationError('装备合成开关必须为布尔值。')
     return result
 
 
 def enabled(settings):
     config = settings.get('synthesis', DEFAULT_SYNTHESIS)
-    return any(config.get(group, {}).get('enabled') is True for group in ('gems', 'runes'))
+    return any(config.get(group, {}).get('enabled') is True for group in DEFAULT_SYNTHESIS)
 
 
 def item_key(row):
@@ -208,6 +217,9 @@ def next_action(settings, observation):
         return None
     config, states = settings.get('synthesis', DEFAULT_SYNTHESIS), observation.get('synthesis', {})
     rows = observation.get('items', [])
+    action = equipment_action(settings, observation)
+    if action:
+        return action
     for group, planner in (('gems', _gem_action), ('runes', _rune_action)):
         state = states.get(group, {})
         if config[group]['enabled'] and state.get('available') is True:

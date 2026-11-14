@@ -275,8 +275,8 @@ class RuntimeClient:
     def progression_snapshot(self, *, merchant=False):
         with self._guard: return self._game_actions().progression_snapshot(merchant=merchant)
 
-    def synthesis_snapshot(self, *, gems=True, runes=True):
-        with self._guard: return self._game_actions().synthesis_snapshot(gems=gems, runes=runes)
+    def synthesis_snapshot(self, *, gems=True, runes=True, equipment=False):
+        with self._guard: return self._game_actions().synthesis_snapshot(gems=gems, runes=runes, **({'equipment': True} if equipment else {}))
 
     def reconcile_synthesis(self, character_id, *, reconnected=False, cancel_event=None, validate=lambda: True):
         with self._guard:

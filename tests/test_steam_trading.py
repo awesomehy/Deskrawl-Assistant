@@ -26,12 +26,14 @@ def wallet():
                        'wallet_fee_percent': '.05', 'wallet_trade_max_balance': 10000000}}
 
 
-def listing(currency=23, low=230, high=227):
+def listing(currency=23, low=230, high=227, *, item_name='Gold Bar', item_type=None):
     def q(key, value):
         return {'queryKey': key, 'state': {'status': 'success', 'data': value}}
-    queries = [q(['market', 'description', APP_ID, 'Gold Bar'],
-                 {'appid': APP_ID, 'market_hash_name': 'Gold Bar', 'marketable': 1}),
-               q(['market', 'orderbook', APP_ID, 'Gold Bar'],
+    description = {'appid': APP_ID, 'market_hash_name': item_name, 'marketable': 1}
+    if item_type:
+        description['type'] = item_type
+    queries = [q(['market', 'description', APP_ID, item_name], description),
+               q(['market', 'orderbook', APP_ID, item_name],
                  {'eCurrency': currency, 'amtMinSellOrder': low, 'amtMaxBuyOrder': high,
                   'cSellOrders': 3 if low else 0, 'cBuyOrders': 2 if high else 0})]
     data = {'renderContext': {'queryData': json.dumps({'queries': queries})}}

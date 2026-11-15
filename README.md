@@ -1,10 +1,10 @@
 # Deskrawl 装备助手
 
-为 Deskrawl 提供装备筛选、物品整理与自动刷图的 Windows x64 工具，无需安装 Python。当前版本：**v1.6.5**。
+为 Deskrawl 提供装备筛选、物品整理与自动刷图的 Windows x64 工具，无需安装 Python。当前版本：**v1.6.6**。
 
-**[下载 Windows 版](https://github.com/awesomehy/Deskrawl-Assistant/releases/download/v1.6.5/Deskrawl-Assistant-v1.6.5.exe)** · [大陆下载](https://hhyan.me:25667/s/a1247f09c37c4b4bb7) · [官网](https://deskrawl.hhyan.me/) · [全部版本与更新说明](https://github.com/awesomehy/Deskrawl-Assistant/releases)
+**[下载 Windows 版](https://github.com/awesomehy/Deskrawl-Assistant/releases/download/v1.6.6/Deskrawl-Assistant-v1.6.6.exe)** · [大陆下载](https://hhyan.me:25667/s/a1247f09c37c4b4bb7) · [官网](https://deskrawl.hhyan.me/) · [全部版本与更新说明](https://github.com/awesomehy/Deskrawl-Assistant/releases)
 
-v1.6.5：新增装备自动合成，修复拍卖行上传记录、托管状态及装备预览显示问题。
+v1.6.6：补全物品分类与稀有度筛选，支持托管运行中修改规则和设置，完善 Steam 自动上架恢复。
 
 ## 快速开始
 
@@ -26,13 +26,15 @@ v1.6.5：新增装备自动合成，修复拍卖行上传记录、托管状态�
 
 ### 背包与仓库
 
-查看物品详情与换装战力预估，按品质、规则结果或可交易状态筛选；支持自动锁定、双向搬运、分区整理及主城批量上架。
+查看物品详情与换装战力预估，按类型、稀有度、规则结果或可交易状态筛选；支持自动锁定、双向搬运、分区整理及主城批量上架。
 
 ![背包与仓库：查看属性、筛选结果并管理物品](docs/screenshots/inventory.png)
 
 ### 托管模式
 
 自动推图、双图轮刷、神话裂隙与南瓜王优先刷取，配合自动换装、回城整理和累计掉落统计。支持神秘商人消费、成长预设、宝石／符文／装备合成、断线重连及交易所／Steam 市场上架。
+
+运行中可修改筛选规则与托管设置，保存后待当前动作核验完成即生效，保留本轮统计。
 
 装备合成默认关闭，可按配方启用远古传说 → 黑雾传说、黑雾传说 → 神圣、同名神圣 → 远古神圣。启用后允许解锁并消耗材料；命中筛选规则的装备默认参与，可取消，已穿戴及强制保留的装备跳过。
 

@@ -204,6 +204,11 @@ class WebServiceTests(unittest.TestCase):
             row=next(i for i in state['items'] if i['kind']==kind)
             self.assertTrue(row['icon']);self.assertTrue(row['effect_groups']);self.assertFalse(row['matches'])
             self.assertTrue((BASE/'deskrawl_assistant/web'/row['icon'].lstrip('/')).exists())
+        gem=next(i for i in state['items'] if i['kind']=='gem')
+        rune=next(i for i in state['items'] if i['kind']=='rune')
+        self.assertTrue(gem['quality_key'].startswith('gem-'))
+        self.assertEqual(rune['quality_key'],'rune-uncommon')
+        self.assertEqual(rune['rarity_label'],'优秀符文')
 
     def test_inventory_quality_keeps_generated_gear_and_actual_base_item_values(self):
         gear = item(1)
@@ -237,6 +242,8 @@ class WebServiceTests(unittest.TestCase):
             self.assertTrue(row['effect_groups'])
             self.assertFalse(row['review'])
             self.assertEqual(self.service._describe_item(key), (names[key], 'material'))
+            self.assertEqual(row['item_category'],'gold_bar' if key=='GoldBar' else 'rein')
+            self.assertEqual(row['rarity_label'],'传说')
 
     def test_all_shipped_reins_resolve_game_names_icons_and_unlock_effects(self):
         reins = {key:meta for key,meta in self.service.loot_item_ui['items'].items()

@@ -134,6 +134,9 @@ class ManagedServiceMixin:
     def _init_managed(self):
         self.managed_config = self.config.with_name('managed-mode.json')
         self.managed = ManagedMode()
+        self.managed_settings_pending = None
+        self._managed_active_rules = None
+        self._managed_active_automation = None
         self.managed_merchant_uids = self.journal.merchant_item_uids()
         self.managed_control = {}
         self.managed_control_read_at = None
@@ -300,7 +303,9 @@ class ManagedServiceMixin:
                 previous = self.managed_control.get('scene',{})
                 self.managed_control['scene'] = {**(previous if isinstance(previous,dict) else {}),**scene}
                 self.managed_capabilities = deepcopy(capabilities)
-        payload = self.state()
+        with self.guard:
+            rules = list(self.rules if self._managed_active_rules is None else self._managed_active_rules)
+        payload = self.state(rules_override=rules)
         raw = {(r.get('container'),r.get('slot_index')):r for c in snap.get('containers',{}).values() for r in c.get('slots',[])}
         observations = {(a.container,a.index):a.observation for a in self.adapter.adapt_snapshot(snap).items}
         market_catalog = self._market_catalog() if self.managed.settings['auction']['upload_enabled'] else None
@@ -338,7 +343,7 @@ class ManagedServiceMixin:
                     item['issues'].append('装备实例读取不完整。')
                 required_groups = ('random',) if is_minion_equipment(item) else ('primary','secondary')
                 known = identity_known and all(obs.groups_complete.get(g) is True for g in required_groups)
-                active_rules = [r for r in self._rules() if r.enabled and item['name_key'] in r.equipment_keys]
+                active_rules = [r for r in rules if r.enabled and item['name_key'] in r.equipment_keys]
                 if not known or not item['rules_known']:
                     item['review'] = True; item['rule_status'] = 'review'
                 elif not active_rules:
@@ -364,10 +369,10 @@ class ManagedServiceMixin:
             try:
                 loot_plan = self.client.managed_loot_snapshot()
                 loot_plan['rules_known'] = not bool(self.config_error)
-                rules = self._rules() if not self.config_error else []
+                preview_rules = rules if not self.config_error else []
                 for wave in loot_plan.get('waves', []):
                     for item in wave.get('items', []):
-                        decorate_equipment(item, rules, self.adapter, self.catalog)
+                        decorate_equipment(item, preview_rules, self.adapter, self.catalog)
             except (OSError, ValueError, RuntimeError, AttributeError, ValidationError):
                 loot_plan = {'available': False, 'reason': '本局掉落计划暂不可读，等待重新核验。'}
         # Never promote a cached/display character into write authority. The
@@ -382,7 +387,8 @@ class ManagedServiceMixin:
                 'merchant_uids':list(self.managed_merchant_uids),
                 'items':payload['items'],'counts':payload['counts'],'character':deepcopy(self.character),
                 'progression':deepcopy(self.managed_growth), 'scene':scene,'carriage':carriage,'ground':ground,
-                'automation_settings':deepcopy(self.automation_settings),
+                'automation_settings':deepcopy(self.automation_settings if self._managed_active_automation is None
+                                               else self._managed_active_automation),
                 'loot_ledger':deepcopy(self.managed_control.get('loot_ledger', {})),
                 'system_log':deepcopy(self.managed_control.get('system_log', {})),
                 'gold_ledger':deepcopy(self.managed_control.get('gold_ledger', {})),
@@ -407,6 +413,8 @@ class ManagedServiceMixin:
     def managed_page(self):
         with self.guard:
             engine = self.managed.state()
+            if self.managed_settings_pending is not None:
+                engine['settings'] = deepcopy(self.managed_settings_pending)
             # Refresh labels even for statistics gathered before a mapping
             # was available; quantities and stored/sold receipts stay intact.
             for row in engine['statistics']['others'] + engine['statistics']['minion_equipment']:
@@ -474,7 +482,6 @@ class ManagedServiceMixin:
         with self.guard:
             if self.closed.is_set() or self.updating: raise ValidationError('助手正在退出或更新。')
             if getattr(self,'game_transition',False): raise ValidationError('游戏正在启动或退出，请稍候。')
-            if self.managed.running or self.operation_kind=='managed': raise ValidationError('请先暂停托管再修改设置。')
             settings = validate_settings(raw,equipment_keys=self.ui['equipment'])
             settings['farming']['stargazing']['enabled'] = False
             catalog = self._market_catalog()
@@ -500,10 +507,14 @@ class ManagedServiceMixin:
             # default switches. It can be repaired through its own save action.
             if not self.automation_config_load_failed: files[self.automation_config] = automation
             write_settings_files(files)
-            self.managed.settings = settings
+            if (self.managed.running or self.operation_kind == 'managed' or self.managed_can_resume
+                    or self.managed_synthesis_wait or self.managed_auction_wait):
+                self.managed_settings_pending = settings
+            else:
+                self.managed.settings = settings
+                self.managed_settings_pending = None
             self.automation_settings = automation
             self.managed_config_load_failed = False
-            self.managed_can_resume = False
             self.managed_config_error = ''
             self.revision += 1
             self.journal.append('settings','managed_settings_saved','保存托管模式设置',context={'settings':settings})
@@ -519,6 +530,12 @@ class ManagedServiceMixin:
             if self.managed.running: return self.managed_page()
             if self.busy: raise ValidationError('请等待当前操作完成。')
             if not self.client.connected: raise ValidationError('请先连接游戏。')
+            if not self.managed_synthesis_wait and not self.managed_auction_wait:
+                if self.managed_settings_pending is not None and not self.managed_can_resume:
+                    self.managed.settings = self.managed_settings_pending
+                    self.managed_settings_pending = None
+                self._managed_active_rules = list(self.rules)
+                self._managed_active_automation = deepcopy(self.automation_settings)
             page = self.managed_page()
             if not page['can_start']: raise ValidationError('托管入口尚未核验：'+'；'.join(page['blocked_reasons']))
             # Native callbacks and old monitor writers never run concurrently.
@@ -530,6 +547,13 @@ class ManagedServiceMixin:
             observation = self._managed_observation()
             with self.guard:
                 if self.cancelled.is_set(): raise ValidationError('托管启动已取消。')
+                if (self.managed_settings_pending is not None and not self.managed_synthesis_wait
+                        and not self.managed_auction_wait):
+                    if (self.managed_settings_pending['farming']['enabled']
+                            and self.managed_settings_pending['farming']['mode'] == 'push'):
+                        observation['farming_start'] = highest_unlocked_map(self.managed_catalog,self.managed_control)
+                    self.managed.update_settings(self.managed_settings_pending, observation)
+                    self.managed_settings_pending = None
                 if (self.managed.settings['reconnect']['enabled']
                         and not (observation.get('character_id') or '').startswith('1:')):
                     raise ValidationError('启用断线重连前，请先进入在线角色并完整读取角色身份。')
@@ -657,7 +681,10 @@ class ManagedServiceMixin:
     def reset_managed(self):
         with self.guard:
             if self.managed.running or self.operation_kind=='managed': raise ValidationError('请先停止托管再清空统计。')
-            self.managed = ManagedMode(self.managed.settings)
+            self.managed = ManagedMode(self.managed_settings_pending or self.managed.settings)
+            self.managed_settings_pending = None
+            self._managed_active_rules = None
+            self._managed_active_automation = None
             self.managed_can_resume=False; self.managed_started_at=None; self.managed_started_clock=None
             self.managed_transition=None; self.managed_elapsed=0
             self.managed_retry=None
@@ -919,6 +946,7 @@ class ManagedServiceMixin:
             if kind in SYNTHESIS_ACTIONS:
                 payload['character_id'] = self.managed.character_id
             auction_intent = None
+            native_validate = active
             if kind == 'auction_upload':
                 coordinator = self._auction_service()
                 config = deepcopy(self.managed.settings['auction'])
@@ -929,15 +957,26 @@ class ManagedServiceMixin:
                 action['item'] = item
                 payload['item'] = {**(source or item), 'auction_operation_id': item.get('auction_operation_id')}
                 ticket = None
-                if config['sell_enabled'] and coordinator.market_preparation_required(steamid):
+                skip_reason = (coordinator.market_preparation_skip_reason(steamid)
+                               if config['sell_enabled'] else 'sale_disabled')
+                if skip_reason is None:
                     ticket = coordinator.prepare(item, steamid, config)
                     if not ticket:
                         return {'verified': False, 'retryable': True,
                             'reason': '正在后台核验 Steam 库存基线，核验失败将跳过此物品。'}
+                def native_validate():
+                    if not active() or self.managed.settings['auction'] != config:
+                        return False
+                    if ticket:
+                        return coordinator.trading.upload_binding_current(ticket, steamid)
+                    return skip_reason == 'sale_disabled' or not coordinator.market_preparation_required(steamid)
+                if not native_validate():
+                    return {'verified': False, 'retryable': True,
+                        'reason': 'Steam 库存基线或登录状态正在变化，保留物品，稍后重新核验。'}
                 if not active() or self.managed.finishing:
                     return {'verified': False, 'retryable': True, 'reason': '托管已结束，不再上传物品。'}
                 auction_intent = coordinator.submitted(item, steamid, ticket,
-                    managed_run=self.managed_started_at)
+                    managed_run=self.managed_started_at, baseline_skip_reason=skip_reason)
             if kind=='equip': payload['expected_replaced_uid']=current_score.get('replaced_uid')
             if kind=='enter_dungeon': payload['map_id']=action['dungeon_id']
             if kind=='collect_ground': payload['selection_id']=item['selection_id']
@@ -945,7 +984,7 @@ class ManagedServiceMixin:
                 payload.update(disposition_authorized=True,rule_matched=item.get('matches') is True,
                                rule_pending=item.get('review') is True or bool(item.get('issues')))
             try:
-                result = self.client.execute_game_action(native_kind,payload,self.cancelled,validate=active)
+                result = self.client.execute_game_action(native_kind,payload,self.cancelled,validate=native_validate)
             except Exception as exc:
                 if kind == 'auction_open':
                     self.auction_refresh_after = time.monotonic() + 60
@@ -1412,8 +1451,47 @@ class ManagedServiceMixin:
                 self.managed.status += ' 游戏提示：' + wait['reason']
         return True
 
+    def _managed_apply_configuration(self, observation):
+        """Save immediately, switch the executor only at a settled boundary.
+
+        Called under guard by the serial worker; native work never observes a
+        partially updated rule/settings pair. Submitted receipts retain priority.
+        """
+        changed = (self.managed_settings_pending is not None
+                   or self._managed_active_rules != self.rules
+                   or self._managed_active_automation != self.automation_settings)
+        if not changed or self.managed_transition is not None:
+            return False
+        if self.managed.pending is not None and self.managed_retry is None:
+            return False
+        if observation.get('complete') is not True:
+            return False
+        if not self.managed._effect_visible(observation, observation['items']):
+            if self.managed.phase == 'paused': self.managed_can_resume = True
+            return True
+        if self.managed_settings_pending is not None:
+            settings = self.managed_settings_pending
+            if settings['farming']['enabled'] and settings['farming']['mode'] == 'push':
+                observation['farming_start'] = highest_unlocked_map(self.managed_catalog,self.managed_control)
+            self.managed.update_settings(settings, observation)
+            self.managed_settings_pending = None
+        self._managed_active_rules = list(self.rules)
+        self._managed_active_automation = deepcopy(self.automation_settings)
+        # These are unsubmitted plans; settled receipts and run statistics stay.
+        self.managed_retry = None
+        self.managed.pending = None
+        self.managed.force_dispose.clear()
+        self.managed_synthesis_deferred.clear()
+        self.managed.status = '已应用保存的配置，正在重新读取并规划后续操作。'
+        self.managed_fast_followup = True
+        return True
+
     def _managed_once(self):
         self.managed_fast_followup = False
+        with self.guard:
+            if self._managed_active_rules is None: self._managed_active_rules = list(self.rules)
+            if self._managed_active_automation is None:
+                self._managed_active_automation = deepcopy(self.automation_settings)
         if self._managed_reconnect_once(): return self.managed.status
         observation = self._managed_observation()
         if self.managed_synthesis_wait:
@@ -1431,6 +1509,8 @@ class ManagedServiceMixin:
             if not self.managed.running: return self.managed.status
             if self.managed.merchant_refresh_wait:
                 self._managed_wait_merchant_refresh(observation)
+                return self.managed.status
+            if self._managed_apply_configuration(observation):
                 return self.managed.status
             # Submitted travel retains its own receipt/deadline protocol. A
             # planner-only native gate otherwise had no timeout at all.

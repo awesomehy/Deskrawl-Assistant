@@ -12,6 +12,9 @@ from deskrawl_assistant.auction_service import AuctionCoordinator
 from deskrawl_assistant.managed_service import required_capabilities
 from deskrawl_assistant.native_dispatcher import NativeActionError
 from deskrawl_assistant.auction_runtime import AuctionUploadPending
+from deskrawl_assistant.steam_market import APP_ID, MarketCatalog
+from deskrawl_assistant.steam_trading import SteamTradingService
+from tests.test_steam_trading import FakeSession, inventory, listing
 
 
 class AuctionManagedBridgeTests(unittest.TestCase):
@@ -375,7 +378,7 @@ class AuctionManagedBridgeTests(unittest.TestCase):
         self.enable(sell=True)
         saved = deepcopy(self.service.managed.settings['auction'])
         item = deepcopy(self.client.items[0])
-        for auth in ({'verified': False, 'bound': True, 'steamid': None},
+        for auth in ({'verified': False, 'bound': True, 'steamid': None, 'expired': True},
                      {'verified': False, 'bound': False, 'steamid': None},
                      {'verified': True, 'steamid': '76561198000000002'}):
             with self.subTest(auth=auth):
@@ -406,7 +409,7 @@ class AuctionManagedBridgeTests(unittest.TestCase):
 
     def test_expired_login_still_fences_unknown_game_upload_results(self):
         self.enable(sell=True)
-        self.trading.auth.update(verified=False, steamid=None)
+        self.trading.auth.update(verified=False, steamid=None, expired=True)
         self.coordinator.process_once()
         action, world = self.plan()
         self.client.native_handler = Mock(side_effect=NativeActionError('lost receipt', uncertain=True))
@@ -415,6 +418,109 @@ class AuctionManagedBridgeTests(unittest.TestCase):
         self.assertIsNone(next_action(self.service.managed.settings, self.service._managed_observation()))
         self.assertEqual(len(self.client.actions), 1)
         self.assertEqual(next(iter(self.coordinator.intents.values()))['phase'], 'submitted')
+
+    def test_temporary_unknown_auth_keeps_item_in_game_until_baseline_recovers(self):
+        self.enable(sell=True)
+        self.trading.auth.update(verified=False, steamid=None)
+        self.coordinator.process_once()
+        action, world = self.plan()
+        result = self.service._managed_execute(action, world)
+        self.assertTrue(result['retryable'])
+        self.assertEqual(self.client.actions, [])
+        self.assertEqual(self.coordinator.intents, {})
+        self.coordinator.process_once()
+        self.assertIsNone(next_action(self.service.managed.settings, self.service._managed_observation()))
+        self.assertTrue(self.service.managed.running)
+        self.trading.auth.update(verified=True, steamid=STEAMID)
+        with patch('deskrawl_assistant.auction_service.time.monotonic', return_value=10**10):
+            action, world = self.plan()
+            self.assertTrue(self.service._managed_execute(action, world)['retryable'])
+            self.coordinator.process_once()
+            self.assertTrue(self.coordinator.prepare(action['item'], STEAMID,
+                self.service.managed.settings['auction']))
+
+    def test_invalid_binding_at_upload_boundary_keeps_item_and_creates_no_intent(self):
+        self.enable(sell=True)
+        action, world = self.plan()
+        self.service._managed_execute(action, world)
+        self.coordinator.process_once()
+        self.trading.upload_binding_current = lambda *_: False
+        result = self.service._managed_execute(action, world)
+        self.assertTrue(result['retryable'])
+        self.assertEqual(self.client.actions, [])
+        self.assertEqual(self.coordinator.intents, {})
+
+    def _real_trading_with_synthetic_steam(self):
+        self.enable(sell=True)
+        session = FakeSession()
+        session.inventory['descriptions'][0].update(market_hash_name='Divine Helm', type='[Divine] Helm')
+        session.quote = listing(item_name='Divine Helm', item_type='[Divine] Helm')
+        catalog = MarketCatalog({'schema_version': 1, 'appid': APP_ID, 'items': {
+            'DivineHelm1': {'kind': 'equipment', 'rarity': 4,
+                'normal': {'definition_id': 123, 'market_hash_name': 'Divine Helm'}}}})
+        trading = SteamTradingService(Path(self.tmp.name), catalog, session=session)
+        self.coordinator.trading = trading
+        return trading, session, catalog
+
+    def test_real_baseline_is_durable_before_upload_and_only_new_asset_enters_sale(self):
+        trading, session, catalog = self._real_trading_with_synthetic_steam()
+        action, world = self.plan()
+        self.assertTrue(self.service._managed_execute(action, world)['retryable'])
+        self.assertEqual(self.client.actions, [])
+        self.coordinator.process_once()
+        def commit(kind, payload):
+            persisted = json.loads(self.coordinator.path.read_text(encoding='utf-8'))
+            intent = next(iter(persisted['intents'].values()))
+            baseline = json.loads(trading._journal_path.read_text(encoding='utf-8'))['tickets'][intent['ticket']]
+            self.assertEqual(baseline['before'], {'1': 1})
+            self.assertEqual(baseline['steamid'], STEAMID)
+            self.assertEqual(intent['phase'], 'submitted')
+            # A restart can read the very same baseline, without another GET.
+            restored = SteamTradingService(Path(self.tmp.name), catalog, session=session)
+            self.assertEqual(restored._tickets[intent['ticket']], baseline)
+            self.client.items.clear()
+            descriptions = session.inventory['descriptions']
+            session.inventory = inventory(('1', 1, {}), ('2', 1, {}))
+            session.inventory['descriptions'] = descriptions
+            return {'effect_confirmed': True, 'quantity': 1,
+                'uploaded_uid': payload['item']['item_uid'],
+                'uploaded_instance_id': payload['item']['instance_id'],
+                'uploaded_internal_name': payload['item']['internal_name']}
+        self.client.native_handler = commit
+        self.assertTrue(self.service._managed_execute(action, world)['verified'])
+        self.coordinator.process_once()
+        self.assertEqual(trading._journal[0]['assetid'], '2')
+        self.coordinator.process_once()
+        self.assertEqual([sale[1]['assetid'] for sale in session.sales], ['2'],
+                         (trading.state(), self.coordinator.error))
+        trading.sale_once(self.service.managed.settings['auction'], STEAMID)
+        self.assertEqual(len(session.sales), 1)
+
+    def test_failed_baseline_write_never_authorizes_native_upload(self):
+        trading, session, _ = self._real_trading_with_synthetic_steam()
+        action, world = self.plan()
+        self.service._managed_execute(action, world)
+        with patch.object(trading, '_save', side_effect=OSError('synthetic disk failure')):
+            self.coordinator.process_once()
+        self.assertIsNone(next_action(self.service.managed.settings, self.service._managed_observation()))
+        self.assertEqual(self.client.actions, [])
+        self.assertEqual(self.coordinator.intents, {})
+        self.assertEqual(session.sales, [])
+        self.assertTrue(self.service.managed.running)
+
+    def test_recovered_auth_between_intent_and_native_write_cannot_upload_without_baseline(self):
+        self.enable(sell=True)
+        self.trading.auth.update(verified=False, steamid=None, expired=True)
+        action, world = self.plan()
+        def recover_before_native(kind, payload, cancelled, *, validate):
+            self.trading.auth.update(verified=True, steamid=STEAMID, expired=False)
+            self.assertFalse(validate())
+            raise NativeActionError('prewrite check changed', mutation_started=False)
+        self.client.execute_game_action = recover_before_native
+        result = self.service._managed_execute(action, world)
+        self.assertTrue(result['retryable'])
+        self.assertEqual(self.coordinator.intents, {})
+        self.assertEqual(self.client.actions, [])
 
     def test_proven_prewrite_rejection_skips_only_the_item_and_preserves_managed_running(self):
         self.enable()

@@ -7,6 +7,21 @@ const gear=(id,extra={})=>({selection_id:id,name:id,kind:'equipment',is_equipmen
   matches:false,review:false,power:{available:true,delta:10,percent:1},...extra});
 const ids=(items,f,role)=>select(items,f,role).map(i=>i.selection_id);
 
+test('non-equipment rarities, specific rune and gem qualities, and material subtypes combine',()=>{
+  const item=(id,kind,extra={})=>({selection_id:id,name:id,kind,container:'inventory',slot_index:0,...extra});
+  const items=[item('gold','material',{item_category:'gold_bar',rarity:3}),
+    item('stone','material',{item_category:'consecration_stone',rarity:3}),
+    item('rune','rune',{rarity:3,quality_key:'rune-grand'}),
+    item('gem','gem',{rarity:0,quality_key:'gem-5',level:70}),gear('armor')];
+  assert.deepEqual(ids(items,{kind:'gold_bar'}),['gold']);
+  assert.deepEqual(ids(items,{kind:'material',rarity:'3'}),['gold','stone']);
+  assert.deepEqual(ids(items,{rarity:'rune-grand'}),['rune']);
+  assert.deepEqual(ids(items,{rarity:'gem-5',levelMin:70}),['gem']);
+  assert.deepEqual(ids(items,{rarity:'3'}),['gold','rune','stone','armor']);
+  assert.deepEqual(ids(items,{rarity:'legendary-normal'}),['armor']);
+  assert.deepEqual(ids(items,{rarity:'3',class:'4'}),['armor']);
+});
+
 test('class, slot, level, upgrade, socket and rule filters combine',()=>{
   const items=[gear('wanted',{class_mask:4,matches:true}),gear('wrong role',{class_mask:1,matches:true}),
     gear('old',{level:700,matches:true}),gear('no socket',{sockets:0,matches:true}),gear('no rule')];
@@ -36,6 +51,13 @@ test('only rule matches excludes four-affix perfect items and secondary-rule mis
   assert.deepEqual(ids(items,{rules:['matches_only']}),['partial']);
   assert.deepEqual(ids(items,{rules:['matches_only','perfect']}),['all four','partial','secondary miss']);
   assert.deepEqual(ids(items,{rules:['matches']}),['all four','partial']);
+});
+
+test('divine filters distinguish ordinary and ancient equipment',()=>{
+  const items=[gear('divine',{rarity:4,is_divine:true}),gear('ancient divine',{rarity:4,is_divine:true,is_ancient:true}),
+    gear('legendary ancient',{is_ancient:true}),{selection_id:'material',rarity:4,kind:'material'}];
+  assert.deepEqual(ids(items,{rarity:'divine-normal'}),['divine']);
+  assert.deepEqual(ids(items,{rarity:'divine-ancient'}),['ancient divine']);
 });
 test('unknown comparison never becomes unchanged or a zero gain when sorted',()=>{
   const items=[gear('unknown',{power:{available:false}}),gear('same',{power:{available:true,delta:0,percent:0}}),

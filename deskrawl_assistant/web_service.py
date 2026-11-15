@@ -28,6 +28,7 @@ from .version import VERSION
 from .managed_service import ManagedServiceMixin
 from .item_protection import is_minion_equipment
 from .chests import is_chest
+from .inventory_categories import inventory_category
 from . import features
 from .projection_cache import ProjectionCache, inventory_projection_key, without_sample_time
 
@@ -576,8 +577,6 @@ class AssistantService(TrayStatusMixin, AuctionTrackingMixin, ManualAuctionServi
             'collectibles':collectibles, 'auction_items':self._auction_catalog_payload()}
 
     def _persist(self, rules):
-        if self.managed.running or self.operation_kind=='managed':
-            raise ValidationError('请先暂停托管，再修改或导入筛选规则。')
         if self.config_error:
             raise ValidationError(self.config_error)
         self.config.parent.mkdir(parents=True, exist_ok=True)
@@ -831,7 +830,7 @@ class AssistantService(TrayStatusMixin, AuctionTrackingMixin, ManualAuctionServi
                 'groups':groups,**self._equipment_facts(row),'reasons':[],'movable':False})
         return payload
 
-    def state(self):
+    def state(self, *, rules_override=None):
         with self.guard:
             if self.snapshot and not self.client.connected and not self.busy:
                 self.snapshot = None
@@ -844,7 +843,7 @@ class AssistantService(TrayStatusMixin, AuctionTrackingMixin, ManualAuctionServi
                 self.message = '游戏已退出，请重新启动游戏并连接。'
             snap = self.snapshot
             character = deepcopy(self.character)
-            rules = list(self.rules)
+            rules = list(self.rules if rules_override is None else rules_override)
             result = {'connected':self.client.connected,'pid':self.client.pid,'busy':self.busy or self.updating,
                 'monitoring':self.monitoring,'message':self.message,'error':self.error,'progress':self.progress,
                 'revision':self.revision,'rules':[r.to_dict() for r in rules], 'config_error':self.config_error,
@@ -889,8 +888,8 @@ class AssistantService(TrayStatusMixin, AuctionTrackingMixin, ManualAuctionServi
             kind, kind_label = item_kind(row)
             entry = self.catalog.equipment.get(key)
             meta = self.ui['equipment'].get(key, {}) if kind=='equipment' else self._item_metadata(row.get('internal_name'))
-            rarity = row.get('base_rarity',row.get('rarity'))
-            if type(rarity) is not int or rarity not in range(6): rarity = None
+            facts = self._equipment_facts(row) if kind=='equipment' else inventory_category(row,kind,meta)
+            kind_label = facts.get('kind_label',kind_label)
             adapted_item = observations.get((row.get('container'),row.get('slot_index')))
             observation = adapted_item.observation if adapted_item else None
             groups = {'base':[],'primary':[],'secondary':[],'random':[],'unknown':[]}
@@ -932,7 +931,7 @@ class AssistantService(TrayStatusMixin, AuctionTrackingMixin, ManualAuctionServi
                 'name':entry.label if entry else self._describe_item(row.get('internal_name','未识别物品'))[0],
                 'container':row.get('container'),'slot_index':row.get('slot_index'),
                 'locked':row.get('locked'),'level':row.get('item_level'),'upgrade':row.get('upgrade_level'),
-                **(self._equipment_facts(row) if kind=='equipment' else {'rarity':rarity}),
+                **facts,
                 'icon':meta.get('icon'),'slot':meta.get('slot'),'slot_label':SLOT_LABELS.get(meta.get('slot'), '未知部位') if kind=='equipment' else kind_label,
                 'is_minion_equipment': is_minion_equipment(row),
                 'class_mask':meta.get('class_mask',0),'groups':groups,'matches':match,'matched_combinations':matched_combinations,
@@ -1264,7 +1263,7 @@ class AssistantService(TrayStatusMixin, AuctionTrackingMixin, ManualAuctionServi
                 raise ValidationError('请先暂停托管，再修改自动整理设置。')
             if self.managed_config_load_failed:
                 raise ValidationError('托管配置未能载入，请先修复或保存托管设置，再修改共用存放页；原文件已保留。')
-            managed_settings=deepcopy(self.managed.settings)
+            managed_settings=deepcopy(self.managed_settings_pending or self.managed.settings)
             for kind,group in SHARED_STORAGE_GROUPS:
                 managed_settings['cleanup'][kind+'_pages']=list(settings[group]['pages'])
             validate_shared_pages(settings,managed_settings['cleanup'])
@@ -1273,9 +1272,12 @@ class AssistantService(TrayStatusMixin, AuctionTrackingMixin, ManualAuctionServi
             write_settings_files({self.automation_config:settings,self.managed_config:managed_settings})
             self.automation_settings=settings
             self.automation_config_load_failed=False
-            self.managed.settings=managed_settings
+            if (self.managed_settings_pending is not None or self.managed_can_resume
+                    or self.managed_synthesis_wait or self.managed_auction_wait):
+                self.managed_settings_pending=managed_settings
+            else:
+                self.managed.settings=managed_settings
             self.managed_config_error=''
-            self.managed_can_resume=False
             self.pressure_active=False
             self.revision+=1
             self.journal.append('settings','automation_saved','保存自动整理设置',context={'settings':settings})

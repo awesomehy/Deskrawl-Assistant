@@ -304,7 +304,7 @@ test('drop totals exclude transfers and correctly display the engine black mist 
   assert.equal(result.equipment.find(row=>row.key==='ancient').salvaged,2);
 });
 
-test('running controls freeze configuration mutations and paused statistics require stop before reset',()=>{
+test('running controls retain pause and stop while paused statistics require stop before reset',()=>{
   const s=settings(),packet={running:true,phase:'cleanup',capabilities:capabilities(true)};
   assert.equal(ui.controlState(packet,s,true).canStart,false);
   assert.equal(ui.controlState(packet,s,true).canPause,true);

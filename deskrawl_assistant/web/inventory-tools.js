@@ -6,14 +6,14 @@
     const view=items.filter(i=>{
       const minion=i.is_minion_equipment===true||i.slot==='Minion'||i.equip_slot===12;
       if(f.container&&i.container!==f.container)return false;
-      if(f.kind&&(f.kind==='minion_equipment'?!minion:f.kind==='equipment'?i.kind!=='equipment'||minion:i.kind!==f.kind))return false;
+      if(f.kind&&(f.kind==='minion_equipment'?!minion:f.kind==='equipment'?i.kind!=='equipment'||minion:i.kind!==f.kind&&i.item_category!==f.kind))return false;
       if(f.tradable&&i.market_eligible!==true)return false;
       if(Array.isArray(f.containers)&&!f.containers.includes(i.container))return false;
       if(Array.isArray(f.locks)&&(!i.is_equipment||!f.locks.some(v=>v==='locked'?i.locked===true:i.locked===false)))return false;
       if(Array.isArray(f.rules)&&(!i.is_equipment||!f.rules.some(v=>v==='matches'?i.matches:v==='matches_only'?i.matches===true&&i.primary_perfect!==true:v==='perfect'?i.primary_perfect:!i.matches&&!i.review)))return false;
       if(query&&![i.name,i.en,i.internal_name].some(v=>String(v||'').toLowerCase().includes(query)))return false;
       if(f.lock&&(!i.is_equipment||(f.lock==='locked'?i.locked!==true:f.lock==='unlocked'?i.locked!==false:f.lock==='matches'?!i.matches:f.lock==='perfect'?!i.primary_perfect:f.lock==='review'?!i.review:i.matches||i.review)))return false;
-      const equipmentFilter=f.class||f.slot||f.rarity||f.ancient||f.mist||f.divine||f.sockets||f.upgrade||f.levelMin||f.levelMax||f.power;
+      const equipmentFilter=f.class||f.slot||f.ancient||f.mist||f.divine||f.sockets||f.upgrade||f.power;
       if(equipmentFilter&&!i.is_equipment)return false;
       if(f.class&&(!classMask||!(i.class_mask&classMask)))return false;
       if(f.slot&&i.slot!==f.slot)return false;
@@ -22,7 +22,11 @@
           'legendary-ancient':i.is_black_mist!==true&&i.is_ancient===true,
           'legendary-normal':i.is_black_mist!==true&&i.is_ancient!==true };
         if(Object.prototype.hasOwnProperty.call(legendary,f.rarity)){
-          if(i.rarity!==3||i.is_divine===true||!legendary[f.rarity])return false;
+          if(!i.is_equipment||i.rarity!==3||i.is_divine===true||!legendary[f.rarity])return false;
+        }else if(f.rarity==='divine-ancient'||f.rarity==='divine-normal'){
+          if(!i.is_equipment||i.rarity!==4||(f.rarity==='divine-ancient'?i.is_ancient!==true:i.is_ancient===true))return false;
+        }else if(f.rarity.startsWith('rune-')||f.rarity.startsWith('gem-')){
+          if(i.quality_key!==f.rarity)return false;
         }else if(i.rarity!==Number(f.rarity))return false;
       }
       if(f.ancient&&i.is_ancient!==true||f.mist&&i.is_black_mist!==true||f.divine&&i.is_divine!==true)return false;

@@ -35,12 +35,18 @@ class TradingFake:
     def discard_upload_baseline(self, ticket):
         self.calls.append(('discard', ticket))
 
-    def sale_once(self, config, steamid, *, validate=None):
+    def upload_binding_current(self, ticket, steamid):
+        return self.auth.get('verified') is True and self.auth.get('steamid') == steamid
+
+    def sale_once(self, config, steamid, *, validate=None, confirmed_uploads=None):
         if validate is not None and validate() is not True:
             return
         self.calls.append(('sale', deepcopy(config), steamid))
 
     def state(self):
+        return deepcopy(self.auth)
+
+    def auth_state(self):
         return deepcopy(self.auth)
 
     def close(self):
@@ -214,7 +220,7 @@ class CoordinatorAuditTests(unittest.TestCase):
     def test_expiry_during_preparation_releases_only_the_steam_preparation_gate(self):
         self.coordinator.prepare(self.row(), STEAMID, self.config)
         def expired(*args):
-            self.trading.auth.update(verified=False, steamid=None)
+            self.trading.auth.update(verified=False, steamid=None, expired=True)
             raise RuntimeError('sensitive expired cookie response')
         self.trading.prepare_upload = expired
         self.coordinator.process_once()
@@ -228,13 +234,98 @@ class CoordinatorAuditTests(unittest.TestCase):
         self.assertIn('uid-a', self.coordinator.observe({'steamid': STEAMID})['blocked_uids'])
         self.coordinator.confirmed(identity, self.receipt(self.row()))
         self.assertEqual(self.coordinator.intents[identity]['phase'], 'resolved')
-        self.trading.auth.update(verified=True, steamid=STEAMID)
+        self.trading.auth.update(verified=True, steamid=STEAMID, expired=False)
         self.coordinator.process_once()
         # Re-login cannot create a late baseline or map an unproven asset.
         self.assertFalse(any(call[0] in ('prepare', 'complete') for call in self.trading.calls))
 
-    def test_game_prewrite_rejection_remains_blocked_with_expired_web_login(self):
+    def test_transient_auth_failure_cannot_bypass_preupload_baseline(self):
         self.trading.auth.update(verified=False, steamid=None)
+        self.coordinator.process_once()
+        self.assertTrue(self.coordinator.market_preparation_required(STEAMID))
+
+    def test_auth_becoming_unknown_during_baseline_read_keeps_item_for_retry(self):
+        self.coordinator.prepare(self.row(), STEAMID, self.config)
+        def temporary_failure(*args):
+            self.trading.auth.update(verified=False, steamid=None)
+            raise RuntimeError('temporary wallet or network read failure')
+        self.trading.prepare_upload = temporary_failure
+        self.coordinator.process_once()
+        self.assertTrue(self.coordinator.market_preparation_required(STEAMID))
+        self.assertIn('uid-a', self.coordinator.observe({'steamid': STEAMID})['blocked_uids'])
+        self.assertIn('物品保留在游戏内', self.coordinator.state()['error'])
+        self.assertEqual(self.coordinator.intents, {})
+
+    def test_recovered_live_auth_overrides_stale_unverified_worker_cache(self):
+        self.trading.auth.update(verified=False, steamid=None, expired=True)
+        self.coordinator.process_once()
+        self.assertFalse(self.coordinator.market_preparation_required(STEAMID))
+        self.trading.auth.update(verified=True, steamid=STEAMID, expired=False)
+        self.assertTrue(self.coordinator.market_preparation_required(STEAMID))
+
+    def test_temporary_auth_failure_skips_only_queued_item_until_retry(self):
+        row = self.row()
+        self.trading.auth.update(verified=False, steamid=None)
+        self.coordinator.prepare(row, STEAMID, self.config)
+        self.coordinator.process_once()
+        identity = self.coordinator.identity(STEAMID, row['item_uid'])
+        self.assertEqual(self.coordinator.jobs[identity]['phase'], 'failed')
+        self.assertIn(row['item_uid'], self.coordinator.observe({'steamid': STEAMID})['blocked_uids'])
+        self.assertEqual(self.trading.calls, [])
+        self.assertEqual(self.coordinator.intents, {})
+        self.trading.auth.update(verified=True, steamid=STEAMID)
+        self.now += 31
+        self.assertIsNone(self.coordinator.prepare(row, STEAMID, self.config))
+        self.coordinator.process_once()
+        ticket = self.coordinator.prepare(row, STEAMID, self.config)
+        self.assertTrue(ticket)
+        intent = self.coordinator.submitted(row, STEAMID, ticket)
+        self.coordinator.confirmed(intent, self.receipt(row))
+        self.coordinator.process_once()
+        self.coordinator.process_once()
+        self.assertEqual([call[0] for call in self.trading.calls], ['prepare', 'complete', 'sale'])
+
+    def test_changed_binding_rebuilds_ready_baseline_before_upload(self):
+        ticket = self.ready()
+        self.trading.upload_mapping_state = lambda *_: {'status': 'terminal', 'reason': 'binding_changed'}
+        self.assertIsNone(self.coordinator.prepare(self.row(), STEAMID, self.config))
+        self.assertEqual(self.coordinator.jobs[self.coordinator.identity(STEAMID, 'uid-a')]['phase'], 'prepare')
+        self.assertEqual(self.coordinator.intents, {})
+
+    def test_busy_binding_check_preserves_ready_baseline_without_upload(self):
+        ticket = self.ready()
+        self.trading.upload_mapping_state = lambda *_: {'status': 'waiting', 'reason': 'worker_busy'}
+        self.assertIsNone(self.coordinator.prepare(self.row(), STEAMID, self.config))
+        self.assertEqual(self.coordinator.jobs[self.coordinator.identity(STEAMID, 'uid-a')]['ticket'], ticket)
+        self.assertEqual([call[0] for call in self.trading.calls], ['prepare'])
+
+    def test_unknown_local_auth_never_falls_back_to_expired_cache(self):
+        self.trading.auth.update(verified=False, steamid=None, expired=True)
+        self.coordinator.process_once()
+        self.trading.auth_state = lambda: None
+        self.assertTrue(self.coordinator.market_preparation_required(STEAMID))
+
+    def test_startup_waits_for_first_discovery_before_treating_empty_session_as_logged_out(self):
+        self.trading.auth = {'bound': False, 'verified': False, 'expired': False,
+                             'source': 'none', 'local_status': 'unavailable'}
+        self.assertTrue(self.coordinator.market_preparation_required(STEAMID))
+        self.coordinator.process_once()
+        self.assertFalse(self.coordinator.market_preparation_required(STEAMID))
+
+    def test_pending_login_and_local_renewal_keep_baseline_requirement(self):
+        for pending in ('login_open', 'renewing'):
+            with self.subTest(pending=pending):
+                self.trading.auth = {'bound': False, 'verified': False, pending: True}
+                self.assertTrue(self.coordinator.market_preparation_required(STEAMID))
+
+    def test_upload_only_reason_is_persisted_without_inventing_a_baseline(self):
+        identity = self.coordinator.submitted(self.row(), STEAMID, baseline_skip_reason='login_expired')
+        disk = json.loads(self.coordinator.path.read_text(encoding='utf-8'))['intents'][identity]
+        self.assertEqual(disk['baseline_skip_reason'], 'login_expired')
+        self.assertIsNone(disk['ticket'])
+
+    def test_game_prewrite_rejection_remains_blocked_with_expired_web_login(self):
+        self.trading.auth.update(verified=False, steamid=None, expired=True)
         self.coordinator.process_once()
         identity = self.coordinator.submitted(self.row(), STEAMID)
         self.coordinator.rejected(identity)

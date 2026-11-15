@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from decimal import Decimal, InvalidOperation, ROUND_FLOOR
+from hashlib import sha256
 import json
 from pathlib import Path
 import re
@@ -601,7 +602,8 @@ class SteamTradingService(ManualSteamSaleMixin, SaleTrackingMixin, PendingTrades
             self._save()
             return self.state()
 
-    def _register(self, steamid, assetid, item_key, variant, count, source, *, proof=None, manual_only=False):
+    def _register(self, steamid, assetid, item_key, variant, count, source, *, proof=None, manual_only=False,
+                  game_instance_id=None, game_item_uid=None, upload_intent_id=None):
         self._healthy_journal()
         identity = _assetid(assetid)
         _int(count, 1, 10**9)
@@ -614,10 +616,16 @@ class SteamTradingService(ManualSteamSaleMixin, SaleTrackingMixin, PendingTrades
                 raise SteamSessionError('此 Steam 资产还有待核验的卖单，新增上传暂不自动出售。')
         if len(self._journal) >= JOURNAL_LIMIT:
             raise SteamSessionError('Steam 出售记录达到上限，请先核验已有记录。')
-        self._journal.append({'id': uuid4().hex, 'steamid': steamid, 'assetid': identity,
-                              'item_key': item_key, 'variant': variant, 'amount': count,
-                              'source': source, 'proof': proof, 'manual_only': manual_only is True,
-                              'status': 'captured', 'created_at': self.clock()})
+        record = {'id': uuid4().hex, 'steamid': steamid, 'assetid': identity,
+                  'item_key': item_key, 'variant': variant, 'amount': count,
+                  'source': source, 'proof': proof, 'manual_only': manual_only is True,
+                  'status': 'captured', 'created_at': self.clock()}
+        # Commit recovery provenance together with the permission to sell. A
+        # crash between these fields must not turn one upload into two orders.
+        record.update({key: value for key, value in (
+            ('game_instance_id', game_instance_id), ('game_item_uid', game_item_uid),
+            ('upload_intent_id', upload_intent_id)) if value is not None})
+        self._journal.append(record)
         self._save()
 
     def proof_state(self, proof, expected_steamid, *, wait=True):
@@ -709,6 +717,89 @@ class SteamTradingService(ManualSteamSaleMixin, SaleTrackingMixin, PendingTrades
             _int(count, 1, 10**9)
             if asset and self._matches(asset, item) and asset['amount'] >= count:
                 self._register(steamid, identity, key, variant, count, 'native_upload_receipt')
+
+    def _recover_confirmed_uploads(self, intents, settings, steamid, inventory):
+        """Recover managed uploads by native GUID, never by a late baseline.
+
+        Caller owns _operation and has rechecked the current authorization.
+        These are internal, durable game receipts, not UI-supplied inventory
+        discoveries. Any old sale record remains a fence, whatever its status.
+        """
+        if not intents:
+            return 0, 0
+        known = [row for row in self._journal if row['steamid'] == steamid]
+        proofs = {row.get('proof') for row in known if row.get('proof')}
+        instances = {row.get('game_instance_id') for row in known if row.get('game_instance_id')}
+        sources = {row.get('upload_intent_id') for row in known if row.get('upload_intent_id')}
+        assets = {row['assetid'] for row in known}
+        eligible = []
+        claims = {}
+        for intent in intents:
+            if (intent.get('phase') != 'resolved' or intent.get('steamid') != steamid
+                    or not intent.get('managed_run') or intent.get('market_skip_reason') == 'ambiguous'):
+                continue
+            source, instance = intent.get('upload_intent_id'), intent.get('instance_id')
+            if (not isinstance(source, str) or re.fullmatch(r'[a-f0-9]{64}', source) is None
+                    or not isinstance(instance, str) or not 0 < len(instance) <= 256):
+                continue
+            key, variant = intent.get('item_key'), intent.get('variant')
+            entry = self.catalog.items.get(key, {}) if self.catalog else {}
+            if not entry or not auction_allows(settings, {**entry, 'internal_name': key, 'variant': variant}):
+                continue
+            baseline = self._tickets.get(intent.get('ticket')) or {}
+            if baseline.get('ambiguous') or baseline.get('manual_only') is True:
+                continue
+            claims[instance] = claims.get(instance, 0) + 1
+            proof = sha256(('confirmed-upload\0' + steamid + '\0' + source).encode()).hexdigest()[:32]
+            if (source in sources or instance in instances or proof in proofs
+                    or intent.get('ticket') is not None and intent['ticket'] in proofs):
+                continue
+            eligible.append((intent, proof))
+        if not eligible:
+            return 0, 0
+        # Two source records claiming one game instance cannot authorize either.
+        by_hash = {}
+        for asset in inventory.values():
+            by_hash.setdefault(asset['description'].get('market_hash_name'), []).append(asset)
+        by_item = {}
+        pending = 0
+        for intent, proof in eligible:
+            instance = intent['instance_id']
+            if claims[instance] != 1:
+                pending += 1
+                continue
+            item = self._item(intent['item_key'], intent['variant'])
+            item_identity = (item.key, item.variant)
+            if item_identity not in by_item:
+                matches = {}
+                try:
+                    for asset in by_hash.get(item.market_hash_name, ()):
+                        if self._matches(asset, item):
+                            native_instance = self._native_instance(asset)
+                            if native_instance:
+                                matches.setdefault(native_instance, []).append(asset)
+                except SteamSessionError:
+                    # Conflicting dynamic properties are not a missing property.
+                    matches = None
+                by_item[item_identity] = matches
+            if by_item[item_identity] is None:
+                pending += 1
+                continue
+            matches = by_item[item_identity].get(instance, [])
+            if (len(matches) != 1 or matches[0]['amount'] != 1
+                    or matches[0]['assetid'] in assets
+                    or self._reprice_reserved(steamid, item.key, item.variant)):
+                pending += 1
+                continue
+            asset = matches[0]
+            self._register(steamid, asset['assetid'], item.key, item.variant, 1,
+                           'verified_confirmed_upload', proof=proof,
+                           game_instance_id=instance, game_item_uid=intent.get('uid'),
+                           upload_intent_id=intent['upload_intent_id'])
+            # One durable recovery per sale round; do not fsync a large backlog
+            # before submitting the first item. Successful sales drain at 2s.
+            return 1, pending
+        return 0, pending
 
     def _can_submit(self, validate):
         if self._closed:
@@ -835,7 +926,8 @@ class SteamTradingService(ManualSteamSaleMixin, SaleTrackingMixin, PendingTrades
         if changed:
             self._message = '已在 Steam 当前卖单中确认上架；是否成交请以 Steam 市场记录为准。'
 
-    def sale_once(self, settings, expected_steamid, uploaded=None, *, validate=None, proof_scope=None):
+    def sale_once(self, settings, expected_steamid, uploaded=None, *, validate=None, proof_scope=None,
+                  confirmed_uploads=None):
         """Submit at most one sale; caller schedules this outside managed reads."""
         if not self._operation.acquire(blocking=False):
             return self.state()
@@ -868,7 +960,8 @@ class SteamTradingService(ManualSteamSaleMixin, SaleTrackingMixin, PendingTrades
             rule = settings.get('price_rule', 'lowest_sell')
             if rule not in ('lowest_sell', 'highest_buy'):
                 raise SteamSessionError('Steam 出售价格规则无效。')
-            wallet = self._account(expected_steamid)
+            # Retain the verified generation across subsequent network reads.
+            wallet = deepcopy(self._account(expected_steamid))
             try:
                 self._reconcile_listings(expected_steamid)
             except SteamSessionError as exc:
@@ -880,6 +973,16 @@ class SteamTradingService(ManualSteamSaleMixin, SaleTrackingMixin, PendingTrades
                 self._message = '部分已提交卖单仍待核验，不重复提交；其他资产继续按配置处理。'
             inventory = self._inventory(expected_steamid)
             self._adopt_receipts(uploaded, expected_steamid, inventory, whitelist)
+            recovery_pending = 0
+            if confirmed_uploads and proof_scope is None and settings.get('upload_enabled') is True:
+                current = self.session.state()
+                if (not self._can_submit(validate) or current.get('bound') is not True
+                        or current.get('verified') is not True or current.get('steamid') != expected_steamid
+                        or current.get('binding_generation') != wallet.get('binding_generation')):
+                    self._message = '托管状态、账号或出售配置已改变，未恢复历史上传物品。'
+                    return self.state()
+                _, recovery_pending = self._recover_confirmed_uploads(
+                    confirmed_uploads, settings, expected_steamid, inventory)
             for row in self._journal:
                 if (proof_scope is not None and row.get('proof') not in proof_scope
                         or proof_scope is None and row.get('manual_only') is True):
@@ -971,6 +1074,10 @@ class SteamTradingService(ManualSteamSaleMixin, SaleTrackingMixin, PendingTrades
                     self._save()
                 self._status = row['status']
                 return {**self.state(), 'sale_submitted': row['status'] in ('pending', 'listed')}
+            if recovery_pending:
+                self._message = ('部分历史上传缺少可核对的 Steam 资产身份，暂不能自动补卖；'
+                                 '可在“待交易物品”中选择对应商品定价上架。'
+                                 '原上传记录保留，已提交的卖单不重复发送。')
             self._status = 'idle'
             return self.state()
         except SteamSessionError as exc:

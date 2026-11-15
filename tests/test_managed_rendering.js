@@ -8,7 +8,7 @@ const auction=require('../deskrawl_assistant/web/auction-ui.js');
 const clone=value=>JSON.parse(JSON.stringify(value));
 
 function page(){
-  const nodes=new Map(),growthCalls=[],timers=[];
+  const nodes=new Map(),growthCalls=[],auctionCalls=[],timers=[];
   function node(id){
     if(!nodes.has(id)){
       let markup='',text='';
@@ -24,7 +24,7 @@ function page(){
   let onShared;
   const sharedStorage={current:{rune:[4],gem:[5]},saved:{rune:[4],gem:[5]},subscribe(fn){onShared=fn;}};
   const window={document,AutomationTools:automation,ManagedGrowthUI:{helpers:growth,init(){},render(...args){growthCalls.push(args);}},
-    AuctionUI:{helpers:auction,init(){},render(){}},setInterval(fn){timers.push(fn);},addEventListener(){}};
+    AuctionUI:{helpers:auction,init(){},render(...args){auctionCalls.push(args);}},setInterval(fn){timers.push(fn);},addEventListener(){}};
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../deskrawl_assistant/web/managed-mode.js'),'utf8'),{window});
   const ui=window.ManagedModeUI;ui.init({catalog:{},sharedStorage,api:async()=>({}),onDirty(){}});
   const settings=managed.normalizeSettings({auto_equip:{enabled:true}});
@@ -32,8 +32,25 @@ function page(){
     capabilities:{transfer:true,equip:true,lock:true},progression_state:{available:true,class_mask:4},stats:{gold:{count:10,available:true}},history:[]};
   const apply=(value=packet)=>ui.applyPacket(clone(value));
   ui.setConnection(true);apply();
-  return {ui,node,apply,packet,growthCalls,sharedStorage,sharedChanged:()=>onShared()};
+  return {ui,node,apply,packet,growthCalls,auctionCalls,sharedStorage,sharedChanged:()=>onShared()};
 }
+
+test('running managed mode keeps configuration editors available while statistics reset stays blocked',()=>{
+  const p=page();
+  p.packet.running=true;
+  p.packet.settings.farming.enabled=true;
+  p.packet.settings.synthesis.gems.enabled=true;
+  p.packet.settings.synthesis.runes.enabled=true;
+  p.apply();
+  for(const id of ['managed-auto-equip','managed-farming','managed-farm-mode',
+    'managed-synthesis-gems','managed-synthesis-gems-max','managed-synthesis-runes',
+    'managed-save','managed-growth-save','managed-shop-save']){
+    assert.equal(p.node(id).disabled,false,id);
+  }
+  assert.equal(p.growthCalls.at(-1)[3],false,'growth configuration is editable');
+  assert.equal(p.auctionCalls.at(-1)[2],false,'auction configuration is editable');
+  assert.equal(p.node('managed-reset-stats').disabled,true,'statistics retain their runtime protection');
+});
 
 test('unchanged managed polls retain warehouse choices/capabilities and do not repeat connection rendering',()=>{
   const p=page(),pages=p.node('managed-rune-pages'),caps=p.node('managed-capabilities');

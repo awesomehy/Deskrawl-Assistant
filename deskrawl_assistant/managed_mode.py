@@ -912,6 +912,57 @@ class ManagedMode:
         self.merchant_refresh_deferred = False
         self.growth_wait = ''
 
+    def update_settings(self, settings, observation):
+        """Apply between verified actions, preserving receipts and session totals."""
+        previous = self.settings
+        settings = validate_settings(settings)
+        farming = settings['farming']
+        route_fields = ('enabled', 'mode', 'dungeon_id', 'difficulty', 'repeat_maps', 'progression')
+        route_changed = any(previous['farming'].get(key) != farming.get(key) for key in route_fields)
+        scene = observation.get('scene', {})
+        current = scene.get('world_difficulty') or scene.get('difficulty')
+        if current not in DIFFICULTIES:
+            current = self.pumpkin_difficulty or self.target_difficulty
+        if route_changed:
+            counts = {(row['dungeon_id'], row['difficulty']):
+                      self.repeat_completed if index == self.repeat_index else self.repeat_counts.get(index, 0)
+                      for index, row in enumerate(self.repeat_maps)}
+            target = self.pumpkin_fallback if self.pumpkin_active else (self.target_dungeon, self.target_difficulty)
+            self.repeat_maps = []
+            self.repeat_counts = {}
+            self.repeat_index = self.repeat_completed = 0
+            self.push_failed = False
+            if farming['enabled'] and farming['mode'] == 'repeat':
+                self.repeat_maps = [dict(row, difficulty=current if row['difficulty'] == 'current' else row['difficulty'])
+                                    for row in farming['repeat_maps']]
+                for index, row in enumerate(self.repeat_maps):
+                    key = (row['dungeon_id'], row['difficulty'])
+                    self.repeat_counts[index] = counts.get(key, 0)
+                    if key == target: self.repeat_index = index
+                row = self.repeat_maps[self.repeat_index]
+                self.repeat_completed = self.repeat_counts[self.repeat_index]
+                target = row['dungeon_id'], row['difficulty']
+                if self.repeat_completed >= row['runs']:
+                    self._repeat_wins(*target, 0)
+                    row = self.repeat_maps[self.repeat_index]
+                    target = row['dungeon_id'], row['difficulty']
+            elif farming['enabled']:
+                first = observation.get('farming_start')
+                target = ((first['dungeon_id'], first['difficulty']) if first else
+                          (farming['dungeon_id'], current if farming['difficulty'] == 'current' else farming['difficulty']))
+            if self.pumpkin_active:
+                self.pumpkin_fallback = target
+            else:
+                self.target_dungeon, self.target_difficulty = target
+        if previous['pumpkin'] != settings['pumpkin']:
+            tier = settings['pumpkin']['difficulty']
+            self.pumpkin_difficulty = current if tier == 'current' else tier
+        if previous['merchant'] != settings['merchant']:
+            self.merchant_counts = {}
+            if not settings['merchant']['enabled']: self.merchant_pending = False
+        self.equip_reserved = None
+        self.settings = settings
+
     def start(self, observation, *, observe_metrics=True):
         if self.running or self.pending: raise ValidationError('托管已在运行。')
         if observation.get('complete') is not True: raise ValidationError('请先完整读取背包与仓库。')

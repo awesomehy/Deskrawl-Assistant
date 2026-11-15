@@ -341,7 +341,7 @@
       const excluded=draft?.auto_equip.disabled_slots.includes(Number(index));
       const unavailable=selected&&!options.some(g=>g.key===selected),note=unavailable?(mask===null?'等待读取职业':gear?'当前职业不可用':'暂未收录'):'点击选择暗金装备';
       const unknown=selected&&!options.some(g=>g.key===selected)?`<option value="${esc(selected)}" selected>${esc(selected)} · 暂未收录</option>`:'';
-      const label=row.name||row.label||slot,disabled=packet?.running||busy||!draft?.auto_equip.enabled;
+      const label=row.name||row.label||slot,disabled=busy||!draft?.auto_equip.enabled;
       return `<div class="managed-slot-field"><span>${esc(label)}</span><button class="managed-gear-select ${excluded?'excluded':unavailable?'unavailable':''}" type="button" data-managed-picker="${esc(index)}" aria-label="${esc(label)}自动换装设置" aria-haspopup="listbox" aria-controls="managed-gear-choices" aria-expanded="${pickerSlot===index}" ${disabled?'disabled':''}><span class="managed-gear-icon">${gearIcon(excluded?{disabled:true}:gear)}</span><span class="managed-gear-label"><strong>${esc(excluded?'不参与自动换装':gear?.name||selected||'不限制名称')}</strong><small>${esc(excluded?'保持当前部位装备':selected?note:'所有可穿戴品质')}</small></span><span class="managed-gear-caret" aria-hidden="true">⌄</span></button><select data-managed-slot="${esc(index)}" hidden aria-hidden="true" tabindex="-1"><option value="">不限制名称 · 所有品质</option>${unknown}${options.map(g=>`<option value="${esc(g.key)}" ${g.key===selected?'selected':''}>${esc(g.name)}</option>`).join('')}</select></div>`;
     }).join('');
     if(pickerSlot!==null){renderPicker();positionPicker();}
@@ -356,7 +356,7 @@
     $('managed-gear-choices').innerHTML=choice({key:disabledChoice,name:'不参与自动换装',disabled:true,description:'跳过此部位的自动换装，保留已配置的暗金限制。'})+choice({key:'',name:'不限制名称'})+options.map(choice).join('')+(!options.length?'<p class="managed-picker-empty">'+esc(characterClass(character())===null?'等待读取职业':'没有符合搜索条件的装备')+'</p>':'');
   }
   function openPicker(index){
-    if(packet?.running||busy||!draft?.auto_equip.enabled)return;
+    if(busy||!draft?.auto_equip.enabled)return;
     if(!slots().some(row=>String(row.index??row.value??row.id)===index))return;
     if(pickerSlot===index){closePicker(true);return;}
     closePicker();pickerSlot=index;pickerSignature='';$('managed-gear-search').value='';renderPicker();
@@ -365,7 +365,7 @@
     positionPicker();if(pickerSlot!==null)$('managed-gear-search').focus();
   }
   function selectGear(key){
-    if(pickerSlot===null||packet?.running||busy||!draft?.auto_equip.enabled)return;
+    if(pickerSlot===null||busy||!draft?.auto_equip.enabled)return;
     const row=slots().find(row=>String(row.index??row.value??row.id)===pickerSlot);
     if(!row||key&&key!==disabledChoice&&!slotEquipment(catalog().equipment,row.slot,character()).some(gear=>gear.key===key))return;
     const previous=readForm(),next=withSlotChoice(previous,Number(pickerSlot),key);
@@ -385,7 +385,7 @@
   }
   function renderSynthesis(){
     if(!draft)return;
-    const s=draft.synthesis,disabled=!!packet?.running||busy,query=$('managed-synthesis-rune-search').value;
+    const s=draft.synthesis,disabled=busy,query=$('managed-synthesis-rune-search').value;
     $('managed-synthesis-gems-max').disabled=disabled||!s.gems.enabled;
     $('managed-synthesis-runes-max').disabled=disabled||!s.runes.enabled;
     for(const key of ['include_matched',...Object.keys(equipmentRecipes)])$('managed-synthesis-equipment-'+key).disabled=disabled||!s.equipment.enabled;
@@ -448,28 +448,27 @@
     if(renderNow){renderSlots();renderMaps();renderPages();renderDependencies();}
   }
   function renderDependencies(){
-    const running=!!packet?.running;
-    fieldIds.forEach(id=>{$(id).disabled=running||busy;});
-    for(const id of farmFields)$(id).disabled=running||busy||!$('managed-farming').checked;
-    $('managed-pumpkin-difficulty').disabled=running||busy||!$('managed-pumpkin').checked;
-    $('managed-free-threshold').disabled=running||busy||!farmingEnabled(draft);
-    root.document.querySelectorAll('[data-managed-slot]').forEach(input=>input.disabled=running||busy||!$('managed-auto-equip').checked);
-    root.document.querySelectorAll('[data-managed-picker]').forEach(input=>input.disabled=running||busy||!$('managed-auto-equip').checked);
-    if(running||busy||!$('managed-auto-equip').checked)closePicker();
-    for(const kind of storageKinds)root.document.querySelectorAll(`[data-managed-pages="${kind}"]`).forEach(input=>input.disabled=running||busy);
-    root.document.querySelectorAll('[data-managed-policy], [data-managed-preset]').forEach(input=>input.disabled=running||busy);
-    for(const id of ['managed-save','managed-growth-save','managed-shop-save'])$(id).disabled=running||busy||!draft;
-    $('managed-reset-draft').disabled=running||busy||!dirty;
+    fieldIds.forEach(id=>{$(id).disabled=busy;});
+    for(const id of farmFields)$(id).disabled=busy||!$('managed-farming').checked;
+    $('managed-pumpkin-difficulty').disabled=busy||!$('managed-pumpkin').checked;
+    $('managed-free-threshold').disabled=busy||!farmingEnabled(draft);
+    root.document.querySelectorAll('[data-managed-slot]').forEach(input=>input.disabled=busy||!$('managed-auto-equip').checked);
+    root.document.querySelectorAll('[data-managed-picker]').forEach(input=>input.disabled=busy||!$('managed-auto-equip').checked);
+    if(busy||!$('managed-auto-equip').checked)closePicker();
+    for(const kind of storageKinds)root.document.querySelectorAll(`[data-managed-pages="${kind}"]`).forEach(input=>input.disabled=busy);
+    root.document.querySelectorAll('[data-managed-policy], [data-managed-preset]').forEach(input=>input.disabled=busy);
+    for(const id of ['managed-save','managed-growth-save','managed-shop-save'])$(id).disabled=busy||!draft;
+    $('managed-reset-draft').disabled=busy||!dirty;
     const push=$('managed-farm-mode').value==='push',two=$('managed-repeat-two').checked;
     $('managed-push-preview').hidden=!push;$('managed-repeat-fields').hidden=push;$('managed-repeat-second').hidden=!two;
     $('managed-stargazing-options').hidden=!$('managed-stargazing').checked;
-    for(const key of stargazingRewards)$('managed-stargazing-'+key).disabled=fixedStargazing.has(key)||running||busy||!$('managed-farming').checked||!$('managed-stargazing').checked;
+    for(const key of stargazingRewards)$('managed-stargazing-'+key).disabled=fixedStargazing.has(key)||busy||!$('managed-farming').checked||!$('managed-stargazing').checked;
     root.document.querySelector('.managed-repeat-count-label').hidden=!two;
     setText('managed-farm-note',push?'从最高已解锁难度的最后一张已解锁图开始；通关前进一关，失败后退一关，上一关通关后再次挑战。普通通关后进入噩梦，噩梦通关后进入炼狱。':two?'依次打满图 1、图 2 的成功通关局数后循环；失败和途中回城均不计数。':'重复进入选定关卡，仅成功通关计数；神话裂隙只显示已解锁层数，每次入场消耗游戏要求的材料；背包空格不足时先回城整理，再继续刷图。');
-    root.ManagedGrowthUI?.render(draft,packet?.progression_catalog,packet?.progression_state,running||busy,(next,renderNow=true)=>{
+    root.ManagedGrowthUI?.render(draft,packet?.progression_catalog,packet?.progression_state,busy,(next,renderNow=true)=>{
       draft={...readForm(),...next};markDirty();if(renderNow){renderDependencies();renderCapabilities();}else {renderFoldSummaries();renderControls();}
     },connected);
-    root.AuctionUI?.render(draft?.auction,catalog(),running||busy);
+    root.AuctionUI?.render(draft?.auction,catalog(),busy);
     renderSynthesis();renderFoldSummaries();renderControls();
   }
   function renderFoldSummaries(){
@@ -539,7 +538,7 @@
     draft=readForm();const error=validateSettings(draft,connected?packet:undefined);if(error)throw new Error(error);
     const submitted=clone(draft),value=await context.api('managed/settings',{settings:submitted});
     context.sharedStorage?.commit(root.AutomationTools.sharedPages(value.settings,true),root.AutomationTools.sharedPages(submitted,true));
-    markDirty(false);applyPacket(value);context.toast?.('托管设置已保存，共用存放页已同步');return true;
+    markDirty(false);applyPacket(value);context.toast?.(packet?.running?'托管设置已保存，当前动作核验后生效':'托管设置已保存，共用存放页已同步');return true;
   }
   async function runAction(action){
     if(!context||busy&&!['pause','stop'].includes(action))return;
@@ -625,12 +624,12 @@
     root.addEventListener('resize',positionPicker);
     root.document.addEventListener('scroll',positionPicker,true);
     root.document.querySelectorAll('[data-managed-preset]').forEach(button=>button.addEventListener('click',()=>{
-      if(packet?.running||busy)return;draft=equipmentPreset(readForm(),button.dataset.managedPreset);markDirty();pageSignature='';writeForm();renderCapabilities();
+      if(busy)return;draft=equipmentPreset(readForm(),button.dataset.managedPreset);markDirty();pageSignature='';writeForm();renderCapabilities();
     }));
     $('managed-reset-draft').addEventListener('click',async()=>{
-      if(packet?.running||busy||!dirty)return;
+      if(busy||!dirty)return;
       if(await context.confirmAction?.('放弃托管设置改动？','将丢弃托管模式及共用存放页尚未保存的修改，恢复到上次保存的配置。\n已保存的配置、装备筛选规则和累计掉落统计不变。','放弃改动')!==true)return;
-      if(packet?.running||busy)return;
+      if(busy)return;
       draft=normalizeSettings(packet?.settings);context.sharedStorage?.reset();markDirty(false);applySharedPages();slotSignature='';pageSignature='';mapSignature='';writeForm();render();
     });
     root.setInterval(()=>{renderTime();if(active||packet?.running)refresh();},1500);

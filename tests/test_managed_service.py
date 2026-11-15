@@ -1056,8 +1056,8 @@ class ManagedServiceTests(unittest.TestCase):
                 self.service.start(operation)
         for start in (self.service.set_monitoring,self.service.set_automation_running):
             with self.assertRaisesRegex(ValidationError,'托管正在运行'): start(True)
-        with self.assertRaisesRegex(ValidationError,'暂停托管'):
-            self.service.save_managed(self.settings(auto_equip=True))
+        self.service.save_managed(self.settings(auto_equip=True))
+        self.assertTrue(self.service.managed.running)
 
     def test_no_rule_is_disposable_only_after_complete_equipment_classification(self):
         row = self.service._managed_observation()['items'][0]

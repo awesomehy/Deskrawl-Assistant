@@ -105,6 +105,8 @@ class RuntimeTests(unittest.TestCase):
 
     def test_exact_full_ui_chain_and_native_eligibility_before_submit(self):
         result = self.runtime.execute('auction_upload', {'item': item()})
+        self.runtime._open.assert_called_once_with(cancel_event=None,
+            validate=unittest.mock.ANY, reconcile_steam=True, expected_steamid=None)
         self.assertTrue(result['effect_confirmed']); self.assertTrue(result['native_verified'])
         calls = self.actions.dispatcher.invoke.call_args.args[0]
         self.assertEqual([c.method for c in calls],

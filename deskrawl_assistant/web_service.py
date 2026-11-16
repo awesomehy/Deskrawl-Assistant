@@ -960,7 +960,8 @@ class AssistantService(TrayStatusMixin, AuctionTrackingMixin, ManualAuctionServi
             if self.updating: raise ValidationError('正在更新程序，请稍候。')
             if self.game_actions_blocked():
                 raise ValidationError('游戏正在启动或退出，请稍候。')
-            if self.busy: raise ValidationError('当前操作尚未完成，请稍候或停止操作。')
+            if self.busy or self.managed_start_pending is not None:
+                raise ValidationError('当前操作尚未完成，请稍候或停止操作。')
             if self.managed.running: raise ValidationError('请先暂停托管，再执行手动背包操作。')
             if kind not in ('connect','disconnect','read','lock_selected','lock_rules','unlock_all','move_items','auction_refresh'):
                 raise ValidationError('不支持的操作。')
@@ -1129,6 +1130,7 @@ class AssistantService(TrayStatusMixin, AuctionTrackingMixin, ManualAuctionServi
                 if kind=='managed': self._managed_finish_stop()
                 self.busy = False
                 self.operation_kind = None
+                self.managed_start_ready.notify_all()
                 if (kind=='managed' and self.managed.running and self.managed_fast_followup
                         and not self.cancelled.is_set() and not self.closed.is_set()):
                     self.monitor_wake.set()
@@ -1183,7 +1185,8 @@ class AssistantService(TrayStatusMixin, AuctionTrackingMixin, ManualAuctionServi
                 if self.game_actions_blocked(): raise ValidationError('游戏正在启动或退出，请稍候。')
                 if self.managed.running: raise ValidationError('托管正在运行，请先暂停托管。')
                 if not self.client.connected: raise ValidationError('请先连接游戏。')
-                if self.busy: raise ValidationError('请等待当前操作完成后开启监控。')
+                if self.busy or self.managed_start_pending is not None:
+                    raise ValidationError('请等待当前操作完成后开启监控。')
                 if not any(r.enabled for r in self.rules): raise ValidationError('请先保存并启用至少一条规则。')
                 if not self.snapshot or not self.snapshot.get('complete'): raise ValidationError('请先刷新完整的装备清单。')
                 if self.monitoring: return
@@ -1290,7 +1293,8 @@ class AssistantService(TrayStatusMixin, AuctionTrackingMixin, ManualAuctionServi
                 if self.game_actions_blocked(): raise ValidationError('游戏正在启动或退出，请稍候。')
                 if self.managed.running: raise ValidationError('托管正在运行，请先暂停托管。')
                 if not self.client.connected: raise ValidationError('请先连接游戏。')
-                if self.busy: raise ValidationError('请等待当前操作完成。')
+                if self.busy or self.managed_start_pending is not None:
+                    raise ValidationError('请等待当前操作完成。')
                 if not self.snapshot or not self.snapshot.get('complete'): raise ValidationError('请先刷新完整的物品清单。')
                 if not any(v['enabled'] for v in self.automation_settings.values()): raise ValidationError('请先启用并保存至少一项自动整理功能。')
                 self.cancelled.clear()
@@ -1439,7 +1443,8 @@ class AssistantService(TrayStatusMixin, AuctionTrackingMixin, ManualAuctionServi
             if self.closed.is_set(): break
             with self.guard:
                 if self.closed.is_set(): break
-                if self.busy or self.updating or getattr(self,'game_transition',False) or not self.client.connected: continue
+                if (self.busy or self.managed_start_pending is not None or self.updating
+                        or getattr(self,'game_transition',False) or not self.client.connected): continue
                 if (hasattr(self,'game_lifecycle')
                         and self.game_lifecycle.state(known_running_pid=self.client.pid)['status']=='closing'): continue
                 self.busy = True

@@ -22445,6 +22445,22 @@
       "rva": 5899712,
       "prefix": "40534883ec20488bd933c9e86078260084c0740c33c94883",
       "declaring_type": "CombatMapCompletionUI"
+    },
+    "SaveSystem.steam_sync": {
+      "name": "euk",
+      "token": "0x06000EDB",
+      "isStatic": false,
+      "returnType": "System.Void",
+      "parameters": [
+        {
+          "name": "a",
+          "typeIndex": 3967,
+          "resolvedType": "System.Action`1<System.Boolean>"
+        }
+      ],
+      "rva": 8751280,
+      "prefix": "48895c24084889742410574883ec20803dd963470300488b",
+      "declaring_type": "SaveSystem"
     }
   },
   "singletons": {

@@ -150,6 +150,8 @@ class CommodityRuntimeTests(unittest.TestCase):
             return {'invoked': True}
         self.actions.dispatcher.invoke.side_effect = invoke
         result = self.runtime.execute('auction_upload', self.payload)
+        self.runtime._open.assert_called_once_with(cancel_event=None,
+            validate=unittest.mock.ANY, reconcile_steam=True, expected_steamid=STEAMID)
         self.assertTrue(result['effect_confirmed']); self.assertEqual(result['quantity'], 1)
         self.assertFalse(self.runtime._pending)
         self.assertEqual(self.runtime._confirmed[OP]['uploaded_instance_id'], 'new-server-instance')

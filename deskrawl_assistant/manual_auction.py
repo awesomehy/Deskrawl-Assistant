@@ -82,7 +82,7 @@ class ManualAuctionServiceMixin:
             raise ValidationError('请先连接游戏。')
         if self.managed.running or self.managed.finishing:
             raise ValidationError('请先暂停托管，再批量上架所选物品。')
-        if self.busy:
+        if self.busy or getattr(self, 'managed_start_pending', None) is not None:
             raise ValidationError('当前操作尚未完成，请稍后再试。')
 
     def _manual_auction_identity(self):

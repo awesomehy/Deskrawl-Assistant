@@ -138,6 +138,10 @@ def next_action(settings, observation):
     count = state.get('listing_count')
     if count is None and isinstance(state.get('listings'), list):
         count = sum(row.get('received') is not True for row in state['listings'])
+    if (type(limit) is int and 1 <= limit <= 8 and type(count) is int
+            and count == limit and candidates and state.get('steam_sync_due') is True):
+        return {'kind': 'auction_open', 'reason_code': 'auction_reconcile_capacity',
+                'reason': '同步已成交物品并重新生成当前上架列表，核验实际剩余名额。'}
     if type(limit) is not int or not 1 <= limit <= 8 or type(count) is not int or not 0 <= count < limit:
         return None
     candidates.sort(key=lambda r: (r.get('container') != 'inventory', str(key(r)), r.get('slot_index', 0)))

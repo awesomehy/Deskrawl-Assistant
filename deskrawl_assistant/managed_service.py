@@ -2,6 +2,7 @@
 from copy import deepcopy
 from datetime import datetime, timezone
 import json
+import threading
 import time
 
 from .managed_mode import (ManagedMode, DEFAULT_SETTINGS, validate_settings, identity,
@@ -27,6 +28,8 @@ from .carriage_transfer import CarriageUnavailable
 from .town_cleanup_recovery import cleanup_ready, cleanup_action_allowed
 
 from .synthesis import KINDS as SYNTHESIS_ACTIONS
+
+MANAGED_START_WAIT_SECONDS = 15
 
 
 def _synthesis_action_key(action):
@@ -132,6 +135,8 @@ def highest_unlocked_map(maps, control):
 
 class ManagedServiceMixin:
     def _init_managed(self):
+        self.managed_start_pending = None
+        self.managed_start_ready = threading.Condition(self.guard)
         self.managed_config = self.config.with_name('managed-mode.json')
         self.managed = ManagedMode()
         self.managed_settings_pending = None
@@ -520,6 +525,31 @@ class ManagedServiceMixin:
             self.journal.append('settings','managed_settings_saved','保存托管模式设置',context={'settings':settings})
             return deepcopy(settings)
 
+    def _managed_wait_for_background(self):
+        """Called under guard; reserve the next idle slot without cancelling a writer."""
+        if self.managed_start_pending is not None:
+            raise ValidationError('托管正在等待当前检查完成，请稍候。')
+        if not self.busy:
+            return
+        if self.operation_kind not in ('observe', 'monitor', 'read'):
+            raise ValidationError('请等待当前操作完成。')
+        request = object()
+        self.managed_start_pending = request
+        try:
+            self.managed_start_ready.wait_for(
+                lambda: (not self.busy or self.managed_start_pending is not request
+                         or self.closed.is_set() or self.updating),
+                timeout=MANAGED_START_WAIT_SECONDS)
+            if self.managed_start_pending is not request:
+                raise ValidationError('托管启动已取消。')
+            if self.closed.is_set() or self.updating:
+                raise ValidationError('助手正在退出或更新。')
+            if self.busy:
+                raise ValidationError('当前后台检查尚未结束，本次未启动托管，请稍后重试。')
+        finally:
+            if self.managed_start_pending is request:
+                self.managed_start_pending = None
+
     def set_managed_running(self, enabled):
         if type(enabled) is not bool: raise ValidationError('托管开关必须为布尔值。')
         if not enabled:
@@ -528,7 +558,10 @@ class ManagedServiceMixin:
             if self.closed.is_set() or self.updating: raise ValidationError('助手正在退出或更新。')
             if self.game_actions_blocked(): raise ValidationError('游戏正在启动或退出，请稍候。')
             if self.managed.running: return self.managed_page()
-            if self.busy: raise ValidationError('请等待当前操作完成。')
+            self._managed_wait_for_background()
+            # Waiting releases guard. Recheck the connection and lifecycle,
+            # then claim busy under the same guard before polling can restart.
+            if self.game_actions_blocked(): raise ValidationError('游戏正在启动或退出，请稍候。')
             if not self.client.connected: raise ValidationError('请先连接游戏。')
             if not self.managed_synthesis_wait and not self.managed_auction_wait:
                 if self.managed_settings_pending is not None and not self.managed_can_resume:
@@ -620,6 +653,9 @@ class ManagedServiceMixin:
 
     def stop_managed(self, *, pause=False, reason=None):
         with self.guard:
+            if self.managed_start_pending is not None:
+                self.managed_start_pending = None
+                self.managed_start_ready.notify_all()
             was_running = self.managed.running
             self.managed_can_resume = pause and (was_running or self.managed_can_resume)
             if was_running or self.operation_kind=='managed': self.cancelled.set()
@@ -644,6 +680,8 @@ class ManagedServiceMixin:
     def finish_managed(self):
         """User stop is graceful; error/disconnect/shutdown use stop_managed."""
         with self.guard:
+            if self.managed_start_pending is not None:
+                return self.stop_managed(reason='托管启动已取消。')
             if self.managed_reconnect.active:
                 return self.stop_managed(reason='重连期间已停止托管，不再自动登录游戏。')
             if self.closed.is_set() or self.updating: raise ValidationError('助手正在退出或更新。')
@@ -680,7 +718,8 @@ class ManagedServiceMixin:
 
     def reset_managed(self):
         with self.guard:
-            if self.managed.running or self.operation_kind=='managed': raise ValidationError('请先停止托管再清空统计。')
+            if self.managed.running or self.operation_kind=='managed' or self.managed_start_pending is not None:
+                raise ValidationError('请先停止托管再清空统计。')
             self.managed = ManagedMode(self.managed_settings_pending or self.managed.settings)
             self.managed_settings_pending = None
             self._managed_active_rules = None

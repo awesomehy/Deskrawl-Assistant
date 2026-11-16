@@ -3,6 +3,22 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const ui=require('../deskrawl_assistant/web/managed-mode.js');
 
+test('gem synthesis selector exposes every supported quality and preserves the selected cap',()=>{
+  const html=fs.readFileSync('deskrawl_assistant/web/index.html','utf8');
+  const select=html.match(/<select id="managed-synthesis-gems-max">([\s\S]*?)<\/select>/);
+  assert.ok(select,'gem synthesis quality selector must exist');
+  const options=[...select[1].matchAll(/<option value="(\d+)">([^<]+)<\/option>/g)]
+    .map(([,value,label])=>({value:Number(value),label}));
+  assert.deepEqual(options,ui.gemQualities.map((label,index)=>({value:index+1,label})));
+  for(const {value,label} of options){
+    const settings=ui.normalizeSettings({synthesis:{gems:{enabled:true,max_quality:value}}});
+    const saved=ui.normalizeSettings(JSON.parse(JSON.stringify(settings)));
+    assert.equal(saved.synthesis.gems.max_quality,value);
+    assert.ok(ui.foldSummaries(saved,null).synthesis.summary.includes('宝石 → '+label));
+  }
+  assert.equal(ui.normalizeSettings().synthesis.gems.max_quality,5);
+});
+
 test('synthesis is opt-in and quality caps and exclusions survive configuration saving',()=>{
   const defaults=ui.normalizeSettings();
   assert.deepEqual(defaults.synthesis,{gems:{enabled:false,max_quality:5},runes:{enabled:false,max_quality:'rare',excluded_keys:[]},equipment:{enabled:false,include_matched:true,ancient_to_black_mist:false,black_mist_to_divine:false,divine_to_ancient:false}});

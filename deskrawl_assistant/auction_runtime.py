@@ -1,7 +1,7 @@
 """Build-gated uploads through AuctionUI's complete original callback chain.
 
 This transfers an item to Steam inventory; it does not place a market order.
-No CloudClient request, forged instance ID or automatic unlock is performed.
+No direct CloudClient request, forged instance ID or automatic unlock is performed.
 Opening and uploading use the supervised validation recorded in the build profile.
 """
 from __future__ import annotations
@@ -22,6 +22,7 @@ from .auction_commodities import CommodityAuctionMixin, commodity_candidate, com
 
 KINDS = ('auction_open', 'auction_upload')
 CAPACITY = 8
+FULL_LIST_SYNC_INTERVAL = 60
 
 
 class AuctionUploadPending(NativeActionError):
@@ -98,6 +99,7 @@ class AuctionRuntime(CommodityAuctionMixin):
         self._refreshed_at = 0
         self._refresh_wait = None
         self._active_submit = False
+        self._last_steam_sync = None
         try:
             if self.journal_path.exists():
                 data = json.loads(self.journal_path.read_text(encoding='utf-8'))
@@ -248,6 +250,12 @@ class AuctionRuntime(CommodityAuctionMixin):
                 self._refreshed_at = 0
             state['server_checked_at'] = (self._refreshed_at
                 if self._refreshed == state.get('_refresh_key') and not state.get('needs_refresh') else 0)
+            # A full but stale native list must not prevent the very action
+            # which can reconcile sold entries. This only schedules work; a
+            # snapshot itself never submits Steam sync or clears game lists.
+            state['steam_sync_due'] = bool(state.get('_refresh_key') and (
+                not self._last_steam_sync or self._last_steam_sync[0] != state['_refresh_key']
+                or time.monotonic() - self._last_steam_sync[1] >= FULL_LIST_SYNC_INTERVAL))
             if self._pending and state.get('steamid_verified') is True and not state.get('busy'):
                 snapshot = self.reader.snapshot()
                 read.finish()
@@ -340,7 +348,66 @@ class AuctionRuntime(CommodityAuctionMixin):
                 and row.get('item_uid') == state['selected_uid']
                 for row in self._pending.values()))
 
-    def _open(self, *, cancel_event=None, validate=lambda: True, refresh_only=False):
+    def _sync_steam(self, read, state, *, cancel_event=None, validate=lambda: True,
+                    expected_steamid=None):
+        """Use the game's complete sold/revoked sync, never its cancel API.
+
+        SaveSystem's wrapper applies the native response and saves normally.
+        CloudClient counts this request before its first coroutine yield. Wait
+        for that queue and any resulting save to settle before fetching lists.
+        Idle is NOT proof of sync success (disabled/throttled responses exist);
+        only a subsequent fresh AuctionUI callback can authorize an upload.
+        """
+        if (self._pending or state.get('steamid_verified') is not True
+                or not state.get('_refresh_key') or state.get('selection_occupied')
+                or expected_steamid is not None and state.get('steamid') != expected_steamid):
+            raise GameBusyError('拍卖行账号、选择或在途操作尚未核验，未请求成交同步。')
+        if (cancel_event is not None and cancel_event.is_set()) or not validate():
+            raise NativeActionError('拍卖行同步已取消；尚未上传物品。')
+        save = read.singleton('SaveSystem')
+        character = read.read(save + 32, 8)
+        key = state['_refresh_key']
+        # Record attempts too: a failed or throttled sync on a full list must
+        # not keep the managed worker opening the auction every iteration.
+        self._last_steam_sync = (key, time.monotonic())
+        try:
+            self._invoke([Invocation('SaveSystem.steam_sync', instance=save,
+                         arguments=(Argument.reference(0),), mutates=True)], read,
+                         cancel_event=cancel_event, validate=validate)
+        except NativeActionError as exc:
+            # Sync can apply native revocations, but cannot submit this upload.
+            # Do not turn a lost sync acknowledgement into a durable, unknown
+            # item-upload intent. A retry still checks the queue/dispatcher.
+            raise GameBusyError('拍卖行成交同步尚未核验；尚未提交物品上传。') from exc
+        deadline = time.monotonic() + 10
+        idle_since = None
+        while time.monotonic() < deadline:
+            if (cancel_event is not None and cancel_event.is_set()) or not validate():
+                raise NativeActionError('拍卖行同步已取消；尚未上传物品。')
+            current = self._context(after=True)
+            now_state = self._state(current)
+            if (now_state.get('_refresh_key') != key or now_state.get('steamid_verified') is not True
+                    or current.singleton('SaveSystem') != save
+                    or current.read(save + 32, 8) != character):
+                raise GameBusyError('同步期间角色或 Steam 账号已变化，未上传物品。')
+            online = self.actions._online_state(current)
+            idle = (not online['online_saving'] and not online['online_pending_requests']
+                    and not current.boolean(save + 193) and not now_state['busy']
+                    and not now_state['selection_occupied'])
+            current.finish()
+            now = time.monotonic()
+            if idle:
+                if idle_since is not None and now - idle_since >= .15:
+                    return
+                if idle_since is None:
+                    idle_since = now
+            else:
+                idle_since = None
+            time.sleep(.15)
+        raise GameBusyError('等待游戏完成拍卖行成交同步；尚未上传物品。')
+
+    def _open(self, *, cancel_event=None, validate=lambda: True, refresh_only=False,
+              reconcile_steam=False, expected_steamid=None):
         # Every explicit list fetch needs a new server callback. An old open
         # window (or its in-memory list) never grants a fresh observation.
         self._refreshed = None
@@ -352,7 +419,19 @@ class AuctionRuntime(CommodityAuctionMixin):
             raise GameBusyError('游戏拍卖行正在同步，请稍后重读。')
         if state['selection_occupied'] and not self._refresh_selection_allowed(state, refresh_only):
             raise GameBusyError('拍卖行槽中已有玩家选择的物品，请先完成或清空。')
+        sync_identity = None
         try:
+            if reconcile_steam:
+                if refresh_only:
+                    raise NativeActionError('在途上传仅允许核验列表，不能同时请求成交同步。')
+                sync_key = state.get('_refresh_key')
+                save = read.singleton('SaveSystem')
+                sync_identity = (save, read.read(save + 32, 8))
+                self._sync_steam(read, state, cancel_event=cancel_event, validate=validate,
+                                 expected_steamid=expected_steamid)
+                read = self._context(); state = self._state(read)
+                if state.get('_refresh_key') != sync_key:
+                    raise GameBusyError('拍卖行账号已变化，等待重新读取。')
             # Only an explicit action installs the main-thread dispatcher.
             # The native Boolean query is hfz()->GameObject.activeSelf; +40
             # and +41 are not substitutes for this query.
@@ -368,6 +447,10 @@ class AuctionRuntime(CommodityAuctionMixin):
                         raise
                     method = 'AuctionUI.Show'
             read = self._context(); state = self._state(read)
+            if sync_identity and (state.get('_refresh_key') != sync_key
+                    or read.singleton('SaveSystem') != sync_identity[0]
+                    or read.read(sync_identity[0] + 32, 8) != sync_identity[1]):
+                raise GameBusyError('同步期间角色或 Steam 账号已变化，未请求上架列表。')
             if state['busy'] or (state['selection_occupied']
                     and not self._refresh_selection_allowed(state, refresh_only)):
                 raise GameBusyError('游戏拍卖行状态已变化，未请求刷新。')
@@ -478,8 +561,9 @@ class AuctionRuntime(CommodityAuctionMixin):
         if self._journal_error:
             raise NativeActionError('拍卖行在途记录无法读取，原文件保留；禁止提交操作。', uncertain=True)
         if kind == 'auction_open':
+            refresh_only = payload.get('refresh_only') is True or bool(self._pending)
             return self._open(cancel_event=cancel_event, validate=validate,
-                              refresh_only=payload.get('refresh_only') is True)
+                              refresh_only=refresh_only, reconcile_steam=not refresh_only)
         if self._pending:
             raise NativeActionError('上一次拍卖行上传仍未核验，禁止重复提交；请先检查游戏拍卖行与 Steam 库存。', uncertain=True)
         requested = payload.get('item', payload.get('row', payload))
@@ -495,7 +579,8 @@ class AuctionRuntime(CommodityAuctionMixin):
                 or len(expected_steamid) != 17 or not expected_steamid.isascii()
                 or not expected_steamid.isdecimal()):
             raise NativeActionError('上传预期 Steam 账号格式无效；尚未提交。')
-        self._open(cancel_event=cancel_event, validate=validate)
+        self._open(cancel_event=cancel_event, validate=validate,
+                   reconcile_steam=True, expected_steamid=expected_steamid)
         # Opening fetches asynchronously. Re-read everything after its callback.
         read = self._context(); state = self._state(read)
         if state.get('steamid_verified') is not True or not state.get('steamid'):

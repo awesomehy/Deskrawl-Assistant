@@ -148,7 +148,8 @@ class CommodityAuctionMixin:
         if (expected is not None and (not isinstance(expected, str)
                 or re.fullmatch(r'\d{17}', expected, flags=re.ASCII) is None)):
             raise NativeActionError('上传预期 Steam 账号格式无效；尚未提交。')
-        self._open(cancel_event=cancel_event, validate=validate)
+        self._open(cancel_event=cancel_event, validate=validate,
+                   reconcile_steam=True, expected_steamid=expected)
         read = self._context(); state = self._state(read)
         if (state.get('steamid_verified') is not True or not state.get('steamid')
                 or expected is not None and state['steamid'] != expected):

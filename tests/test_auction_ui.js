@@ -125,6 +125,17 @@ test('confirmed expiry replaces the saved credential label directly',()=>{
   assert.equal(view.currency,'等待读取 Steam 钱包币种');
 });
 
+test('unsupported native renewal displays its own status and preserves a verified assistant login',()=>{
+  const message='当前 Steam 版本的自动续期接口尚未适配，可使用助手登录。';
+  const view=auction.stateView({steam:{source:'local_steam',local_status:'unsupported',expired:true,message}});
+  assert.equal(view.authenticated,false);
+  assert.equal(view.expired,true);
+  assert.equal(view.loginText,'当前不支持本机 Steam 自动续期');
+  assert.equal(view.loginMessage,message);
+  const fallback=auction.stateView({steam:{source:'saved_login',local_status:'unsupported',authenticated:true}});
+  assert.equal(fallback.loginText,'已登录');
+});
+
 test('a late pre-logout poll cannot resurrect a Steam login or overwrite pending action state',async()=>{
   let resolvePoll,resolveLogout;const requests=[],states=[];
   const controller=auction.createStateController({api:(path,body)=>{

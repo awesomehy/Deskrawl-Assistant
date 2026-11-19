@@ -10,6 +10,7 @@ from unittest.mock import Mock, patch
 from deskrawl_assistant.steam_client_profile import ClientIdentity
 from deskrawl_assistant.steam_local_renewal import (
     web_cookies, cookie_expiry, NativeRenewalUnavailable, renew_native_web_session, _renew_child,
+    _native_refresh,
 )
 from deskrawl_assistant.steam_local_session import LocalSteamSessionProvider, LocalSessionSnapshot, LocalSessionUnavailable
 from deskrawl_assistant.steam_session import SteamSession, SteamSessionError
@@ -55,6 +56,19 @@ class NativeCookieTests(unittest.TestCase):
 
 
 class IsolatedHelperTests(unittest.TestCase):
+    def test_unreviewed_dll_is_rejected_before_loading_native_code(self):
+        with tempfile.TemporaryDirectory() as folder:
+            identity = SimpleNamespace(root=Path(folder), status='online')
+            (identity.root / 'steamclient64.dll').write_bytes(b'unreviewed-steam-build')
+            with patch('deskrawl_assistant.steam_local_renewal.os.name', 'nt'), \
+                    patch('deskrawl_assistant.steam_local_renewal.WindowsSteamProfile') as profile, \
+                    patch('deskrawl_assistant.steam_local_renewal.C.WinDLL', create=True) as load:
+                profile.return_value.identity.return_value = identity
+                with self.assertRaises(NativeRenewalUnavailable) as caught:
+                    _native_refresh(identity)
+                self.assertFalse(caught.exception.retryable)
+                load.assert_not_called()
+
     def setUp(self):
         self.context = Mock()
         self.receive, self.send, self.process = Mock(), Mock(), Mock()
@@ -238,6 +252,35 @@ class AutomaticRenewalTests(unittest.TestCase):
         self.assertFalse(self.session.state()['renewing'])
         self.assertEqual(self.session.state()['local_status'], 'unsupported')
         self.assertIn('尚未适配', self.session.state()['message'])
+        self.session.refresh_local(force=True)
+        self.assertFalse(self.session.state()['renewing'])
+        self.assertEqual(self.session.state()['local_status'], 'unsupported')
+        self.provider.renew.assert_called_once_with(IDENTITY)
+
+    def test_unsupported_renewal_with_unreadable_cache_is_not_an_expiry(self):
+        self.provider.snapshot.side_effect = LocalSessionUnavailable('cache locked')
+        self.provider.renew.side_effect = LocalSessionUnavailable('当前 Steam 版本尚未适配。', retryable=False)
+        self.session.refresh_local()
+        state = self.session.state()
+        self.assertFalse(state['expired'])
+        self.assertFalse(state['verified'])
+        self.assertEqual(state['local_status'], 'unsupported')
+        self.transport.assert_not_called()
+
+        self.provider.snapshot.side_effect = None
+        self.session.refresh_local(force=True)
+        self.assertTrue(self.session.state()['verified'])
+        self.provider.renew.assert_called_once_with(IDENTITY)
+
+    def test_unsupported_renewal_does_not_invalidate_a_verified_session(self):
+        self.session.refresh_local()
+        self.provider.snapshot.side_effect = LocalSessionUnavailable('cache locked')
+        self.provider.renew.side_effect = LocalSessionUnavailable('当前 Steam 版本尚未适配。', retryable=False)
+        self.session.refresh_local(force=True)
+        state = self.session.state()
+        self.assertTrue(state['verified'])
+        self.assertFalse(state['expired'])
+        self.assertEqual(state['local_status'], 'unsupported')
 
     def test_native_logout_while_waiting_for_renewal_is_not_shown_as_still_renewing(self):
         self.session.refresh_local()

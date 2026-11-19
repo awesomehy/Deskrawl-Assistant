@@ -9,6 +9,8 @@ from deskrawl_assistant.item_protection import disposal_protection
 from deskrawl_assistant.managed_service import required_capabilities
 from deskrawl_assistant.managed_mode import identity
 from deskrawl_assistant.models import ValidationError
+from deskrawl_assistant.synthesis import next_action as plan_synthesis
+from tests.test_synthesis import world as synthesis_world
 
 
 class ManagedSynthesisServiceTests(unittest.TestCase):
@@ -73,6 +75,61 @@ class ManagedSynthesisServiceTests(unittest.TestCase):
         actual = self.service._managed_observation()['items'][0]
         for name in ('slot_locked', 'identity_verified', 'rune_xp', 'item_class', 'rune_level'):
             self.assertEqual(actual[name], self.client.items[0][name], name)
+
+    def native_rune_materials(self):
+        self.enable(runes=True)
+        self.client.synthesis_snapshot = Mock(return_value={
+            'runes': synthesis_world()['synthesis']['runes']})
+        self.client.items = [service_fixtures.equipment(
+            index if index < 5 else 200 + index - 5, container='storage',
+            key='HunterRune1', is_equipment=False, kind='rune', item_class='RuneData',
+            item_type=3, base_rarity=1, rarity=1, count=1, locked=False, slot_locked=False,
+            rune_level=17, rune_xp=12345) for index in range(9)]
+        for row in self.client.items:
+            row.pop('identity_verified', None)
+            # NativeReader's nested proof describes equipment instances only.
+            # A valid RuneData UID/slot still has these equipment flags false.
+            row['read_evidence'].update(identity_verified=False, slot_verified=False,
+                lock_verified=False, modifiers_complete=False, native_affixes_verified=False)
+
+    def test_native_runes_reach_staging_and_craft_despite_equipment_only_evidence(self):
+        self.native_rune_materials()
+        expected = {row['item_uid'] for row in self.client.items}
+        for _ in range(9):
+            state = self.service._managed_observation()
+            action = plan_synthesis(self.service.managed.settings, state)
+            self.assertIsNotNone(action)
+            self.assertEqual((action['kind'], action['synthesis_group']), ('transfer', 'runes'))
+            self.assertTrue(self.service._managed_execute(action, state)['verified'])
+        state = self.service._managed_observation()
+        action = plan_synthesis(self.service.managed.settings, state)
+        self.assertIsNotNone(action)
+        self.assertEqual(action['kind'], 'synthesize_runes')
+        self.assertEqual(set(action['input_uids']), expected)
+        self.assertEqual(action['recipe']['input_quality'], 'uncommon')
+        self.assertTrue(self.service._managed_execute(action, state)['verified'])
+        self.assertEqual([entry[0] for entry in self.client.actions], ['transfer'] * 9 + ['synthesize_runes'])
+
+    def test_native_rune_rejection_lock_exclusion_and_equipped_checks_still_apply(self):
+        for protection in ('rejected_identity', 'locked', 'slot_locked', 'missing_uid',
+                           'equipped', 'excluded', 'locked_page'):
+            with self.subTest(protection=protection):
+                self.native_rune_materials()
+                row = self.client.items[-1]
+                if protection == 'rejected_identity':
+                    row['identity_verified'] = False
+                elif protection in ('locked', 'slot_locked'):
+                    row[protection] = True
+                elif protection == 'missing_uid':
+                    row['item_uid'] = ''
+                elif protection == 'equipped':
+                    self.client.synthesis_snapshot.return_value['runes']['equipped_uids'] = [row['item_uid']]
+                elif protection == 'excluded':
+                    self.service.managed.settings['synthesis']['runes']['excluded_keys'] = [row['internal_name']]
+                elif protection == 'locked_page':
+                    self.client.storage_indices.remove(row['slot_index'])
+                self.assertIsNone(plan_synthesis(self.service.managed.settings, self.service._managed_observation()))
+                self.assertEqual(self.client.actions, [])
 
     def test_synthesis_capabilities_are_independent_and_opt_in(self):
         settings = deepcopy(self.service.managed.settings)

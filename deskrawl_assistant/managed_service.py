@@ -321,11 +321,13 @@ class ManagedServiceMixin:
             item['transfer_key'] = source.get('transfer_key')
             item['item_class'] = source.get('item_class')
             item['slot_locked'] = source.get('slot_locked')
-            # Native equipment snapshots keep identity proof in read_evidence.
-            # Preserve an explicit top-level rejection/unknown from other readers.
+            # Nested identity proof covers equipment instances only; native
+            # RuneData rows have false equipment flags even with valid UIDs.
+            # Preserve explicit top-level identity facts for every item type.
             evidence = source.get('read_evidence')
             item['identity_verified'] = source.get('identity_verified',
-                evidence.get('identity_verified') if isinstance(evidence, dict) else None)
+                evidence.get('identity_verified')
+                if source.get('is_equipment') is True and isinstance(evidence, dict) else None)
             item['base_rarity'] = source.get('base_rarity')
             item['bound'] = source.get('bound')
             item['is_equipped'] = source.get('is_equipped')

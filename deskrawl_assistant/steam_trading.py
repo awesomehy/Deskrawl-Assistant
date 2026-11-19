@@ -36,6 +36,9 @@ def sale_feedback(auth, phase, message):
         return phase, message
     if auth.get('renewing') is True:
         return phase, '本机 Steam 社区凭证正在自动续期，期间暂停市场出售。'
+    if (auth.get('local_status') == 'unsupported' and auth.get('source') != 'saved_login'
+            and auth.get('verified') is not True and auth.get('login_open') is not True):
+        return phase, '当前不支持本机 Steam 自动续期，请使用助手登录后再出售。'
     if auth.get('expired') is True:
         return phase, 'Steam 登录已过期，请重新登录。'
     if auth.get('verified') is True:

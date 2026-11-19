@@ -244,6 +244,7 @@ class SteamSession:
         self._local_rejected = None
         self._local_rejected_until = 0
         self._local_renew_after = 0
+        self._local_renew_unsupported = None
         self._renewing = False
         self._local_suppressed = False
         self._local_identity = None
@@ -366,13 +367,16 @@ class SteamSession:
                         # A real account switch/logout is different from an
                         # expired web cookie. It revokes prepared transactions.
                         try: self._assert_local_identity()
-                        except SteamSessionError: pass
+                        except SteamSessionError: return
                     failure = renewal_failure or exc
-                    if (self._source == 'local_steam' and isinstance(failure, LocalSessionUnavailable)
-                            and failure.retryable is False):
-                        self._expired, self._renewing, self._wallet = True, False, None
+                    if isinstance(failure, LocalSessionUnavailable) and not failure.retryable:
                         self._local_status = 'unsupported'
-                        self._message = self._local_message = str(failure)
+                        self._local_message = str(failure)
+                        if self._source == 'local_steam':
+                            expiry = cookie_expiry(self._cookies)
+                            if self._renewing or (expiry is not None and expiry <= self.clock()):
+                                self._expired, self._renewing, self._wallet = True, False, None
+                                self._message = self._local_message
                     # A changed native identity is revoked at every request
                     # boundary as well; do not silently switch an existing sale.
                 return
@@ -398,12 +402,23 @@ class SteamSession:
         from .steam_local_session import LocalSessionUnavailable
         with self.guard:
             if (generation != self._generation or self._closed or self._local_suppressed or self._login_busy
-                    or identity.status != 'online' or self.clock() < self._local_renew_after):
+                    or identity.status != 'online'):
+                raise LocalSessionUnavailable('本机 Steam 自动续期等待重试，期间暂停市场操作。')
+            if self.clock() < self._local_renew_after:
+                unsupported = self._local_renew_unsupported
+                if unsupported is not None and unsupported[0] == identity:
+                    raise LocalSessionUnavailable(unsupported[1], retryable=False)
                 raise LocalSessionUnavailable('本机 Steam 自动续期等待重试，期间暂停市场操作。')
             # Bounded single-flight renewal; even force-refresh cannot spam the
             # CM auth service. Normal wallet GETs retain their own cooldowns.
             self._local_renew_after = self.clock() + 300
-        snapshot = self.local_provider.renew(identity)
+            self._local_renew_unsupported = None
+        try:
+            snapshot = self.local_provider.renew(identity)
+        except LocalSessionUnavailable as exc:
+            if not exc.retryable:
+                self._local_renew_unsupported = (identity, str(exc))
+            raise
         if self.local_provider.current_identity() != identity:
             raise LocalSessionUnavailable('本机 Steam 账号已变化，未采用续期凭证。')
         return snapshot
@@ -477,6 +492,7 @@ class SteamSession:
             self._wallet = None
             self._expired = False
             self._renewing = False
+            self._local_status, self._local_message = 'unavailable', ''
             self._persisted_fingerprint = None
             self._message = '已解除本机 Steam 绑定。'
             self.path.unlink(missing_ok=True)

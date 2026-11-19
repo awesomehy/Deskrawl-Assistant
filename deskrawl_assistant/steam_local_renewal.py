@@ -23,7 +23,12 @@ from .steam_session import _validated_values
 
 # Reviewed 64-bit SteamClient020 / ClientEngine005 / IClientUser dispatch layout.
 # Do not guess new vtable slots after a Steam update.
-SUPPORTED_DLLS = frozenset({'253e0a11a4415b38c78a42f7bdd6ecc426455f06c1ba6453a48090df3142dbbc'})
+SUPPORTED_DLLS = frozenset({
+    '253e0a11a4415b38c78a42f7bdd6ecc426455f06c1ba6453a48090df3142dbbc',
+    # Steam 11.23.65.88, reviewed 2026-11-19. IClientUserMap still exposes
+    # GetCurrentWebAuthToken(buffer, size) at 52 and RequestWebAuthToken() at 53.
+    '669fa08e259277fbf5a1dfe15ce88afe734e89151194304b44d92f418dcc985b',
+})
 
 
 class NativeRenewalUnavailable(RuntimeError):

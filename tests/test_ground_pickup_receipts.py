@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
+from deskrawl_assistant.carriage_transfer import CarriageUnavailable
 from deskrawl_assistant.game_actions import GameActions, _Read
 from deskrawl_assistant.native_memory import MemoryReadError, SnapshotChangedError
 from deskrawl_assistant.native_dispatcher import NativeActionError
@@ -164,6 +165,81 @@ class GoldReceiptTests(unittest.TestCase):
             with self.subTest(options=options):
                 game, selected = self.game(**options)
                 self.assertFalse(PotionReceiptTests().confirm(game, selected))
+
+
+class GroundCarriageReadTests(unittest.TestCase):
+    def game(self):
+        game = GameActions(Mock(), dispatcher=Mock())
+        read = Mock()
+        read.guards = []
+        read.singleton.return_value = 3
+        read.boolean.return_value = False
+        read.ptr.return_value = 0x5000
+        read.list.return_value = []
+        game._context = Mock(return_value=(read, 0x100, 2, 0))
+        game.capabilities = Mock(return_value={'compatible':True})
+        game._enrich_drops = Mock(side_effect=lambda read, rows:rows)
+        game._before_pickup = Mock()
+        game.dispatcher.invoke.return_value = {}
+        return game, read
+
+    def test_carriage_race_is_not_reported_as_an_empty_ground_snapshot(self):
+        game, read = self.game()
+        with patch('deskrawl_assistant.carriage_transfer.read_carriage',
+                side_effect=CarriageUnavailable('马车正在收集物品，等待下一次读取。')):
+            with self.assertRaises(SnapshotChangedError):
+                game._ground(read, 0x100)
+        game._enrich_drops.assert_not_called()
+
+    def test_carriage_race_before_ground_pickup_never_submits_native_action(self):
+        game, _ = self.game()
+        with patch('deskrawl_assistant.carriage_transfer.read_carriage',
+                side_effect=CarriageUnavailable('马车正在收集物品，等待下一次读取。')):
+            with self.assertRaises(SnapshotChangedError):
+                game.execute('collect_ground', {'selection_id':'old-selection'})
+        game._before_pickup.assert_not_called()
+        game.dispatcher.invoke.assert_not_called()
+
+    def test_carriage_layout_error_stays_fatal_before_ground_pickup(self):
+        game, _ = self.game()
+        error = MemoryReadError('马车对象布局不一致')
+        with patch('deskrawl_assistant.carriage_transfer.read_carriage', side_effect=error):
+            with self.assertRaises(MemoryReadError) as failure:
+                game.execute('collect_ground', {'selection_id':'old-selection'})
+        self.assertIs(failure.exception, error)
+        self.assertNotIsInstance(failure.exception, SnapshotChangedError)
+        game.dispatcher.invoke.assert_not_called()
+
+    def test_carriage_race_during_receipt_only_rereads_and_confirms_received_item(self):
+        game, _ = self.game()
+        selected = {'internal_name':'GemOriginal', 'item_type':6, 'item_uid':'',
+            'count':1, 'observation_id':'drop', '_before_total_count':0}
+        game.reader.snapshot.return_value = {'complete':True, 'containers':
+            {'inventory':{'slots':[{'internal_name':'GemOriginal', 'count':1}]}}}
+        with patch('deskrawl_assistant.carriage_transfer.read_carriage', side_effect=[
+                CarriageUnavailable('马车正在收集物品，等待下一次读取。'), {'items':[]}]) as carriage, \
+                patch('deskrawl_assistant.game_actions.time.monotonic', side_effect=[0, 0, .1]), \
+                patch('deskrawl_assistant.game_actions.time.sleep'):
+            self.assertTrue(game._confirm_effect('collect_ground', selected, {}))
+        self.assertEqual(carriage.call_count, 2)
+        self.assertEqual(selected['_confirmed_count'], 1)
+        game.dispatcher.invoke.assert_not_called()
+
+    def test_unconfirmed_receipt_after_carriage_race_remains_uncertain_without_resubmit(self):
+        game, _ = self.game()
+        selected = {'internal_name':'GemOriginal', 'item_type':6, 'item_uid':'',
+            'count':1, 'observation_id':'drop', 'selection_id':'chosen', '_address':123}
+        ground = game._ground
+        game._ground = Mock(side_effect=lambda read, manager, selection_id=None:
+            [selected] if selection_id else ground(read, manager))
+        with patch('deskrawl_assistant.carriage_transfer.read_carriage',
+                side_effect=CarriageUnavailable('马车正在收集物品，等待下一次读取。')), \
+                patch('deskrawl_assistant.game_actions.time.monotonic', side_effect=[0, 0, 3]), \
+                patch('deskrawl_assistant.game_actions.time.sleep'):
+            with self.assertRaises(NativeActionError) as failure:
+                game.execute('collect_ground', {'selection_id':'chosen'})
+        self.assertTrue(failure.exception.uncertain)
+        game.dispatcher.invoke.assert_called_once()
 
 
 class GroundCountTests(unittest.TestCase):

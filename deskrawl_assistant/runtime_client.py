@@ -261,6 +261,24 @@ class RuntimeClient:
     def control_snapshot(self):
         with self._guard: return self._game_actions().control_snapshot()
 
+    def completion_replay_signal(self):
+        with self._guard: return self._game_actions().completion_replay_signal()
+
+    def completion_replay_snapshot(self, *, merchant=False, statistics=False):
+        """Fresh replay gates without UI/rule/power projections or saved snapshots."""
+        with self._guard:
+            snap = self.snapshot(save=False)
+            actions = self._game_actions()
+            control = actions.control_snapshot()
+            growth = actions.progression_snapshot(merchant=True) if merchant else {}
+            # Keep inventory, current character/run and optional merchant read
+            # on one connection. This is not authority for inventory writes.
+            value = {'snapshot': snap, 'control': control, 'progression': growth,
+                     'session': self._reader.session_id}
+            if statistics:
+                value['character'] = self.character_snapshot()
+            return value
+
     def reconnect_snapshot(self):
         with self._guard: return self._game_actions().reconnect_runtime().snapshot()
 

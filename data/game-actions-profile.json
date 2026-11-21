@@ -21574,6 +21574,258 @@
         }
       ],
       "logicalName": "completion_events"
+    },
+    "LootManager": {
+      "fields": [
+        {
+          "name": "<oqt>k__BackingField",
+          "fieldIndex": 26532,
+          "token": "0x04000EEC",
+          "typeIndex": 25383,
+          "resolvedType": "LootManager",
+          "typeKind": 18,
+          "attributes": "0x0011",
+          "isStatic": true,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 0
+        },
+        {
+          "name": "oqu",
+          "fieldIndex": 26533,
+          "token": "0x04000EED",
+          "typeIndex": 29569,
+          "resolvedType": "System.Single",
+          "typeKind": 12,
+          "attributes": "0x8051",
+          "isStatic": true,
+          "isLiteral": true,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 0
+        },
+        {
+          "name": "oqv",
+          "fieldIndex": 26534,
+          "token": "0x04000EEE",
+          "typeIndex": 29569,
+          "resolvedType": "System.Single",
+          "typeKind": 12,
+          "attributes": "0x8051",
+          "isStatic": true,
+          "isLiteral": true,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 0
+        },
+        {
+          "name": "oqw",
+          "fieldIndex": 26535,
+          "token": "0x04000EEF",
+          "typeIndex": 10291,
+          "resolvedType": "System.Collections.Generic.List`1<ItemData>",
+          "typeKind": 21,
+          "attributes": "0x0021",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": true,
+          "rawRegistrationOffset": 32
+        },
+        {
+          "name": "LootDropPrefab",
+          "fieldIndex": 26536,
+          "token": "0x04000EF0",
+          "typeIndex": 22436,
+          "resolvedType": "UnityEngine.GameObject",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 40
+        },
+        {
+          "name": "PotionChargeDropPrefab",
+          "fieldIndex": 26537,
+          "token": "0x04000EF1",
+          "typeIndex": 22436,
+          "resolvedType": "UnityEngine.GameObject",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 48
+        },
+        {
+          "name": "SequentialDropThreshold",
+          "fieldIndex": 26538,
+          "token": "0x04000EF2",
+          "typeIndex": 24335,
+          "resolvedType": "System.Int32",
+          "typeKind": 8,
+          "attributes": "0x8056",
+          "isStatic": true,
+          "isLiteral": true,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 0
+        },
+        {
+          "name": "SequentialDropDelay",
+          "fieldIndex": 26539,
+          "token": "0x04000EF3",
+          "typeIndex": 29554,
+          "resolvedType": "System.Single",
+          "typeKind": 12,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 56
+        },
+        {
+          "name": "HighRarityExtraDelay",
+          "fieldIndex": 26540,
+          "token": "0x04000EF4",
+          "typeIndex": 29554,
+          "resolvedType": "System.Single",
+          "typeKind": 12,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 60
+        },
+        {
+          "name": "DropVfxPrefab",
+          "fieldIndex": 26541,
+          "token": "0x04000EF5",
+          "typeIndex": 22436,
+          "resolvedType": "UnityEngine.GameObject",
+          "typeKind": 18,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 64
+        },
+        {
+          "name": "GroundLootLifetimeMinutes",
+          "fieldIndex": 26542,
+          "token": "0x04000EF6",
+          "typeIndex": 29554,
+          "resolvedType": "System.Single",
+          "typeKind": 12,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 72
+        },
+        {
+          "name": "oqx",
+          "fieldIndex": 26543,
+          "token": "0x04000EF7",
+          "typeIndex": 24304,
+          "resolvedType": "System.Int32",
+          "typeKind": 8,
+          "attributes": "0x0001",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 76
+        },
+        {
+          "name": "oqy",
+          "fieldIndex": 26544,
+          "token": "0x04000EF8",
+          "typeIndex": 10321,
+          "resolvedType": "System.Collections.Generic.List`1<LootDrop>",
+          "typeKind": 21,
+          "attributes": "0x0021",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": true,
+          "rawRegistrationOffset": 80
+        },
+        {
+          "name": "oqz",
+          "fieldIndex": 26545,
+          "token": "0x04000EF9",
+          "typeIndex": 10321,
+          "resolvedType": "System.Collections.Generic.List`1<LootDrop>",
+          "typeKind": 21,
+          "attributes": "0x0021",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": true,
+          "rawRegistrationOffset": 88
+        },
+        {
+          "name": "CollectAllKey",
+          "fieldIndex": 26546,
+          "token": "0x04000EFA",
+          "typeIndex": 24740,
+          "resolvedType": "UnityEngine.InputSystem.Key",
+          "typeKind": 17,
+          "attributes": "0x0006",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": false,
+          "rawRegistrationOffset": 96
+        },
+        {
+          "name": "ora",
+          "fieldIndex": 26547,
+          "token": "0x04000EFB",
+          "typeIndex": 5302,
+          "resolvedType": "System.Collections.Generic.Dictionary`2<ItemRarity, System.Collections.Generic.List`1<ItemData>>",
+          "typeKind": 21,
+          "attributes": "0x0021",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": true,
+          "rawRegistrationOffset": 104
+        },
+        {
+          "name": "orb",
+          "fieldIndex": 26548,
+          "token": "0x04000EFC",
+          "typeIndex": 16260,
+          "resolvedType": "System.Int32[]",
+          "typeKind": 29,
+          "attributes": "0x0021",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": true,
+          "rawRegistrationOffset": 112
+        },
+        {
+          "name": "orc",
+          "fieldIndex": 26549,
+          "token": "0x04000EFD",
+          "typeIndex": 10291,
+          "resolvedType": "System.Collections.Generic.List`1<ItemData>",
+          "typeKind": 21,
+          "attributes": "0x0021",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": true,
+          "rawRegistrationOffset": 120
+        },
+        {
+          "name": "ord",
+          "fieldIndex": 26550,
+          "token": "0x04000EFE",
+          "typeIndex": 5303,
+          "resolvedType": "System.Collections.Generic.Dictionary`2<ItemRarity, System.Collections.Generic.List`1<RuneData>>",
+          "typeKind": 21,
+          "attributes": "0x0021",
+          "isStatic": false,
+          "isLiteral": false,
+          "isInitOnly": true,
+          "rawRegistrationOffset": 128
+        }
+      ],
+      "typeDefinitionIndex": 6146
     }
   },
   "methods": {
@@ -22461,6 +22713,16 @@
       "rva": 8751280,
       "prefix": "48895c24084889742410574883ec20803dd963470300488b",
       "declaring_type": "SaveSystem"
+    },
+    "MythicCompletionUI.replay": {
+      "name": "ibj",
+      "token": "0x06001B2A",
+      "isStatic": false,
+      "returnType": "System.Void",
+      "parameters": [],
+      "rva": 6637280,
+      "prefix": "40534883ec2080b9e900000000488bd9752933c9e837371b",
+      "declaring_type": "MythicCompletionUI"
     }
   },
   "singletons": {
@@ -22485,7 +22747,8 @@
     "CraftingPanelUI": 62051680,
     "MainMenuUI": 62057200,
     "PopupPanel": 62025496,
-    "AuctionUI": 62048664
+    "AuctionUI": 62048664,
+    "LootManager": 62030144
   },
   "iat": {
     "peek_message_w_rva": 28941400

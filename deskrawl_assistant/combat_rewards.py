@@ -17,6 +17,25 @@ class CompletionRewards:
         self.empty_since = None
         self.empty_reads = 0
 
+    def _sample_empty(self):
+        now = time.monotonic()
+        if self.empty_since is None:
+            self.empty_since = now
+        self.empty_reads += 1
+        return self.empty_reads >= 2 and now - self.empty_since >= self.QUIET_SECONDS
+
+    def _current_final_wave(self, scene):
+        run = scene.get('run') or {}
+        return (scene.get('in_dungeon') is True and scene.get('dead') is False
+            and run.get('id') == self.run_id and not run.get('retained_terminal')
+            and run.get('completion_confirmed') is True
+            and run.get('wave_active') is False and run.get('enemy_count') == 0
+            and type(run.get('wave_count')) is int and run['wave_count'] > 0
+            and type(run.get('wave_index')) is int and run['wave_index'] >= run['wave_count'])
+
+    def _final_kill_confirmed(self, scene):
+        return self._current_final_wave(scene) and (scene.get('run') or {}).get('final_kill_settled') is True
+
     def observe(self, observation):
         scene = observation.get('scene') or {}
         if observation.get('complete') is not True or scene.get('available') is not True:
@@ -61,9 +80,12 @@ class CompletionRewards:
                     and not run.get('retained_terminal')):
             self.settled = True
 
-    def ready(self, observation):
+    def ready(self, observation, *, native_replay=False):
         self.observe(observation)
         if self.run_id is None:
+            if native_replay:
+                self.reason = '等待完整读取本局结算和地面奖励，暂不复刷。'
+                return False
             return True
         scene = observation.get('scene') or {}
         ground = observation.get('ground') or {}
@@ -79,12 +101,26 @@ class CompletionRewards:
             self.reason = '先拾取本局地面奖励，再回城或切换副本。'
             return False
         if not self.settled:
-            self._reset_empty()
+            # Overlap the quiet period with the game's post-kill settlement,
+            # never with ordinary combat or a retained win from a previous run.
+            # Empty ground alone still cannot authorize departure: native
+            # completion (after the loot spawner) must be observed above first.
+            if self._final_kill_confirmed(scene):
+                self._sample_empty()
+            else:
+                self._reset_empty()
             self.reason = '等待 Boss 掉落生成和本局结算完成，暂不切图。'
             return False
-        now = time.monotonic()
-        if self.empty_since is None:
-            self.empty_since = now
-        self.empty_reads += 1
+        run = scene.get('run') or {}
+        popup = 'MythicCompletionUI' if scene.get('difficulty') == 'Mythic' else 'CombatMapCompletionUI'
+        if (native_replay and self._current_final_wave(scene) and run.get('finished') is True
+                and run.get('rewards_settled') is True
+                and run.get('reward_evidence') == 'verified_WaveManager_finished_and_LootManager_idle'
+                and (scene.get('completion_visible') or {}).get(popup) is True):
+            # A current native completion proof replaces a heuristic delay.
+            # Execution still independently re-reads ground and guards the
+            # producer counter on the game thread before calling native replay.
+            self.reason = ''
+            return True
         self.reason = '正在确认本局地面奖励已收完，暂不切图。'
-        return self.empty_reads >= 2 and now - self.empty_since >= self.QUIET_SECONDS
+        return self._sample_empty()

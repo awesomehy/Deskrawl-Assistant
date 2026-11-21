@@ -1490,10 +1490,10 @@ class ManagedMode:
             self.status = '等待完整读取马车与地面掉落。'
         return None, complete
 
-    def _completion_reward_action(self, observation, all_items=None):
+    def _completion_reward_action(self, observation, all_items=None, *, native_replay=False):
         """Share the settled-drop barrier between returns and native replays."""
         if observation.get('scene', {}).get('dead') is not True:
-            if not self.completion_rewards.ready(observation):
+            if not self.completion_rewards.ready(observation, native_replay=native_replay):
                 self.status = self.completion_rewards.reason
                 ground = observation.get('ground') or {}
                 if ground.get('complete') is not True:
@@ -1558,6 +1558,85 @@ class ManagedMode:
                 return False, '已触发神秘商人消费，回城整理。'
         status, reason = pumpkin_status(scene, self.target_difficulty)
         return status == 'ready', reason
+
+    def completion_replay_ready(self, observation):
+        """Repeat the same map/floor only while the freshly selected target allows it."""
+        scene = observation.get('scene') or {}
+        run = run_record(scene.get('run'))
+        farming = self.settings['farming']
+        if (not farming['enabled'] or farming['mode'] != 'repeat' or self.pumpkin_active
+                or self.finishing or scene.get('in_town') is True or scene.get('dead') is True
+                or scene.get('dungeon_id') != self.target_dungeon
+                or scene.get('difficulty') != self.target_difficulty
+                or is_world_boss(self.target_dungeon) or run.get('retained_terminal')
+                or run.get('status') != 'success' or not run.get('id')):
+            return False, '本局或复刷目标已变化，重新规划。'
+        if (self.settings['pumpkin']['enabled']
+                and pumpkin_status(scene, self.pumpkin_difficulty)[0] == 'ready'):
+            return False, '南瓜王已有可用次数，回城整理后优先挑战。'
+        if self._bag_chest_count(observation_items(observation)) >= CHEST_BATCH_LIMIT:
+            return False, '背包宝箱达到批量处理门槛，回城整理。'
+        if self._bag_free(observation) < farming['free_threshold']:
+            return False, '背包剩余空格低于门槛，回城整理。'
+        if self.settings['merchant']['enabled']:
+            state = observation.get('progression') or {}
+            if state.get('available') is not True:
+                return False, '等待读取灵魂碎片容量后再决定是否复刷。'
+            if self.merchant_pending or self._merchant_triggered(state):
+                return False, '已触发神秘商人消费，回城整理。'
+        rows = (scene.get('maps_by_difficulty') or {}).get(self.target_difficulty, [])
+        target = next((row for row in rows if row.get('map_id', row.get('id')) == self.target_dungeon), {})
+        if (target.get('can_enter') is not True or target.get('unlocked') is False
+                or target.get('supported') is False):
+            return False, target.get('entry_reason') or '关卡解锁或门票尚未确认，回城核验。'
+        return True, ''
+
+    def _completion_replay_action(self, observation, all_items=None):
+        ready, action = self._completion_reward_action(observation, all_items, native_replay=True)
+        if not ready:
+            return action
+        popup = 'MythicCompletionUI' if self.target_difficulty == MYTHIC else 'CombatMapCompletionUI'
+        if not (observation['scene'].get('completion_visible') or {}).get(popup):
+            self.status = '等待结算界面就绪，收完奖励后立即复刷。'
+            return None
+        self.phase = 'farming'
+        return self._action('enter_dungeon', dungeon_id=self.target_dungeon,
+            difficulty=self.target_difficulty, source_run_id=observation['scene']['run']['id'],
+            reason_code='completion_replay', protect_completion_rewards=True,
+            reason='本局奖励已收完，跳过结算等待，立即复刷当前关卡。')
+
+    def next_completion_replay(self, observation):
+        """Fresh native facts can replay/pick up; they cannot dispose or equip."""
+        if not self.running or not self.check_identity(observation, require_character=True):
+            return None
+        self.observe_runs(observation)
+        if not self.running or self.pending is not None or self.await_effect is not None:
+            return None
+        scene = observation.get('scene') or {}
+        self.completion_rewards.observe(observation)
+        if (observation.get('complete') is not True or scene.get('available') is not True
+                or any(scene.get(k) is True for k in ('scene_changing','teleporting','online_saving'))
+                or type(scene.get('online_pending_requests')) is not int
+                or scene['online_pending_requests'] != 0):
+            # A pending online request forbids travel, but need not postpone
+            # observing an otherwise settled, empty reward area.
+            self.completion_rewards.ready(observation)
+            self.status = '等待结算状态和在线同步稳定，暂不复刷。'
+            return None
+        if growth_enabled(self.settings) and observation.get('progression', {}).get('busy') is True:
+            self.status = '等待游戏完成在线同步，已确认的动作不会重复执行。'
+            return None
+        run = run_record(scene.get('run'))
+        if run.get('status') == 'settling' and run.get('completion_confirmed') is True:
+            # Collect late Boss drops and prepare the empty-ground interval
+            # while the native loot/settlement coroutine finishes. This branch
+            # can pick up rewards, but cannot enter or change a dungeon.
+            self.metrics.observe(observation)
+            return self._completion_reward_action(observation)[1]
+        if not self.completion_replay_ready(observation)[0]:
+            return None
+        self.metrics.observe(observation)
+        return self._completion_replay_action(observation)
 
     def _merchant_batch_blockers(self, observation):
         return [r for r in observation['items'] if r.get('container') == 'inventory'
@@ -1876,6 +1955,10 @@ class ManagedMode:
 
     def expect_run_entry(self, action, observation=None):
         """An accepted map entry resets native totals; native repeat does not."""
+        if action.get('reason_code') in ('completion_replay', 'pumpkin_replay'):
+            # Keep the original entry's baseline/fallback receipts. The native
+            # replay preserves its cumulative wins even though the RunPlan changes.
+            return
         if self.run_entry and self.run_entry['action_id'] == action['action_id']: return
         source = run_record((observation or {}).get('scene', {}).get('run')).get('id')
         self.run_entry = {'action_id': action['action_id'], 'dungeon_id': action['dungeon_id'],
@@ -2209,9 +2292,10 @@ class ManagedMode:
                                 difficulty=self.target_difficulty, source_run_id=scene['run']['id'],
                                 reason_code='pumpkin_replay', protect_completion_rewards=True,
                                 reason='南瓜王本局奖励已收完，继续原生复刷。')
-                    # TownPortalSystem.fri rejects the already active combat map.
-                    # Finish every run through the original return/cleanup/entry
-                    # path, including repeats of the same map after a failure.
+                    if self.completion_replay_ready(observation)[0]:
+                        return self._completion_replay_action(observation, all_items)
+                    # Failed runs, target rotations and unavailable entry materials
+                    # retain the original return/cleanup/entry path.
                     self.phase = 'returning'
                     return self._return_town(observation, all_items, reason='本轮结束，回城整理后复刷或推进关卡。')
                 if scene.get('dungeon_id') is not None and str(scene['dungeon_id']) != str(self.target_dungeon):

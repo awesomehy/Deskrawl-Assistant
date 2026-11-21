@@ -541,21 +541,24 @@ def _campaign_progress(copy, save, config_obj, catalog):
             'mythic_completed':[key for key in completed_keys if floor_number(key) is not None]}
 
 
-def _campaign_run(copy, manager, difficulty, *, allow_settled_world_boss=False):
+def _campaign_run(copy, manager, difficulty, *, allow_settled_world_boss=False,
+                  allow_settled_replay=False):
     """Only the identity and completion evidence needed by the serial planner."""
     plan,active_map = copy.ptr(manager+128),copy.ptr(manager+120)
     if not active_map: return None
     settlement_plan = False
     if not plan:
-        # World-boss settlement can clear GameManager's plan while leaving the
-        # finished round in WaveManager. Only the guarded, visible settlement
-        # reader may use it; ordinary campaign reads must not revive an old
-        # plan during travel.
-        if not allow_settled_world_boss: return None
+        # Settlement clears GameManager's plan before the auto-replay timer
+        # ends, but WaveManager retains this finished round. Only a caller
+        # guarding the matching visible completion UI may recover it. The
+        # ordinary campaign reader must still return None during this gap.
+        if not (allow_settled_world_boss or allow_settled_replay): return None
         from .world_boss import MAP_TYPE, is_world_boss
         copy.verify(active_map, 'MapData')
-        if (copy.integer(active_map+32) != MAP_TYPE
-                or not is_world_boss(copy.reader.asset_name(active_map))): return None
+        map_type = copy.integer(active_map+32)
+        boss = is_world_boss(copy.reader.asset_name(active_map))
+        if not (allow_settled_world_boss and map_type == MAP_TYPE and boss
+                or allow_settled_replay and map_type in (0, 1) and not boss): return None
         wave = copy.verify(copy.ptr(manager+112), 'WaveManager')
         if (copy.ptr(wave+40) != active_map or not copy.boolean(wave+248)
                 or copy.boolean(wave+64)): return None

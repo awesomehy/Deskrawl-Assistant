@@ -1,5 +1,6 @@
 """Settlement recovery without native calls, spending, or real-time sleeps."""
 from copy import deepcopy
+import struct
 import unittest
 from unittest.mock import Mock, patch
 
@@ -158,6 +159,109 @@ class NativeSettlementTests(unittest.TestCase):
         self.assertEqual(self.game._run_receipts.snapshot()['receipts'], [])
 
 
+class ClearedRepeatSettlementTests(unittest.TestCase):
+    read = NativeSettlementTests.read
+
+    def setUp(self):
+        NativeSettlementTests.setUp(self)
+        self.fixture.singleton('LootManager')
+        self.stack.enter_context(patch('deskrawl_assistant.recommendation_reader.resolved_profile',
+            return_value={'types':[{'name':'WaveManager', 'fields':[]}]}))
+
+    def cleared(self, mythic):
+        value = campaign()
+        value['run'] = None
+        key = floor_id(22) if mythic else 'map-a'
+        ui = 'MythicCompletionUI' if mythic else 'CombatMapCompletionUI'
+        self.fixture.load_completion(ui, visible=True)
+        run = {**finished_plan(), 'id':'live-finished-plan', 'map_id':key,
+               'difficulty':MYTHIC if mythic else 'Normal', 'world_difficulty':'Normal',
+               'finished':True, 'completion_counter':{'id':'counter', 'count':4}}
+        if mythic:
+            value['profile']['mythic_completed'] = [key]
+            self.fixture.reader.asset_name.return_value = 'MythicDungeon'
+            wave = self.fixture.object('WaveManager')
+            self.fixture.memory.pointer(self.fixture.objects['GameManager']+112, wave)
+            self.fixture.memory.put(wave+304, struct.pack('<i',22))
+        else:
+            value['profile']['completed_maps']['Normal'] = [key]
+        return value, run
+
+    def test_native_reward_proof_requires_current_finished_wave_and_idle_spawner(self):
+        for mythic in (False, True):
+            for change in ('none','spawning','unfinished','enemy','active','early_wave','unknown_wave'):
+                with self.subTest(mythic=mythic, change=change):
+                    value, run = self.cleared(mythic)
+                    run['final_kill_settled'] = False  # Update clears it when setting finished.
+                    if change=='unfinished': run['finished']=False
+                    elif change=='enemy': run['enemy_count']=1
+                    elif change=='active': run['wave_active']=True
+                    elif change=='early_wave': run['wave_index']=1
+                    elif change=='unknown_wave': run['wave_count']=None
+                    self.fixture.memory.put(self.fixture.objects['LootManager']+76,
+                                            struct.pack('<i',int(change=='spawning')))
+                    with patch('deskrawl_assistant.recommendation_reader._campaign_run',return_value=run):
+                        result = self.read(value)
+                    self.assertTrue(result['available'], result['reason'])
+                    self.assertEqual((result.get('run') or {}).get('rewards_settled') is True, change=='none')
+
+    def test_spawner_change_after_proof_invalidates_entire_control_snapshot(self):
+        value, run = self.cleared(False)
+        run['final_kill_settled'] = False
+        original = self.game._completion_loot_idle
+        def race(read):
+            result = original(read)
+            self.fixture.memory.put(self.fixture.objects['LootManager']+76, struct.pack('<i',1))
+            return result
+        with patch('deskrawl_assistant.recommendation_reader._campaign_run',return_value=run), \
+                patch.object(self.game,'_completion_loot_idle',side_effect=race):
+            result = self.read(value)
+        self.assertFalse(result['available'])
+        self.assertTrue(result['retryable'])
+        self.assertNotIn('run',result)
+
+    def test_visible_finished_wave_replaces_cached_settling_plan_for_both_repeat_modes(self):
+        for mythic in (False, True):
+            with self.subTest(mythic=mythic):
+                self.game._run_receipts = type(self.game._run_receipts)()
+                value, run = self.cleared(mythic)
+                self.game._last_terminal_run = {**run, 'status':'settling', 'finished':False}
+                with patch('deskrawl_assistant.recommendation_reader._campaign_run', return_value=run) as current:
+                    first = self.read(value)
+                    second = self.read(value)
+                self.assertTrue(first['available'], first['reason'])
+                self.assertEqual(first['run']['status'], 'success')
+                self.assertEqual(first['run']['id'], 'live-finished-plan')
+                self.assertNotIn('retained_terminal', first['run'])
+                self.assertTrue(current.call_args.kwargs['allow_settled_replay'])
+                self.assertEqual(first['run_history']['sequence'], 1)
+                self.assertEqual(first['run_history'], second['run_history'])
+
+    def test_hidden_wrong_popup_and_scene_transitions_cannot_recover_a_cleared_repeat(self):
+        for mythic in (False, True):
+            for change in ('hidden','wrong_popup','town','changing','teleporting'):
+                with self.subTest(mythic=mythic, change=change):
+                    value, run = self.cleared(mythic)
+                    for name in ('CombatMapCompletionUI', 'MythicCompletionUI'):
+                        self.fixture.load_completion(name, visible=False)
+                    mem, objs = self.fixture.memory, self.fixture.objects
+                    mem.put(objs['GameAreaManager']+120, struct.pack('<i',0))
+                    mem.put(objs['GameAreaManager']+176, b'\0')
+                    mem.put(objs['TownPortalSystem']+76, b'\0')
+                    ui = 'MythicCompletionUI' if mythic else 'CombatMapCompletionUI'
+                    if change != 'hidden':
+                        self.fixture.load_completion(('CombatMapCompletionUI' if mythic else 'MythicCompletionUI')
+                                                     if change == 'wrong_popup' else ui, visible=True)
+                    if change == 'town': mem.put(objs['GameAreaManager']+120, struct.pack('<i',1))
+                    elif change == 'changing': mem.put(objs['GameAreaManager']+176, b'\1')
+                    elif change == 'teleporting': mem.put(objs['TownPortalSystem']+76, b'\1')
+                    with patch('deskrawl_assistant.recommendation_reader._campaign_run') as current:
+                        result = self.read(value)
+                    current.assert_not_called()
+                    self.assertTrue(result['available'], result['reason'])
+                    self.assertIsNone(result['run'])
+
+
 class ClearedWorldBossSettlementTests(unittest.TestCase):
     setUp = NativeSettlementTests.setUp
     settlement = NativeSettlementTests.settlement
@@ -203,7 +307,7 @@ class ClearedWorldBossSettlementTests(unittest.TestCase):
         self.assertEqual(result['run_history']['receipts'], [])
 
     def test_cleared_plan_recovery_requires_correct_visible_popup_and_stable_combat_scene(self):
-        for case in ('hidden', 'mythic_popup', 'town', 'teleporting', 'changing', 'ordinary_map'):
+        for case in ('hidden', 'mythic_popup', 'town', 'teleporting', 'changing'):
             with self.subTest(case=case):
                 value, run = self.boss_settlement()
                 self.fixture.load_completion('MythicCompletionUI', visible=False)
@@ -218,7 +322,6 @@ class ClearedWorldBossSettlementTests(unittest.TestCase):
                 elif case == 'town': mem.put(objs['GameAreaManager']+120, b'\1\0\0\0')
                 elif case == 'teleporting': mem.put(objs['TownPortalSystem']+76, b'\1')
                 elif case == 'changing': mem.put(objs['GameAreaManager']+176, b'\1')
-                elif case == 'ordinary_map': self.fixture.reader.asset_name.return_value = 'map-a'
                 with patch('deskrawl_assistant.recommendation_reader._campaign_run') as current:
                     result = self.read(value)
                 current.assert_not_called()

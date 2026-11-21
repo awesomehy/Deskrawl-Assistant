@@ -371,8 +371,16 @@ class GameActions:
         carriage_items = set()
         if carriage:
             # Exact HorseCarriage layout is verified by the existing reader.
-            from .carriage_transfer import read_carriage
-            value = read_carriage(self.reader)
+            from .carriage_transfer import read_carriage, CarriageUnavailable
+            try:
+                value = read_carriage(self.reader)
+            except CarriageUnavailable as exc:
+                # Carriage collection can change this exclusion list during a
+                # ground read. Discard the snapshot rather than treating held
+                # drops as ground loot or stopping on a normal collection race.
+                # Post-pickup receipt reads also handle SnapshotChangedError;
+                # they only reread, never resubmit an unconfirmed native call.
+                raise SnapshotChangedError(str(exc)) from exc
             carriage_items = {row['_address'] for row in value['items']}
         for position, address in enumerate(world):
             if not address or address in carriage_items:
@@ -471,6 +479,18 @@ class GameActions:
             static = read.ptr(klass+184)
             result[name] = read.boolean(static+offset) if static else False
         return result
+
+    def completion_replay_signal(self):
+        """Scheduling hint only: never authorizes travel or claims a run receipt."""
+        read, manager, area, scene = self._context(allow_busy=True)
+        from .recommendation_reader import _Copy
+        copy = _Copy(self.reader)
+        wave = copy.verify(read.ptr(manager+112), 'WaveManager')
+        ready = scene == 0 and (read.boolean(wave+248) or read.boolean(wave+249)
+            or any(self._completion_state(read).values()))
+        read.guards.extend(copy.guards)
+        read.finish()
+        return ready
 
     def _return_town_call(self, read, manager, portal):
         self._require_travel_ready(read)
@@ -724,22 +744,39 @@ class GameActions:
                 read.guards.extend(copy.guards)
             campaign_run = recommendation.get('run')
             settlement = None
+            settled_replay = (not world_boss.is_world_boss(map_id)
+                and completion.get('MythicCompletionUI' if scene_difficulty == MYTHIC else 'CombatMapCompletionUI') is True)
             if (scene == 0 and any(value is True for value in completion.values())
                     and not scene_changing and not teleporting
-                    and (campaign_run or (world_boss.is_world_boss(map_id)
+                    and (campaign_run or settled_replay or (world_boss.is_world_boss(map_id)
                          and completion.get('CombatMapCompletionUI') is True))):
                 # Bind the dialog to the still-current native plan, retaining
                 # these guards through the full snapshot. A same-map restart
                 # or old dialog during travel cannot promote a stale campaign.
                 from .recommendation_reader import _campaign_run
                 copy = _Copy(self.reader)
-                current = (_campaign_run(copy, manager, difficulty) if campaign_run else
-                           _campaign_run(copy, manager, difficulty, allow_settled_world_boss=True))
+                if campaign_run:
+                    current = _campaign_run(copy, manager, difficulty)
+                elif settled_replay:
+                    current = _campaign_run(copy, manager, difficulty, allow_settled_replay=True)
+                else:
+                    current = _campaign_run(copy, manager, difficulty, allow_settled_world_boss=True)
                 if (not current or (campaign_run and current['id'] != campaign_run.get('id'))
                         or current['map_id'] != map_id or current['difficulty'] != scene_difficulty):
                     raise SnapshotChangedError('结算界面与当前关卡计划正在切换，等待重新读取。')
                 read.guards.extend(copy.guards)
                 campaign_run, settlement = current, completion
+            if (settled_replay and campaign_run and campaign_run.get('finished') is True
+                    and campaign_run.get('wave_active') is False and campaign_run.get('enemy_count') == 0
+                    and type(campaign_run.get('wave_count')) is int and campaign_run['wave_count'] > 0
+                    and type(campaign_run.get('wave_index')) is int
+                    and campaign_run['wave_index'] >= campaign_run['wave_count']
+                    and settlement is not None and self._completion_loot_idle(read)):
+                # WaveManager.Update sets finished only after fke accepts the
+                # LootManager sequential spawner and live drops. Keep that
+                # spawner counter guarded alongside the current-plan/UI read.
+                campaign_run = dict(campaign_run, rewards_settled=True,
+                    reward_evidence='verified_WaveManager_finished_and_LootManager_idle')
             signature = None
             if scene == 1 and scene_changing is True:
                 signature = self._town_cleanup_signature(read, manager, area, scene)
@@ -921,7 +958,7 @@ class GameActions:
         address = self.reader.module['base'] + self.profile['statics']['completion_events']
         klass = read.ptr(address)
         if not klass or klass == self.profile['uninitialized_type_tokens']['completion_events']:
-            raise GameBusyError('等待南瓜王结算窗口完成初始化。')
+            raise GameBusyError('等待结算窗口完成初始化。')
         static = read.ptr(read.klass(klass, 'completion_events') + 184)
         # New native events can shift this static slot. Resolve the unique
         # GameArea-change event from the profile whose full runtime layout was
@@ -935,7 +972,7 @@ class GameActions:
             raise MemoryReadError('结算窗口关卡事件未唯一确认，未提交复刷。')
         root = read.ptr(static + events[0]['rawRegistrationOffset']) if static else 0
         if not root:
-            raise GameBusyError('等待南瓜王结算窗口注册完成。')
+            raise GameBusyError('等待结算窗口注册完成。')
         delegate_class = read.ptr(root)
         multicast = read.ptr(delegate_class + 88)
         delegate_base = read.ptr(multicast + 88)
@@ -957,7 +994,7 @@ class GameActions:
             if target and self.reader.class_name(read.ptr(target)) == 'CombatMapCompletionUI':
                 dialogs.add(read.verify(target, 'CombatMapCompletionUI'))
         if len(dialogs) != 1:
-            raise GameBusyError('南瓜王结算窗口实例尚未确认，等待重新读取。')
+            raise GameBusyError('结算窗口实例尚未确认，等待重新读取。')
         dialog = dialogs.pop()
         # These fields belong to the current dialog, not a retained old scene.
         # Guard its timer too: the native auto-replay may run before our job.
@@ -965,6 +1002,61 @@ class GameActions:
             raise SnapshotChangedError('结算窗口的关卡已变化，重新核验后再复刷。')
         read.read(dialog + 200, 1)
         read.ptr(dialog + 224)
+        return dialog
+
+    def _completion_loot_idle(self, read):
+        loot = read.singleton('LootManager')
+        pending = read.integer(loot + 76)
+        if type(pending) is not int or not 0 <= pending <= 8192:
+            raise SnapshotChangedError('Boss 掉落生成队列尚未确认，暂不复刷。')
+        return pending == 0
+
+    def _require_completion_replay(self, read, manager, scene, payload, state):
+        run = state.get('run') or {}
+        key = payload.get('map_id')
+        if (scene != 0 or not key or world_boss.is_world_boss(key)
+                or state.get('map_id') != key or state.get('dead') is True
+                or state.get('difficulty') != payload.get('difficulty')
+                or not payload.get('source_run_id') or run.get('id') != payload['source_run_id']
+                or run.get('status') != 'success' or run.get('retained_terminal')):
+            raise SnapshotChangedError('复刷源关卡已变化，重新读取后再复刷。')
+        popup = 'MythicCompletionUI' if floor_number(key) is not None else 'CombatMapCompletionUI'
+        if not self._completion_state(read).get(popup):
+            raise GameBusyError('等待结算界面就绪后复刷。')
+        if read.boolean(manager + 248):
+            raise GameBusyError('游戏正在重开关卡，等待完成。')
+        from .recommendation_reader import _Copy, _campaign_run
+        copy = _Copy(self.reader)
+        # The RunPlan stores the world difficulty even inside a Mythic floor.
+        current = _campaign_run(copy, manager, state.get('world_difficulty') or state['difficulty'],
+                                allow_settled_replay=True)
+        if (not current or current['id'] != payload['source_run_id']
+                or current.get('map_id') != key or current.get('difficulty') != payload['difficulty']
+                or current.get('enemy_count') != 0 or current.get('wave_active') is not False
+                or not (current.get('finished') is True or current.get('final_kill_settled') is True)):
+            raise SnapshotChangedError('本局尚未结算或已经复刷，重新核验。')
+        if popup == 'MythicCompletionUI' and current.get('finished') is not True:
+            raise GameBusyError('等待神话裂隙完成本局结算后复刷。')
+        copy.finish()
+        read.guards.extend(copy.guards)
+        if not self._completion_loot_idle(read):
+            raise GameBusyError('Boss 掉落仍在生成，先收完奖励后再复刷。')
+        if self._ground(read, manager):
+            raise GameBusyError('本局仍有地面奖励，先拾取后再复刷。')
+
+    def _mythic_replay_ui(self, read):
+        address = self.reader.module['base'] + self.profile['statics']['MythicCompletionUI']
+        klass = read.ptr(address)
+        if not klass or klass == self.profile['uninitialized_type_tokens']['MythicCompletionUI']:
+            raise GameBusyError('等待神话裂隙结算窗口完成初始化。')
+        static = read.ptr(read.klass(klass, 'MythicCompletionUI') + 184)
+        if not static or not read.boolean(static + 8):
+            raise GameBusyError('等待神话裂隙结算界面就绪后复刷。')
+        dialog = read.verify(read.ptr(static), 'MythicCompletionUI')
+        # qtk is the native replay-in-flight fence. ContinueButton calls ibj
+        # (same floor), whereas NextTierButton calls ibk (next floor).
+        if read.boolean(dialog + 233):
+            raise GameBusyError('神话裂隙正在复刷，等待完成。')
         return dialog
 
     def _require_stored_inventory(self, read):
@@ -1067,7 +1159,8 @@ class GameActions:
             self._require_travel_ready(read)
             stargazing_entry = payload.get('reason_code') == 'stargazing_skip'
             pumpkin_replay = payload.get('reason_code') == 'pumpkin_replay'
-            if not (stargazing_entry or pumpkin_replay):
+            completion_replay = payload.get('reason_code') == 'completion_replay'
+            if not (stargazing_entry or pumpkin_replay or completion_replay):
                 self._require_empty_town(read,manager,scene)
             state = self.control_snapshot()
             if not state['available']:
@@ -1078,6 +1171,8 @@ class GameActions:
                 raise NativeActionError(state['reason'])
             if pumpkin_replay:
                 self._require_pumpkin_replay(read, manager, scene, payload, state)
+            if completion_replay:
+                self._require_completion_replay(read, manager, scene, payload, state)
             if stargazing_entry:
                 if (scene != 0 or (state.get('run') or {}).get('id') != payload.get('source_run_id')
                         or not payload.get('source_run_id') or state.get('dead') is True
@@ -1103,7 +1198,7 @@ class GameActions:
                 raise NativeActionError((row or {}).get('entry_reason') or '目标关卡尚未解锁、缺少材料或资源未载入')
             if not floor and target_difficulty != state['difficulty']:
                 raise NativeActionError('请先在游戏里切换难度；托管不会绕过难度解锁')
-            if floor and (scene!=1 or stargazing_entry):
+            if floor and not completion_replay and (scene!=1 or stargazing_entry):
                 raise NativeActionError('神话裂隙必须回城整理后进入。')
             native_key = MYTHIC_MAP if floor else key
             obj = self._map_objects(read, area, native_key)[native_key]
@@ -1113,7 +1208,17 @@ class GameActions:
                 # state guards. Native entry performs its own final checks.
                 boss = world_boss.read_entry(read,obj)
                 if not boss['can_enter']: raise NativeActionError(boss['reason'])
-            if floor:
+            if floor and completion_replay:
+                if read.integer(obj+32)!=1: raise NativeActionError('神话裂隙地图类型未确认。')
+                if read.boolean(manager+284): raise GameBusyError('游戏正在提交关卡请求，等待完成。')
+                dialog = self._mythic_replay_ui(read)
+                calls = [Invocation('GameManager.travel_busy', require_false=True, mutates=False),
+                    Invocation('SaveSystem.mythic_unlocked',
+                        arguments=(Argument.reference(obj), Argument.integer(floor)), require_true=True, mutates=False),
+                    Invocation('TownPortalSystem.entry_materials', arguments=(Argument.reference(obj),),
+                        require_true=True, mutates=False),
+                    Invocation('MythicCompletionUI.replay', dialog, mutates=True)]
+            elif floor:
                 if read.integer(obj+32)!=1: raise NativeActionError('神话裂隙地图类型未确认。')
                 if read.boolean(manager+284): raise GameBusyError('游戏正在提交关卡请求，等待完成。')
                 # Match MythicPortalInteractable: native unlock + material gates,
@@ -1123,7 +1228,7 @@ class GameActions:
                     Invocation('SaveSystem.mythic_unlocked',arguments=(Argument.reference(obj),Argument.integer(floor)),require_true=True),
                     Invocation('TownPortalSystem.entry_materials',arguments=(Argument.reference(obj),),require_true=True),
                     Invocation('GameManager.enter_mythic',manager,(Argument.reference(obj),Argument.integer(floor)))]
-            elif pumpkin_replay:
+            elif pumpkin_replay or completion_replay:
                 dialog = self._pumpkin_replay_ui(read, obj)
                 calls = [Invocation('GameManager.travel_busy', require_false=True, mutates=False),
                     Invocation('TownPortalSystem.entry_materials', arguments=(Argument.reference(obj),),

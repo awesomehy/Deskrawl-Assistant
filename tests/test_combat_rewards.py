@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from deskrawl_assistant.game_actions import GameActions
+from deskrawl_assistant.combat_rewards import CompletionRewards
 from deskrawl_assistant.managed_mode import ManagedMode
 from deskrawl_assistant.native_memory import GameBusyError, SnapshotChangedError
 from tests import test_ground_pickup_receipts as receipts
@@ -196,6 +197,129 @@ class CompletionRewardTests(unittest.TestCase):
         self.assertEqual(self.engine.repeat_completed, 1)
         self.assertEqual(self.engine.target_dungeon, 'a')
         self.assertIsNone(self.step(10))
+
+
+class PreparedCompletionRewardTests(unittest.TestCase):
+    def world(self):
+        world = observation()
+        world['scene'].update(in_dungeon=True, dead=False, difficulty='Normal',
+            run={'id':'boss','dungeon_id':'a','difficulty':'Normal','status':'settling',
+                 'completion_confirmed':True,'final_kill_settled':True,'finished':False,
+                 'enemy_count':0,'wave_active':False,'wave_index':5,'wave_count':5})
+        return world
+
+    def ready(self, rewards, world, now):
+        with patch('deskrawl_assistant.combat_rewards.time.monotonic',return_value=now):
+            return rewards.ready(world)
+
+    def test_quiet_ground_during_final_kill_never_authorizes_departure_without_settlement(self):
+        world = self.world()
+        rewards = CompletionRewards()
+        for now in (0,.2,2,30):
+            self.assertFalse(self.ready(rewards,world,now))
+        self.assertEqual(rewards.empty_since,0)
+        self.assertFalse(rewards.settled)
+        world['scene']['run'].update(status='success',finished=True)
+        self.assertTrue(self.ready(rewards,world,30.05))
+
+    def test_unknown_or_regressing_kill_evidence_cannot_prepare_empty_interval(self):
+        changes = ({'final_kill_settled':False}, {'final_kill_settled':None},
+                   {'completion_confirmed':False}, {'enemy_count':1}, {'enemy_count':None},
+                   {'wave_active':True}, {'wave_active':None}, {'wave_index':4},
+                   {'wave_count':0}, {'wave_count':None}, {'wave_count':True},
+                   {'retained_terminal':True})
+        for change in changes:
+            with self.subTest(change=change):
+                world = self.world()
+                rewards = CompletionRewards()
+                self.assertFalse(self.ready(rewards,world,0))
+                world['scene']['run'].update(change)
+                self.assertFalse(self.ready(rewards,world,5))
+                self.assertIsNone(rewards.empty_since)
+
+    def test_drop_scene_save_or_partial_read_resets_prepared_quiet_interval(self):
+        for change in ('drop','partial','scene','ground','teleport','save','dead','unknown_dead'):
+            with self.subTest(change=change):
+                world = self.world()
+                rewards = CompletionRewards()
+                self.assertFalse(self.ready(rewards,world,0))
+                changed = deepcopy(world)
+                if change=='drop': changed['ground']['items']=[equipment('late',container='ground')]
+                elif change=='partial': changed['complete']=False
+                elif change=='scene': changed['scene']['available']=False
+                elif change=='ground': changed['ground']['complete']=False
+                else:
+                    key = {'teleport':'teleporting','save':'online_saving','dead':'dead','unknown_dead':'dead'}[change]
+                    changed['scene'][key] = None if change=='unknown_dead' else True
+                self.assertFalse(self.ready(rewards,changed,10))
+                self.assertIsNone(rewards.empty_since)
+                self.assertFalse(self.ready(rewards,world,11))
+                world['scene']['run'].update(status='success',finished=True)
+                self.assertFalse(self.ready(rewards,world,11.9))
+                self.assertTrue(self.ready(rewards,world,12))
+
+    def test_another_run_cannot_inherit_prepared_interval(self):
+        for change in ('id','location'):
+            with self.subTest(change=change):
+                world = self.world()
+                rewards = CompletionRewards()
+                self.assertFalse(self.ready(rewards,world,0))
+                if change=='id': world['scene']['run']['id']='new'
+                else:
+                    world['scene']['dungeon_id']='b'
+                    world['scene']['run']['dungeon_id']='b'
+                world['scene']['run'].update(status='success',finished=True)
+                self.assertFalse(self.ready(rewards,world,10))
+                self.assertEqual(rewards.empty_since,10)
+                self.assertTrue(self.ready(rewards,world,11))
+
+
+class NativeSettledRewardTests(unittest.TestCase):
+    world = PreparedCompletionRewardTests.world
+
+    def settled(self, mythic=False):
+        world = self.world()
+        world['scene']['difficulty'] = difficulty = 'Mythic' if mythic else 'Normal'
+        world['scene']['run'].update(difficulty=difficulty, status='success', finished=True,
+            final_kill_settled=False, rewards_settled=True,
+            reward_evidence='verified_WaveManager_finished_and_LootManager_idle')
+        world['scene']['completion_visible'] = {('Mythic' if mythic else 'CombatMap')+'CompletionUI':True}
+        return world
+
+    def test_native_finished_clears_kill_flag_but_can_replay_on_first_empty_read(self):
+        for mythic in (False, True):
+            with self.subTest(mythic=mythic):
+                world, rewards = self.settled(mythic), CompletionRewards()
+                self.assertTrue(rewards.ready(world, native_replay=True))
+                self.assertIsNone(rewards.empty_since)
+                # The immediate proof is specific to original native replay;
+                # returns/other travel retain the existing quiet barrier.
+                self.assertFalse(rewards.ready(world))
+
+    def test_incomplete_native_proof_or_late_drop_cannot_skip_quiet_barrier(self):
+        for change in ('proof','source','unfinished','active','enemy','wave','unknown_wave',
+                       'retained','popup','wrong_popup','dead','unknown_dead','drop','ground',
+                       'partial','save','teleport','changing','unavailable'):
+            with self.subTest(change=change):
+                world, rewards = self.settled(), CompletionRewards()
+                run = world['scene']['run']
+                if change=='proof': run.pop('rewards_settled')
+                elif change=='source': run['reward_evidence']='old_cached_proof'
+                elif change=='unfinished': run['finished']=False
+                elif change=='active': run['wave_active']=True
+                elif change=='enemy': run['enemy_count']=1
+                elif change=='wave': run['wave_index']=4
+                elif change=='unknown_wave': run['wave_count']=None
+                elif change=='retained': run['retained_terminal']=True
+                elif change=='popup': world['scene']['completion_visible']={}
+                elif change=='wrong_popup': world['scene']['completion_visible']={'MythicCompletionUI':True}
+                elif change in ('dead','unknown_dead'): world['scene']['dead']=True if change=='dead' else None
+                elif change=='drop': world['ground']['items']=[equipment('late',container='ground')]
+                elif change=='ground': world['ground']['complete']=False
+                elif change=='partial': world['complete']=False
+                elif change=='unavailable': world['scene']['available']=False
+                else: world['scene'][{'save':'online_saving','teleport':'teleporting','changing':'scene_changing'}[change]]=True
+                self.assertFalse(rewards.ready(world, native_replay=True))
 
 
 class NativeRewardGuardsTests(unittest.TestCase):

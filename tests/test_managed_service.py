@@ -508,8 +508,18 @@ class ManagedServiceTests(unittest.TestCase):
         settings['cleanup']['rune_pages'] = [1]
         return settings
 
-    def ready(self, *, farming=False, auto_equip=True):
-        self.service.save_managed(self.settings(farming=farming,auto_equip=auto_equip))
+    def prepare_campaign(self):
+        self.service.managed_catalog = [dict(row, map_type=0) for row in self.client.maps]
+        self.client.difficulty = 'Inferno'  # Final campaign point: return without changing the target.
+        self.service._managed_refresh_control()
+
+    def ready(self, *, farming=False, auto_equip=True, mode=None):
+        cfg = self.settings(farming=farming,auto_equip=auto_equip)
+        if mode is not None:
+            cfg['farming']['mode'] = mode
+        if mode == 'push':
+            self.prepare_campaign()
+        self.service.save_managed(cfg)
         self.service.set_managed_running(True)
 
     def test_native_gold_and_other_drops_reach_page_stats_without_counting_potions(self):
@@ -545,15 +555,16 @@ class ManagedServiceTests(unittest.TestCase):
         self.assertEqual(self.client.actions, [])
 
     def returning_world(self):
+        # Repeat now restarts in place; push still needs a town visit after a win.
         self.client.items=[];self.client.in_town=False;self.client.current_map='offline-map'
         self.client.run_status='success'
-        self.ready(farming=True,auto_equip=False)
+        self.ready(farming=True,auto_equip=False,mode='push')
         with patch('deskrawl_assistant.combat_rewards.time.monotonic', return_value=0):
             self.service._managed_once()  # First empty reward confirmation.
 
     def test_return_preflight_replans_a_boss_win_or_drop_after_planning(self):
         self.client.items=[];self.client.in_town=False;self.client.current_map='offline-map'
-        self.ready(farming=True,auto_equip=False)
+        self.ready(farming=True,auto_equip=False,mode='push')
         world=self.service._managed_observation()
         action=self.service.managed._action('return_town',reason='test pending return')
         self.client.run_status='success'
@@ -577,7 +588,7 @@ class ManagedServiceTests(unittest.TestCase):
         self.client.items=[];self.client.in_town=False;self.client.current_map='offline-map'
         self.client.run_status='success'
         self.client.ground=[equipment(0,container='ground',selection_id='boss-drop')]
-        self.ready(farming=True,auto_equip=False)
+        self.ready(farming=True,auto_equip=False,mode='push')
         def native(kind,payload):
             if kind=='collect_ground':
                 row=self.client.ground.pop();row.update(container='inventory',slot_index=0)
@@ -807,6 +818,8 @@ class ManagedServiceTests(unittest.TestCase):
                 self.client.in_town=not returning;self.client.items=[equipment(locked=False)]
                 self.client.current_map='offline-map';self.client.run_status='success'
                 cfg=self.settings(farming=True)
+                cfg['farming']['mode']='push'
+                self.prepare_campaign()
                 cfg['cleanup']['equipment_policies']['legendary']={'action':'salvage','fallback':'salvage'}
                 self.service.save_managed(cfg);self.service.set_managed_running(True)
                 if returning:
@@ -1443,7 +1456,7 @@ class ManagedServiceTests(unittest.TestCase):
         self.client.items=[];self.client.in_town=False;self.client.current_map='offline-map'
         self.client.run_status='success'
         self.service._publish(self.client.snapshot())
-        self.ready(farming=True,auto_equip=False)
+        self.ready(farming=True,auto_equip=False,mode='push')
         self.client.native_handler=lambda kind,payload:{'transition_requested':True}
         with patch('deskrawl_assistant.combat_rewards.time.monotonic',return_value=0):
             self.service._managed_once()
@@ -1477,7 +1490,7 @@ class ManagedServiceTests(unittest.TestCase):
     def test_cancelled_return_replans_native_repeat_without_cleanup_or_false_arrival(self):
         self.client.items=[];self.client.in_town=False;self.client.current_map='offline-map'
         self.client.run_status='success'
-        self.service._publish(self.client.snapshot());self.ready(farming=True,auto_equip=False)
+        self.service._publish(self.client.snapshot());self.ready(farming=True,auto_equip=False,mode='push')
         self.client.native_handler=lambda kind,payload:{'transition_requested':True}
         with patch('deskrawl_assistant.combat_rewards.time.monotonic',return_value=0):
             self.service._managed_once()
@@ -1859,6 +1872,46 @@ class ManagedServiceTests(unittest.TestCase):
                 self.service._work('managed',{})
         self.assertEqual(collect.call_args.args[0],'fresh-selection')
         self.assertTrue(self.service.managed.running)
+
+    def test_ground_pickup_carriage_read_race_replans_without_stopping_or_submitting(self):
+        from deskrawl_assistant.carriage_transfer import CarriageUnavailable
+        from deskrawl_assistant.game_actions import GameActions
+        self.client.items = []
+        self.client.ground = [equipment(0,container='ground',selection_id='old-selection')]
+        self.service._publish(self.client.snapshot())
+        self.ready(farming=True,auto_equip=False)
+        game = GameActions(Mock(), dispatcher=Mock())
+        read = Mock()
+        read.guards = []
+        read.singleton.return_value = 3
+        read.boolean.return_value = False
+        read.ptr.return_value = 0x5000
+        read.list.return_value = []
+        game._context = Mock(return_value=(read, 0x100, 2, 1))
+        game.capabilities = Mock(return_value={'compatible':True})
+        with patch.object(self.client,'execute_game_action',
+                side_effect=lambda kind,payload,*args,**kwargs:game.execute(kind,payload)), \
+                patch('deskrawl_assistant.carriage_transfer.read_carriage',
+                    side_effect=CarriageUnavailable('马车正在收集物品，等待下一次读取。')):
+            self.service._work('managed',{})
+        game.dispatcher.invoke.assert_not_called()
+        self.assertTrue(self.service.managed.running)
+        self.assertIsNone(self.service.managed.pending)
+        self.assertEqual(self.service.error,'')
+        self.assertEqual(self.client.actions,[])
+        self.client.ground[0]['selection_id'] = 'fresh-selection'
+        def native(kind,payload):
+            self.assertEqual(kind,'collect_ground')
+            self.assertEqual(payload['selection_id'],'fresh-selection')
+            row = self.client.ground.pop()
+            row.update(container='inventory',slot_index=0)
+            self.client.items.append(row)
+            return {'bridge_verified':True,'effect_confirmed':True,'quantity':1}
+        self.client.native_handler = native
+        self.service._work('managed',{})
+        self.assertTrue(self.service.managed.running)
+        self.assertEqual([action[0] for action in self.client.actions],['collect_ground'])
+        self.assertEqual(len(self.client.items),1)
 
     def test_collection_batch_reaches_executor_before_locks_and_disposal(self):
         self.client.items = []

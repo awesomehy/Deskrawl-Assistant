@@ -154,6 +154,8 @@ class ManagedServiceMixin:
         self.managed_can_resume = False
         self.managed_stop_request = None
         self.managed_fast_followup = False
+        self.managed_replay_poll = None
+        self.managed_full_read_due = 0
         self.managed_transition = None
         self.managed_retry = None
         self.managed_return_recovery = None
@@ -212,7 +214,7 @@ class ManagedServiceMixin:
             if not key.startswith('Legendary') or meta.get('slot') != target:
                 raise ValidationError('指定暗金必须属于对应的穿戴部位。')
 
-    def _managed_refresh_control(self):
+    def _managed_refresh_control(self, *, reward_snapshot=None):
         """Called only by a new assistant's read worker, never by an HTTP GET."""
         with self.guard:
             self.managed_control_read_at = None
@@ -227,6 +229,19 @@ class ManagedServiceMixin:
             value = {'available':False,'reason':str(exc)}
             capabilities = {}
         read_at = time.monotonic()
+        with self.guard:
+            self.managed_control = deepcopy(value)
+            self.managed_control_read_at = read_at
+            self.managed_capabilities = deepcopy(capabilities)
+            if reward_snapshot is not None:
+                # Start the existing loot quiet period at the fresh control
+                # read, before expensive display/rule projections. Optional
+                # growth reads must not hide the final-kill fast-poll signal.
+                early = self._managed_replay_context(reward_snapshot, value)
+                self._managed_update_replay_poll(early)
+                poll = self.managed_replay_poll
+                if poll and poll['active'] and poll['key'] == (early['session'], run_record(early['scene'].get('run')).get('id')):
+                    self.managed.completion_rewards.ready(early)
         growth = {'available': False, 'reason': '成长读取入口尚未载入。'}
         if hasattr(self.client, 'progression_snapshot'):
             # Price previews are read-only and independent of enabling purchases.
@@ -235,12 +250,9 @@ class ManagedServiceMixin:
             except Exception as exc: growth = {'available': False, 'reason': str(exc)}
         with self.guard:
             self.managed_growth = deepcopy(growth)
-            self.managed_control = deepcopy(value)
-            self.managed_control_read_at = read_at
-            self.managed_capabilities = deepcopy(capabilities)
 
-    def _managed_scene(self):
-        control = deepcopy(self.managed_control)
+    def _managed_scene(self, control=None):
+        control = deepcopy(self.managed_control if control is None else control)
         scene = control.get('scene',{})
         if not isinstance(scene,dict):
             scene = {'in_town':scene=='town','in_dungeon':scene=='combat'}
@@ -266,6 +278,104 @@ class ManagedServiceMixin:
         capture = getattr(self.client,'managed_snapshot',self.client.snapshot)
         return capture()
 
+    def _managed_replay_context(self, snap, control, progression=None):
+        ground = deepcopy(control.get('ground', {}))
+        if isinstance(ground, list):
+            ground = {'items':ground, 'complete':control.get('ground_complete') is True}
+        return {'complete':snap.get('complete') is True, 'session':snap.get('bridge_session'),
+                'character_id':control.get('character_id') if control.get('available') is True else None,
+                'containers':snap.get('containers', {}), 'scene':self._managed_scene(control),
+                'ground':ground, 'progression':progression or {}}
+
+    def _managed_replay_observation(self, *, statistics=False):
+        read = getattr(self.client, 'completion_replay_snapshot', None)
+        if not callable(read):
+            return self._managed_observation()
+        options = {'merchant':self.managed.settings['merchant']['enabled']
+                   or statistics and growth_enabled(self.managed.settings)}
+        if statistics: options['statistics'] = True
+        value = read(**options)
+        snap, control = value['snapshot'], value['control']
+        if (snap.get('bridge_session') != value.get('session')
+                or control.get('available') is not True):
+            raise SnapshotChangedError(control.get('reason') or '复刷连接或场景正在变化，等待重新核验。')
+        capabilities = self.client.managed_capabilities()
+        with self.guard:
+            self.managed_capabilities = deepcopy(capabilities)
+        observation = self._managed_replay_context(snap, control, value.get('progression'))
+        if not self._managed_identity_ok(observation, require_character=True):
+            raise SnapshotChangedError(self.managed.status)
+        if statistics:
+            character = value.get('character') or {}
+            if (character.get('available') is not True or character.get('session') != value['session']
+                    or character.get('character_id') != observation['character_id']):
+                raise SnapshotChangedError('复刷期间角色读取正在变化，等待重新核验。')
+            observation['character'] = deepcopy(character)
+            observation['carriage'] = deepcopy(control.get('carriage') or {})
+            for key in ('loot_ledger','system_log','gold_ledger','run_history'):
+                observation[key] = deepcopy(control.get(key) or {})
+            # Metrics need the same native rarity/name facts as the full view,
+            # but replay needs no rule groups, tooltips or attack previews.
+            def decorate(row):
+                row.setdefault('rarity', row.get('base_rarity'))
+                row.setdefault('name', self._describe_item(row.get('name_key') or row.get('internal_name'))[0])
+                return row
+            observation['items'] = [decorate(dict(deepcopy(row), container=container))
+                for container, data in observation['containers'].items() for row in data.get('slots', [])]
+            for data in (observation['ground'], observation['carriage']):
+                for row in data.get('items', []): decorate(row)
+            for key in ('equipment', 'minion_equipment'):
+                for row in observation['character'].get(key, []): decorate(row)
+            with self.guard:
+                self.managed_control = deepcopy(control)
+                self.managed_control_read_at = time.monotonic()
+        return observation
+
+    def _managed_replay_probe_enabled(self):
+        """The existing serial worker samples a tiny hint between full reads."""
+        poll = self.managed_replay_poll
+        fast = bool(poll and poll['active'] and time.monotonic() < poll['until'])
+        retry = self.managed_retry
+        replay_retry = (fast and retry and retry.get('key', (None,))[0] == 'online_sync_pending'
+            and retry.get('reason_code') == 'completion_replay' and retry.get('source_run_id') == poll['key'][1])
+        return bool(self.managed.running and not self.managed.finishing and not self.managed.pumpkin_active
+            and self.managed.settings['farming']['enabled'] and self.managed.settings['farming']['mode'] == 'repeat'
+            and self.managed.pending is None and self.managed.await_effect is None
+            and not any((self.managed_transition, retry and not replay_retry, self.managed_synthesis_wait,
+                         self.managed_auction_wait, self.managed.merchant_refresh_wait))
+            and self.managed_settings_pending is None and self._managed_active_rules == self.rules
+            and self._managed_active_automation == self.automation_settings
+            and not self.cancelled.is_set() and self.client.connected
+            and callable(getattr(self.client, 'completion_replay_signal', None))
+            and (fast or self._managed_scene().get('in_dungeon') is True))
+
+    def _managed_completion_observation(self, *, signal=False):
+        poll = self.managed_replay_poll
+        if (not self._managed_replay_probe_enabled()
+                or not signal and (not poll or not poll['active'])
+                or poll and poll['active'] and time.monotonic() >= poll['until']):
+            return None
+        try:
+            observation = self._managed_replay_observation(statistics=True)
+        except SnapshotChangedError:
+            # A racing read cannot bridge an otherwise quiet reward interval.
+            self.managed.completion_rewards.observe({'complete':False})
+            raise
+        with self.guard:
+            self.managed.observe_runs(observation)  # Apply a completed rotation quota first.
+            self._managed_update_replay_poll(observation)
+            poll = self.managed_replay_poll
+            run = run_record(observation['scene'].get('run'))
+            preparing = (poll and poll['active'] and time.monotonic() < poll['until']
+                and poll['key'] == (observation.get('session'), run.get('id'))
+                and run.get('status') == 'settling' and run.get('completion_confirmed') is True)
+            if (observation.get('complete') is not True
+                    or observation['carriage'].get('complete') is not True
+                    or not (preparing or self.managed.completion_replay_ready(observation)[0])):
+                self.managed.completion_rewards.observe({'complete':False})
+                return None
+        return observation
+
     def _managed_synthesis_state(self, scene):
         """Optional native data never becomes a dependency of normal farming."""
         config = self.managed.settings.get('synthesis', {})
@@ -290,10 +400,16 @@ class ManagedServiceMixin:
     def _managed_observation(self, *, inventory_only=False):
         # Every write is planned from the latest server-side read, not browser rows.
         snap = self._managed_snapshot()
+        farming = self.managed.settings['farming']
+        replay_read = (not inventory_only and self.managed.running and not self.managed.pumpkin_active
+                       and farming['enabled'] and farming['mode'] == 'repeat'
+                       and self._managed_scene().get('in_dungeon') is True)
+        if replay_read:
+            self._managed_refresh_control(reward_snapshot=snap)
         self._publish(snap,refresh_character=not inventory_only)
-        if not inventory_only:
+        if not inventory_only and not replay_read:
             self._managed_refresh_control()
-        else:
+        elif inventory_only:
             # Recheck scene, online sync and capability changes. Inventory
             # actions do not need a second campaign/growth/character scan.
             context_reader = getattr(self.client,'action_context_snapshot',self.client.control_snapshot)
@@ -757,7 +873,9 @@ class ManagedServiceMixin:
         # Inventory writes need fresh rule/equip checks. Pickup backends already
         # resolve the drop, verify receiving capacity/identity and confirm the
         # receipt themselves; do not scan campaign/character/rules twice here.
-        if kind not in ('collect_ground', 'collect_carriage'):
+        if kind == 'enter_dungeon' and action.get('reason_code') == 'completion_replay':
+            observation = self._managed_replay_observation()
+        elif kind not in ('collect_ground', 'collect_carriage'):
             observation = self._managed_observation(inventory_only=kind in ('lock','transfer','sell','salvage')
                 and action.get('reason_code') not in ('equip_prepare', 'synthesis_prepare', 'auction_prepare'))
         if observation.get('complete') is not True: raise SnapshotChangedError('物品正在变化，等待重新规划。')
@@ -809,13 +927,15 @@ class ManagedServiceMixin:
         elif kind == 'return_town':
             action.pop('protect_completion_rewards', None)
         pumpkin_replay = kind == 'enter_dungeon' and action.get('reason_code') == 'pumpkin_replay'
-        if pumpkin_replay:
-            ready, reason = self.managed.pumpkin_replay_ready(observation)
-            if (not ready or action.get('dungeon_id') != PUMPKIN
+        completion_replay = kind == 'enter_dungeon' and action.get('reason_code') == 'completion_replay'
+        if pumpkin_replay or completion_replay:
+            ready, reason = (self.managed.pumpkin_replay_ready(observation) if pumpkin_replay
+                             else self.managed.completion_replay_ready(observation))
+            if (not ready or action.get('dungeon_id') != scene.get('dungeon_id')
                     or action.get('difficulty') != scene.get('difficulty')
                     or action.get('source_run_id') != run_record(scene.get('run')).get('id')):
-                return {'verified':False, 'retryable':True, 'reason':reason or '南瓜王本局已变化，重新规划。'}
-            if not self.managed.completion_rewards.ready(observation):
+                return {'verified':False, 'retryable':True, 'reason':reason or '复刷本局已变化，重新规划。'}
+            if not self.managed.completion_rewards.ready(observation, native_replay=completion_replay):
                 return {'verified':False, 'retryable':True, 'reason':self.managed.completion_rewards.reason}
             action['protect_completion_rewards'] = True
         stargazing_entry = kind == 'enter_dungeon' and action.get('reason_code') == 'stargazing_skip'
@@ -836,7 +956,7 @@ class ManagedServiceMixin:
                     or verdict['verdict'] != 'skip'
                     or not (combat_rewards_clear(observation) if stargazing_entry else combat_rewards_known(observation))):
                 return {'verified':False, 'retryable':True, 'reason':'观星状态或实际奖励已变化，重新核验后再切图。'}
-        if kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh') and not (stargazing_entry or pumpkin_replay) and not managed_town_rewards_clear(observation):
+        if kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh') and not (stargazing_entry or pumpkin_replay or completion_replay) and not managed_town_rewards_clear(observation):
             return {'verified':False,'retryable':True,'reason':'主城奖励尚未收取或收纳完成，继续整理后再进入地图。'}
         if self.managed.finishing and (kind in ('enter_dungeon','switch_difficulty','merchant_buy','merchant_open','merchant_refresh','allocate_talent','learn_life_skill','set_skill','auction_upload','auction_open',*SYNTHESIS_ACTIONS)
                 or action.get('reason_code') in ('synthesis_prepare', 'auction_prepare')):
@@ -851,7 +971,12 @@ class ManagedServiceMixin:
                       'synthesize_gems':'gem_synthesis', 'synthesize_runes':'rune_synthesis', 'synthesize_equipment':'equipment_synthesis',
                       'auction_open':'auction_upload',
                       'collect_ground':'ground_pickup','collect_carriage':'transfer', 'unlock':'lock'}.get(kind,kind)
-        if not available_capability(self.managed_page()['capabilities'].get(capability)):
+        # Replay already refreshed its native capability. Do not construct the
+        # entire managed settings page (routes, storage pages, growth catalog)
+        # merely to read this one gate in the short settlement window.
+        available = (self.managed_capabilities.get(capability) if completion_replay
+                     else self.managed_page()['capabilities'].get(capability))
+        if not available_capability(available):
             raise ValidationError('当前托管动作能力尚未核验：'+capability)
         if kind in NEW_ACTIONS:
             state = observation.get('progression', {})
@@ -1086,7 +1211,7 @@ class ManagedServiceMixin:
             action = action or {}
             key = (code,action.get('kind'))
             source_run_id = (action.get('source_run_id') if action.get('kind') == 'enter_dungeon'
-                             and action.get('reason_code') == 'pumpkin_replay' else None)
+                             and action.get('reason_code') in ('pumpkin_replay', 'completion_replay') else None)
             if source_run_id:
                 # Native replay can finish another run between two preflight
                 # waits. Its new settlement must not inherit the old deadline.
@@ -1527,6 +1652,53 @@ class ManagedServiceMixin:
         self.managed_fast_followup = True
         return True
 
+    def _managed_update_replay_poll(self, observation):
+        """Briefly sample settlement faster, without speeding up normal farming."""
+        scene = observation.get('scene') or {}
+        run = run_record(scene.get('run'))
+        farming = self.managed.settings['farming']
+        if observation.get('complete') is not True or scene.get('available') is not True:
+            # A transient changing read may span the popup appearing. Keep an
+            # already armed window, without renewing it or authorizing a write.
+            return
+        active = (self.managed.running and not self.managed.finishing
+            and farming['enabled'] and farming['mode'] == 'repeat' and not self.managed.pumpkin_active
+            and scene.get('in_dungeon') is True and scene.get('dead') is False
+            and not any(scene.get(k) is True for k in ('scene_changing','teleporting'))
+            and scene.get('dungeon_id') == self.managed.target_dungeon
+            and scene.get('difficulty') == self.managed.target_difficulty
+            and run.get('id') and not run.get('retained_terminal')
+            and run.get('status') in ('settling','success')
+            and (run.get('status') == 'success' or run.get('completion_confirmed') is True
+                 or run.get('final_kill_settled') is True))
+        if self.managed_replay_poll is not None:
+            self.managed_replay_poll['active'] = bool(active)
+        if not active:
+            return
+        key = (observation.get('session'), run['id'])
+        if self.managed_replay_poll is None or self.managed_replay_poll['key'] != key:
+            # A stuck popup or changing reads must not extend the fast window.
+            self.managed_replay_poll = {'key':key, 'until':time.monotonic()+8, 'active':True}
+            self.managed_fast_followup = True
+
+    def _managed_poll_interval(self):
+        poll = self.managed_replay_poll
+        retry = self.managed_retry
+        replay_sync_wait = (retry and poll and retry.get('key', (None,))[0] == 'online_sync_pending'
+            and retry.get('action_kind') == 'enter_dungeon' and retry.get('reason_code') == 'completion_replay'
+            and retry.get('source_run_id') == poll['key'][1])
+        if (self.managed.running and not self.managed.finishing and poll and poll['active']
+                and self.managed.settings['farming']['enabled']
+                and self.managed.settings['farming']['mode'] == 'repeat'
+                and not self.managed.pumpkin_active and self.managed.pending is None
+                and not any((retry and not replay_sync_wait, self.managed_transition,
+                             self.managed_synthesis_wait, self.managed_auction_wait))
+                and not self.cancelled.is_set() and time.monotonic() < poll['until']):
+            return 0.05
+        if self._managed_replay_probe_enabled():
+            return 0.2
+        return 2
+
     def _managed_once(self):
         self.managed_fast_followup = False
         with self.guard:
@@ -1534,7 +1706,23 @@ class ManagedServiceMixin:
             if self._managed_active_automation is None:
                 self._managed_active_automation = deepcopy(self.automation_settings)
         if self._managed_reconnect_once(): return self.managed.status
-        observation = self._managed_observation()
+        replay_observation = self._managed_completion_observation()
+        if replay_observation is None and self._managed_replay_probe_enabled():
+            if time.monotonic() < self.managed_full_read_due:
+                # This hint only wakes the normal authoritative read. It never
+                # supplies a run identity, counts a win or authorizes a write.
+                try: signal = self.client.completion_replay_signal()
+                except (OSError, RuntimeError, ValueError, KeyError): signal = True
+                poll = self.managed_replay_poll
+                expired = poll and poll['active'] and time.monotonic() >= poll['until']
+                if signal is False or expired: return self.managed.status
+                if not poll or not poll['active']:
+                    # The tiny hint wakes an authoritative capture directly;
+                    # do not run tooltip/rule/power projections on the kill edge.
+                    replay_observation = self._managed_completion_observation(signal=True)
+        observation = replay_observation if replay_observation is not None else self._managed_observation()
+        if replay_observation is None:
+            self.managed_full_read_due = time.monotonic() + 2
         if self.managed_synthesis_wait:
             return self._managed_wait_synthesis(observation)
         if self._managed_wait_auction(observation):
@@ -1547,6 +1735,7 @@ class ManagedServiceMixin:
             # In particular, native repeat can replace the winning plan during
             # a backoff or an already submitted stargazing transition.
             self.managed.observe_runs(observation)
+            self._managed_update_replay_poll(observation)
             if not self.managed.running: return self.managed.status
             if self.managed.merchant_refresh_wait:
                 self._managed_wait_merchant_refresh(observation)
@@ -1661,7 +1850,8 @@ class ManagedServiceMixin:
                     self.managed.status='等待游戏完成场景切换。'
                     return self.managed.status
             else:
-                action = self.managed.next_action(observation)
+                action = (self.managed.next_completion_replay(observation) if replay_observation is not None
+                          else self.managed.next_action(observation))
                 if self.managed.phase=='paused': self.managed_can_resume=True
                 if ((not action or action['kind'] != 'return_town')
                         and (action is not None or self.managed.phase != 'returning')

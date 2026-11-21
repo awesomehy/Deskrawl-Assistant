@@ -1438,7 +1438,9 @@ class AssistantService(TrayStatusMixin, AuctionTrackingMixin, ManualAuctionServi
 
     def _monitor_loop(self):
         while not self.closed.is_set():
-            self.monitor_wake.wait(2)
+            with self.guard:
+                poll_interval = self._managed_poll_interval()
+            self.monitor_wake.wait(poll_interval)
             self.monitor_wake.clear()
             if self.closed.is_set(): break
             with self.guard:

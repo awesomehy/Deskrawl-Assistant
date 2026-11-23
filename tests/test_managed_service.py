@@ -606,6 +606,82 @@ class ManagedServiceTests(unittest.TestCase):
         self.assertEqual([a[0] for a in self.client.actions],['collect_ground','return_town'])
         self.assertTrue(self.client.actions[-1][1]['protect_completion_rewards'])
 
+    def test_departed_unconfirmed_flask_does_not_stop_or_repeat_before_other_boss_rewards(self):
+        self.client.items=[];self.client.in_town=False;self.client.current_map='offline-map'
+        self.client.run_status='success'
+        self.client.ground=[equipment(0,container='ground',selection_id='flask',
+            internal_name='HealthPotionDrop',is_equipment=False,item_type=1,item_class='LootDrop',
+            item_uid='',instance_id=''), equipment(1,container='ground',selection_id='boss-drop')]
+        self.ready(farming=True,auto_equip=False,mode='push')
+        def native(kind,payload):
+            if kind=='collect_ground':
+                row=self.client.ground.pop(0)
+                if row['internal_name']=='HealthPotionDrop':
+                    return {'effect_confirmed':False,'retryable':True,'quantity':0,
+                            'reason':'治疗药水已离开地面，重新读取其他奖励，不重复拾取。'}
+                row.update(container='inventory',slot_index=0)
+                self.client.items.append(row)
+                return {'effect_confirmed':True,'quantity':1}
+            self.assertEqual(kind,'return_town')
+            return {'transition_requested':True}
+        self.client.native_handler=native
+        with patch('deskrawl_assistant.combat_rewards.time.monotonic',return_value=100):
+            self.service._managed_once()
+            self.assertTrue(self.service.managed.running)
+            self.assertIsNone(self.service.managed.pending)
+            self.assertIsNone(self.service.managed.await_effect)
+            self.service._managed_once()
+            self.service._managed_once()
+        with patch('deskrawl_assistant.combat_rewards.time.monotonic',return_value=102):
+            self.service._managed_once()
+        self.assertTrue(self.service.managed.running)
+        self.assertEqual([a[0] for a in self.client.actions],
+                         ['collect_ground','collect_ground','return_town'])
+        self.assertEqual([a[1]['selection_id'] for a in self.client.actions if a[0]=='collect_ground'],
+                         ['flask','boss-drop'])
+        self.assertTrue(self.client.actions[-1][1]['protect_completion_rewards'])
+
+    def test_departed_unconfirmed_gold_rereads_and_collects_remaining_boss_equipment(self):
+        self.client.items=[];self.client.in_town=False;self.client.current_map='offline-map'
+        self.client.run_status='success'
+        self.client.ground=[equipment(0,container='ground',selection_id='gold',
+            internal_name='GoldDrop',is_equipment=False,item_type=1,item_class='LootDrop',
+            count=1223,item_uid='',instance_id=''),
+            equipment(1,container='ground',selection_id='boss-drop')]
+        self.ready(farming=True,auto_equip=False,mode='push')
+        def native(kind,payload):
+            if kind=='collect_ground':
+                row=self.client.ground.pop(0)
+                if row['internal_name']=='GoldDrop':
+                    return {'effect_confirmed':False,'retryable':True,'quantity':0,
+                            'reason':'金币已离开地面且余额已增加，重新读取其他奖励，不重复拾取。'}
+                row.update(container='inventory',slot_index=0)
+                self.client.items.append(row)
+                return {'effect_confirmed':True,'quantity':1}
+            self.assertEqual(kind,'return_town')
+            self.assertFalse(self.client.ground)
+            self.assertEqual(len(self.client.items),1)
+            return {'transition_requested':True}
+        self.client.native_handler=native
+        with patch('deskrawl_assistant.combat_rewards.time.monotonic',return_value=100):
+            self.service._managed_once()
+            self.assertTrue(self.service.managed.running)
+            self.assertIsNone(self.service.managed.pending)
+            self.assertIsNone(self.service.managed.await_effect)
+            # An unconfirmed coin pile never becomes a successful action entry.
+            self.assertFalse(self.service.managed_history)
+            self.service._managed_once()
+            self.service._managed_once()
+            self.assertEqual([a[0] for a in self.client.actions],['collect_ground','collect_ground'])
+        with patch('deskrawl_assistant.combat_rewards.time.monotonic',return_value=102):
+            self.service._managed_once()
+        self.assertTrue(self.service.managed.running)
+        self.assertEqual([a[0] for a in self.client.actions],
+                         ['collect_ground','collect_ground','return_town'])
+        self.assertEqual([a[1]['selection_id'] for a in self.client.actions if a[0]=='collect_ground'],
+                         ['gold','boss-drop'])
+        self.assertTrue(self.client.actions[-1][1]['protect_completion_rewards'])
+
     def test_death_flag_overrides_stale_running_plan_and_native_revive_resumes_farming(self):
         self.client.items=[];self.client.in_town=False;self.client.current_map='offline-map'
         raw_control=self.client.control_snapshot

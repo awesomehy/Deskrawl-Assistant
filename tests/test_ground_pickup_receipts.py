@@ -131,6 +131,81 @@ class PotionReceiptTests(unittest.TestCase):
             self.assertEqual(call.kwargs['item']['selection_id'], 'chosen')
         self.assertEqual(log.call_args_list[-1].kwargs['receipt'], selected['_pickup_receipt'])
 
+    def departed_action(self, *, remaining=False, change=None):
+        _, selected, _ = self.game(consumed=False)
+        selected.update(selection_id='chosen', item_uid='')
+        if change: change(selected)
+        game = GameActions(Mock(), dispatcher=Mock())
+        read = Mock(guards=[])
+        read.singleton.return_value = 3
+        read.boolean.return_value = False
+        game._context = Mock(return_value=(read, 1, 2, 0))
+        game.capabilities = Mock(return_value={'compatible':True})
+        game._ground = Mock(side_effect=[[selected], [selected] if remaining else []])
+        game._before_pickup = Mock()
+        game._confirm_effect = Mock(return_value=False)
+        game.dispatcher.invoke.return_value = {'completed':True}
+        return game, selected, read
+
+    def test_departed_virtual_potion_replans_without_claiming_receipt_or_repeating_call(self):
+        game, selected, read = self.departed_action()
+        with patch('deskrawl_assistant.game_actions.record') as log:
+            result = game.execute('collect_ground', {'selection_id':'chosen'})
+        self.assertTrue(result['retryable'])
+        self.assertFalse(result['effect_confirmed'])
+        self.assertEqual(result['quantity'], 0)
+        self.assertNotIn('_confirmed_count', selected)
+        game.dispatcher.invoke.assert_called_once()
+        self.assertEqual(game._ground.call_count, 2)
+        self.assertEqual(read.finish.call_count, 2)
+        self.assertEqual(log.call_args_list[-1].args[0], 'game_action_potion_departed')
+
+    def test_still_present_potion_keeps_uncertain_fence(self):
+        game, _, _ = self.departed_action(remaining=True)
+        with self.assertRaises(NativeActionError) as failure:
+            game.execute('collect_ground', {'selection_id':'chosen'})
+        self.assertTrue(failure.exception.uncertain)
+        game.dispatcher.invoke.assert_called_once()
+
+    def test_incomplete_or_changing_ground_cannot_prove_departure(self):
+        for error in (MemoryReadError('unreadable'), SnapshotChangedError('changed')):
+            with self.subTest(error=type(error).__name__):
+                game, _, read = self.departed_action()
+                read.finish.side_effect = [None, error]
+                with self.assertRaises(NativeActionError) as failure:
+                    game.execute('collect_ground', {'selection_id':'chosen'})
+                self.assertTrue(failure.exception.uncertain)
+                game.dispatcher.invoke.assert_called_once()
+
+    def test_departure_exception_never_applies_to_inventory_items_gold_or_unbound_drops(self):
+        def header_change(row, change):
+            header = bytearray(row['_header']); change(header); row['_header'] = bytes(header)
+        changes = [lambda row:row.update(internal_name='GoldDrop'),
+            lambda row:row.update(internal_name='MovementPotion1'),
+            lambda row:row.update(item_type=6), lambda row:row.update(count=2),
+            lambda row:row.update(item_uid='owned-item'), lambda row:row.pop('observation_id'),
+            lambda row:row.pop('_header'),
+            lambda row:header_change(row, lambda h:struct.pack_into('<Q', h, 120, 0x4444)),
+            lambda row:header_change(row, lambda h:h.__setitem__(132, 1)),
+            lambda row:header_change(row, lambda h:h.__setitem__(185, 1))]
+        for change in changes:
+            with self.subTest(change=change):
+                game, _, _ = self.departed_action(change=change)
+                with self.assertRaises(NativeActionError):
+                    game.execute('collect_ground', {'selection_id':'chosen'})
+                game.dispatcher.invoke.assert_called_once()
+                self.assertEqual(game._ground.call_count, 1)
+
+    def test_failed_consumption_receipt_explains_native_flag_or_identity_mismatch(self):
+        for change, reason in ((None, 'not_consumed'),
+                (lambda h:struct.pack_into('<Q', h, 136, 0x5555), 'identity_changed'),
+                (lambda h:struct.pack_into('<i', h, 164, 2), 'quantity_changed'),
+                (lambda h:struct.pack_into('<Q', h, 16, 0x2222), 'native_object_changed')):
+            with self.subTest(reason=reason):
+                game, selected, _ = self.game(consumed=False, change=change)
+                self.assertFalse(self.confirm(game, selected))
+                self.assertEqual(selected['_pickup_receipt']['consumption_check'], reason)
+
 
 class GoldReceiptTests(unittest.TestCase):
     def game(self, *, amount=2312, increase=2312, consumed=True, remaining=False, change=None):
@@ -165,6 +240,82 @@ class GoldReceiptTests(unittest.TestCase):
             with self.subTest(options=options):
                 game, selected = self.game(**options)
                 self.assertFalse(PotionReceiptTests().confirm(game, selected))
+
+    def departed_action(self, *, amount=1223, increase=1559, remaining=False, change=None):
+        game, selected, read = PotionReceiptTests().departed_action(remaining=remaining)
+        header = bytearray(selected['_header'])
+        header[132:134] = b'\1\0'
+        struct.pack_into('<i', header, 128, amount)
+        selected.update(internal_name='GoldDrop', count=amount, _header=bytes(header),
+                        _before_virtual=142686201, observation_id='gold-drop')
+        selected['_pickup_receipt'] = {'remaining_count':0, 'before':142686201,
+            'after':142686201+increase, 'consumed':False, 'consumption_check':'not_consumed'}
+        game._virtual_balance = Mock(return_value=142686201+increase)
+        if change: change(selected)
+        return game, selected, read
+
+    def test_recorded_1223_gold_departure_replans_without_credit_or_duplicate_pickup(self):
+        for increase in (1223, 1559):
+            with self.subTest(increase=increase):
+                game, selected, read = self.departed_action(increase=increase)
+                with patch('deskrawl_assistant.game_actions.record') as log:
+                    result = game.execute('collect_ground', {'selection_id':'chosen'})
+                self.assertTrue(result['retryable'])
+                self.assertFalse(result['effect_confirmed'])
+                self.assertEqual(result['quantity'], 0)
+                self.assertNotIn('_confirmed_count', selected)
+                game.dispatcher.invoke.assert_called_once()
+                game.reader.snapshot.assert_not_called()
+                self.assertEqual(game._ground.call_count, 2)
+                self.assertEqual(read.finish.call_count, 2)
+                self.assertEqual(log.call_args_list[-1].args[0], 'game_action_gold_departed')
+                self.assertFalse(log.call_args_list[-1].kwargs['receipt']['consumed'])
+                self.assertEqual(log.call_args_list[-1].kwargs['departure'],
+                    {'remaining_count':0, 'before':142686201, 'after':142686201+increase})
+
+    def test_still_present_gold_or_insufficient_balance_keeps_uncertain_fence(self):
+        for options in ({'remaining':True}, {'increase':0}, {'increase':1222}, {'increase':-1}):
+            with self.subTest(options=options):
+                game, _, _ = self.departed_action(**options)
+                with self.assertRaises(NativeActionError) as failure:
+                    game.execute('collect_ground', {'selection_id':'chosen'})
+                self.assertTrue(failure.exception.uncertain)
+                game.dispatcher.invoke.assert_called_once()
+
+    def test_gold_departure_cannot_bypass_incomplete_ground_or_balance_reads(self):
+        for source in ('ground', 'balance', 'guards'):
+            with self.subTest(source=source):
+                game, selected, read = self.departed_action()
+                error = SnapshotChangedError('changed')
+                if source == 'ground': game._ground.side_effect = [[selected], error]
+                elif source == 'balance': game._virtual_balance.side_effect = MemoryReadError('unreadable')
+                else: read.finish.side_effect = [None, error]
+                with self.assertRaises(NativeActionError) as failure:
+                    game.execute('collect_ground', {'selection_id':'chosen'})
+                self.assertTrue(failure.exception.uncertain)
+                game.dispatcher.invoke.assert_called_once()
+
+    def test_departure_requires_original_bound_gold_kind_amount_and_balance(self):
+        def header_change(row, change):
+            header = bytearray(row['_header']); change(header); row['_header'] = bytes(header)
+        changes = [lambda row:row.update(internal_name='GemRuby4'),
+            lambda row:row.update(item_type=6), lambda row:row.update(count=0),
+            lambda row:row.update(count=True), lambda row:row.update(count=1224),
+            lambda row:row.update(item_uid='owned-item'), lambda row:row.pop('observation_id'),
+            lambda row:row.pop('_header'), lambda row:row.pop('_before_virtual'),
+            lambda row:row.update(_before_virtual={'charges':3}),
+            lambda row:row.update(_before_virtual=-1),
+            lambda row:header_change(row, lambda h:struct.pack_into('<Q', h, 120, 0x4444)),
+            lambda row:header_change(row, lambda h:h.__setitem__(133, 1)),
+            lambda row:header_change(row, lambda h:h.__setitem__(185, 1))]
+        for change in changes:
+            with self.subTest(change=change):
+                game, _, _ = self.departed_action(change=change)
+                with self.assertRaises(NativeActionError):
+                    game.execute('collect_ground', {'selection_id':'chosen'})
+                game.dispatcher.invoke.assert_called_once()
+                self.assertEqual(game._ground.call_count, 1)
+                game._virtual_balance.assert_not_called()
 
 
 class GroundCarriageReadTests(unittest.TestCase):

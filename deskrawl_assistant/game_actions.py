@@ -1329,6 +1329,25 @@ class GameActions:
             if not result['effect_confirmed']:
                 record('game_action_unconfirmed',kind=kind,item=item_log,
                     receipt=selected.get('_pickup_receipt'))
+                if kind == 'collect_ground' and self._potion_pickup_departed(selected):
+                    # A transient flask drop has no inventory/loot-stat effect.
+                    # Do not claim receipt or replay the call; re-plan from a
+                    # fresh ground read. Other item/currency fences stay strict.
+                    result.update(retryable=True, quantity=0,
+                        reason='治疗药水已离开地面，补充次数未确认；重新读取其他奖励，不重复拾取。')
+                    record('game_action_potion_departed', item=item_log,
+                           receipt=selected.get('_pickup_receipt'))
+                    return result
+                if kind == 'collect_ground' and self._gold_pickup_departed(selected):
+                    # Destroyed coin objects may no longer expose a bound
+                    # consumed flag. This is re-planning, not a success receipt:
+                    # do not credit a pickup or submit the old selection again.
+                    result.update(retryable=True, quantity=0,
+                        reason='金币已离开地面且余额已增加，单堆回执未确认；重新读取其他奖励，不重复拾取。')
+                    record('game_action_gold_departed', item=item_log,
+                           receipt=selected.get('_pickup_receipt'),
+                           departure=selected.get('_pickup_departure'))
+                    return result
                 raise NativeActionError('游戏方法已执行，但物品结果尚未确认；已停止重复操作', uncertain=True)
             if '_confirmed_snapshot' in selected:
                 result['_receipt_snapshot'] = selected['_confirmed_snapshot']
@@ -1399,17 +1418,73 @@ class GameActions:
         """
         before = selected.get('_header')
         flags = {'GoldDrop':(1, 0), 'HealthPotionDrop':(0, 1)}.get(selected.get('internal_name'))
-        if flags is None or not isinstance(before, bytes) or len(before) < 186 or before[185] != 0:
+        selected.pop('_consumption_check', None)
+        def rejected(reason):
+            selected['_consumption_check'] = reason
             return False
+        if flags is None or not isinstance(before, bytes) or len(before) < 186 or before[185] != 0:
+            return rejected('unbound_drop')
         address = selected['_address']
         klass = read.ptr(address)
         read.klass(klass, 'LootDrop')
-        return (struct.pack('<Q', klass) == before[:8]
-            and read.ptr(address+16) in (0, struct.unpack_from('<Q', before, 16)[0])
-            and tuple(before[132:134]) == flags
-            and read.read(address+120, 33) == before[120:153]
-            and read.read(address+164, 8) == before[164:172]
-            and read.boolean(address+185))
+        if struct.pack('<Q', klass) != before[:8]: return rejected('class_changed')
+        if read.ptr(address+16) not in (0, struct.unpack_from('<Q', before, 16)[0]):
+            return rejected('native_object_changed')
+        if tuple(before[132:134]) != flags: return rejected('virtual_kind_changed')
+        if read.read(address+120, 33) != before[120:153]: return rejected('identity_changed')
+        if read.read(address+164, 8) != before[164:172]: return rejected('quantity_changed')
+        if not read.boolean(address+185): return rejected('not_consumed')
+        return True
+
+    def _potion_pickup_departed(self, selected):
+        """Only a verified virtual flask may finish without a success receipt."""
+        header = selected.get('_header')
+        if (selected.get('internal_name') != 'HealthPotionDrop' or selected.get('item_type') != 1
+                or selected.get('count') != 1 or selected.get('item_uid')
+                or not selected.get('observation_id')
+                or not isinstance(header, bytes) or len(header) < 216
+                or struct.unpack_from('<Q', header, 120)[0] != 0
+                or header[132:134] != b'\0\1' or header[185] != 0):
+            return False
+        try:
+            read, manager, _, _ = self._context(allow_busy=True)
+            rows = self._ground(read, manager)
+            absent = not any(row.get('observation_id') == selected['observation_id'] for row in rows)
+            read.finish()
+            return absent
+        except (MemoryReadError, NativeActionError):
+            return False
+
+    def _gold_pickup_departed(self, selected):
+        """Re-plan a departed coin pile without relaxing successful receipts.
+
+        Other coins may contribute to the balance change, so neither departure
+        nor the sufficient balance delta is credited as this pile's receipt.
+        All remaining ground rewards still pass through the normal loot fence.
+        """
+        header, amount = selected.get('_header'), selected.get('count')
+        before = selected.get('_before_virtual')
+        if (selected.get('internal_name') != 'GoldDrop' or selected.get('item_type') != 1
+                or type(amount) is not int or not 0 < amount <= 0x7fffffff
+                or type(before) is not int or before < 0 or selected.get('item_uid')
+                or not selected.get('observation_id')
+                or not isinstance(header, bytes) or len(header) < 216
+                or struct.unpack_from('<Q', header, 120)[0] != 0
+                or struct.unpack_from('<i', header, 128)[0] != amount
+                or header[132:134] != b'\1\0' or header[185] != 0):
+            return False
+        try:
+            read, manager, _, _ = self._context(allow_busy=True)
+            rows = self._ground(read, manager)
+            absent = not any(row.get('observation_id') == selected['observation_id'] for row in rows)
+            after = self._virtual_balance(selected, read)
+            read.finish()
+            if absent and type(after) is int and after - before >= amount:
+                selected['_pickup_departure'] = {'remaining_count':0, 'before':before, 'after':after}
+                return True
+            return False
+        except (MemoryReadError, NativeActionError):
+            return False
 
     def _confirm_pickup(self, selected):
         # Receipt reads may overlap the save triggered by the accepted pickup.
@@ -1429,10 +1504,14 @@ class GameActions:
                     refilled = balance['charges'] > before['charges']
                     consumed = self._virtual_drop_consumed(selected, read) if not refilled else False
                     evidence['consumed'] = consumed
+                    if not refilled and selected.get('_consumption_check'):
+                        evidence['consumption_check'] = selected['_consumption_check']
                     received = remaining is None and (refilled or consumed)
                 elif selected['internal_name'] == 'GoldDrop':
                     consumed = self._virtual_drop_consumed(selected, read)
                     evidence['consumed'] = consumed
+                    if selected.get('_consumption_check'):
+                        evidence['consumption_check'] = selected['_consumption_check']
                     # Other auto-picked coins can arrive in the same frame.
                     # Require this drop's consumed flag and at least its value,
                     # rather than an exact total-balance delta of one coin pile.

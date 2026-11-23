@@ -1,10 +1,10 @@
 # Deskrawl 装备助手
 
-为 Deskrawl 提供装备筛选、物品整理与自动刷图的 Windows x64 工具，无需安装 Python。当前版本：**v1.6.9**。
+为 Deskrawl 提供装备筛选、物品整理与自动刷图的 Windows x64 工具，无需安装 Python。当前版本：**v1.6.10**。
 
-**[下载 Windows 版](https://github.com/awesomehy/Deskrawl-Assistant/releases/download/v1.6.9/Deskrawl-Assistant-v1.6.9.exe)** · [大陆下载](https://hhyan.me:25667/s/a1247f09c37c4b4bb7) · [官网](https://deskrawl.hhyan.me/) · [全部版本与更新说明](https://github.com/awesomehy/Deskrawl-Assistant/releases)
+**[下载 Windows 版](https://github.com/awesomehy/Deskrawl-Assistant/releases/download/v1.6.10/Deskrawl-Assistant-v1.6.10.exe)** · [大陆下载](https://hhyan.me:25667/s/a1247f09c37c4b4bb7) · [官网](https://deskrawl.hhyan.me/) · [全部版本与更新说明](https://github.com/awesomehy/Deskrawl-Assistant/releases)
 
-v1.6.9：普通副本与神话裂隙支持收完奖励后跳过结算倒计时复刷，修复马车收集期间误停止托管。
+v1.6.10：修复金币拾取核验导致托管误停止，完善拾取后的托管恢复。
 
 ## 快速开始
 

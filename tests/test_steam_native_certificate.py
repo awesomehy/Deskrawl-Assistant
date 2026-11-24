@@ -86,7 +86,12 @@ class PersistentCertificateTests(CertificateFixture, unittest.TestCase):
     def test_disk_contains_only_protected_bundle_and_no_scratch_files(self):
         material = self.store.prepare(self.trust)
         encrypted = self.path.read_bytes()
-        for marker in (b'PRIVATE KEY', b'certificate', b'key', material.der):
+        bundle = self.read_bundle()
+        self.assertEqual(base64.b64decode(bundle['certificate']), material.der)
+        # Random ciphertext may contain short words such as "key" by chance.
+        # Check complete plaintext fields and actual private material instead.
+        for marker in (b'-----BEGIN PRIVATE KEY-----', b'"certificate":', b'"key":',
+                       material.der, base64.b64decode(bundle['key']), bundle['key'].encode('ascii')):
             self.assertNotIn(marker, encrypted)
         self.assertEqual(list(self.path.parent.iterdir()), [self.path])
         self.assertEqual(validate_leaf(material.der).not_valid_after_utc, self.now + timedelta(days=365))

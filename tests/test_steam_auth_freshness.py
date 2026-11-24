@@ -38,7 +38,7 @@ class SteamFreshnessTests(unittest.TestCase):
         self.requests.append((method, path))
         if self.failure:
             raise self.failure
-        if path == '/market/':
+        if path.startswith('/profiles/') and path.endswith('/inventory'):
             return self.document
         if path.startswith('/inventory/'):
             return inventory(('1', 1, {}))

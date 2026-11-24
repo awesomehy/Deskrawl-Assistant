@@ -174,8 +174,8 @@ def parse_wallet(document, steamid):
 
 
 class _NoRedirect(HTTPRedirectHandler):
-    # Steam checks market eligibility on a same-origin GET redirect before
-    # returning the wallet page. Never replay an economic POST through it.
+    # Steam checks market eligibility before returning a wallet/inventory page.
+    # Follow only same-origin reads; never replay an economic POST through it.
     max_redirections = 3
     max_repeats = 2
 
@@ -210,12 +210,27 @@ class _NoRedirect(HTTPRedirectHandler):
             raise SteamSessionError('Steam 返回不支持的跳转地址，已停止核验。')
         if target.path == '/login' or target.path.startswith('/login/'):
             raise SteamSessionError('Steam 登录已过期，请重新登录。', status=401, auth_expired=True)
-        allowed = ('/market/', '/market/eligibilitycheck/')
-        if urlparse(req.full_url).path not in allowed or target.path not in allowed:
+        source_path = urlparse(req.full_url).path
+        inventory = re.fullmatch(r'/profiles/(7656\d{13})/inventory/?', source_path)
+        inventory_account = getattr(req, '_steam_inventory_account', None)
+        if inventory_account is None and inventory:
+            inventory_account = inventory.group(1)
+        if inventory_account is not None:
+            # Preserve the account across the intermediate eligibility page.
+            # A redirect cannot substitute another profile or a market action.
+            allowed = ('/market/eligibilitycheck/',
+                       f'/profiles/{inventory_account}/inventory',
+                       f'/profiles/{inventory_account}/inventory/')
+        else:
+            allowed = ('/market/', '/market/eligibilitycheck/')
+        if source_path not in allowed or target.path not in allowed:
             raise SteamSessionError('Steam 返回不支持的页面跳转，已停止核验。')
         if sum(getattr(req, 'redirect_dict', {}).values()) >= self.max_redirections:
             raise SteamSessionError('Steam 市场资格检查跳转次数过多，暂不继续核验。')
-        return super().redirect_request(req, fp, code, msg, headers, newurl)
+        follow = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if follow is not None and inventory_account is not None:
+            follow._steam_inventory_account = inventory_account
+        return follow
 
 
 class SteamSession:
@@ -438,7 +453,11 @@ class SteamSession:
                 prepare = getattr(type(self.transport), 'prepare_local_verification', None)
                 if prepare is not None:
                     prepare(self.transport)
-                result['wallet'] = parse_wallet(self._request('GET', '/market/', cookies=values), steamid)
+                # The redesigned market home no longer publishes wallet fee
+                # parameters. The account's official inventory still supplies
+                # both the logged-in viewer identity and native wallet limits.
+                result['wallet'] = parse_wallet(self._request(
+                    'GET', f'/profiles/{steamid}/inventory', cookies=values), steamid)
             except Exception as exc:
                 result['error'] = exc
             finally:
@@ -613,7 +632,7 @@ class SteamSession:
         if not re.fullmatch(r'7656\d{13}', steamid):
             raise SteamSessionError('请先绑定 Steam 登录。', status=401)
         try:
-            wallet = parse_wallet(self.request('GET', '/market/'), steamid)
+            wallet = parse_wallet(self.request('GET', f'/profiles/{steamid}/inventory'), steamid)
         except SteamSessionError as exc:
             if exc.auth_expired:
                 self._expire(generation)

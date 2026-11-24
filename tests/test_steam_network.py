@@ -350,7 +350,7 @@ class TradingIntegrationTests(unittest.TestCase):
             return json.dumps(self.post_result)
         if self.get_failure: raise self.get_failure
         if route is None: raise ProbeFailure('existing proxy disconnected')
-        if path == '/market/': return page()
+        if path == f'/profiles/{STEAMID}/inventory': return page()
         if path.startswith('/inventory/'): return json.dumps(inventory(('1', 1, {})))
         if path.startswith('/market/listings/'): return listing()
         if path.startswith('/market/mylistings/'):

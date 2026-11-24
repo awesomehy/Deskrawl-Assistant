@@ -146,7 +146,7 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(state['steamid'], SID)
         self.assertFalse(self.path.exists())
         self.assertNotIn('test-only-token', json.dumps(state))
-        self.assertEqual(self.transport.call_args.args[:3], ('GET', '/market/', None))
+        self.assertEqual(self.transport.call_args.args[:3], ('GET', f'/profiles/{SID}/inventory', None))
 
     def test_native_snapshot_is_not_treated_as_verified_on_rejection(self):
         self.transport.side_effect = SteamSessionError('expired', status=401, auth_expired=True)
@@ -305,7 +305,7 @@ class NativeTradingIntegrationTests(unittest.TestCase):
         def transport(method, path, data, cookies):
             self.assertEqual(cookies, VALUES)
             self.methods.append((method, path))
-            if path == '/market/':
+            if path == f'/profiles/{SID}/inventory':
                 return page()
             if method == 'POST':
                 self.assertEqual(data['sessionid'], VALUES['sessionid'])

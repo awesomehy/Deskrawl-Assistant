@@ -64,6 +64,36 @@ class _ScriptedHTTPS(HTTPSHandler):
 
 
 class ReadRedirectTests(unittest.TestCase):
+    def test_wallet_inventory_eligibility_round_trip_keeps_the_exact_account(self):
+        handler = _NoRedirect()
+        path = f'/profiles/{STEAMID}/inventory'
+        request = Request('https://steamcommunity.com' + path, method='GET')
+        qualify = handler.redirect_request(request, None, 302, 'Redirect', Message(),
+            'https://steamcommunity.com/market/eligibilitycheck/?goto=' + path)
+        follow = handler.redirect_request(qualify, None, 302, 'Redirect', Message(),
+            'https://steamcommunity.com' + path + '/')
+        self.assertEqual(follow.get_method(), 'GET')
+        self.assertIsNone(follow.data)
+        for destination in (
+            '/profiles/76561198000000002/inventory', '/market/',
+            '/market/sellitem/', '/market/removelisting/1', '/my/inventory/',
+        ):
+            with self.subTest(destination=destination), self.assertRaises(SteamSessionError):
+                handler.redirect_request(qualify, None, 302, 'Redirect', Message(),
+                    'https://steamcommunity.com' + destination)
+
+    def test_wallet_inventory_redirect_still_rejects_foreign_origins_and_write_replay(self):
+        path = f'https://steamcommunity.com/profiles/{STEAMID}/inventory'
+        for method, data in (('POST', None), ('GET', b'body'), ('HEAD', None)):
+            with self.subTest(method=method), self.assertRaises(SteamSessionError):
+                _NoRedirect().redirect_request(Request(path, data=data, method=method),
+                    None, 302, 'Redirect', Message(), 'https://steamcommunity.com/market/eligibilitycheck/')
+        for destination in ('http://steamcommunity.com', 'https://steamcommunity.com.attacker.test',
+                            'https://store.steampowered.com', 'https://steamcommunity.com:444'):
+            with self.subTest(destination=destination), self.assertRaises(SteamSessionError):
+                _NoRedirect().redirect_request(Request(path, method='GET'),
+                    None, 302, 'Redirect', Message(), destination + '/market/eligibilitycheck/')
+
     def test_bodyless_get_can_follow_only_same_origin_market_paths(self):
         handler = _NoRedirect()
         for code in (301, 302, 303, 307, 308):
@@ -144,6 +174,26 @@ class ReadRedirectTests(unittest.TestCase):
 
 
 class SessionTests(unittest.TestCase):
+    def test_login_reads_native_wallet_from_own_inventory_after_market_redesign(self):
+        with tempfile.TemporaryDirectory() as temp:
+            requests = []
+            path = f'https://steamcommunity.com/profiles/{STEAMID}/inventory'
+            steps = [(302, 'https://steamcommunity.com/market/eligibilitycheck/?goto=inventory', [], ''),
+                     (302, path, ['steam_market_eligibility=qualified; Path=/; Secure'], ''),
+                     (200, None, [], page(wallet_default='.1'))]
+            def opener(*handlers):
+                return real_build_opener(*handlers, _ScriptedHTTPS(steps, requests))
+            with patch('deskrawl_assistant.steam_session.build_opener', side_effect=opener):
+                session = SteamSession(Path(temp) / 'session.dpapi', protector=lambda value, **kwargs: value)
+                self.addCleanup(session.close)
+                session.capture_session(cookies())
+            self.assertTrue(session.state()['verified'])
+            self.assertEqual(session.state()['wallet_currency'], 'CNY')
+            self.assertEqual([request.full_url for request in requests],
+                [path, 'https://steamcommunity.com/market/eligibilitycheck/?goto=inventory', path])
+            self.assertIn('steam_market_eligibility=qualified', requests[-1].get_header('Cookie'))
+            self.assertNotIn('steam_market_eligibility', session._cookies)
+
     def test_official_cookie_domains_only(self):
         for domain in ('steamcommunity.com.attacker.test', 'store.steampowered.com', ''):
             with self.assertRaises(SteamSessionError):
@@ -352,7 +402,7 @@ class SessionTests(unittest.TestCase):
                 (302, '/market/eligibilitycheck/?goto=market',
                  ['steamCountry=CN; Path=/; Secure', 'Steam_Language=english; Path=/; Secure',
                   'browserid=temporary-browser; Path=/; Secure'], ''),
-                (302, '/market/', ['webTradeEligibility=temporary-eligibility; Path=/; Secure'], ''),
+                (302, f'/profiles/{STEAMID}/inventory', ['webTradeEligibility=temporary-eligibility; Path=/; Secure'], ''),
                 (200, None, [], page()),
             ]
             requests = []
@@ -400,7 +450,8 @@ class SessionTests(unittest.TestCase):
             service = SteamSession(Path(temp) / 'session.dpapi', protector=lambda raw, **kwargs: raw)
             service.capture_session(cookies(), verify_now=False)
             requests = []
-            destination = 'https://login.steampowered.com/jwt/refresh?redir=https%3A%2F%2Fsteamcommunity.com%2Fmarket%2F'
+            destination = ('https://login.steampowered.com/jwt/refresh?redir='
+                           f'https%3A%2F%2Fsteamcommunity.com%2Fprofiles%2F{STEAMID}%2Finventory')
             fake_https = _ScriptedHTTPS([(302, destination, [], '')], requests)
             with patch('urllib.request.getproxies', return_value={}), \
                     patch('deskrawl_assistant.steam_session.build_opener',

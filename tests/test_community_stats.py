@@ -123,16 +123,15 @@ class CommunityTests(unittest.TestCase):
         self.assertEqual(reopened.status()['divine_count'], 0)
         self.assertIsNone(reopened.values['pending'])
 
-    def test_only_the_deployed_public_http_listener_is_allowed(self):
-        for url in ('http://other.example:46293', 'http://hhyan.me:80', 'http://hhyan.me.evil.example:46293',
-                    'https://user:secret@hhyan.me:46293',
+    def test_only_https_is_allowed_for_public_listeners(self):
+        for url in ('http://hhyan.me:46293', 'http://other.example:46293', 'http://hhyan.me:80',
+                    'http://hhyan.me.evil.example:46293', 'https://user:secret@hhyan.me:46293',
                     'https://hhyan.me/a', 'https://hhyan.me?token=x'):
             with self.subTest(url=url), self.assertRaises(ValueError): validate_url(url)
-        self.assertEqual(validate_url('https://hhyan.me:46293/'), 'https://hhyan.me:46293')
-        self.assertEqual(validate_url('http://hhyan.me:46293/'), DEFAULT_URL)
+        self.assertEqual(validate_url('https://hhyan.me:46293/'), DEFAULT_URL)
         self.assertEqual(validate_url('http://192.168.50.90:46293'), 'http://192.168.50.90:46293')
 
-    def test_upgrade_enables_reporting_and_fixes_only_unused_legacy_default(self):
+    def test_upgrade_enables_reporting_and_migrates_legacy_http_default_to_https(self):
         with self.client.lock, self.client.db:
             self.client._set('enabled', False)
             self.client._set('url', LEGACY_DEFAULT_URL)
@@ -144,13 +143,12 @@ class CommunityTests(unittest.TestCase):
         self.assertEqual(reopened.values['token'], '')
         self.assertIsNone(reopened.values['pending'])
 
-    def test_upgrade_preserves_custom_or_previously_acknowledged_tls_server(self):
-        for url, acknowledgements in [('https://example.com', 0), (LEGACY_DEFAULT_URL, 1)]:
-            with self.client.lock, self.client.db:
-                self.client._set('url', url); self.client._set('acknowledged', acknowledgements)
-            reopened = CommunityStats(self.path, '1.3.0', start=False)
-            try:self.assertEqual(reopened.status()['url'], url)
-            finally:reopened.close()
+    def test_upgrade_preserves_custom_https_server(self):
+        with self.client.lock, self.client.db:
+            self.client._set('url', 'https://example.com'); self.client._set('acknowledged', 0)
+        reopened = CommunityStats(self.path, '1.3.0', start=False)
+        try:self.assertEqual(reopened.status()['url'], 'https://example.com')
+        finally:reopened.close()
 
     def test_configuration_cannot_disable_automatic_reporting(self):
         with self.assertRaises(ValueError):self.client.configure({'enabled': False, 'url': DEFAULT_URL})

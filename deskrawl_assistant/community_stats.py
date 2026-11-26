@@ -14,8 +14,8 @@ from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 import uuid
 
-DEFAULT_URL = 'http://hhyan.me:46293'
-LEGACY_DEFAULT_URL = 'https://hhyan.me:46293'
+DEFAULT_URL = 'https://hhyan.me:46293'
+LEGACY_DEFAULT_URL = 'http://hhyan.me:46293'
 CLASS_NAMES = {1: 'warrior', 2: 'mage', 4: 'hunter', 8: 'monk'}
 
 
@@ -29,7 +29,7 @@ def validate_url(value):
         raise ValueError('统计服务端口无效。') from None
     if (not parts.hostname or parts.username or parts.password or parts.query or parts.fragment
             or parts.path not in ('', '/') or parts.scheme not in ('https', 'http')):
-        raise ValueError('请填写服务根地址，例如 http://hhyan.me:46293。')
+        raise ValueError('请填写服务根地址，例如 https://hhyan.me:46293。')
     if parts.scheme == 'http':
         try:
             ip = ipaddress.ip_address(parts.hostname)
@@ -37,8 +37,8 @@ def validate_url(value):
                 (('10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16') if ip.version == 4 else ('fc00::/7',)))
         except ValueError:
             private = False
-        if not private and (parts.hostname.lower(), parts.port) != ('hhyan.me', 46293):
-            raise ValueError('其他公网统计地址需要 HTTPS；当前已配置的 hhyan.me:46293 可使用 HTTP。')
+        if not private:
+            raise ValueError('公网统计地址必须使用 HTTPS。')
     return value.rstrip('/')
 
 
@@ -73,10 +73,8 @@ class CommunityStats:
         # no longer controls the worker after upgrade.
         with self.db:
             self._set('enabled', True)
-        # The earlier development default assumed TLS, but the deployed NAS
-        # listener uses HTTP. Change only the never-acknowledged old default;
-        # preserve custom servers and a working explicitly configured TLS URL.
-        if self.values['url'] == LEGACY_DEFAULT_URL and not self.values['acknowledged']:
+        # Upgrade the legacy plaintext default URL to HTTPS while preserving custom servers.
+        if self.values['url'] == LEGACY_DEFAULT_URL:
             with self.db:
                 self._set('url', DEFAULT_URL)
                 self._set('token', '')
